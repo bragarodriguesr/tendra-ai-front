@@ -1,0 +1,28 @@
+// Design system Tendra.ai — componentes React (fonte: _ds/tendra-ai-design-system).
+export { Badge } from "./components/core/Badge.jsx";
+export { Button } from "./components/core/Button.jsx";
+export { Card } from "./components/core/Card.jsx";
+export { Divider } from "./components/core/Divider.jsx";
+export { Icon } from "./components/core/Icon.jsx";
+export { IconButton } from "./components/core/IconButton.jsx";
+export { Logo } from "./components/core/Logo.jsx";
+export { MonoLabel } from "./components/core/MonoLabel.jsx";
+export { ProgressBar } from "./components/core/ProgressBar.jsx";
+export { Tag } from "./components/core/Tag.jsx";
+export { ICON_PATHS, ICON_NAMES } from "./components/core/icon-paths.js";
+export { Dialog } from "./components/feedback/Dialog.jsx";
+export { EmptyState } from "./components/feedback/EmptyState.jsx";
+export { SourceTrail } from "./components/feedback/SourceTrail.jsx";
+export { Toast } from "./components/feedback/Toast.jsx";
+export { Tooltip } from "./components/feedback/Tooltip.jsx";
+export { Checkbox } from "./components/forms/Checkbox.jsx";
+export { Field } from "./components/forms/Field.jsx";
+export { Input } from "./components/forms/Input.jsx";
+export { Radio } from "./components/forms/Radio.jsx";
+export { Select } from "./components/forms/Select.jsx";
+export { Switch } from "./components/forms/Switch.jsx";
+export { Textarea } from "./components/forms/Textarea.jsx";
+export { Breadcrumb } from "./components/navigation/Breadcrumb.jsx";
+export { SidebarNav } from "./components/navigation/SidebarNav.jsx";
+export { Tabs } from "./components/navigation/Tabs.jsx";
+export { TopBar } from "./components/navigation/TopBar.jsx";
