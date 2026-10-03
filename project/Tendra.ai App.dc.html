@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail" data-bg-color="#12140F"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><g transform="translate(600 400) rotate(45)"><rect x="-150" y="-150" width="300" height="300" fill="none" stroke="#C8F73D" stroke-width="56"/></g><rect x="565" y="365" width="70" height="70" fill="#F5F6F1"/></svg></template>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/tendra-ai-design-system-0a229461-d208-4f14-80da-2934495ace9d/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/tendra-ai-design-system-0a229461-d208-4f14-80da-2934495ace9d/tokens/colors.css">
+<link rel="stylesheet" href="_ds/tendra-ai-design-system-0a229461-d208-4f14-80da-2934495ace9d/tokens/typography.css">
+<link rel="stylesheet" href="_ds/tendra-ai-design-system-0a229461-d208-4f14-80da-2934495ace9d/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/tendra-ai-design-system-0a229461-d208-4f14-80da-2934495ace9d/tokens/radii.css">
+<link rel="stylesheet" href="_ds/tendra-ai-design-system-0a229461-d208-4f14-80da-2934495ace9d/tokens/elevation.css">
+<link rel="stylesheet" href="_ds/tendra-ai-design-system-0a229461-d208-4f14-80da-2934495ace9d/tokens/motion.css">
+<link rel="stylesheet" href="_ds/tendra-ai-design-system-0a229461-d208-4f14-80da-2934495ace9d/styles.css">
+<script src="_ds/tendra-ai-design-system-0a229461-d208-4f14-80da-2934495ace9d/_ds_bundle.js"></script>
+<style>label:has(>[role="switch"]) *{box-sizing:border-box}[role="progressbar"][aria-valuenow="100"]>div{background:var(--brand-lime)!important}body{margin:0;background:#F5F6F1;color:#3E4238;font-family:'IBM Plex Sans',sans-serif}a{color:#12140F}a:hover{color:#6E7268}button{font-family:inherit}nav{box-sizing:border-box;background:var(--n-000)!important;border-right:0!important;padding:20px 12px 4px!important;gap:12px!important}nav>div{gap:12px!important}nav>div>div{gap:2px!important}nav>div,nav>div>div{grid-template-columns:minmax(0,1fr)}nav a{box-sizing:border-box!important;min-height:36px!important;padding:6px 12px!important}</style>
+</helmet>
+<div style="{{ siteStyle }}"><x-import component-from-global-scope="TendraSite" from="./site-bundle.jsx" hint-size="100%,100vh"></x-import></div>
+<div style="{{ appWrapStyle }}">
+<div style="position:sticky;top:0;z-index:60;height:56px;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:0 20px;background:var(--n-000);border-bottom:1px solid var(--n-200)">
+  <a href="#" aria-label="Tendra.ai — voltar ao site" onClick="{{ goSite }}" style="display:flex;margin-right:8px;text-decoration:none" style-hover="text-decoration:none"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Logo" size="28" variant="paper" hint-size="140px,28px"></x-import></a>
+  <div style="margin-left:auto;display:flex"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" size="sm" variant="accent" icon="layout-grid" onClick="{{ goWorkspace }}" hint-size="auto,32px">Produto · Workspace</x-import></div>
+</div>
+<div style="{{ shellStyle }};height:calc(100vh - 56px);background:var(--n-050);font-family:'IBM Plex Sans',sans-serif;font-size:14px;color:var(--n-700);position:relative;overflow:hidden">
+<div aria-live="polite" style="position:absolute;left:-9999px">{{ toastText }}</div>
+
+<!-- Sidebar -->
+<sc-if value="{{ navOpen }}" hint-placeholder-val="{{ false }}"><div onClick="{{ closeNav }}" style="position:absolute;inset:0;z-index:49;background:rgba(18,20,15,.4)"></div></sc-if>
+<div style="{{ sideStyle }}">
+  <div style="flex:1;overflow-y:auto;overflow-x:hidden;min-height:0"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.SidebarNav" groups="{{ navGroups }}" value="{{ navValue }}" width="100%" hint-size="100%,400px"></x-import></div>
+  <div style="padding:12px 20px;border-top:1px solid var(--n-200);display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600;color:var(--n-900)">{{ userName }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--n-400)">{{ role }}</span></div>
+    <div style="border:1px dashed var(--n-350);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:10px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--n-400)">Painel de demo</span>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" size="sm" fullWidth="{{ true }}" variant="{{ revVariant }}" onClick="{{ setRevisor }}" hint-size="auto,32px">Revisor</x-import>
+        <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" size="sm" fullWidth="{{ true }}" variant="{{ aprVariant }}" onClick="{{ setAprovador }}" hint-size="auto,32px">Aprovador</x-import>
+      </div>
+      <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" size="sm" fullWidth="{{ true }}" variant="secondary" onClick="{{ demoApproveAll }}" hint-size="auto,32px">Aprovar todos os itens</x-import>
+    </div>
+  </div>
+</div>
+
+<!-- Main -->
+<div style="min-width:0;min-height:0;overflow:auto;position:relative">
+<sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}"><div style="position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;padding:8px 12px;background:var(--n-050);border-bottom:1px solid var(--n-200)"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.IconButton" icon="menu" aria-label="Abrir menu" onClick="{{ openNav }}" hint-size="40px,40px"></x-import><span style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:18px;color:var(--n-900)">Tendra.ai</span></div></sc-if>
+
+<!-- T1 Onboarding -->
+<sc-if value="{{ isOnboarding }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:960px;padding:{{ pad }};display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.MonoLabel" hint-size="auto,14px">Primeiros passos · 1 de 2</x-import>
+    <h1 style="margin:0;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:40px;letter-spacing:-.03em;line-height:1.1;color:var(--n-900);max-width:18ch">Suba os documentos que a Tendra.ai vai consultar.</h1>
+    <p style="margin:0;max-width:62ch;line-height:1.6">Propostas anteriores, whitepapers, políticas e RFPs respondidas. Mais documentos melhoram os rascunhos; cada resposta gerada aponta para o trecho de origem.</p>
+  </div>
+  <div style="border:1px dashed var(--n-350);border-radius:16px;background:var(--n-000);padding:40px;display:flex;flex-direction:column;align-items:flex-start;gap:16px">
+    <div style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:20px;color:var(--n-900)">Arraste arquivos ou selecione do computador</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--n-400);line-height:1.6">.doc · .docx · .xls · .xlsx · .md · .pdf · .ppt · .pptx · .txt · .csv · arquivos do Google (baixados como Office)</div>
+    <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" icon="upload" onClick="{{ uploadDocs }}" hint-size="auto,40px">Subir documentos</x-import>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:18px;color:var(--n-900)">{{ docsReadyText }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--n-400)">Sem mínimo definido</span></div>
+    <div style="background:var(--n-000);border:1px solid var(--n-200);border-radius:14px;overflow-x:auto;overflow-y:hidden">
+      <sc-for list="{{ docsView }}" as="d" hint-placeholder-count="4">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:12px 20px;border-top:1px solid var(--n-100)">
+        <div style="min-width:0"><div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--n-900);overflow:hidden;text-overflow:ellipsis">{{ d.name }}</div><div style="font-size:13px;color:var(--n-400);margin-top:2px">{{ d.note }}</div></div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <sc-if value="{{ d.canRetry }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" size="sm" variant="secondary" icon="refresh-cw" onClick="{{ d.retry }}" hint-size="auto,32px">Tentar novamente</x-import></sc-if>
+          <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="{{ d.tone }}" icon="{{ d.icon }}" hint-size="auto,24px">{{ d.statusText }}</x-import>
+        </div>
+      </div>
+      </sc-for>
+    </div>
+  </div>
+  <div style="display:flex;gap:12px;align-items:center">
+    <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" icon="arrow-right" iconEnd="arrow-right" onClick="{{ goNew }}" disabled="{{ noReadyDocs }}" hint-size="auto,40px">Criar primeira RFP</x-import>
+    <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" variant="ghost" onClick="{{ goTasks }}" hint-size="auto,40px">Fazer depois</x-import>
+  </div>
+</div>
+</sc-if>
+
+<!-- T2 Base -->
+<sc-if value="{{ isBase }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:1160px;padding:{{ pad }};display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.MonoLabel" hint-size="auto,14px">Base de conhecimento</x-import>
+      <h1 style="margin:0;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:32px;letter-spacing:-.025em;color:var(--n-900)">{{ docsCountText }}</h1>
+      <span style="color:var(--n-400)">Prazo de aging em vigor: <b style="font-family:'IBM Plex Mono',monospace;font-weight:500">120 dias</b> sem atualização.</span>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center">
+      <div style="width:200px"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Select" options="{{ sortOptions }}" value="{{ sort }}" onChange="{{ setSort }}" size="sm" hint-size="200px,32px"></x-import></div>
+      <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" variant="secondary" icon="history" onClick="{{ uploadRfp }}" hint-size="auto,40px">Importar RFP passada</x-import>
+      <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" icon="upload" onClick="{{ uploadDocs }}" hint-size="auto,40px">Subir documentos</x-import>
+    </div>
+  </div>
+  <div style="background:var(--n-000);border:1px solid var(--n-200);border-radius:14px;overflow-x:auto;overflow-y:hidden">
+    <div style="display:grid;min-width:1100px;grid-template-columns:minmax(0,2.2fr) 100px 110px 170px minmax(150px,1fr) 120px 110px;gap:16px;padding:12px 20px;background:var(--n-050);border-bottom:1px solid var(--n-200);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--n-400)"><span>Documento</span><span>Tipo</span><span>Atualizado</span><span>Idade</span><span>Status</span><span>Enviado por</span><span>Ações</span></div>
+    <sc-for list="{{ docsView }}" as="d" hint-placeholder-count="6">
+    <div style="display:grid;min-width:1100px;grid-template-columns:minmax(0,2.2fr) 100px 110px 170px minmax(150px,1fr) 120px 110px;gap:16px;padding:14px 20px;border-top:1px solid var(--n-100);align-items:center">
+      <div style="min-width:0"><div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--n-900);overflow:hidden;text-overflow:ellipsis">{{ d.name }}</div><div style="font-size:12px;color:var(--n-400);margin-top:2px">{{ d.version }}</div></div>
+      <span>{{ d.type }}</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px">{{ d.upd }}</span>
+      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px"><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--n-900)">{{ d.ageText }}</span><sc-if value="{{ d.old }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="danger" icon="clock" hint-size="auto,24px">Mais de 120 dias</x-import></sc-if></div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="{{ d.tone }}" icon="{{ d.icon }}" hint-size="auto,24px">{{ d.statusText }}</x-import></div>
+      <span>{{ d.by }}</span>
+      <div style="display:flex;align-items:center;gap:8px"><sc-if value="{{ d.canRetry }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Tooltip" content="Tentar novamente" placement="top" hint-size="32px,32px"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.IconButton" icon="refresh-cw" label="Tentar novamente" variant="secondary" size="sm" onClick="{{ d.retry }}" hint-size="32px,32px"></x-import></x-import></sc-if><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Tooltip" content="{{ d.toggleLabel }}" placement="top" hint-size="44px,26px"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Switch" checked="{{ d.active }}" onChange="{{ d.toggle }}" aria-label="{{ d.toggleLabel }}" hint-size="44px,26px"></x-import></x-import></div>
+    </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- T0 Dashboard -->
+<sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:1160px;padding:{{ pad }};display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.MonoLabel" hint-size="auto,14px">Dashboard · últimos 90 dias</x-import>
+      <h1 style="margin:0;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:32px;letter-spacing:-.025em;color:var(--n-900)">Visão geral do uso</h1>
+    </div>
+    <div style="flex:none;white-space:nowrap"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" icon="plus" onClick="{{ goNew }}" hint-size="auto,40px">Nova RFP/RFI</x-import></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px">
+    <div style="background:var(--n-000);border:1px solid var(--n-200);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:8px;color:var(--n-500)"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Icon" name="layout-grid" size="md" hint-size="16px,16px"></x-import><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.MonoLabel" hint-size="auto,14px">RFPs e RFIs trabalhadas</x-import></div>
+      <span style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:48px;letter-spacing:-.03em;line-height:1;color:var(--n-900)">{{ dash.worked }}</span>
+      <span style="font-size:13px;color:var(--n-500);line-height:1.5">{{ dash.workedSub }}</span>
+    </div>
+    <div style="background:var(--n-000);border:1px solid var(--n-200);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:8px;color:var(--n-500)"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Icon" name="circle-alert" size="md" hint-size="16px,16px"></x-import><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.MonoLabel" hint-size="auto,14px">Itens em aberto</x-import></div>
+      <span style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:48px;letter-spacing:-.03em;line-height:1;color:var(--n-900)">{{ dash.open }}</span>
+      <span style="font-size:13px;color:var(--n-500);line-height:1.5">{{ dash.openSub }}</span>
+    </div>
+    <div style="background:var(--n-000);border:1px solid var(--n-200);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:8px;color:var(--n-500)"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Icon" name="clock" size="md" hint-size="16px,16px"></x-import><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.MonoLabel" hint-size="auto,14px">Tempo médio por RFP</x-import></div>
+      <span style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:48px;letter-spacing:-.03em;line-height:1;color:var(--n-900)">{{ dash.avg }}</span>
+      <span style="font-size:13px;color:var(--n-500);line-height:1.5">Da importação à exportação do documento.</span>
+    </div>
+    <div style="background:var(--n-000);border:1px solid var(--n-200);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:8px;color:var(--n-500)"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Icon" name="shield-check" size="md" hint-size="16px,16px"></x-import><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.MonoLabel" hint-size="auto,14px">Itens aprovados</x-import></div>
+      <span style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:48px;letter-spacing:-.03em;line-height:1;color:var(--n-900)">{{ dash.approved }}</span>
+      <span style="font-size:13px;color:var(--n-500);line-height:1.5">{{ dash.approvedSub }}</span>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px">
+    <div style="background:var(--n-000);border:1px solid var(--n-200);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:16px">
+      <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.MonoLabel" hint-size="auto,14px">Tarefas por status</x-import>
+      <div style="display:flex;height:12px;border-radius:99px;overflow:hidden;background:var(--n-100)">
+        <sc-for list="{{ dash.status }}" as="g" hint-placeholder-count="4"><div style="{{ g.bar }}"></div></sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{ dash.status }}" as="g" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:8px;font-size:14px"><span style="{{ g.dot }}"></span><span style="flex:1">{{ g.label }}</span><span style="font-family:'IBM Plex Mono',monospace;color:var(--n-900)">{{ g.n }}</span></div></sc-for>
+      </div>
+    </div>
+    <div style="background:var(--n-000);border:1px solid var(--n-200);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:16px">
+      <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.MonoLabel" hint-size="auto,14px">RFPs concluídas por mês</x-import>
+      <div style="display:flex;align-items:flex-end;gap:12px;height:132px">
+        <sc-for list="{{ dash.months }}" as="m" hint-placeholder-count="6"><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;height:100%"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--n-900)">{{ m.n }}</span><div style="{{ m.bar }}"></div><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--n-500)">{{ m.m }}</span></div></sc-for>
+      </div>
+    </div>
+  </div>
+  <div style="background:var(--n-000);border:1px solid var(--n-200);border-radius:14px;overflow:hidden">
+    <div style="padding:20px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.MonoLabel" hint-size="auto,14px">Prazos mais próximos</x-import><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" size="sm" variant="ghost" iconEnd="arrow-right" onClick="{{ goTasks }}" hint-size="auto,32px">Ver todas as tarefas</x-import></div>
+    <sc-for list="{{ dash.deadlines }}" as="t" hint-placeholder-count="4">
+    <div role="button" tabindex="0" onClick="{{ t.open }}" style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:14px 24px;border-top:1px solid var(--n-100);cursor:pointer" style-hover="background:var(--n-050)">
+      <div style="min-width:0"><div style="font-weight:600;color:var(--n-900)">{{ t.title }}</div><div style="font-size:13px;color:var(--n-500);margin-top:2px">{{ t.company }} · {{ t.type }} · {{ t.owner }}</div></div>
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="{{ t.tone }}" icon="{{ t.icon }}" hint-size="auto,24px">{{ t.status }}</x-import><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--n-900)">{{ t.due }}</span><span style="font-size:13px;min-width:90px;text-align:right;color:{{ t.dueColor }};font-weight:{{ t.dueWeight }}">{{ t.dueText }}</span></div>
+    </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- T3 Tarefas -->
+<sc-if value="{{ isTasks }}" hint-placeholder-val="{{ true }}">
+<div style="max-width:1160px;padding:{{ pad }};display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.MonoLabel" hint-size="auto,14px">Painel de tarefas</x-import>
+      <h1 style="margin:0;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:32px;letter-spacing:-.025em;color:var(--n-900)">8 RFPs e RFIs em andamento</h1>
+    </div>
+    <div style="flex:none;white-space:nowrap"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" icon="plus" onClick="{{ goNew }}" hint-size="auto,40px">Nova RFP/RFI</x-import></div>
+  </div>
+  <sc-if value="{{ hasAlerts }}" hint-placeholder-val="{{ true }}">
+  <div role="region" aria-label="Alertas" style="position:relative;padding-bottom:{{ tDeck.pad }}">
+    <sc-for list="{{ tDeck.layers }}" as="ly" hint-placeholder-count="0"><div style="{{ ly }}"></div></sc-for>
+    <div style="display:flex;flex-direction:column;gap:10px;padding:16px 20px;background:var(--n-000);border:1px solid var(--danger);border-top:3px solid var(--danger);border-radius:12px;position:relative;z-index:5">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px;flex:1 1 180px;min-width:0;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;color:#A8402E"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Icon" name="{{ tDeck.a.icon }}" size="md" hint-size="16px,16px"></x-import>{{ tDeck.a.label }}</div>
+        <sc-if value="{{ tDeck.hasMany }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:8px;flex:none"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.IconButton" icon="chevron-left" aria-label="Alerta anterior" onClick="{{ prevTAlert }}" hint-size="40px,40px"></x-import><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--n-700);white-space:nowrap">Alerta {{ tDeck.pos }}</span><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.IconButton" icon="chevron-right" aria-label="Próximo alerta" onClick="{{ nextTAlert }}" hint-size="40px,40px"></x-import></div></sc-if>
+      </div>
+      <div style="color:var(--n-900);line-height:1.5"><b>{{ tDeck.a.name }}</b> {{ tDeck.a.text }}</div>
+      <div><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" size="sm" variant="secondary" iconEnd="arrow-right" onClick="{{ tDeck.a.go }}" hint-size="auto,32px">{{ tDeck.a.action }}</x-import></div>
+    </div>
+  </div>
+  </sc-if>
+  <sc-if value="{{ notMobile }}" hint-placeholder-val="{{ true }}">
+  <div role="table" aria-label="Tarefas" style="background:var(--n-000);border:1px solid var(--n-200);border-radius:14px;overflow-x:auto;overflow-y:hidden">
+    <div role="row" style="display:grid;min-width:940px;grid-template-columns:minmax(0,2.2fr) 64px minmax(0,1.7fr) 150px 130px 130px;gap:16px;padding:12px 20px;background:var(--n-050);border-bottom:1px solid var(--n-200);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--n-500)"><span role="columnheader">Tarefa</span><span role="columnheader">Itens</span><span role="columnheader">PROGRESSO</span><span role="columnheader">Prazo</span><span role="columnheader">Responsável</span><span role="columnheader">Status</span></div>
+    <sc-for list="{{ tasksView }}" as="t" hint-placeholder-count="3">
+    <div role="row" tabindex="0" aria-label="Abrir {{ t.title }}" onClick="{{ t.open }}" style="display:grid;min-width:940px;grid-template-columns:minmax(0,2.2fr) 64px minmax(0,1.7fr) 150px 130px 130px;gap:16px;padding:16px 20px;border-top:1px solid var(--n-100);align-items:center;cursor:pointer;background:var(--n-000)" style-hover="background:var(--n-050)">
+      <div role="cell" style="min-width:0"><div style="font-weight:600;color:var(--n-900)">{{ t.title }}</div><div style="font-size:13px;color:var(--n-500);margin-top:2px">{{ t.company }} · {{ t.type }}</div></div>
+      <span role="cell" style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--n-900)">{{ t.items }}</span>
+      <div role="cell" style="display:flex;flex-direction:column;gap:6px;align-items:flex-start"><sc-if value="{{ t.showBar }}" hint-placeholder-val="{{ true }}"><div style="width:100%"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.ProgressBar" value="{{ t.pct }}" hint-size="100%,8px"></x-import></div></sc-if><span style="font-size:12px;color:{{ t.compColor }}">{{ t.compText }}</span><sc-if value="{{ t.canRetry }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" size="sm" variant="secondary" icon="refresh-cw" onClick="{{ t.retry }}" hint-size="auto,32px">Tentar de novo</x-import></sc-if></div>
+      <div role="cell" style="display:flex;flex-direction:column;gap:2px"><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--n-900)">{{ t.due }}</span><span style="font-size:12px;color:{{ t.dueColor }};font-weight:{{ t.dueWeight }}">{{ t.dueText }}</span></div>
+      <span role="cell">{{ t.owner }}</span>
+      <div role="cell"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="{{ t.tone }}" icon="{{ t.icon }}" hint-size="auto,24px">{{ t.status }}</x-import></div>
+    </div>
+    </sc-for>
+  </div>
+  </sc-if>
+  <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <sc-for list="{{ tasksView }}" as="t" hint-placeholder-count="3">
+    <div role="button" tabindex="0" onClick="{{ t.open }}" style="background:var(--n-000);border:1px solid var(--n-200);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;cursor:pointer">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div style="min-width:0"><div style="font-weight:600;color:var(--n-900);line-height:1.3">{{ t.title }}</div><div style="font-size:13px;color:var(--n-500);margin-top:2px">{{ t.company }} · {{ t.type }}</div></div><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="{{ t.tone }}" icon="{{ t.icon }}" hint-size="auto,24px">{{ t.status }}</x-import></div>
+      <sc-if value="{{ t.showBar }}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.ProgressBar" value="{{ t.pct }}" hint-size="100%,8px"></x-import></sc-if>
+      <span style="font-size:13px;color:{{ t.compColor }}">{{ t.compText }}</span>
+      <sc-if value="{{ t.canRetry }}" hint-placeholder-val="{{ false }}"><div><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" size="sm" variant="secondary" icon="refresh-cw" onClick="{{ t.retry }}" hint-size="auto,32px">Tentar de novo</x-import></div></sc-if>
+      <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px"><span><span style="font-family:'IBM Plex Mono',monospace;color:var(--n-900)">{{ t.due }}</span> · <span style="color:{{ t.dueColor }};font-weight:{{ t.dueWeight }}">{{ t.dueText }}</span></span><span>{{ t.owner }}</span></div>
+    </div>
+    </sc-for>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<!-- T4 Nova -->
+<sc-if value="{{ isNew }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:760px;padding:{{ pad }};display:flex;flex-direction:column;gap:28px">
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.MonoLabel" hint-size="auto,14px">Nova RFP/Questionário</x-import>
+    <h1 style="margin:0;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:32px;letter-spacing:-.025em;color:var(--n-900)">Importe a lista de perguntas.</h1>
+  </div>
+  <sc-if value="{{ baseSmallWarn }}" hint-placeholder-val="{{ false }}"><div style="padding:12px 16px;background:var(--n-000);border:1px solid var(--n-200);border-radius:12px">Sua base ainda é pequena. Os itens tendem a ficar sem contexto, mas você pode continuar.</div></sc-if>
+  <sc-if value="{{ notIdentified }}" hint-placeholder-val="{{ true }}">
+  <div style="display:flex;flex-direction:column;gap:20px">
+    <div role="button" tabindex="0" onClick="{{ pickFile }}" style="border:1px dashed var(--n-350);border-radius:16px;background:var(--n-000);padding:28px;display:flex;align-items:center;gap:16px;cursor:pointer">
+      <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Icon" name="{{ fileIcon }}" size="xl" hint-size="24px,24px"></x-import>
+      <div style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600;color:var(--n-900);font-family:'IBM Plex Mono',monospace;font-size:14px">{{ fileLabel }}</span><span style="font-size:13px;color:var(--n-400)">Planilha, documento, apresentação ou arquivo do Google.</span></div>
+    </div>
+    <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Field" label="Nome" required="{{ true }}" error="{{ errName }}" hint-size="100%,72px"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Input" value="{{ form.name }}" onChange="{{ setName }}" hint-size="100%,40px"></x-import></x-import>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Field" label="Empresa" required="{{ true }}" error="{{ errCompany }}" hint-size="100%,72px"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Input" value="{{ form.company }}" placeholder="Empresa que enviou o edital" onChange="{{ setCompany }}" hint-size="100%,40px"></x-import></x-import>
+      <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Field" label="Tipo" required="{{ true }}" hint-size="100%,72px"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Select" options="{{ typeOptions }}" value="{{ form.type }}" onChange="{{ setType }}" hint-size="100%,40px"></x-import></x-import>
+      <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Field" label="Prazo de submissão" required="{{ true }}" error="{{ errDue }}" hint-size="100%,72px"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Input" type="date" value="{{ form.due }}" onChange="{{ setDue }}" hint-size="100%,40px"></x-import></x-import>
+      <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Field" label="Responsável" required="{{ true }}" error="{{ errOwner }}" hint-size="100%,72px"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Select" options="{{ ownerOptions }}" placeholder="Escolha um usuário" value="{{ form.owner }}" onChange="{{ setOwner }}" hint-size="100%,40px"></x-import></x-import>
+    </div>
+    <div style="display:flex;gap:12px"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" onClick="{{ createTask }}" hint-size="auto,40px">Importar perguntas</x-import><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" variant="ghost" onClick="{{ goTasks }}" hint-size="auto,40px">Cancelar</x-import></div>
+  </div>
+  </sc-if>
+  <sc-if value="{{ form.identified }}" hint-placeholder-val="{{ false }}">
+  <div style="background:var(--n-000);border:1px solid var(--n-200);border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:16px">
+    <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="approved" icon="check" hint-size="auto,24px">Processamento concluído</x-import>
+    <div style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:28px;letter-spacing:-.02em;color:var(--n-900)">Identificamos 12 perguntas.</div>
+    <div style="color:var(--n-400)">O texto original de cada item continua visível na revisão.</div>
+    <div><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" iconEnd="arrow-right" onClick="{{ goReview }}" hint-size="auto,40px">Abrir revisão</x-import></div>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<!-- T5 Detalhe -->
+<sc-if value="{{ isTask }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:1160px;padding:{{ pad }};display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--n-400)"><a href="#" onClick="{{ goTasks }}" style="color:var(--n-400)">Tarefas</a> / {{ task.name }}</span>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:8px"><sc-if value="{{ task.hasItems }}" hint-placeholder-val="{{ false }}"><div><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="{{ task.sTone }}" icon="{{ task.sIcon }}" hint-size="auto,24px">{{ task.sTxt }}</x-import></div></sc-if><h1 style="margin:0;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:32px;letter-spacing:-.025em;color:var(--n-900)">{{ task.name }}</h1><span style="color:var(--n-400)">{{ task.company }} · {{ task.type }} · prazo {{ task.due }} ({{ task.dueText }}) · responsável {{ task.owner }}</span></div>
+      <sc-if value="{{ task.hasItems }}" hint-placeholder-val="{{ true }}"><div style="display:flex;gap:12px"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" variant="secondary" icon="download" onClick="{{ goExport }}" hint-size="auto,40px">Exportação</x-import><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" icon="eye" onClick="{{ goReview }}" hint-size="auto,40px">Abrir revisão</x-import></div></sc-if>
+    </div>
+  </div>
+  <sc-if value="{{ task.isProcessing }}" hint-placeholder-val="{{ false }}">
+  <div style="background:var(--n-000);border:1px solid var(--n-200);border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:16px;max-width:640px">
+    <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="neutral" icon="loader-circle" hint-size="auto,24px">Processando</x-import>
+    <div style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:24px;color:var(--n-900)">Processando: 42 de 180 perguntas.</div>
+    <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.ProgressBar" value="{{ 23 }}" hint-size="100%,8px"></x-import>
+    <div style="color:var(--n-400)">Você pode sair desta tela. Avisaremos aqui quando terminar.</div>
+    <div><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" variant="secondary" onClick="{{ goTasks }}" hint-size="auto,40px">Sair e voltar depois</x-import></div>
+  </div>
+  </sc-if>
+  <sc-if value="{{ task.isFailed }}" hint-placeholder-val="{{ false }}">
+  <div style="background:var(--n-000);border:1px solid var(--danger);border-top:3px solid var(--danger);border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:16px;max-width:640px">
+    <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="danger" icon="triangle-alert" hint-size="auto,24px">Falha no carregamento</x-import>
+    <div style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:24px;color:var(--n-900)">Não foi possível carregar este arquivo. Tente de novo ou fale com o suporte.</div>
+    <div style="color:var(--n-900);line-height:1.6"><b>Causa:</b> arquivo ilegível ou protegido por senha.</div>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" icon="refresh-cw" onClick="{{ retryTask }}" hint-size="auto,40px">Tentar de novo</x-import><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" variant="secondary" icon="upload" onClick="{{ goNew }}" hint-size="auto,40px">Importar novo arquivo</x-import></div>
+  </div>
+  </sc-if>
+  <sc-if value="{{ task.isReady }}" hint-placeholder-val="{{ false }}">
+  <div style="background:var(--n-000);border:1px solid var(--n-200);border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:16px;max-width:640px">
+    <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="approved" icon="check-check" hint-size="auto,24px">Pronta para exportar</x-import>
+    <div style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:24px;color:var(--n-900)">{{ task.progText }}</div>
+    <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.ProgressBar" value="{{ 100 }}" hint-size="100%,8px"></x-import>
+    <div style="color:var(--n-400);line-height:1.6">Nenhum alerta pendente. Um Aprovador pode exportar a planilha com respostas e fontes.</div>
+    <div><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" icon="download" onClick="{{ goExport4 }}" hint-size="auto,40px">Ir para exportação</x-import></div>
+  </div>
+  </sc-if>
+  <sc-if value="{{ task.hasItems }}" hint-placeholder-val="{{ true }}">
+  <div style="background:var(--n-000);border:1px solid var(--n-200);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:20px">
+    <div style="display:flex;gap:48px;align-items:flex-end;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:4px"><span style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:48px;letter-spacing:-.03em;line-height:1;color:var(--n-900)">{{ counts.approved }} <span style="font-size:24px;color:var(--n-400)">de {{ counts.total }}</span></span><span style="color:var(--n-700)">itens aprovados</span></div>
+      <div style="display:flex;flex-direction:column;gap:4px"><span style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:28px;color:var(--n-900)">{{ counts.withDraft }} de {{ counts.total }}</span><span style="color:var(--n-700)">com sugestão</span></div>
+      <div style="display:flex;flex-direction:column;gap:4px"><span style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:28px;color:var(--n-900)">{{ counts.alerts }}</span><span style="color:var(--n-700)">itens com alerta pendente</span></div>
+    </div>
+    <div style="display:flex;height:12px;border-radius:99px;overflow:hidden;background:var(--n-100)">
+      <sc-for list="{{ segs }}" as="g" hint-placeholder-count="4"><div style="{{ g.style }}"></div></sc-for>
+    </div>
+    <div style="display:flex;gap:24px;flex-wrap:wrap">
+      <sc-for list="{{ segs }}" as="g" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="{{ g.dot }}"></span><span style="font-family:'IBM Plex Mono',monospace;color:var(--n-900)">{{ g.n }}</span><span>{{ g.label }}</span></div></sc-for>
+    </div>
+  </div>
+  <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Tabs" items="{{ filterTabs }}" value="{{ filter }}" onChange="{{ setFilter }}" hint-size="100%,44px"></x-import>
+  <div style="background:var(--n-000);border:1px solid var(--n-200);border-radius:14px;overflow-x:auto;overflow-y:hidden">
+    <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+    <div role="button" tabindex="0" onClick="{{ r.openFromTask }}" style="display:grid;min-width:980px;grid-template-columns:120px minmax(0,1fr) 150px 150px;gap:16px;align-items:center;padding:14px 20px;border-top:1px solid var(--n-100);cursor:pointer" style-hover="background:var(--n-050)">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--n-900)">{{ r.code }}</span>
+      <span style="color:var(--n-900)">{{ r.q }}</span>
+      <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="{{ r.tone }}" icon="{{ r.icon }}" hint-size="auto,24px">{{ r.st }}</x-import>
+      <sc-if value="{{ r.hasAlert }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;color:var(--danger);font-size:13px;font-weight:500"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Icon" name="triangle-alert" size="sm" hint-size="14px,14px"></x-import>{{ r.alertText }}</span></sc-if>
+    </div>
+    </sc-for>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<!-- T6 Revisão -->
+<sc-if value="{{ isReview }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:minmax(260px,320px) minmax(0,1fr);height:calc(100vh - 56px)">
+  <div style="border-right:1px solid var(--n-200);display:flex;flex-direction:column;min-height:0;background:var(--n-050)">
+    <div style="padding:20px 20px 12px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:18px;color:var(--n-900)">Itens</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--n-400)">{{ rows.length }} de {{ counts.total }}</span></div>
+      <div style="font-size:12px;color:var(--n-500);line-height:1.4">{{ revTask }}</div>
+      <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Select" options="{{ filterOptions }}" value="{{ filter }}" onChange="{{ setFilterEv }}" size="sm" hint-size="100%,32px"></x-import>
+    </div>
+    <div style="flex:1;overflow:auto">
+      <sc-for list="{{ rows }}" as="r" hint-placeholder-count="8">
+      <div role="button" tabindex="0" onClick="{{ r.open }}" style="{{ r.rowStyle }}">
+        <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--n-900)">{{ r.code }}</span><sc-if value="{{ r.hasAlert }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:4px;color:var(--danger);font-size:12px;font-weight:500"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Icon" name="triangle-alert" size="sm" hint-size="14px,14px"></x-import>{{ r.alertText }}</span></sc-if></div>
+        <div style="color:var(--n-900);line-height:1.4">{{ r.q }}</div>
+        <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--n-500)"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Icon" name="{{ r.icon }}" size="sm" hint-size="14px,14px"></x-import>{{ r.st }}</span>
+      </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;min-height:0;background:var(--n-050)">
+   <sc-if value="{{ hasCur }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:1;overflow:auto;padding:28px 40px;display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px 16px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--n-900);font-weight:500">{{ cur.code }}</span><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="{{ cur.tone }}" icon="{{ cur.icon }}" hint-size="auto,24px">{{ cur.st }}</x-import><sc-if value="{{ cur.edited }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="neutral" icon="pencil" hint-size="auto,24px">Editado</x-import></sc-if></div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" size="sm" variant="secondary" icon="chevron-left" onClick="{{ prevItem }}" hint-size="auto,32px">Item anterior</x-import><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" size="sm" variant="secondary" iconEnd="chevron-right" onClick="{{ nextItem }}" hint-size="auto,32px">Próximo item</x-import></div>
+      </div>
+      <h2 style="margin:0;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:26px;letter-spacing:-.02em;line-height:1.25;color:var(--n-900);max-width:40ch;text-wrap:pretty">{{ cur.q }}</h2>
+
+      <sc-if value="{{ cur.hasAlert }}" hint-placeholder-val="{{ false }}">
+      <div style="position:relative;padding-bottom:{{ cur.deckPad }}">
+        <sc-for list="{{ cur.layers }}" as="ly" hint-placeholder-count="0"><div style="{{ ly }}"></div></sc-for>
+        <div style="{{ cur.alert.style }};position:relative;z-index:5">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:8px;flex:1 1 180px;min-width:0;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;color:{{ cur.alert.labelColor }}"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Icon" name="{{ cur.alert.icon }}" size="md" hint-size="16px,16px"></x-import>{{ cur.alert.label }}<sc-if value="{{ cur.alert.pending }}" hint-placeholder-val="{{ true }}"><span>· pendente</span></sc-if></div>
+            <sc-if value="{{ cur.hasMany }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:8px;flex:none"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.IconButton" icon="chevron-left" aria-label="Alerta anterior" onClick="{{ prevAlert }}" hint-size="40px,40px"></x-import><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--n-700);white-space:nowrap">Alerta {{ cur.alertPos }}</span><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.IconButton" icon="chevron-right" aria-label="Próximo alerta" onClick="{{ nextAlert }}" hint-size="40px,40px"></x-import></div></sc-if>
+          </div>
+          <div style="color:var(--n-900);line-height:1.5">{{ cur.alert.text }}</div>
+          <sc-if value="{{ cur.alert.showAck }}" hint-placeholder-val="{{ false }}"><div><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" size="sm" variant="secondary" icon="check" onClick="{{ cur.alert.ack }}" hint-size="auto,32px">Reconhecer alerta</x-import></div></sc-if>
+          <sc-if value="{{ cur.alert.showNone }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" size="sm" variant="secondary" icon="pencil" onClick="{{ cur.alert.none }}" hint-size="auto,32px">Nenhuma, vou escrever</x-import><span style="font-size:13px;color:var(--n-400)">Ou use “Usar esta fonte” no painel abaixo.</span></div></sc-if>
+          <sc-if value="{{ cur.alert.isAck }}" hint-placeholder-val="{{ false }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--n-500)">{{ cur.alert.ackText }}</span></sc-if>
+        </div>
+      </div>
+      </sc-if>
+
+      <div style="background:var(--n-000);border:1px solid var(--n-200);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+          <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.MonoLabel" hint-size="auto,14px">Resposta</x-import>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--n-400)">{{ savedText }}</span>
+            <sc-if value="{{ cur.edited }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" size="sm" variant="ghost" onClick="{{ toggleOrig }}" hint-size="auto,32px">{{ origLabel }}</x-import><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" size="sm" variant="ghost" icon="refresh-cw" onClick="{{ restore }}" hint-size="auto,32px">Restaurar sugestão</x-import></sc-if>
+            <sc-if value="{{ cur.canEditBtn }}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" size="sm" variant="secondary" icon="pencil" onClick="{{ startEdit }}" hint-size="auto,32px">Editar resposta</x-import></sc-if>
+            <sc-if value="{{ edit }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" size="sm" variant="secondary" icon="check" onClick="{{ endEdit }}" hint-size="auto,32px">Concluir edição</x-import></sc-if>
+          </div>
+        </div>
+        <sc-if value="{{ showOrig }}" hint-placeholder-val="{{ false }}"><div style="padding:12px 16px;background:var(--n-100);border-radius:8px;line-height:1.6"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--n-400);margin-bottom:6px">Sugestão original</div>{{ cur.orig }}</div></sc-if>
+        <sc-if value="{{ edit }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Textarea" rows="8" value="{{ cur.text }}" placeholder="Escreva a resposta. Separe parágrafos com uma linha em branco." onChange="{{ onDraft }}" hint-size="100%,180px"></x-import></sc-if>
+        <sc-if value="{{ viewMode }}" hint-placeholder-val="{{ true }}">
+          <sc-if value="{{ cur.noText }}" hint-placeholder-val="{{ false }}"><div style="color:var(--n-400);line-height:1.6">Nenhum rascunho. Escreva a resposta para poder revisar este item.</div></sc-if>
+          <sc-for list="{{ cur.paras }}" as="p" hint-placeholder-count="2">
+            <div style="display:flex;gap:12px;align-items:flex-start;font-size:16px;line-height:1.65;color:var(--n-700)"><span style="flex:1">{{ p.t }}</span><span style="display:flex;gap:4px;flex-shrink:0;padding-top:2px"><sc-for list="{{ p.marks }}" as="m" hint-placeholder-count="1"><button onClick="{{ m.open }}" aria-label="{{ m.aria }}" style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;min-width:24px;height:24px;border:1px solid var(--n-350);border-radius:6px;background:var(--n-050);color:var(--n-900);cursor:pointer" style-hover="background:var(--n-200)">{{ m.k }}</button></sc-for></span></div>
+          </sc-for>
+        </sc-if>
+        <sc-if value="{{ cur.hasManual }}" hint-placeholder-val="{{ false }}"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--n-500);display:flex;align-items:center;gap:6px"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Icon" name="pencil" size="sm" hint-size="14px,14px"></x-import>Resposta manual, sem fonte na base · escrita por {{ cur.manualBy }}</div></sc-if>
+        <sc-if value="{{ cur.isApproved }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:8px;padding-top:12px;border-top:1px solid var(--n-100)"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="approved" icon="shield-check" hint-size="auto,24px">Aprovado por {{ cur.by }} · {{ cur.at }}</x-import></div></sc-if>
+      </div>
+
+      <sc-if value="{{ cur.hasSrcs }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.MonoLabel" hint-size="auto,14px">Fontes · {{ cur.srcs.length }}</x-import>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
+          <sc-for list="{{ cur.srcs }}" as="s" hint-placeholder-count="2">
+          <div style="{{ s.style }}">
+            <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;background:var(--n-100);border-radius:6px;padding:2px 8px;color:var(--n-900)">[{{ s.k }}]</span><span style="font-size:12px;color:var(--n-400)">{{ s.type }}</span></div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--n-900);line-height:1.4;word-break:break-word">{{ s.doc }} · {{ s.loc }}</div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--n-700)">{{ s.ageText }}</span><sc-if value="{{ s.old }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="danger" icon="clock" hint-size="auto,24px">Mais de 120 dias</x-import></sc-if><sc-if value="{{ s.conflict }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="danger" icon="copy" hint-size="auto,24px">Em conflito</x-import></sc-if><sc-if value="{{ s.chosen }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="approved" icon="check" hint-size="auto,24px">Fonte escolhida</x-import></sc-if></div>
+            <div style="display:flex;gap:8px;margin-top:auto"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" size="sm" variant="secondary" icon="external-link" onClick="{{ s.open }}" hint-size="auto,32px">Abrir no trecho</x-import><sc-if value="{{ s.canUse }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" size="sm" icon="check" onClick="{{ s.use }}" hint-size="auto,32px">Usar esta fonte</x-import></sc-if></div>
+          </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:var(--n-700)">
+        <span style="font-size:13px">Esta resposta ajudou?</span>
+        <button onClick="{{ fbUp }}" aria-label="Positivo" aria-pressed="{{ cur.fbUp }}" style="{{ fbUpStyle }}"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Icon" name="thumbs-up" size="md" hint-size="16px,16px"></x-import></button>
+        <button onClick="{{ fbDown }}" aria-label="Negativo" aria-pressed="{{ cur.fbDown }}" style="{{ fbDownStyle }}"><span style="display:flex;transform:rotate(180deg)"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Icon" name="thumbs-up" size="md" hint-size="16px,16px"></x-import></span></button>
+        <sc-if value="{{ cur.fbDown }}" hint-placeholder-val="{{ false }}"><div style="width:220px"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Select" options="{{ fbReasons }}" placeholder="Motivo" size="sm" hint-size="220px,32px"></x-import></div></sc-if>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid var(--n-200);background:var(--n-000);padding:16px 40px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div style="font-size:13px;line-height:1.5;color:var(--n-900);display:flex;align-items:center;gap:8px;max-width:420px"><sc-if value="{{ cur.blockedAny }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Icon" name="info" size="md" hint-size="16px,16px"></x-import></sc-if><span>{{ cur.blockText }}</span></div>
+      <div style="display:flex;gap:12px;align-items:center">
+        <sc-if value="{{ cur.isApprovedOrRevised }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:var(--n-400)">{{ cur.stateHint }}</span></sc-if>
+        <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" variant="secondary" icon="check" disabled="{{ cur.noRevise }}" onClick="{{ doRevise }}" hint-size="auto,40px">Marcar como revisado</x-import>
+        <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" icon="shield-check" disabled="{{ cur.noApprove }}" onClick="{{ doApprove }}" hint-size="auto,40px">Aprovar resposta</x-import>
+      </div>
+    </div>
+   </sc-if>
+   <sc-if value="{{ noCur }}" hint-placeholder-val="{{ false }}"><div style="padding:40px"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.EmptyState" icon="filter" title="Nenhum item neste filtro." description="Escolha outro estado para continuar a revisão." hint-size="100%,240px"></x-import></div></sc-if>
+  </div>
+</div>
+</sc-if>
+
+<!-- T8 Exportação -->
+<sc-if value="{{ isExport }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:860px;padding:{{ pad }};display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.MonoLabel" hint-size="auto,14px">Exportação</x-import>
+    <h1 style="margin:0;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:32px;letter-spacing:-.025em;color:var(--n-900)">{{ exportPageTitle }}</h1>
+  </div>
+  <sc-for list="{{ exportCards }}" as="x" hint-placeholder-count="2">
+  <div style="background:var(--n-000);border:1px solid var(--n-200);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:4px;min-width:0"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.MonoLabel" hint-size="auto,14px">{{ x.company }}</x-import><span style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:20px;letter-spacing:-.01em;color:var(--n-900);line-height:1.25">{{ x.title }}</span></div>
+      <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="{{ x.tone }}" icon="{{ x.icon }}" hint-size="auto,24px">{{ x.badge }}</x-import>
+    </div>
+    <div style="font-size:16px;color:var(--n-900)">{{ x.count }}</div>
+    <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.ProgressBar" value="{{ x.pct }}" hint-size="100%,8px"></x-import>
+    <div style="color:var(--n-400);line-height:1.6">O arquivo traz, na ordem original, a pergunta, o ID do item, a resposta aprovada com as edições do revisor e as fontes usadas. Itens de resposta manual mostram “Resposta manual, sem fonte na base”. Formato: planilha (.xlsx).</div>
+    <div style="display:flex;align-items:center;gap:12px 16px;flex-wrap:wrap">
+      <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" icon="download" disabled="{{ x.disabled }}" onClick="{{ x.doExport }}" hint-size="auto,40px">{{ x.btn }}</x-import>
+      <sc-if value="{{ x.blocked }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" variant="secondary" iconEnd="arrow-right" onClick="{{ x.goReview }}" hint-size="auto,40px">Ir para revisão</x-import></sc-if>
+      <span style="font-size:13px;color:var(--n-900)">{{ x.reason }}</span>
+    </div>
+    <sc-if value="{{ x.exported }}" hint-placeholder-val="{{ false }}"><div><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="approved" icon="check-check" hint-size="auto,24px">Exportada por {{ x.by }} · {{ x.at }}</x-import></div></sc-if>
+  </div>
+  </sc-for>
+</div>
+</sc-if>
+
+<!-- T9 Histórico -->
+<sc-if value="{{ isHistory }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:1160px;padding:{{ pad }};display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.MonoLabel" hint-size="auto,14px">Histórico de aprovações e revisões</x-import>
+    <h1 style="margin:0;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:32px;letter-spacing:-.025em;color:var(--n-900)">{{ historyTitle }}</h1>
+  </div>
+  <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Tabs" items="{{ historyTabs }}" value="{{ hfilter }}" onChange="{{ setHfilter }}" hint-size="100%,44px"></x-import>
+  <div style="background:var(--n-000);border:1px solid var(--n-200);border-radius:14px;overflow-x:auto;overflow-y:hidden">
+    <sc-for list="{{ history }}" as="h" hint-placeholder-count="5">
+    <div style="border-top:1px solid var(--n-100)">
+      <div role="button" tabindex="0" onClick="{{ h.toggle }}" style="display:grid;min-width:980px;grid-template-columns:minmax(0,2fr) minmax(0,1.6fr) 170px 100px 24px;gap:16px;align-items:center;padding:16px 20px;cursor:pointer" style-hover="background:var(--n-050)">
+        <div><div style="font-weight:600;color:var(--n-900)">{{ h.q }}</div><div style="font-size:13px;color:var(--n-400);margin-top:2px">{{ h.task }}</div></div>
+        <span style="color:var(--n-700);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ h.snippet }}</span>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start"><sc-if value="{{ h.imported }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="neutral" icon="history" hint-size="auto,24px">Histórico importado</x-import></sc-if><sc-if value="{{ h.hasBy }}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="{{ h.kindTone }}" icon="{{ h.kindIcon }}" hint-size="auto,24px">{{ h.kindLabel }}</x-import><span style="color:var(--n-900)">{{ h.by }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--n-400)">{{ h.at }}</span></sc-if></div>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--n-900)">{{ h.ageText }}</span>
+        <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Icon" name="{{ h.chev }}" size="md" hint-size="16px,16px"></x-import>
+      </div>
+      <sc-if value="{{ h.open }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:4px 20px 20px;display:flex;flex-direction:column;gap:12px;background:var(--n-050)">
+        <div style="font-size:16px;line-height:1.65;max-width:70ch;padding-top:16px">{{ h.full }}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><sc-for list="{{ h.srcs }}" as="s" hint-placeholder-count="1"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" size="sm" variant="secondary" icon="external-link" onClick="{{ s.open }}" hint-size="auto,32px">{{ s.label }}</x-import></sc-for></div>
+      </div>
+      </sc-if>
+    </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+</div>
+
+<!-- T7 Visualizador de fonte -->
+<sc-if value="{{ hasDrawer }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;z-index:20;background:rgba(18,20,15,.32)" onClick="{{ closeDrawer }}"></div>
+<aside role="dialog" aria-label="Visualizador de fonte" style="position:absolute;top:0;right:0;bottom:0;width:560px;max-width:92vw;z-index:21;background:var(--n-000);border-left:1px solid var(--n-200);box-shadow:var(--shadow-overlay);display:flex;flex-direction:column">
+  <div style="padding:20px 24px;border-bottom:1px solid var(--n-200);display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
+    <div style="display:flex;flex-direction:column;gap:6px;min-width:0"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--n-400)">Fonte [{{ dr.k }}] · {{ dr.type }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;color:var(--n-900);word-break:break-word">{{ dr.doc }}</span><span style="font-size:13px;color:var(--n-400)">{{ dr.loc }} · {{ dr.ageText }}</span></div>
+    <x-import component-from-global-scope="TendraAiDesignSystem_0a2294.IconButton" icon="x" aria-label="Fechar fonte" onClick="{{ closeDrawer }}" hint-size="40px,40px"></x-import>
+  </div>
+  <div style="flex:1;overflow:auto;padding:24px;background:var(--n-100)">
+    <sc-if value="{{ dr.missing }}" hint-placeholder-val="{{ false }}"><div style="background:var(--n-000);border:1px solid var(--n-200);border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:12px"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Badge" tone="danger" icon="triangle-alert" hint-size="auto,24px">Documento indisponível</x-import><div style="line-height:1.6;color:var(--n-900)">Este documento não está mais na base. Mostramos o nome e a página registrados.</div><div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--n-700)">{{ dr.doc }} · {{ dr.loc }}</div></div></sc-if>
+    <sc-if value="{{ dr.present }}" hint-placeholder-val="{{ true }}">
+    <div style="background:var(--n-000);border:1px solid var(--n-200);border-radius:4px;padding:40px 36px;display:flex;flex-direction:column;gap:12px;min-height:520px">
+      <div style="height:10px;width:40%;background:var(--n-200);border-radius:2px"></div>
+      <div style="height:6px;width:100%;background:var(--n-100);border-radius:2px"></div><div style="height:6px;width:94%;background:var(--n-100);border-radius:2px"></div><div style="height:6px;width:97%;background:var(--n-100);border-radius:2px"></div>
+      <div style="height:16px"></div>
+      <div style="font-size:15px;line-height:1.7;color:var(--n-900)"><mark style="background:var(--brand-lime);color:var(--brand-ink);padding:2px 0">{{ dr.ex }}</mark></div>
+      <div style="height:16px"></div>
+      <div style="height:6px;width:96%;background:var(--n-100);border-radius:2px"></div><div style="height:6px;width:88%;background:var(--n-100);border-radius:2px"></div><div style="height:6px;width:60%;background:var(--n-100);border-radius:2px"></div>
+    </div>
+    </sc-if>
+  </div>
+  <div style="padding:16px 24px;border-top:1px solid var(--n-200);display:flex;justify-content:space-between;align-items:center"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--n-400)">Esc fecha e volta ao item</span><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" variant="secondary" onClick="{{ closeDrawer }}" hint-size="auto,40px">Fechar</x-import></div>
+</aside>
+</sc-if>
+
+<!-- Confirmar edição de item aprovado -->
+<sc-if value="{{ dialogOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;z-index:30;background:rgba(18,20,15,.4);display:flex;align-items:center;justify-content:center">
+  <div role="alertdialog" style="width:440px;background:var(--n-000);border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:16px;box-shadow:var(--shadow-overlay)">
+    <div style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:22px;color:var(--n-900)">Editar remove a aprovação.</div>
+    <div style="line-height:1.6">O item volta para Em revisão e o evento fica registrado.</div>
+    <div style="display:flex;justify-content:flex-end;gap:12px"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" variant="secondary" onClick="{{ cancelDialog }}" hint-size="auto,40px">Cancelar</x-import><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Button" onClick="{{ confirmEdit }}" hint-size="auto,40px">Editar e remover aprovação</x-import></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;right:24px;bottom:24px;z-index:40"><x-import component-from-global-scope="TendraAiDesignSystem_0a2294.Toast" title="{{ toast.title }}" description="{{ toast.desc }}" tone="{{ toast.tone }}" onClose="{{ closeToast }}" hint-size="360px,72px"></x-import></div></sc-if>
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;initialScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;dashboard&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;dashboard&quot;,&quot;tasks&quot;,&quot;review&quot;,&quot;task&quot;,&quot;export&quot;,&quot;history&quot;,&quot;base&quot;,&quot;new&quot;,&quot;onboarding&quot;]},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Aprovador&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;Aprovador&quot;,&quot;Revisor&quot;]}}">
+const SRCS = {
+  wp12:{doc:'Security_Whitepaper_v4.pdf',loc:'p. 12',type:'Documento',age:38,ex:'Todos os dados em repouso são criptografados com AES-256. As chaves são geradas e armazenadas em módulos HSM dedicados, com rotação anual.'},
+};
+const mk = (doc,loc,type,age,ex,x={}) => ({doc,loc,type,age,ex,...x});
+const seedItems = () => [
+ {id:'r1',q:'Os dados de clientes em repouso são criptografados?',paras:[{t:'Sim. Todos os dados de clientes em repouso são criptografados com AES-256, com chaves gerenciadas em HSM dedicado e rotação anual.',s:[1]},{t:'Backups seguem o mesmo padrão de criptografia e ficam em região separada da produção.',s:[2]}],srcs:[mk('Security_Whitepaper_v4.pdf','p. 12','Documento',38,'Todos os dados em repouso são criptografados com AES-256. As chaves são geradas e armazenadas em módulos HSM dedicados, com rotação anual.'),mk('SOC2_Type2_Relatorio.pdf','p. 9','Documento',24,'Backups são criptografados com AES-256 e replicados em região distinta do ambiente de produção.')],alerts:[],st:'sugerida'},
+ {id:'r2',q:'Como o tráfego entre cliente e plataforma é protegido?',paras:[{t:'Toda comunicação usa TLS 1.2 ou superior, com perfect forward secrecy e HSTS habilitado.',s:[1]},{t:'Cifras legadas são desativadas no balanceador.',s:[1]}],srcs:[mk('Politica_Criptografia_2025.docx','§ 3.2','Documento',142,'Conexões externas exigem TLS 1.2 ou superior. Suítes sem perfect forward secrecy são desabilitadas no balanceador.')],alerts:[{t:'old'}],st:'sugerida'},
+ {id:'r3',q:'A plataforma oferece SSO e provisionamento SCIM?',paras:[{t:'A plataforma oferece SSO via SAML 2.0 e OIDC, e provisionamento SCIM 2.0 para Okta, Entra ID e Google Workspace.',s:[1]}],srcs:[mk('Security_Whitepaper_v4.pdf','p. 18','Documento',38,'SSO via SAML 2.0 e OIDC. Provisionamento automático de usuários por SCIM 2.0 com Okta, Entra ID e Google Workspace.')],alerts:[],st:'aprovada',by:'Marcelo Vieira',at:'28/09/2026 14:05'},
+ {id:'r4',q:'Quais são o RPO e o RTO do ambiente de produção?',paras:[{t:'RPO de 15 minutos e RTO de 4 horas para o ambiente de produção.',s:[1,2]}],srcs:[mk('Politica_Backup_DR.pdf','p. 7','Documento',51,'RPO: 15 minutos. RTO: 4 horas. Válido para o ambiente de produção.',{conflict:true}),mk('Plano_Continuidade_2024.pdf','p. 2','Documento',380,'RPO: 1 hora. RTO: 8 horas. Válido para o ambiente de produção.',{conflict:true})],alerts:[{t:'conflict'},{t:'old'}],st:'sugerida'},
+ {id:'r5',q:'A empresa assume responsabilidade civil por vazamentos e multas contratuais?',paras:[{t:'A responsabilidade da contratada limita-se aos termos da cláusula 14 do contrato de prestação de serviços, sem garantias adicionais além das previstas no SLA.',s:[1]}],srcs:[mk('Contrato_Modelo_MSA.docx','cl. 14','Documento',95,'A responsabilidade total de cada parte fica limitada ao valor pago nos 12 meses anteriores ao evento, salvo dolo.')],alerts:[{t:'critical'},{t:'lowconf'}],st:'sugerida'},
+ {id:'r6',q:'A empresa possui relatório SOC 2 Type II vigente?',paras:[{t:'Sim. O relatório SOC 2 Type II vigente cobre os critérios de segurança, disponibilidade e confidencialidade.',s:[1]}],srcs:[mk('SOC2_Type2_Relatorio.pdf','p. 3','Documento',24,'O período de auditoria cobre segurança, disponibilidade e confidencialidade, sem exceções relevantes.')],alerts:[],st:'sugerida'},
+ {id:'r7',q:'Com que frequência são feitos testes de intrusão?',paras:[{t:'Testes de intrusão independentes são realizados semestralmente e após mudanças relevantes de arquitetura.',s:[1]}],srcs:[mk('Security_Whitepaper_v4.pdf','p. 22','Documento',38,'Testes de intrusão por terceiros independentes ocorrem a cada seis meses e após mudanças relevantes de arquitetura.')],alerts:[],st:'revisada',rby:'Kadu Mendes',rat:'28/09/2026 11:20'},
+ {id:'r8',q:'Onde os dados ficam hospedados e quais sub-processadores têm acesso?',paras:[],srcs:[],alerts:[{t:'nocontext'}],st:'sem-rascunho'},
+ {id:'r9',q:'Qual é o SLA de disponibilidade mensal?',paras:[{t:'Disponibilidade mensal de 99,9%, com créditos de serviço proporcionais em caso de descumprimento.',s:[1]}],srcs:[mk('SLA_Padrao_v2.pdf','p. 4','Documento',210,'',{missing:true})],alerts:[{t:'old'}],st:'em-revisao'},
+ {id:'r10',q:'Por quanto tempo os logs de auditoria são retidos?',paras:[{t:'Logs de auditoria são retidos por 12 meses em armazenamento imutável.',s:[1]}],srcs:[mk('Security_Whitepaper_v4.pdf','p. 25','Documento',38,'Logs de auditoria ficam retidos por 12 meses em armazenamento imutável (WORM).')],alerts:[],st:'aprovada',by:'Marcelo Vieira',at:'28/09/2026 16:40'},
+ {id:'r11',q:'Existe plano de resposta a incidentes e qual o prazo de notificação?',paras:[{t:'Há plano de resposta a incidentes testado anualmente, com notificação ao cliente em até 72 horas após a confirmação.',s:[1]},{t:'A mesma janela foi informada em RFP anterior do setor financeiro.',s:[2]}],srcs:[mk('Politica_Resposta_Incidentes.pdf','p. 5','Documento',16,'O plano é testado anualmente. Clientes afetados são notificados em até 72 horas após a confirmação do incidente.'),mk('RFP_Aurora_2025.xlsx','linha 41','RFP passada',61,'Notificação de incidentes ao cliente: até 72 horas após confirmação.')],alerts:[],st:'sugerida'},
+ {id:'r12',q:'A empresa mantém seguro contra riscos cibernéticos?',paras:[{t:'Apólice de seguro cibernético com cobertura de R$ 20 milhões, renovada em março de 2026.',s:[]}],srcs:[],alerts:[{t:'manual'}],st:'em-revisao',manualBy:'Kadu Mendes'},
+].map(i=>({...i,orig:i.paras.map(p=>p.t).join('\n\n')}));
+i => i;
+const seedDocs = () => [
+ {id:'d1',name:'Security_Whitepaper_v4.pdf',type:'Documento',upd:'22/08/2026',age:38,st:'pronto',by:'Kadu Mendes',ver:'v4'},
+ {id:'d2',name:'Politica_Criptografia_2025.docx',type:'Documento',upd:'10/05/2026',age:142,st:'pronto',by:'Paula Rocha',ver:'v2.1'},
+ {id:'d3',name:'SLA_Padrao_v2.pdf',type:'Documento',upd:'01/03/2026',age:212,st:'pronto',by:'Paula Rocha',ver:'v2'},
+ {id:'d4',name:'RFP_Aurora_2025.xlsx',type:'RFP passada',upd:'29/07/2026',age:62,st:'pronto',by:'Marcelo Vieira',ver:''},
+ {id:'d5',name:'SOC2_Type2_Relatorio.pdf',type:'Documento',upd:'05/09/2026',age:24,st:'pronto',by:'Kadu Mendes',ver:'2026'},
+ {id:'d6',name:'Matriz_Controles.xlsx',type:'Documento',upd:'12/09/2026',age:17,st:'erro',by:'Kadu Mendes',ver:''},
+ {id:'d7',name:'Plano_Continuidade_2024.pdf',type:'Documento',upd:'14/09/2025',age:380,st:'pronto',by:'Paula Rocha',ver:'v1'},
+];
+const BANK=[["Qual é o prazo de retenção de dados de clientes após o encerramento do contrato?","Os dados são retidos por até 90 dias após o encerramento do contrato e depois excluídos de forma irreversível, com certificado de descarte mediante solicitação.","Politica_Retencao.pdf","p. 3","Dados de clientes são excluídos de forma irreversível em até 90 dias após o encerramento do contrato."],["A plataforma possui autenticação multifator?","Sim. O MFA é obrigatório para todo acesso administrativo e opcional para usuários finais, com TOTP e chaves de segurança FIDO2.","Security_Whitepaper_v4.pdf","p. 17","MFA obrigatório para acessos administrativos. Usuários finais podem habilitar TOTP ou chaves FIDO2."],["Como é feito o controle de acesso baseado em função?","O acesso segue RBAC, com papéis predefinidos de Revisor, Aprovador e Administrador, e revisão trimestral dos acessos concedidos.","Politica_Acesso.docx","§ 2","Papéis predefinidos limitam o acesso ao mínimo necessário. Acessos são revisados a cada trimestre."],["Existe segregação entre os ambientes de desenvolvimento, homologação e produção?","Sim. Os ambientes ficam em contas e redes separadas, e dados reais de clientes não são usados fora de produção.","Security_Whitepaper_v4.pdf","p. 8","Desenvolvimento, homologação e produção operam em contas e redes isoladas, sem dados reais fora de produção."],["Como as vulnerabilidades são identificadas e corrigidas?","Varreduras automáticas rodam toda semana. Vulnerabilidades críticas são corrigidas em até 7 dias e as altas em até 30 dias.","Politica_Vulnerabilidades.pdf","p. 4","Críticas: correção em até 7 dias. Altas: até 30 dias. Varredura automática semanal."],["A empresa mantém programa de conscientização em segurança?","Sim. O treinamento é obrigatório na admissão e anual, com simulações trimestrais de phishing.","Politica_Pessoas.pdf","p. 2","Treinamento de segurança na admissão e anualmente. Simulações de phishing a cada trimestre."],["Como funciona o gerenciamento de mudanças?","Toda mudança passa por revisão por pares, testes automatizados e aprovação antes do deploy. Mudanças emergenciais são registradas depois.","Processo_Mudancas.docx","§ 5","Mudanças exigem revisão por pares, testes automatizados e aprovação. Emergências são documentadas após a execução."],["Há monitoramento contínuo e registro de eventos de segurança?","Sim. Os logs são centralizados, com alertas em tempo real, monitoramento 24x7 e retenção de 12 meses.","Security_Whitepaper_v4.pdf","p. 25","Logs centralizados com alertas em tempo real, monitoramento 24x7 e retenção de 12 meses."],["A plataforma está em conformidade com a LGPD?","Sim. A Tendra.ai atua como operadora, com encarregado (DPO) designado, registro das operações de tratamento e contrato de tratamento de dados.","Politica_Privacidade.pdf","p. 6","Atuamos como operadora, com DPO designado e registro das operações de tratamento."],["Quem é o encarregado de proteção de dados (DPO)?","O DPO é designado formalmente e atende por um canal dedicado de privacidade, informado no contrato.","Politica_Privacidade.pdf","p. 2","O encarregado de proteção de dados é designado formalmente e atende por canal dedicado."],["Como são tratadas as solicitações de titulares de dados?","As solicitações são atendidas em até 15 dias por canal dedicado, com registro de cada pedido e da resposta.","Politica_Privacidade.pdf","p. 9","Solicitações de titulares são respondidas em até 15 dias e registradas."],["Existe plano de continuidade de negócios testado?","Sim. O plano é testado anualmente e cada teste gera relatório com resultados e ações corretivas.","Plano_Continuidade_2025.pdf","p. 3","O plano de continuidade é testado uma vez por ano. O relatório do teste registra ações corretivas."],["Qual é a disponibilidade mensal contratada da plataforma?","A disponibilidade contratada é de 99,9% ao mês, com créditos de serviço proporcionais em caso de descumprimento.","SLA_Padrao_v2.pdf","p. 4","Disponibilidade mensal de 99,9%. O descumprimento gera créditos de serviço."],["Como é feito o backup dos dados?","Os backups são diários, incrementais e criptografados, armazenados em região distinta da produção e retidos por 35 dias.","Politica_Backup_DR.pdf","p. 7","Backup diário incremental, criptografado, em região separada, com retenção de 35 dias."],["Há avaliação de segurança de fornecedores e sub-processadores?","Sim. A avaliação acontece na contratação e é revisada todo ano. A lista de sub-processadores está disponível para o cliente.","Politica_Terceiros.pdf","p. 3","Fornecedores são avaliados na contratação e reavaliados anualmente."],["São realizados testes de intrusão?","Sim. Testes de intrusão por terceiros independentes ocorrem a cada seis meses e após mudanças relevantes de arquitetura.","Security_Whitepaper_v4.pdf","p. 22","Testes de intrusão por terceiros independentes a cada seis meses e após mudanças relevantes."],["Como é feita a gestão de incidentes de segurança?","Há plano de resposta testado anualmente, com notificação ao cliente em até 72 horas após a confirmação do incidente.","Politica_Resposta_Incidentes.pdf","p. 5","O plano é testado anualmente. Clientes afetados são notificados em até 72 horas."],["A plataforma oferece trilha de auditoria?","Sim. Cada revisão e aprovação registra usuário, data e hora, e o histórico pode ser exportado.","Security_Whitepaper_v4.pdf","p. 27","Revisões e aprovações registram usuário, data e hora. O histórico é exportável."],["Quais certificações de segurança a empresa possui?","A empresa mantém as certificações ISO/IEC 27001 e SOC 2 Type II, ambas vigentes.","Certificado_ISO27001.pdf","p. 1","Certificação ISO/IEC 27001 vigente, com escopo que cobre desenvolvimento e operação da plataforma."],["Como as chaves de criptografia são protegidas?","As chaves ficam em módulos HSM dedicados, com rotação anual e separação de funções entre quem gera e quem usa.","Security_Whitepaper_v4.pdf","p. 12","Chaves geradas e armazenadas em HSM dedicados, com rotação anual e separação de funções."],["Existe política de senhas e gestão de credenciais?","Sim. A senha exige no mínimo 12 caracteres, é conferida contra vazamentos conhecidos e bloqueia após tentativas inválidas. SSO está disponível.","Politica_Acesso.docx","§ 4","Mínimo de 12 caracteres, verificação contra vazamentos e bloqueio após tentativas inválidas."],["Como é feito o descarte seguro de mídias?","As mídias são sanitizadas conforme NIST 800-88, e o descarte é registrado em certificado de destruição.","Politica_Retencao.pdf","p. 5","Sanitização conforme NIST 800-88 com certificado de destruição."],["A empresa verifica os antecedentes dos colaboradores?","Sim. A verificação é feita na contratação, conforme a legislação local.","Politica_Pessoas.pdf","p. 4","Verificação de antecedentes na contratação, conforme a legislação aplicável."],["Há suporte técnico em português e qual é o horário de atendimento?","O suporte é em português, em dias úteis das 8h às 18h, com plantão 24x7 para incidentes críticos.","SLA_Padrao_v2.pdf","p. 6","Suporte em português de segunda a sexta, 8h às 18h. Plantão 24x7 para incidentes críticos."]];
+const SCOPES=['','ambiente de homologação','unidades regionais','subcontratados','serviços de suporte','ambiente de recuperação'];
+const OWN=['Marcelo Vieira','Kadu Mendes','Paula Rocha'];
+const genItems=(total,appr,off)=>Array.from({length:total},(_,k)=>{
+ const n=k+off,b=BANK[n%BANK.length],sc=SCOPES[Math.floor(n/BANK.length)%SCOPES.length],p2=x=>String(x).padStart(2,'0');
+ const q=sc?b[0].replace(/\?$/,' ('+sc+')?'):b[0];
+ const it={id:'r'+(k+1),q,paras:[{t:b[1],s:[1]}],srcs:[mk(b[2],b[3],'Documento',20+(k*7)%70,b[4])],alerts:[],tot:total};
+ const r=k-appr; let st='aprovada'; const dt=p2(24+k%5)+'/09/2026 '+p2(9+k%8)+':'+p2((k*7)%60);
+ if(r>=0){ st=['em-revisao','sugerida','revisada','sugerida','sem-rascunho','sugerida','em-revisao'][r%7];
+  if(st==='sem-rascunho'){it.paras=[];it.srcs=[];it.alerts=[{t:'nocontext'}];}
+  else if(r%6===1){it.alerts=[{t:'lowconf'}];}
+  else if(r%9===2){it.srcs[0].age=150;it.alerts=[{t:'old'}];}
+ }
+ it.st=st;
+ if(st==='aprovada'){it.by=OWN[k%3];it.at=dt;}
+ if(st==='revisada'){it.rby=OWN[(k+1)%3];it.rat=dt;}
+ return {...it,orig:it.paras.map(p=>p.t).join('\n\n')};
+});
+const AL = {
+ lowconf:{l:'Baixa confiança',i:'triangle-alert',x:'Baixa confiança. Confira a fonte antes de aprovar.'},
+ conflict:{l:'Fontes conflitantes',i:'copy',x:'Duas fontes se contradizem. Escolha qual vale.'},
+ old:{l:'Fonte antiga',i:'clock'},
+ critical:{l:'Termo crítico · nível alto',i:'circle-alert',x:'Requer validação do Jurídico. A pergunta envolve responsabilização civil, multa ou garantia jurídica.'},
+ nocontext:{l:'Sem contexto',i:'search',x:'Informação não localizada na base. Preenchimento manual obrigatório.'},
+ manual:{l:'Resposta manual sem fonte',i:'pencil',x:'Resposta escrita à mão, sem fonte na base. Confirme o conteúdo antes de aprovar.'},
+};
+const ST = {
+ 'sem-rascunho':{l:'Sem rascunho',i:'minus',tone:'neutral'},
+ 'sugerida':{l:'Sugerida',i:'sparkles',tone:'neutral'},
+ 'em-revisao':{l:'Em revisão',i:'eye',tone:'ink'},
+ 'revisada':{l:'Revisada',i:'check',tone:'neutral'},
+ 'aprovada':{l:'Aprovada',i:'shield-check',tone:'approved'},
+};
+const pad = n => String(n).padStart(3,'0');
+const code = i => `REQ-${pad(parseInt(i.id.slice(1)))}/${pad(i.tot||12)}`;
+const nowStr = () => { const d=new Date(); const p=x=>String(x).padStart(2,'0'); return `29/09/2026 ${p(d.getHours())}:${p(d.getMinutes())}`; };
+const plural = (n,a,b) => n===1?a:b;
+
+class Component extends DCLogic {
+ state = { view:this.props.initialView||'site', tAi:0, hfilter:'todos', alertAt:{id:null,i:0}, screen:this.props.initialScreen||'dashboard', role:this.props.role||'Aprovador', items:seedItems(), itemsTask:'t1', store:{}, sel:'r4', filter:'todos', edit:false, showOrig:false, drawer:null, dialog:false, toast:null, docs:seedDocs(), sort:'idade', taskId:'t1', exported:null, expanded:null, form:{name:'Perguntas_Meridian.xlsx',company:'',type:'RFP',due:'',owner:'',file:false,identified:false,tried:false}, fb:{}, saved:0, tick:0, taskRetry:false, vw:window.innerWidth, navOpen:false };
+
+ componentDidMount() {
+  this._kd = e => {
+   const t = e.target && e.target.tagName;
+   if (e.key==='Escape' && this.state.drawer) { this.setState({drawer:null}); return; }
+   if (t==='INPUT'||t==='TEXTAREA'||t==='SELECT'||this.state.screen!=='review'||this.state.drawer) return;
+   if (e.key==='j'||e.key==='J') this.step(1);
+   if (e.key==='k'||e.key==='K') this.step(-1);
+  };
+  window.addEventListener('keydown', this._kd);
+  this._nav = e => { this.setState({view:e.detail}); window.scrollTo(0,0); }; window.addEventListener('tdr-nav', this._nav);
+  this._rz = ()=>this.setState({vw:window.innerWidth}); window.addEventListener('resize', this._rz);
+  this._iv = setInterval(()=>this.setState({tick:Date.now()}), 5000);
+ }
+ componentWillUnmount() { window.removeEventListener('keydown', this._kd); window.removeEventListener('tdr-nav', this._nav); window.removeEventListener('resize', this._rz); clearInterval(this._iv); }
+
+ name() { return this.state.role==='Aprovador'?'Marcelo Vieira':'Kadu Mendes'; }
+ hasItems(id) { return ['t1','t3','t6','t7'].includes(id); }
+ genFor(id) { this._g=this._g||{}; const P={t3:[100,70,0],t6:[60,45,7],t7:[150,90,13]}; if(!this._g[id]) this._g[id]=id==='t1'?seedItems():(P[id]?genItems(...P[id]):[]); return this._g[id]; }
+ itemsOf(id) { const s=this.state; return id===s.itemsTask?s.items:(s.store[id]||this.genFor(id)); }
+ go(screen, extra={}) {
+  const st=this.state, tid=extra.taskId; let sw={};
+  if ((screen==='task'||screen==='review') && tid && tid!==st.itemsTask && this.hasItems(tid)) {
+   const next=this.itemsOf(tid), first=next.find(i=>i.st!=='aprovada')||next[0];
+   sw={items:next,store:{...st.store,[st.itemsTask]:st.items},itemsTask:tid,sel:first.id,filter:'todos'};
+  }
+  this.setState({screen, navOpen:false, drawer:null, edit:false, showOrig:false, ...sw, ...extra});
+ }
+ toast(title, desc, tone='success') { this.setState({toast:{title,desc,tone}}); clearTimeout(this._tt); this._tt=setTimeout(()=>this.setState({toast:null}),4000); }
+ upd(id, fn) { this.setState(s=>({items:s.items.map(i=>i.id===id?fn({...i}):i)})); }
+ visible(s=this.state) {
+  return s.items.filter(i => s.filter==='todos' ? true : s.filter==='alerta' ? i.alerts.some(a=>!a.ack) : i.st===s.filter);
+ }
+ step(d) {
+  const v = this.visible(); if (!v.length) return;
+  const idx = v.findIndex(i=>i.id===this.state.sel);
+  const n = v[(idx+d+v.length)%v.length];
+  this.setState({sel:n.id, edit:false, showOrig:false});
+ }
+ setFilter(v) { this.setState({filter:v}); }
+ pendingCount(i) { return i.alerts.filter(a=>!a.ack).length; }
+
+ addDocs(list) {
+  const base = Date.now();
+  const add = list.map((d,k)=>({id:'n'+base+k, upd:'29/09/2026', age:0, by:this.name(), ver:'', ...d}));
+  this.setState(s=>({docs:[...s.docs,...add]}));
+  add.filter(d=>d.st==='processando').forEach(d=>setTimeout(()=>this.setState(s=>({docs:s.docs.map(x=>x.id===d.id?{...x,st:'pronto'}:x)})),1800));
+ }
+ uploadDocs() { this.addDocs([{name:'Proposta_Helios_2026.pptx',type:'Documento',st:'processando'},{name:'Inventario_Ativos.exe',type:'Documento',st:'formato'},{name:'Contrato_scan_2023.pdf',type:'Documento',st:'suporte'}]); }
+ uploadRfp() { this.addDocs([{name:'RFP_Vetta_2026.xlsx',type:'RFP passada',st:'processando'}]); }
+ retryDoc(id) { this.setState(s=>({docs:s.docs.map(x=>x.id===id?{...x,st:'processando'}:x)})); setTimeout(()=>this.setState(s=>({docs:s.docs.map(x=>x.id===id?{...x,st:'pronto'}:x)})),1800); }
+
+ onDraft(text) {
+  const id=this.state.sel;
+  this.upd(id, i => {
+   const parts = text.split(/\n\s*\n/);
+   i.paras = text.trim()==='' ? [] : parts.map((t,k)=>({t,s:(i.paras[k]&&i.paras[k].s)||[]}));
+   if (i.st==='aprovada'||i.st==='revisada') i.st='em-revisao';
+   if (!i.srcs.length) {
+    const has = text.trim()!=='';
+    const cur = i.alerts.find(a=>a.t==='nocontext'||a.t==='manual');
+    if (has && (!cur||cur.t==='nocontext')) { i.alerts=[{t:'manual'},...i.alerts.filter(a=>a.t!=='nocontext')]; i.manualBy=this.name(); }
+    if (!has && cur && cur.t==='manual') { i.alerts=[{t:'nocontext'},...i.alerts.filter(a=>a.t!=='manual')]; }
+    if (has && i.st==='sem-rascunho') i.st='em-revisao';
+    if (!has) i.st='sem-rascunho';
+   } else if (i.st==='sugerida') i.st='em-revisao';
+   return i;
+  });
+  this.setState({saved:Date.now()});
+ }
+ ack(id, idx) { const by=this.name(), at=nowStr(); this.upd(id,i=>{i.alerts=i.alerts.map((a,k)=>k===idx?{...a,ack:{by,at}}:a);return i;}); this.toast('Alerta reconhecido',`${by}, ${at}`); }
+ useSource(id, k) {
+  const by=this.name(), at=nowStr();
+  this.upd(id,i=>{i.srcs=i.srcs.map((s,n)=>({...s,chosen:n+1===k}));i.paras=i.paras.map(p=>({...p,s:[k]}));i.alerts=i.alerts.map(a=>a.t==='conflict'?{...a,ack:{by,at}}:a);return i;});
+  this.toast('Fonte escolhida','O alerta de conflito foi reconhecido.');
+ }
+ approve() {
+  const s=this.state, id=s.sel, by=this.name(), at=nowStr();
+  this.upd(id,i=>{i.st='aprovada';i.by=by;i.at=at;return i;});
+  const next = s.items.find(i=>i.id!==id && i.st!=='aprovada');
+  this.toast('Item aprovado',`${by} · ${at}`);
+  if (next) this.setState({sel:next.id, edit:false, showOrig:false});
+ }
+ demoAll() {
+  const by='Marcelo Vieira', at=nowStr();
+  this.setState(s=>({items:s.items.map(i=>({...i,st:'aprovada',by:i.by||by,at:i.at||at,alerts:i.alerts.map(a=>a.ack?a:{...a,ack:{by,at}})}))}));
+  this.toast('Demo','Todos os itens aprovados e sem alerta pendente.','neutral');
+ }
+ counts(id) {
+  const it=id?this.itemsOf(id):this.state.items, c=st=>it.filter(i=>i.st===st).length;
+  const total=it.length, approved=c('aprovada');
+  return {total, approved, none:c('sem-rascunho'), sug:c('sugerida'), emr:c('em-revisao'), rev:c('revisada'), withDraft:total-c('sem-rascunho'), alerts:it.filter(i=>this.pendingCount(i)>0).length, pctApproved:Math.round(approved/total*100)};
+ }
+ taskInfo(id) {
+  const s=this.state, c=this.counts();
+  const T = {
+   t1:{id:'t1',name:'Questionário de segurança — Banco Meridian',company:'Banco Meridian',type:'RFP',items:12,due:'03/10/2026',dueText:'faltam 4 dias',dueColor:'#12140F',owner:'Marcelo Vieira',isMain:true},
+   t2:{id:'t2',name:'Questionário CISO — Vetta Pagamentos',company:'Vetta Pagamentos',type:'RFI',items:180,due:'15/10/2026',dueText:'faltam 16 dias',dueColor:'#12140F',owner:'Kadu Mendes',isProcessing:true},
+   t3:{id:'t3',name:'Due diligence — Cordel Seguros',company:'Cordel Seguros',type:'RFP',items:100,due:'28/09/2026',dueText:'Vencida',dueColor:'#A8402E',owner:'Paula Rocha',isInReview:true,approvedN:70},
+   t4:{id:'t4',name:'Questionário LGPD — Helios Logística',company:'Helios Logística',type:'RFP',items:24,due:'10/10/2026',dueText:'faltam 11 dias',dueColor:'#12140F',owner:'Paula Rocha',isReady:true,approvedN:24},
+   t5:{id:'t5',name:'Questionário ESG — Orbis Energia',company:'Orbis Energia',type:'RFP',items:0,due:'23/10/2026',dueText:'faltam 24 dias',dueColor:'#12140F',owner:'Marcelo Vieira',isFailed:!s.taskRetry},
+   t6:{id:'t6',name:'Questionário de privacidade — Nimbus Telecom',company:'Nimbus Telecom',type:'RFI',items:60,due:'12/10/2026',dueText:'faltam 13 dias',dueColor:'#12140F',owner:'Kadu Mendes',isInReview:true,approvedN:45},
+   t7:{id:'t7',name:'Due diligence — Solaris Energia',company:'Solaris Energia',type:'RFP',items:150,due:'05/10/2026',dueText:'faltam 6 dias',dueColor:'#12140F',owner:'Marcelo Vieira',isInReview:true,approvedN:90},
+   t8:{id:'t8',name:'Questionário de segurança — Atlas Saúde',company:'Atlas Saúde',type:'RFI',items:32,due:'18/10/2026',dueText:'faltam 19 dias',dueColor:'#12140F',owner:'Paula Rocha',isReady:true,approvedN:32},
+  };
+  const x=T[id]; if(x&&this.hasItems(id)){const cc=this.counts(id); x.items=cc.total; x.approvedN=cc.approved; x.hasItems=true;}
+  if(x&&x.approvedN!=null){const left=x.items-x.approvedN; x.pct=Math.round(x.approvedN/x.items*100); x.progText=x.approvedN+' de '+x.items+' itens aprovados.'; x.shortProg=x.approvedN+' de '+x.items+' aprovados'; x.reviewNote=(x.dueText==='Vencida'?'Prazo vencido em '+x.due+'. ':'Dentro do prazo. ')+'Faltam '+left+' itens para a exportação ser liberada.';}
+  return x;
+ }
+
+ renderVals() {
+  const s=this.state, S=this;
+  const ax='TendraAiDesignSystem_0a2294';
+  const isA = s.role==='Aprovador';
+  const c = this.counts();
+  const go = (sc)=>()=>S.go(sc);
+  const openItem = (id,tid) => () => S.go('review',{taskId:tid||s.itemsTask,sel:id,filter:'todos'});
+  const scr = s.screen;
+
+  // navegação
+  const pend = s.items.filter(i=>S.pendingCount(i)>0).length;
+  const navGroups = [
+   {label:'Início',items:[{value:'dashboard',label:'Dashboard',icon:'layout-dashboard',onClick:go('dashboard')}]},
+   {label:'Trabalho',items:[{value:'tasks',label:'Tarefas',icon:'layout-grid',count:8,onClick:go('tasks')},{value:'review',label:'Revisão',icon:'eye',count:pend,onClick:go('review')},{value:'export',label:'Exportação',icon:'download',onClick:()=>S.go('export',{taskId:'t1'})},{value:'history',label:'Histórico',icon:'history',onClick:go('history')}]},
+   {label:'Base',items:[{value:'base',label:'Base de conhecimento',icon:'database',count:s.docs.length,onClick:go('base')},{value:'onboarding',label:'Primeiros passos',icon:'play',onClick:go('onboarding')}]},
+  ];
+  const navValue = scr==='task'?'tasks':scr;
+
+  // documentos
+  const dst = {pronto:['Pronto','approved','check'],processando:['Processando','neutral','loader-circle'],fila:['Na fila','neutral','clock'],erro:['Erro','danger','triangle-alert'],suporte:['Em tratamento pelo suporte','neutral','users'],formato:['Formato não aceito','danger','triangle-alert']};
+  const fmts='.doc, .docx, .xls, .xlsx, .md, .pdf, .ppt, .pptx, .txt, .csv';
+  let docsSorted=[...s.docs];
+  if (s.sort==='idade') docsSorted.sort((a,b)=>b.age-a.age); else if (s.sort==='nome') docsSorted.sort((a,b)=>a.name.localeCompare(b.name)); else docsSorted.reverse();
+  const docsView = docsSorted.map(d=>{const x=d.off?['Inativo','neutral','minus']:dst[d.st];return {...d,active:!d.off,toggleLabel:d.off?'Ativar documento':'Desativar documento',toggle:()=>{S.setState(z=>({docs:z.docs.map(q=>q.id===d.id?{...q,off:!q.off}:q)}));S.toast(d.off?'Documento ativado':'Documento inativo',d.off?d.name+' voltou a ser usado nas respostas.':d.name+' não será usado em novas respostas.','neutral');},statusText:x[0],tone:x[1],icon:x[2],ageText:d.age===0?'hoje':d.age+' dias',old:d.age>120,version:d.ver?('Versão '+d.ver):'Sem versão',canRetry:d.st==='erro'&&!d.off,retry:()=>S.retryDoc(d.id),note:d.st==='formato'?`Formato não aceito. Formatos aceitos: ${fmts}.`:d.st==='suporte'?'Este arquivo precisa de tratamento pelo suporte. Avisaremos aqui quando estiver pronto.':d.st==='erro'?'Falha ao processar. Tente novamente.':d.st==='processando'?'Processando…':'Última atualização '+d.upd};});
+  const ready = s.docs.filter(d=>d.st==='pronto'&&!d.off).length;
+
+  // tarefas
+  const tk = ['t1','t2','t3','t4','t5','t6','t7','t8'].map(id=>{const t=S.taskInfo(id);const main=id==='t1';
+   const status = main ? (s.exported?['Exportada','approved','check-check']:['Em revisão','neutral','eye']) : t.dueText==='Vencida'?['Vencido','danger','clock']:t.isReady?(s.exported4?['Exportada','approved','check-check']:['Pronta','approved','check-check']):t.isInReview?['Em revisão','neutral','eye']:t.isProcessing?['Processando','neutral','loader-circle']:t.isFailed?['Falha','danger','triangle-alert']:['Na fila','neutral','clock'];
+   const dm=/faltam (\d+)/.exec(t.dueText||''); const urgent=t.dueText==='Vencida'||(dm&&+dm[1]<5);
+   return {...t,dueColor:urgent?'#A8402E':t.dueColor,dueWeight:urgent?600:400,title:t.name.split(' — ')[0],items:t.items,showBar:true,canRetry:false,compColor:'#4B5046',retry:e=>{e&&e.stopPropagation&&e.stopPropagation();S.setState({taskRetry:true});S.toast('Nova tentativa','O arquivo voltou para a fila de processamento.','neutral');},pct:t.hasItems||t.isReady?t.pct:t.isProcessing?23:0,compText:t.hasItems||t.isReady?t.shortProg:t.isProcessing?'42 de 180 processadas':t.isFailed?'0 de 0':'Reprocessando',status:status[0],tone:status[1],icon:status[2],open:()=>S.go('task',{taskId:id})};});
+  const dp=x=>{const [d,m,y]=x.split('/');return +(y+m+d);};
+  const itc=['t1','t3','t6','t7'].map(id=>S.counts(id)); const openItems=itc.reduce((a,q)=>a+q.total-q.approved,0)+138;
+  const stCount={}; tk.forEach(t=>{stCount[t.status]=(stCount[t.status]||0)+1;});
+  const stCol={'Em revisão':'var(--n-700)','Processando':'var(--brand-sage)','Pronta':'var(--brand-lime)','Exportada':'var(--n-900)','Vencido':'var(--danger)','Falha':'var(--n-500)','Na fila':'var(--n-350)'};
+  const dash={worked:String(tk.length+18),workedSub:tk.length+' em andamento · 18 concluídas',open:String(openItems),openSub:'Em '+tk.filter(t=>!t.isReady).length+' tarefas ativas, entre revisão e processamento.',avg:'2,4 dias',approved:(1284+itc.reduce((a,q)=>a+q.approved,0)).toLocaleString('pt-BR'),approvedSub:'Todas com fonte rastreável até o documento de origem.',
+   status:Object.keys(stCount).map(k=>({label:k,n:stCount[k],bar:'width:'+(stCount[k]/tk.length*100)+'%;background:'+stCol[k],dot:'width:12px;height:12px;border-radius:99px;background:'+stCol[k]})),
+   months:[['Abr',2],['Mai',3],['Jun',3],['Jul',4],['Ago',3],['Set',3]].map(([m,n])=>({m,n,bar:'width:100%;max-width:44px;border-radius:6px 6px 0 0;background:var(--n-900);height:'+(n*22)+'px'})),
+   deadlines:tk.filter(t=>{const m=/faltam (\d+)/.exec(t.dueText||'');return m&&+m[1]<15;}).sort((a,b)=>dp(a.due)-dp(b.due))};
+  const task = S.taskInfo(s.taskId)||S.taskInfo('t1');
+  const tkr = tk.find(x=>x.id===task.id)||{};
+  const taskV = {...task, sTxt:tkr.status, sTone:tkr.tone, sIcon:tkr.icon, hasItems: !!task.hasItems, isMain: !!task.isMain, isReady: !!task.isReady, isInReview: !!task.isInReview, pct:task.pct, progText:task.progText, reviewNote:task.reviewNote};
+
+  // filtros
+  const fl = [['todos','Todos'],['sem-rascunho','Sem rascunho'],['sugerida','Sugerida'],['em-revisao','Em revisão'],['revisada','Revisada'],['aprovada','Aprovada'],['alerta','Alerta pendente']];
+  const cnt = k => k==='todos'?s.items.length:k==='alerta'?c.alerts:s.items.filter(i=>i.st===k).length;
+  const filterTabs = fl.map(([v,l])=>({value:v,label:l,count:cnt(v)}));
+  const filterOptions = fl.map(([v,l])=>({value:v,label:l}));
+
+  const vis = S.visible();
+  const rowFor = i => { const st=ST[i.st], p=S.pendingCount(i), act=i.id===s.sel;
+   return {id:i.id,code:code(i),q:i.q.length>68?i.q.slice(0,66)+'…':i.q,st:st.l,icon:st.i,tone:st.tone,hasAlert:p>0,alertText:p+' '+plural(p,'alerta','alertas'),open:()=>S.setState({sel:i.id,edit:false,showOrig:false}),openFromTask:openItem(i.id),
+    rowStyle:`display:flex;flex-direction:column;gap:6px;padding:14px 20px;border-top:1px solid var(--n-200);cursor:pointer;font-size:14px;background:${act?'var(--n-000)':'transparent'};box-shadow:${act?'inset 2px 0 0 var(--n-900)':'none'}`};};
+  const rows = vis.map(rowFor);
+
+  // item atual
+  const it = s.items.find(i=>i.id===s.sel) && vis.find(i=>i.id===s.sel) ? s.items.find(i=>i.id===s.sel) : null;
+  let cur = null;
+  if (it) {
+   const st=ST[it.st], p=S.pendingCount(it);
+   const oldSrcs = it.srcs.filter(x=>x.age>120);
+   const maxAge = oldSrcs.reduce((m,x)=>Math.max(m,x.age),0);
+   const hasConflict = it.alerts.some(a=>a.t==='conflict'&&!a.ack);
+   const alerts = it.alerts.map((a,idx)=>{const d=AL[a.t];const pending=!a.ack;
+    return {label:d.l,icon:a.ack?'check':d.i,text:a.t==='old'?`Fonte sem atualização há ${maxAge} dias, acima do prazo de 120 dias.`:a.t==='nocontext'&&!pending?'':d.x,pending,isAck:!!a.ack,ackText:a.ack?`Reconhecido por ${a.ack.by}, ${a.ack.at}`:'',
+     showAck:pending&&a.t!=='conflict'&&a.t!=='nocontext',showNone:pending&&a.t==='conflict',
+     ack:()=>S.ack(it.id,idx),none:()=>{S.ack(it.id,idx);S.setState({edit:true});},
+     labelColor:pending?'#A8402E':'#4B5046',
+     style:`display:flex;flex-direction:column;gap:10px;padding:16px 20px;background:var(--n-000);border:1px solid ${pending?'var(--danger)':'var(--n-200)'};border-top:3px solid ${pending?'var(--danger)':'var(--n-350)'};border-radius:12px`};});
+   const ai = s.alertAt.id===it.id ? Math.min(s.alertAt.i, Math.max(alerts.length-1,0)) : 0;
+   const L = Math.min(alerts.length-1,2);
+   const layers = Array.from({length:L},(_,n)=>{const k=n+1;return `position:absolute;left:${8*k}px;right:${8*k}px;top:0;bottom:${8*(L-k)}px;z-index:${4-k};background:var(--n-000);border:1px solid var(--n-200);border-radius:12px`;});
+   const hasAnswer = it.paras.length>0 && it.paras.some(x=>x.t.trim());
+   let blockText='', noRevise=false, noApprove=false;
+   const alertWord = p>1?`${p} alertas`:'1 alerta';
+   if (it.st==='aprovada') { blockText=''; noApprove=true; noRevise=true; }
+   else if (!hasAnswer) { blockText='Escreva a resposta antes de revisar ou aprovar.'; noRevise=true; noApprove=true; }
+   else if (p>0) { blockText=`Falta tratar ${alertWord} antes de aprovar.`; noRevise=true; noApprove=true; }
+   if (!isA && it.st!=='aprovada') { noApprove=true; if (!blockText) blockText='Somente Aprovadores aprovam.'; else blockText+=' Somente Aprovadores aprovam.'; }
+   if (it.st==='revisada') noRevise=true;
+   const srcs = it.srcs.map((x,n)=>{const k=n+1;return {...x,k,ageText:x.age+' dias',old:x.age>120,conflict:x.conflict&&hasConflict,chosen:!!x.chosen,canUse:x.conflict&&hasConflict,use:()=>S.useSource(it.id,k),open:()=>S.setState({drawer:{id:it.id,k}}),
+    style:`display:flex;flex-direction:column;gap:12px;background:var(--n-000);border:1px solid ${x.conflict&&hasConflict?'var(--danger)':'var(--n-200)'};border-radius:14px;padding:16px`};});
+   const paras = it.paras.map(pp=>({t:pp.t,marks:pp.s.filter(k=>it.srcs[k-1]).map(k=>({k,aria:'Abrir fonte '+k,open:()=>S.setState({drawer:{id:it.id,k}})}))}));
+   cur = {...it,hasAlert:alerts.length>0,alert:alerts[ai]||{},alertPos:`${ai+1} de ${alerts.length}`,hasMany:alerts.length>1,layers,deckPad:(8*L)+'px',code:code(it),st:st.l,icon:st.i,tone:st.tone,alerts,srcs,paras,hasSrcs:srcs.length>0,noText:!hasAnswer,edited:it.orig!==''&&it.paras.map(x=>x.t).join('\n\n')!==it.orig,text:it.paras.map(x=>x.t).join('\n\n'),
+    hasManual:it.alerts.some(a=>a.t==='manual'),manualBy:it.manualBy,isApproved:it.st==='aprovada',blockText,blockedAny:!!blockText,noRevise,noApprove,canEditBtn:!s.edit,
+    fbUp:s.fb[it.id]==='up',fbDown:s.fb[it.id]==='down',isApprovedOrRevised:it.st==='revisada'||it.st==='aprovada',stateHint:it.st==='aprovada'?'Editar remove a aprovação.':'Pronta para aprovação.'};
+  }
+  const fbBase = 'display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:9px;cursor:pointer;';
+  const fbOn = 'background:var(--n-900);color:var(--n-050);border:1px solid var(--n-900);';
+  const fbOff = 'background:var(--n-000);color:var(--n-900);border:1px solid var(--n-350);';
+  const secs = s.saved ? Math.max(0,Math.round(((s.tick||Date.now())-s.saved)/1000)) : 0;
+  const savedText = s.saved ? `Salvo há ${secs<=1?'1 segundo':secs+' segundos'}` : 'Salvamento automático';
+
+  // drawer
+  let dr = {}; let hasDrawer = false;
+  if (s.drawer) { const di=s.items.find(i=>i.id===s.drawer.id); const x=di&&di.srcs[s.drawer.k-1]; if (x) { hasDrawer=true; dr={k:s.drawer.k,doc:x.doc,loc:x.loc,type:x.type.toUpperCase(),ageText:x.age+' dias',ex:x.ex,missing:!!x.missing,present:!x.missing}; } }
+
+  // exportação
+  const pendingRows = S.itemsOf('t1').filter(i=>i.st!=='aprovada'||S.pendingCount(i)>0).map(i=>{const st=ST[i.st];return {code:code(i),q:i.q,st:st.l,icon:st.i,open:openItem(i.id,'t1')};});
+  const allDone = pendingRows.length===0;
+  const exportDisabled = !allDone || !isA;
+  const exportReason = !allDone ? `${pendingRows.length} de ${S.counts('t1').total} itens ainda não foram aprovados.` : !isA ? 'Somente Aprovadores exportam.' : 'Todos os itens estão aprovados e sem alerta pendente.';
+
+  const mkCard = (id,company,title,total,approved,exp,onExp) => { const blocked=approved<total; return {company,title,count:approved+' de '+total+' itens aprovados',pct:Math.round(approved/total*100),blocked,badge:blocked?'Bloqueada':(exp?'Exportada':'Pronta'),tone:blocked?'neutral':'approved',icon:blocked?'lock':(exp?'check-check':'circle-check'),disabled:blocked||!isA,btn:exp?'Baixar novamente':'Exportar documento',reason:blocked?((total-approved)+' de '+total+' itens ainda não foram aprovados. Exportação bloqueada até 100% aprovado.'):!isA?'Somente Aprovadores exportam.':'Todos os itens estão aprovados e sem alerta pendente.',exported:!!exp,by:exp?exp.by:'',at:exp?exp.at:'',doExport:onExp,goReview:openItem(pendingRows[0]?S.itemsOf('t1').find(i=>i.st!=='aprovada'||S.pendingCount(i)>0).id:'r1','t1')}; };
+  const exportCards = [
+   mkCard('t1','Banco Meridian','Questionário de segurança',S.counts('t1').total,S.counts('t1').total-pendingRows.length,s.exported,()=>{ if(!s.exported) S.setState({exported:{by:S.name(),at:nowStr()}}); S.toast('Documento exportado','Planilha .xlsx com respostas aprovadas e fontes.'); }),
+   mkCard('t8','Atlas Saúde','Questionário de segurança',32,32,s.exported8,()=>{ if(!s.exported8) S.setState({exported8:{by:S.name(),at:nowStr()}}); S.toast('Documento exportado','Planilha .xlsx com respostas aprovadas e fontes.'); }),
+   mkCard('t4','Helios Logística','Questionário LGPD',24,24,s.exported4,()=>{ if(!s.exported4) S.setState({exported4:{by:S.name(),at:nowStr()}}); S.toast('Documento exportado','Planilha .xlsx com respostas aprovadas e fontes.'); }),
+  ];
+  const readyCount = exportCards.filter(x=>!x.blocked).length;
+
+  // histórico
+  const live = S.itemsOf('t1').filter(i=>i.st==='aprovada').map(i=>({key:i.id,q:i.q,task:'Questionário de segurança — Banco Meridian',full:i.paras.map(p=>p.t).join(' '),by:i.by,at:i.at,age:0,srcs:i.srcs.map((x,n)=>({label:`${x.doc} · ${x.loc}`,open:()=>S.setState({drawer:{id:i.id,k:n+1}})}))}));
+  const past = [
+   {key:'h1',q:'Onde ficam armazenados os backups?',task:'RFP Aurora Seguros — 2025',full:'Backups ficam em região distinta da produção, criptografados com AES-256 e retidos por 35 dias.',by:'Marcelo Vieira',at:'14/03/2026 10:12',age:199,srcs:[{label:'Politica_Backup_DR.pdf · p. 7'}]},
+   {key:'h2',q:'A plataforma possui certificação ISO 27001?',task:'RFI Helix Saúde — 2026',full:'Sim. A certificação ISO/IEC 27001 está vigente, com escopo que cobre desenvolvimento e operação da plataforma.',by:'Marcelo Vieira',at:'02/07/2026 16:48',age:89,srcs:[{label:'Certificado_ISO27001.pdf · p. 1'}]},
+   {key:'h3',q:'Como é feita a segregação de dados entre clientes?',task:'RFP Aurora Seguros — 2025',full:'Cada cliente tem isolamento lógico por tenant, com chaves de criptografia distintas por tenant.',imported:true,age:420,srcs:[{label:'RFP_Aurora_2025.xlsx · linha 33'}]},
+  ];
+  const liveRev = S.itemsOf('t1').filter(i=>i.st==='revisada').map(i=>({key:i.id+'-rev',kind:'revisao',q:i.q,task:'Questionário de segurança — Banco Meridian',full:i.paras.map(p=>p.t).join(' '),by:i.rby,at:i.rat,age:0,srcs:i.srcs.map((x,n)=>({label:`${x.doc} · ${x.loc}`,open:()=>S.setState({drawer:{id:i.id,k:n+1}})}))}));
+  const pastRev = [
+   {key:'h4',kind:'revisao',q:'Quais são os controles de acesso privilegiado?',task:'RFI Helix Saúde — 2026',full:'Acesso privilegiado exige MFA, aprovação just-in-time e sessão gravada, com revisão trimestral dos acessos.',by:'Kadu Mendes',at:'01/07/2026 09:30',age:90,srcs:[{label:'Politica_Acesso.docx · § 4'}]},
+   {key:'h5',kind:'revisao',q:'Como é feito o descarte seguro de dados?',task:'RFP Aurora Seguros — 2025',full:'Mídias são sanitizadas conforme NIST 800-88 e o descarte é registrado em certificado de destruição.',by:'Paula Rocha',at:'12/03/2026 15:05',age:201,srcs:[{label:'Politica_Retencao.pdf · p. 3'}]},
+  ];
+  const allHist = [...live,...liveRev,...past,...pastRev].map(h=>({...h,kind:h.kind||'aprovacao'}));
+  const hc = k=>k==='todos'?allHist.length:allHist.filter(x=>x.kind===(k==='aprovacoes'?'aprovacao':'revisao')).length;
+  const historyTabs = [['todos','Todos'],['aprovacoes','Aprovações'],['revisoes','Revisões']].map(([v,l])=>({value:v,label:l,count:hc(v)}));
+  const shownHist = s.hfilter==='todos'?allHist:allHist.filter(x=>x.kind===(s.hfilter==='aprovacoes'?'aprovacao':'revisao'));
+  const history = shownHist.map(h=>({...h,isRev:h.kind==='revisao',kindLabel:h.kind==='revisao'?'Revisada':'Aprovada',kindTone:h.kind==='revisao'?'neutral':'approved',kindIcon:h.kind==='revisao'?'check':'shield-check',imported:!!h.imported,hasBy:!h.imported,by:h.by||'',at:h.at||'',snippet:h.full,ageText:h.age===0?'hoje':h.age+' dias',open:s.expanded===h.key,chev:s.expanded===h.key?'chevron-down':'chevron-right',toggle:()=>S.setState(x=>({expanded:x.expanded===h.key?null:h.key})),srcs:h.srcs.map(x=>({label:x.label,open:x.open||(()=>S.toast('Fonte de histórico','Abra a tarefa de origem para ver o trecho.','neutral'))}))}));
+
+  const alertsView = [];
+  alertsView.push(s.taskRetry?{icon:'clock',label:'Reprocessamento',name:'Orbis Energia',text:'voltou para a fila de processamento.',action:'Conferir processamento',go:()=>S.go('task',{taskId:'t5'})}:{icon:'triangle-alert',label:'Falha no carregamento',name:'Orbis Energia',text:'não pôde ser carregada. O arquivo está com 0% de conclusão.',action:'Conferir arquivo',go:()=>S.go('task',{taskId:'t5'})});
+  alertsView.push({icon:'clock',label:'Prazo vencido',name:'Cordel Seguros',text:'está vencida, com '+(S.counts('t3').total-S.counts('t3').approved)+' itens sem aprovação.',action:'Abrir tarefa',go:()=>S.go('task',{taskId:'t3'})});
+  if (!s.exported) alertsView.push({icon:'clock',label:'Prazo próximo',name:'Banco Meridian',text:'vence em 4 dias com '+(S.counts('t1').total-S.counts('t1').approved)+' itens sem aprovação.',action:'Revisar itens',go:()=>S.go('review',{taskId:'t1',sel:'r4',filter:'todos'})});
+
+  const tAi = Math.min(s.tAi, Math.max(alertsView.length-1,0));
+  const tL = Math.min(alertsView.length-1,2);
+  const tDeck = {a:alertsView[tAi]||{}, pos:`${tAi+1} de ${alertsView.length}`, hasMany:alertsView.length>1, pad:(8*tL)+'px', layers:Array.from({length:tL},(_,n)=>{const q=n+1;return `position:absolute;left:${8*q}px;right:${8*q}px;top:0;bottom:${8*(tL-q)}px;z-index:${4-q};background:var(--n-000);border:1px solid var(--n-200);border-radius:12px`;})};
+
+  // formulário
+  const f=s.form; const t=f.tried;
+  const setF = k => e => S.setState(x=>({form:{...x.form,[k]:e.target.value}}));
+  const dueErr = t && (!f.due ? 'Informe o prazo de submissão.' : f.due<'2026-09-29' ? 'O prazo não pode estar no passado.' : null);
+
+  return {
+   revTask:S.taskInfo(s.itemsTask).name, dash, navGroups, navValue, role:s.role, userName:S.name(),
+   revVariant:isA?'secondary':'primary', aprVariant:isA?'primary':'secondary',
+   setRevisor:()=>S.setState({role:'Revisor'}), setAprovador:()=>S.setState({role:'Aprovador'}), demoApproveAll:()=>S.demoAll(), goSite:e=>{e&&e.preventDefault&&e.preventDefault();S.setState({view:'site'});window.scrollTo(0,0);}, siteStyle:s.view==='site'?'min-height:100vh;background:#F5F6F1':'display:none', appWrapStyle:s.view==='app'?'display:block':'display:none', goWorkspace:()=>S.go('dashboard'),
+   isOnboarding:scr==='onboarding', isBase:scr==='base', isDashboard:scr==='dashboard', isTasks:scr==='tasks', isNew:scr==='new', isTask:scr==='task', isReview:scr==='review', isExport:scr==='export', isHistory:scr==='history',
+   docsView, docsReadyText:`${ready} de ${s.docs.length} documentos processados`, noReadyDocs:ready===0, docsCountText:`${s.docs.length} documentos na base`,
+   sortOptions:[{value:'idade',label:'Ordenar por idade'},{value:'nome',label:'Ordenar por nome'},{value:'upload',label:'Ordenar por envio'}], sort:s.sort, setSort:e=>S.setState({sort:e.target.value}),
+   uploadDocs:()=>S.uploadDocs(), uploadRfp:()=>S.uploadRfp(), goNew:go('new'), goTasks:e=>{e&&e.preventDefault&&e.preventDefault();S.go('tasks');}, goReview:go('review'), goExport:()=>S.go('export',{taskId:'t1'}), goExport4:()=>S.go('export',{taskId:'t4'}),
+   tasksView:tk, hasAlerts:alertsView.length>0, alertsView, tDeck, prevTAlert:()=>S.setState({tAi:(tAi-1+alertsView.length)%alertsView.length}), nextTAlert:()=>S.setState({tAi:(tAi+1)%alertsView.length}),
+   isMobile:s.vw<900, notMobile:s.vw>=900, pad:s.vw<900?'20px 16px':'40px', navOpen:s.navOpen&&s.vw<900, openNav:()=>S.setState({navOpen:true}), closeNav:()=>S.setState({navOpen:false}),
+   shellStyle:s.vw<900?'display:grid;grid-template-columns:minmax(0,1fr)':'display:grid;grid-template-columns:272px minmax(0,1fr)',
+   sideStyle:'display:flex;flex-direction:column;border-right:1px solid var(--n-200);background:var(--n-000);min-height:0'+(s.vw<900?`;position:absolute;top:0;bottom:0;left:0;width:272px;z-index:50;box-shadow:var(--shadow-overlay);${s.navOpen?'':'visibility:hidden;transform:translateX(-100%)'}`:''), pendingItemsText:`${c.total-c.approved} itens sem aprovação`,
+   task:taskV, retryTask:()=>{S.setState({taskRetry:true});S.toast('Nova tentativa','O arquivo voltou para a fila de processamento.','neutral');},
+   counts:c, segs:[
+    {n:c.none,label:'sem rascunho',style:`width:${c.none/c.total*100}%;background:var(--n-350)`,dot:'width:12px;height:12px;border-radius:99px;background:var(--n-350)'},
+    {n:c.sug,label:'sugerida',style:`width:${c.sug/c.total*100}%;background:var(--brand-sage)`,dot:'width:12px;height:12px;border-radius:99px;background:var(--brand-sage)'},
+    {n:c.emr,label:'em revisão',style:`width:${c.emr/c.total*100}%;background:var(--n-700)`,dot:'width:12px;height:12px;border-radius:99px;background:var(--n-700)'},
+    {n:c.rev,label:'revisada',style:`width:${c.rev/c.total*100}%;background:var(--n-500)`,dot:'width:12px;height:12px;border-radius:99px;background:var(--n-500)'},
+    {n:c.approved,label:'aprovada',style:`width:${c.approved/c.total*100}%;background:var(--n-900)`,dot:'width:12px;height:12px;border-radius:99px;background:var(--n-900)'}],
+   filterTabs, filter:s.filter, setFilter:v=>S.setFilter(v), filterOptions, setFilterEv:e=>S.setFilter(e.target.value), rows,
+   hasCur:!!cur, noCur:!cur, cur:cur||{alerts:[],srcs:[],paras:[]}, edit:s.edit, viewMode:!s.edit, showOrig:s.showOrig&&!!cur, origLabel:s.showOrig?'Ocultar sugestão original':'Ver sugestão original',
+   toggleOrig:()=>S.setState({showOrig:!s.showOrig}), restore:()=>{if(cur){S.upd(cur.id,i=>{i.paras=i.orig.split(/\n\n/).map((t,k)=>({t,s:(i.paras[k]&&i.paras[k].s)||[]}));return i;});S.toast('Sugestão restaurada','O texto voltou ao rascunho original.','neutral');}},
+   startEdit:()=>{ if(cur&&cur.st==='Aprovada') S.setState({dialog:true}); else S.setState({edit:true}); }, endEdit:()=>S.setState({edit:false}),
+   onDraft:e=>S.onDraft(e.target.value), savedText,
+   prevAlert:()=>cur&&S.setState({alertAt:{id:cur.id,i:(cur.alerts.indexOf(cur.alert)-1+cur.alerts.length)%cur.alerts.length}}), nextAlert:()=>cur&&S.setState({alertAt:{id:cur.id,i:(cur.alerts.indexOf(cur.alert)+1)%cur.alerts.length}}),
+   prevItem:()=>S.step(-1), nextItem:()=>S.step(1),
+   doRevise:()=>{ if(cur){S.upd(cur.id,i=>{i.st='revisada';i.rby=S.name();i.rat=nowStr();return i;});S.toast('Item revisado','Pronto para aprovação.');} },
+   doApprove:()=>S.approve(),
+   fbUp:()=>cur&&S.setState(x=>({fb:{...x.fb,[cur.id]:'up'}})), fbDown:()=>cur&&S.setState(x=>({fb:{...x.fb,[cur.id]:'down'}})),
+   fbUpStyle:fbBase+(cur&&cur.fbUp?fbOn:fbOff), fbDownStyle:fbBase+(cur&&cur.fbDown?fbOn:fbOff),
+   fbReasons:['Fonte incorreta','Texto impreciso','Informação desatualizada','Outro'],
+   hasDrawer, dr, closeDrawer:()=>S.setState({drawer:null}),
+   dialogOpen:s.dialog, cancelDialog:()=>S.setState({dialog:false}), confirmEdit:()=>{ if(cur){S.upd(cur.id,i=>{i.st='em-revisao';return i;});} S.setState({dialog:false,edit:true}); S.toast('Aprovação removida','O item voltou para Em revisão.','neutral'); },
+   taskName:'Banco Meridian', exportTitle:s.exported?'Tarefa exportada.':allDone?'Pronta para exportar.':'Exportação bloqueada até 100% aprovado.',
+   exportCount:`${c.approved} de ${c.total} itens aprovados`, exportDisabled, exportReason, exportBtn:s.exported?'Baixar novamente':'Exportar documento',
+   doExport:()=>{ if(!s.exported) S.setState({exported:{by:S.name(),at:nowStr()}}); S.toast('Documento exportado','Planilha .xlsx com respostas aprovadas e fontes.'); },
+   exported:!!s.exported, exportedBy:s.exported?s.exported.by:'', exportedAt:s.exported?s.exported.at:'', hasPending:!allDone, pendingRows,
+   exportCards, exportPageTitle:`${readyCount} de ${exportCards.length} tarefas prontas para exportar`,
+   history, historyTabs, hfilter:s.hfilter, setHfilter:v=>S.setState({hfilter:v}), historyTitle:`${history.length} ${history.length===1?'registro':'registros'}`,
+   form:f, baseSmallWarn:ready<3, notIdentified:!f.identified,
+   fileIcon:f.file?'file-text':'upload', fileLabel:f.file?'Perguntas_Meridian.xlsx':'Selecionar planilha ou documento de perguntas',
+   pickFile:()=>S.setState(x=>({form:{...x.form,file:true}})),
+   setName:setF('name'), setCompany:setF('company'), setType:setF('type'), setDue:setF('due'), setOwner:setF('owner'),
+   errName:t&&!f.name?'Informe o nome da tarefa.':null, errCompany:t&&!f.company?'Informe a empresa.':null, errDue:dueErr||null, errOwner:t&&!f.owner?'Escolha um responsável.':null,
+   typeOptions:['RFP','RFI'], ownerOptions:['Marcelo Vieira','Kadu Mendes','Paula Rocha'],
+   createTask:()=>{ const ok=f.file&&f.name&&f.company&&f.due&&f.due>='2026-09-29'&&f.owner; S.setState(x=>({form:{...x.form,tried:true,identified:!!ok}})); if(!f.file) S.toast('Nenhum arquivo','Selecione a lista de perguntas para continuar.','danger'); },
+   hasToast:!!s.toast, toast:s.toast||{}, toastText:s.toast?`${s.toast.title}. ${s.toast.desc}`:'', closeToast:()=>S.setState({toast:null}),
+  };
+ }
+}
+</script>
+</body>
+</html>

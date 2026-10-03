@@ -1,0 +1,120 @@
+<!-- @dsCard group="Components" viewport="700x360" name="Feedback" subtitle="Modal, toast, tooltip, vazio e trilha de fonte" -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Tendra.ai — Feedback</title>
+  <link rel="stylesheet" href="../../styles.css" />
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+  <script src="../../_ds_bundle.js" onerror="window.__noBundle = true"></script>
+  <script>
+    // Prefere o bundle gerado do design system; se ele ainda nao existe
+    // (projeto nao marcado como Design System), avalia os arquivos locais.
+    const TDR_FILES = ["../../components/core/icon-paths.js","../../components/core/Icon.jsx","../../components/core/Logo.jsx","../../components/core/MonoLabel.jsx","../../components/core/Button.jsx","../../components/core/IconButton.jsx","../../components/core/Badge.jsx","../../components/core/Tag.jsx","../../components/core/Card.jsx","../../components/core/Divider.jsx","../../components/core/ProgressBar.jsx","../../components/forms/Field.jsx","../../components/forms/Input.jsx","../../components/forms/Textarea.jsx","../../components/forms/Select.jsx","../../components/forms/Checkbox.jsx","../../components/forms/Radio.jsx","../../components/forms/Switch.jsx","../../components/navigation/Tabs.jsx","../../components/navigation/Breadcrumb.jsx","../../components/navigation/SidebarNav.jsx","../../components/navigation/TopBar.jsx","../../components/feedback/Dialog.jsx","../../components/feedback/Toast.jsx","../../components/feedback/Tooltip.jsx","../../components/feedback/EmptyState.jsx","../../components/feedback/SourceTrail.jsx"];
+    window.TDR = {};
+    window.addEventListener("DOMContentLoaded", async () => {
+      const root = document.getElementById("root");
+      try {
+        let bundled = null;
+        for (const k of Object.getOwnPropertyNames(window)) {
+          try {
+            const v = window[k];
+            if (v && typeof v === "object" && !Array.isArray(v) && typeof v.Button === "function" && typeof v.Badge === "function") { bundled = v; break; }
+          } catch (_) { /* frame cross-origin */ }
+        }
+        if (bundled) { window.TDR = bundled; }
+        else {
+          const srcs = await Promise.all(TDR_FILES.map((f) => fetch(f).then((r) => {
+            if (!r.ok) throw new Error(f + " -> " + r.status);
+            return r.text();
+          })));
+          const parts = srcs.map((src) => {
+            const imported = [];
+            const body = src.replace(/^[ \t]*import[^;\n]*;?[ \t]*$/gm, (line) => {
+              const m = line.match(/\{([^}]*)\}/);
+              if (m) m[1].split(",").forEach((n) => { n = n.trim(); if (n && n !== "React") imported.push(n); });
+              return "";
+            });
+            const exported = [];
+            const stripped = body.replace(/^export[ \t]+(function|const|class)[ \t]+([A-Za-z0-9_$]+)/gm, (all, kind, name) => {
+              exported.push(name); return kind + " " + name;
+            });
+            return "(function(){\n" +
+              (imported.length ? "const {" + [...new Set(imported)].join(",") + "} = window.TDR;\n" : "") +
+              stripped + "\nObject.assign(window.TDR, {" + exported.join(",") + "});\n})();";
+          });
+          new Function(Babel.transform(parts.join("\n"), { presets: ["react"] }).code)();
+        }
+        const demo = document.getElementById("demo").textContent;
+        new Function("NS", Babel.transform(demo, { presets: ["react"] }).code)(window.TDR);
+      } catch (e) {
+        root.innerHTML = "<pre style='padding:20px;font:12px var(--font-mono);color:var(--danger);white-space:pre-wrap'>" + e.message + "</pre>";
+        throw e;
+      }
+    });
+  </script>
+  <style>
+    html, body { margin: 0; background: var(--surface-page); }
+    * { box-sizing: border-box; }
+    body { font-family: var(--font-sans); color: var(--text-body); }
+    #root { padding: 20px 24px; }
+    .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+    .col { display: grid; gap: 14px; }
+    .cap { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-meta); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/plain" id="demo">
+  const { Dialog, Toast, Tooltip, EmptyState, SourceTrail, Button, IconButton, Card } = NS;
+
+  function Demo() {
+    const [open, setOpen] = React.useState(false);
+    return (
+      <div className="col" style={{ gap: 16, position: 'relative' }}>
+        <div className="row" style={{ alignItems: 'stretch', gap: 16 }}>
+          <Card padding="none" style={{ flex: '1 1 300px', minWidth: 0, overflow: 'hidden' }}>
+            <EmptyState
+              icon="folder"
+              title="Nenhum edital importado"
+              description="Suba o PDF do edital ou conecte o portal do cliente."
+              action={<Button icon="upload">Importar edital</Button>}
+              style={{ padding: '26px 20px' }}
+            />
+          </Card>
+          <div className="col" style={{ flex: '1 1 300px', minWidth: 0, gap: 12 }}>
+            <Toast tone="success" title="12 respostas aprovadas" description="Trilha de auditoria atualizada." onClose={() => {}} />
+            <Toast tone="danger" title="2 requisitos sem fonte" description="Revisão manual obrigatória." onClose={() => {}} />
+          </div>
+        </div>
+
+        <Card padding="sm">
+          <SourceTrail sources={[{ file: 'Security_Whitepaper_v4.pdf', page: 12, href: '#' }, { file: 'ISO27001_Anexo_A10.docx' }]} />
+        </Card>
+
+        <div className="row" style={{ gap: 14 }}>
+          <Button variant="secondary" onClick={() => setOpen(true)}>Abrir modal</Button>
+          <Tooltip content="Rastreia até o documento de origem">
+            <IconButton icon="link" label="Fonte" variant="outline" />
+          </Tooltip>
+          <Tooltip content="Histórico de revisões" placement="right">
+            <IconButton icon="history" label="Histórico" variant="outline" />
+          </Tooltip>
+        </div>
+
+        <Dialog
+          open={open}
+          title="Aprovar 12 respostas?"
+          description="A trilha de auditoria registra você como revisor responsável por cada uma delas."
+          onClose={() => setOpen(false)}
+          footer={<><Button variant="secondary" onClick={() => setOpen(false)}>Cancelar</Button><Button icon="check" onClick={() => setOpen(false)}>Aprovar</Button></>}
+        />
+      </div>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(Demo));
+</script>
+</body>
+</html>

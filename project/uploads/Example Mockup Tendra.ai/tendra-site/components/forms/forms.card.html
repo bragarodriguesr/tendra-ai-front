@@ -1,0 +1,124 @@
+<!-- @dsCard group="Components" viewport="700x340" name="Formulários" subtitle="Campos, seleção e alternâncias" -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Tendra.ai — Formulários</title>
+  <link rel="stylesheet" href="../../styles.css" />
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+  <script src="../../_ds_bundle.js" onerror="window.__noBundle = true"></script>
+  <script>
+    // Prefere o bundle gerado do design system; se ele ainda nao existe
+    // (projeto nao marcado como Design System), avalia os arquivos locais.
+    const TDR_FILES = ["../../components/core/icon-paths.js","../../components/core/Icon.jsx","../../components/core/Logo.jsx","../../components/core/MonoLabel.jsx","../../components/core/Button.jsx","../../components/core/IconButton.jsx","../../components/core/Badge.jsx","../../components/core/Tag.jsx","../../components/core/Card.jsx","../../components/core/Divider.jsx","../../components/core/ProgressBar.jsx","../../components/forms/Field.jsx","../../components/forms/Input.jsx","../../components/forms/Textarea.jsx","../../components/forms/Select.jsx","../../components/forms/Checkbox.jsx","../../components/forms/Radio.jsx","../../components/forms/Switch.jsx","../../components/navigation/Tabs.jsx","../../components/navigation/Breadcrumb.jsx","../../components/navigation/SidebarNav.jsx","../../components/navigation/TopBar.jsx","../../components/feedback/Dialog.jsx","../../components/feedback/Toast.jsx","../../components/feedback/Tooltip.jsx","../../components/feedback/EmptyState.jsx","../../components/feedback/SourceTrail.jsx"];
+    window.TDR = {};
+    window.addEventListener("DOMContentLoaded", async () => {
+      const root = document.getElementById("root");
+      try {
+        let bundled = null;
+        for (const k of Object.getOwnPropertyNames(window)) {
+          try {
+            const v = window[k];
+            if (v && typeof v === "object" && !Array.isArray(v) && typeof v.Button === "function" && typeof v.Badge === "function") { bundled = v; break; }
+          } catch (_) { /* frame cross-origin */ }
+        }
+        if (bundled) { window.TDR = bundled; }
+        else {
+          const srcs = await Promise.all(TDR_FILES.map((f) => fetch(f).then((r) => {
+            if (!r.ok) throw new Error(f + " -> " + r.status);
+            return r.text();
+          })));
+          const parts = srcs.map((src) => {
+            const imported = [];
+            const body = src.replace(/^[ \t]*import[^;\n]*;?[ \t]*$/gm, (line) => {
+              const m = line.match(/\{([^}]*)\}/);
+              if (m) m[1].split(",").forEach((n) => { n = n.trim(); if (n && n !== "React") imported.push(n); });
+              return "";
+            });
+            const exported = [];
+            const stripped = body.replace(/^export[ \t]+(function|const|class)[ \t]+([A-Za-z0-9_$]+)/gm, (all, kind, name) => {
+              exported.push(name); return kind + " " + name;
+            });
+            return "(function(){\n" +
+              (imported.length ? "const {" + [...new Set(imported)].join(",") + "} = window.TDR;\n" : "") +
+              stripped + "\nObject.assign(window.TDR, {" + exported.join(",") + "});\n})();";
+          });
+          new Function(Babel.transform(parts.join("\n"), { presets: ["react"] }).code)();
+        }
+        const demo = document.getElementById("demo").textContent;
+        new Function("NS", Babel.transform(demo, { presets: ["react"] }).code)(window.TDR);
+      } catch (e) {
+        root.innerHTML = "<pre style='padding:20px;font:12px var(--font-mono);color:var(--danger);white-space:pre-wrap'>" + e.message + "</pre>";
+        throw e;
+      }
+    });
+  </script>
+  <style>
+    html, body { margin: 0; background: var(--surface-page); }
+    * { box-sizing: border-box; }
+    body { font-family: var(--font-sans); color: var(--text-body); }
+    #root { padding: 20px 24px; }
+    .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+    .col { display: grid; gap: 14px; }
+    .cap { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-meta); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/plain" id="demo">
+  const { Field, Input, Textarea, Select, Checkbox, Radio, Switch, Divider } = NS;
+
+  function Demo() {
+    const [tom, setTom] = React.useState('tecnico');
+    const [rev, setRev] = React.useState(true);
+    const [cite, setCite] = React.useState(true);
+    return (
+      <div className="col" style={{ gap: 18 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
+          <Field label="Nome do edital" hint="Como aparece no portal do cliente" htmlFor="a">
+            <Input id="a" defaultValue="RFP — Banco Aurora 2026" />
+          </Field>
+          <Field label="ID do requisito" htmlFor="b">
+            <Input id="b" mono defaultValue="REQ-084/210" />
+          </Field>
+          <Field label="Buscar" htmlFor="c">
+            <Input id="c" icon="search" placeholder="Buscar em 4.812 respostas" />
+          </Field>
+          <Field label="Revisor" error="Selecione um revisor responsável." htmlFor="d">
+            <Select id="d" invalid placeholder="Selecione o revisor" options={['Helena Marques', 'Rafael Nunes']} />
+          </Field>
+        </div>
+
+        <Field label="Resposta gerada" htmlFor="e">
+          <Textarea id="e" rows={2} defaultValue="Todos os dados em repouso são cifrados com AES-256 e as chaves são geridas em HSM com rotação a cada 90 dias." />
+        </Field>
+
+        <Divider />
+
+        <div className="row" style={{ gap: 32, alignItems: 'flex-start' }}>
+          <div className="col" style={{ gap: 2 }}>
+            <div className="cap">Checkbox</div>
+            <Checkbox label="Exigir revisão humana" checked={rev} onChange={(e) => setRev(e.target.checked)} />
+            <Checkbox label="Alguns selecionados" indeterminate />
+            <Checkbox label="Desabilitado" disabled />
+          </div>
+          <div className="col" style={{ gap: 2 }}>
+            <div className="cap">Radio</div>
+            <Radio name="t" label="Formal" checked={tom === 'formal'} onChange={() => setTom('formal')} />
+            <Radio name="t" label="Técnico" checked={tom === 'tecnico'} onChange={() => setTom('tecnico')} />
+          </div>
+          <div className="col" style={{ gap: 2 }}>
+            <div className="cap">Switch</div>
+            <Switch label="Citar fonte sempre" checked={cite} onChange={(e) => setCite(e.target.checked)} />
+            <Switch label="Modo rascunho" checked={false} onChange={() => {}} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(Demo));
+</script>
+</body>
+</html>

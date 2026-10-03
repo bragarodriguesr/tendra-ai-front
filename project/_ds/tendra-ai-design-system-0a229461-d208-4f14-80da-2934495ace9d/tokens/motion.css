@@ -1,0 +1,15 @@
+:root {
+  /* Sem bounce. Movimento curto, decidido, com desaceleração longa. */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1); /* @kind other */
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1); /* @kind other */
+  --duration-instant: 90ms; /* @kind other */
+  --duration-fast: 140ms; /* @kind other */
+  --duration-base: 220ms; /* @kind other */
+  --duration-slow: 420ms; /* @kind other */
+  --duration-fill: 1600ms; /* @kind other */
+}
+
+@keyframes tdr-fill { from { width: 0%; } }
+@keyframes tdr-rise { from { opacity: 0; transform: translateY(6px); } }
+@keyframes tdr-fade { from { opacity: 0; } }
+@keyframes tdr-spin { to { transform: rotate(360deg); } }

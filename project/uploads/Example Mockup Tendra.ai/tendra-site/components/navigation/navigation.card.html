@@ -1,0 +1,128 @@
+<!-- @dsCard group="Components" viewport="700x330" name="Navegação" subtitle="Abas, trilha, barra superior e lateral" -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Tendra.ai — Navegação</title>
+  <link rel="stylesheet" href="../../styles.css" />
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+  <script src="../../_ds_bundle.js" onerror="window.__noBundle = true"></script>
+  <script>
+    // Prefere o bundle gerado do design system; se ele ainda nao existe
+    // (projeto nao marcado como Design System), avalia os arquivos locais.
+    const TDR_FILES = ["../../components/core/icon-paths.js","../../components/core/Icon.jsx","../../components/core/Logo.jsx","../../components/core/MonoLabel.jsx","../../components/core/Button.jsx","../../components/core/IconButton.jsx","../../components/core/Badge.jsx","../../components/core/Tag.jsx","../../components/core/Card.jsx","../../components/core/Divider.jsx","../../components/core/ProgressBar.jsx","../../components/forms/Field.jsx","../../components/forms/Input.jsx","../../components/forms/Textarea.jsx","../../components/forms/Select.jsx","../../components/forms/Checkbox.jsx","../../components/forms/Radio.jsx","../../components/forms/Switch.jsx","../../components/navigation/Tabs.jsx","../../components/navigation/Breadcrumb.jsx","../../components/navigation/SidebarNav.jsx","../../components/navigation/TopBar.jsx","../../components/feedback/Dialog.jsx","../../components/feedback/Toast.jsx","../../components/feedback/Tooltip.jsx","../../components/feedback/EmptyState.jsx","../../components/feedback/SourceTrail.jsx"];
+    window.TDR = {};
+    window.addEventListener("DOMContentLoaded", async () => {
+      const root = document.getElementById("root");
+      try {
+        let bundled = null;
+        for (const k of Object.getOwnPropertyNames(window)) {
+          try {
+            const v = window[k];
+            if (v && typeof v === "object" && !Array.isArray(v) && typeof v.Button === "function" && typeof v.Badge === "function") { bundled = v; break; }
+          } catch (_) { /* frame cross-origin */ }
+        }
+        if (bundled) { window.TDR = bundled; }
+        else {
+          const srcs = await Promise.all(TDR_FILES.map((f) => fetch(f).then((r) => {
+            if (!r.ok) throw new Error(f + " -> " + r.status);
+            return r.text();
+          })));
+          const parts = srcs.map((src) => {
+            const imported = [];
+            const body = src.replace(/^[ \t]*import[^;\n]*;?[ \t]*$/gm, (line) => {
+              const m = line.match(/\{([^}]*)\}/);
+              if (m) m[1].split(",").forEach((n) => { n = n.trim(); if (n && n !== "React") imported.push(n); });
+              return "";
+            });
+            const exported = [];
+            const stripped = body.replace(/^export[ \t]+(function|const|class)[ \t]+([A-Za-z0-9_$]+)/gm, (all, kind, name) => {
+              exported.push(name); return kind + " " + name;
+            });
+            return "(function(){\n" +
+              (imported.length ? "const {" + [...new Set(imported)].join(",") + "} = window.TDR;\n" : "") +
+              stripped + "\nObject.assign(window.TDR, {" + exported.join(",") + "});\n})();";
+          });
+          new Function(Babel.transform(parts.join("\n"), { presets: ["react"] }).code)();
+        }
+        const demo = document.getElementById("demo").textContent;
+        new Function("NS", Babel.transform(demo, { presets: ["react"] }).code)(window.TDR);
+      } catch (e) {
+        root.innerHTML = "<pre style='padding:20px;font:12px var(--font-mono);color:var(--danger);white-space:pre-wrap'>" + e.message + "</pre>";
+        throw e;
+      }
+    });
+  </script>
+  <style>
+    html, body { margin: 0; background: var(--surface-page); }
+    * { box-sizing: border-box; }
+    body { font-family: var(--font-sans); color: var(--text-body); }
+    #root { padding: 20px 24px; }
+    .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+    .col { display: grid; gap: 14px; }
+    .cap { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-meta); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/plain" id="demo">
+  const { Tabs, Breadcrumb, TopBar, SidebarNav, Logo, Input, IconButton, Badge } = NS;
+
+  function Demo() {
+    const [tab, setTab] = React.useState('req');
+    const [nav, setNav] = React.useState('editais');
+    return (
+      <div className="col" style={{ gap: 16 }}>
+        <div style={{ border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xl)', overflow: 'hidden', background: 'var(--surface-card)' }}>
+          <TopBar
+            start={<Breadcrumb items={[{ label: 'Editais', href: '#' }, { label: 'Banco Aurora' }, { label: 'REQ-084' }]} />}
+            center={<Input icon="search" placeholder="Buscar" style={{ maxWidth: 240 }} />}
+            end={<><IconButton icon="bell" label="Notificações" /><IconButton icon="settings" label="Ajustes" /></>}
+          />
+          <div style={{ padding: '16px 24px 0' }}>
+            <Tabs value={tab} onChange={setTab} items={[
+              { value: 'req', label: 'Requisitos', count: 210 },
+              { value: 'src', label: 'Fontes', icon: 'folder' },
+              { value: 'aud', label: 'Auditoria', icon: 'history' }
+            ]} />
+            <div style={{ padding: '14px 0 18px', fontSize: 14, color: 'var(--text-meta)' }}>Aba ativa: {tab}</div>
+          </div>
+        </div>
+
+        <div className="row" style={{ alignItems: 'stretch', gap: 16 }}>
+          <div style={{ border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xl)', overflow: 'hidden' }}>
+            <SidebarNav
+              width={228}
+              value={nav}
+              header={<Logo size={24} style={{ padding: '2px 8px 6px' }} />}
+              groups={[
+                { label: 'Trabalho', items: [
+                  { value: 'editais', label: 'Editais', icon: 'file-text', count: 12, onClick: (e) => { e.preventDefault(); setNav('editais'); } },
+                  { value: 'rev', label: 'Revisão', icon: 'check-check', count: 3, onClick: (e) => { e.preventDefault(); setNav('rev'); } }
+                ]},
+                { label: 'Conhecimento', items: [
+                  { value: 'base', label: 'Base de respostas', icon: 'database', onClick: (e) => { e.preventDefault(); setNav('base'); } }
+                ]}
+              ]}
+            />
+          </div>
+          <div style={{ flex: 1, minWidth: 0, display: 'grid', gap: 10, alignContent: 'start' }}>
+            <div className="cap">Tabs · fundo tinta</div>
+            <div style={{ background: 'var(--surface-inverse)', borderRadius: 'var(--radius-xl)', padding: '16px 20px' }}>
+              <Tabs tone="ink" value={tab} onChange={setTab} items={[
+                { value: 'req', label: 'Requisitos' },
+                { value: 'src', label: 'Fontes' }
+              ]} />
+              <div style={{ marginTop: 14 }}><Badge tone="approved-inverse" icon="check">Conformidade OK</Badge></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(Demo));
+</script>
+</body>
+</html>
