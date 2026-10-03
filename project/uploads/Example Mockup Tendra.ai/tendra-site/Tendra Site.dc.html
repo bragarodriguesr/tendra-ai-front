@@ -1,0 +1,17 @@
+<helmet>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+  <script type="text/babel" src="site-bundle.jsx" data-tdr-bundle="1"></script>
+  <script>
+    (function retry() {
+      if (window.Babel && document.querySelector('script[data-tdr-bundle]')) { Babel.transformScriptTags(); }
+      else { setTimeout(retry, 30); }
+    })();
+  </script>
+  <style>
+    html, body { margin: 0; }
+    a { color: var(--text-state); }
+    a:hover { color: var(--brand-ink); }
+  </style>
+</helmet>
+<x-import component-from-global-scope="TendraSite" hint-size="100%,1000px"></x-import>

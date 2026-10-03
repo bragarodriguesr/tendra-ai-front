@@ -1,0 +1,148 @@
+<!-- @dsCard group="Components" viewport="700x330" name="Core" subtitle="Botões, selos, chips, cards e progresso" -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Tendra.ai — Core</title>
+  <link rel="stylesheet" href="../../styles.css" />
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+  <script src="../../_ds_bundle.js" onerror="window.__noBundle = true"></script>
+  <script>
+    // Prefere o bundle gerado do design system; se ele ainda nao existe
+    // (projeto nao marcado como Design System), avalia os arquivos locais.
+    const TDR_FILES = ["../../components/core/icon-paths.js","../../components/core/Icon.jsx","../../components/core/Logo.jsx","../../components/core/MonoLabel.jsx","../../components/core/Button.jsx","../../components/core/IconButton.jsx","../../components/core/Badge.jsx","../../components/core/Tag.jsx","../../components/core/Card.jsx","../../components/core/Divider.jsx","../../components/core/ProgressBar.jsx","../../components/forms/Field.jsx","../../components/forms/Input.jsx","../../components/forms/Textarea.jsx","../../components/forms/Select.jsx","../../components/forms/Checkbox.jsx","../../components/forms/Radio.jsx","../../components/forms/Switch.jsx","../../components/navigation/Tabs.jsx","../../components/navigation/Breadcrumb.jsx","../../components/navigation/SidebarNav.jsx","../../components/navigation/TopBar.jsx","../../components/feedback/Dialog.jsx","../../components/feedback/Toast.jsx","../../components/feedback/Tooltip.jsx","../../components/feedback/EmptyState.jsx","../../components/feedback/SourceTrail.jsx"];
+    window.TDR = {};
+    window.addEventListener("DOMContentLoaded", async () => {
+      const root = document.getElementById("root");
+      try {
+        let bundled = null;
+        for (const k of Object.getOwnPropertyNames(window)) {
+          try {
+            const v = window[k];
+            if (v && typeof v === "object" && !Array.isArray(v) && typeof v.Button === "function" && typeof v.Badge === "function") { bundled = v; break; }
+          } catch (_) { /* frame cross-origin */ }
+        }
+        if (bundled) { window.TDR = bundled; }
+        else {
+          const srcs = await Promise.all(TDR_FILES.map((f) => fetch(f).then((r) => {
+            if (!r.ok) throw new Error(f + " -> " + r.status);
+            return r.text();
+          })));
+          const parts = srcs.map((src) => {
+            const imported = [];
+            const body = src.replace(/^[ \t]*import[^;\n]*;?[ \t]*$/gm, (line) => {
+              const m = line.match(/\{([^}]*)\}/);
+              if (m) m[1].split(",").forEach((n) => { n = n.trim(); if (n && n !== "React") imported.push(n); });
+              return "";
+            });
+            const exported = [];
+            const stripped = body.replace(/^export[ \t]+(function|const|class)[ \t]+([A-Za-z0-9_$]+)/gm, (all, kind, name) => {
+              exported.push(name); return kind + " " + name;
+            });
+            return "(function(){\n" +
+              (imported.length ? "const {" + [...new Set(imported)].join(",") + "} = window.TDR;\n" : "") +
+              stripped + "\nObject.assign(window.TDR, {" + exported.join(",") + "});\n})();";
+          });
+          new Function(Babel.transform(parts.join("\n"), { presets: ["react"] }).code)();
+        }
+        const demo = document.getElementById("demo").textContent;
+        new Function("NS", Babel.transform(demo, { presets: ["react"] }).code)(window.TDR);
+      } catch (e) {
+        root.innerHTML = "<pre style='padding:20px;font:12px var(--font-mono);color:var(--danger);white-space:pre-wrap'>" + e.message + "</pre>";
+        throw e;
+      }
+    });
+  </script>
+  <style>
+    html, body { margin: 0; background: var(--surface-page); }
+    * { box-sizing: border-box; }
+    body { font-family: var(--font-sans); color: var(--text-body); }
+    #root { padding: 20px 24px; }
+    .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+    .col { display: grid; gap: 14px; }
+    .cap { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-meta); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/plain" id="demo">
+  const { Button, IconButton, Badge, Tag, Card, ProgressBar, MonoLabel, Logo, Divider } = NS;
+
+  function Demo() {
+    return (
+      <div className="col" style={{ gap: 18 }}>
+        <div className="col" style={{ gap: 8 }}>
+          <div className="cap">Button · variantes</div>
+          <div className="row">
+            <Button icon="check">Aprovar resposta</Button>
+            <Button variant="secondary">Ver auditoria</Button>
+            <Button variant="accent" iconEnd="arrow-right">Agendar demo</Button>
+            <Button variant="ghost" icon="pencil">Editar</Button>
+            <Button variant="danger" icon="trash-2">Remover</Button>
+            <Button disabled>Indisponível</Button>
+            <Button loading>Gerando</Button>
+          </div>
+        </div>
+
+        <div className="row" style={{ gap: 28, alignItems: 'flex-start' }}>
+          <div className="col" style={{ gap: 8 }}>
+            <div className="cap">Tamanhos</div>
+            <div className="row">
+              <Button size="sm">sm 36</Button>
+              <Button size="md">md 44</Button>
+              <Button size="lg">lg 52</Button>
+            </div>
+          </div>
+          <div className="col" style={{ gap: 8 }}>
+            <div className="cap">IconButton</div>
+            <div className="row">
+              <IconButton icon="filter" label="Filtrar" />
+              <IconButton icon="search" label="Buscar" variant="outline" />
+              <IconButton icon="plus" label="Novo" variant="solid" />
+            </div>
+          </div>
+        </div>
+
+        <Divider />
+
+        <div className="row" style={{ gap: 28, alignItems: 'flex-start' }}>
+          <div className="col" style={{ gap: 8 }}>
+            <div className="cap">Badge · estado</div>
+            <div className="row">
+              <Badge tone="approved" icon="check">Conformidade OK</Badge>
+              <Badge tone="neutral">Fonte rastreável</Badge>
+              <Badge tone="ink">Em revisão</Badge>
+              <Badge tone="danger">Bloqueado</Badge>
+            </div>
+          </div>
+          <div className="col" style={{ gap: 8 }}>
+            <div className="cap">Tag · filtro</div>
+            <div className="row">
+              <Tag onRemove={() => {}}>Banco Aurora</Tag>
+              <Tag>Segurança</Tag>
+            </div>
+          </div>
+        </div>
+
+        <div className="row" style={{ gap: 14, alignItems: 'stretch' }}>
+          <Card padding="sm" style={{ flex: '1 1 210px', minWidth: 0 }}>
+            <MonoLabel>Card · paper</MonoLabel>
+            <ProgressBar label="Cobertura" value={92} style={{ marginTop: 12 }} />
+          </Card>
+          <Card tone="ink" padding="sm" radius="2xl" style={{ flex: '1 1 210px', minWidth: 0 }}>
+            <Logo variant="ink" size={22} />
+            <ProgressBar tone="ink" label="Preenchimento" value={68} style={{ marginTop: 12 }} />
+          </Card>
+          <Card tone="accent" padding="sm" radius="2xl" style={{ flex: '0 0 150px' }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 17, letterSpacing: '-0.02em' }}>Card accent<br />— só marketing</div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(Demo));
+</script>
+</body>
+</html>
