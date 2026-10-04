@@ -11,8 +11,8 @@ export function SiteFooter() {
   return (
     <footer style={{ background: "var(--surface-inverse)", color: "var(--text-on-inverse-body)" }}>
       <div style={{ maxWidth: "var(--page-max)", margin: "0 auto", padding: "var(--space-16) var(--page-pad) var(--space-8)", display: "grid", gap: "var(--space-12)" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.4fr) repeat(3, minmax(0, 1fr))", gap: "var(--space-10)" }}>
-          <div style={{ display: "grid", gap: "var(--space-4)", alignContent: "start" }}>
+        <div className="tdr-site-footer-cols">
+          <div className="tdr-site-footer-brand" style={{ display: "grid", gap: "var(--space-4)", alignContent: "start" }}>
             <Logo variant="ink" size={30} />
             <p style={{ margin: 0, fontSize: "var(--text-sm-size)", lineHeight: 1.6, color: "var(--text-on-inverse-meta)", maxWidth: "34ch", textWrap: "pretty" }}>
               O cérebro comercial e técnico da sua operação de licitações e RFPs.

@@ -13,12 +13,12 @@ export function SiteHeader({ onPage, onWorkspace, tone = "paper" }) {
         borderBottom: inverse ? "1px solid var(--border-inverse)" : "1px solid var(--border-default)"
       }}
     >
-      <div style={{ maxWidth: "var(--page-max)", margin: "0 auto", padding: "var(--space-4) var(--page-pad)", display: "flex", alignItems: "center", gap: "var(--space-8)" }}>
+      <div style={{ maxWidth: "var(--page-max)", margin: "0 auto", padding: "var(--space-4) var(--page-pad)" }} className="tdr-site-header-row">
         <a href="#" onClick={(e) => { e.preventDefault(); onPage("home"); }} style={{ display: "flex", textDecoration: "none" }}>
           <Logo variant={inverse ? "ink" : "paper"} size={30} />
         </a>
-        <nav style={{ display: "flex", alignItems: "center", gap: "var(--space-6)", marginLeft: "auto" }}>
-          <Button size="sm" variant="secondary" icon="layout-grid" onClick={onWorkspace}>Produto · Workspace</Button>
+        <nav className="tdr-site-header-nav" aria-label="Site">
+          <Button size="sm" variant="secondary" icon="layout-grid" onClick={onWorkspace}><span><span className="tdr-site-ws-prefix">Produto · </span>Workspace</span></Button>
           <Button size="sm" variant={inverse ? "accent" : "primary"} onClick={() => onPage("precos")}>Preços</Button>
         </nav>
       </div>
