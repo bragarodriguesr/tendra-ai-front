@@ -1,0 +1,34 @@
+
+:root {
+  /* Dataviz — uso RESTRITO a gráficos e painéis de dashboard.
+     Não usar em botões, navegação, bordas, foco ou qualquer elemento estrutural.
+     Tinta (--brand-ink) e Sálvia (--brand-sage) NUNCA preenchem séries de gráfico. */
+  --dv-teal-solid: #117780; /* Petróleo — preenchimento de série */
+  --dv-teal-ink: #004F57;   /* texto sobre branco/wash (≥4,5:1) */
+  --dv-teal-wash: #E2F4F7;  /* fundo de painel/tooltip */
+  --dv-teal-line: #B0D6DA;  /* borda/grade tintada */
+  --dv-slate-solid: #446B9C; /* Ardósia — preenchimento de série */
+  --dv-slate-ink: #234877;   /* texto sobre branco/wash (≥4,5:1) */
+  --dv-slate-wash: #E7F1FE;  /* fundo de painel/tooltip */
+  --dv-slate-line: #BDD0E8;  /* borda/grade tintada */
+  --dv-amber-solid: #DFA635; /* Âmbar — preenchimento de série */
+  --dv-amber-ink: #72480B;   /* texto sobre branco/wash (≥4,5:1) */
+  --dv-amber-wash: #FDF1D8;  /* fundo de painel/tooltip */
+  --dv-amber-line: #E8CD9D;  /* borda/grade tintada */
+  --dv-plum-solid: #8B4A70; /* Ameixa — preenchimento de série */
+  --dv-plum-ink: #693253;   /* texto sobre branco/wash (≥4,5:1) */
+  --dv-plum-wash: #FBEBF3;  /* fundo de painel/tooltip */
+  --dv-plum-line: #E2C4D4;  /* borda/grade tintada */
+  --dv-terra-solid: #BA673F; /* Terracota — preenchimento de série */
+  --dv-terra-ink: #863C21;   /* texto sobre branco/wash (≥4,5:1) */
+  --dv-terra-wash: #FFECE2;  /* fundo de painel/tooltip */
+  --dv-terra-line: #EEC8B5;  /* borda/grade tintada */
+
+  /* Série categórica, em ordem de uso. O limão entra só como preenchimento (6ª série). */
+  --dv-series-1: var(--dv-teal-solid);
+  --dv-series-2: var(--dv-slate-solid);
+  --dv-series-3: var(--dv-amber-solid);
+  --dv-series-4: var(--dv-plum-solid);
+  --dv-series-5: var(--dv-terra-solid);
+  --dv-series-6: var(--brand-lime);
+}
