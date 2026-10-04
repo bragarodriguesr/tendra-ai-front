@@ -1,5 +1,5 @@
 import React from "react";
-import { Icon, IconButton, MonoLabel } from "../ds/index.js";
+import { Icon, IconButton, MonoLabel, Tooltip } from "../ds/index.js";
 
 export const MONO = "'IBM Plex Mono',monospace";
 export const DISPLAY = "'Space Grotesk',sans-serif";
@@ -77,11 +77,21 @@ export function AlertDeck({ deck, pending = true, icon, label, suffix, pos, onPr
   );
 }
 
-/** Barra empilhada + legenda (status das tarefas, estados dos itens). */
-export function StackedBar({ segments }) {
+/** Barra empilhada de dataviz: 2px de superfície entre segmentos e tooltip em cada um. */
+export function SegmentBar({ segments, total, unit }) {
+  const shown = segments.filter((g) => g.n > 0);
+  const last = shown.length - 1;
   return (
-    <div style={{ display: "flex", height: 12, borderRadius: 99, overflow: "hidden", background: "var(--n-100)" }}>
-      {segments.map((g) => <div key={g.label} style={{ width: g.width, background: g.color }} />)}
+    <div style={{ display: "flex", gap: 2, height: 12 }}>
+      {shown.map((g, i) => {
+        const text = `${g.label}: ${g.n} de ${total} ${unit}`;
+        const l = i === 0 ? 99 : 0, r = i === last ? 99 : 0;
+        return (
+          <Tooltip key={g.label} content={text} style={{ width: g.width, display: "block" }}>
+            <span tabIndex={0} aria-label={text} style={{ display: "block", height: 12, background: g.color, borderRadius: `${l}px ${r}px ${r}px ${l}px` }} />
+          </Tooltip>
+        );
+      })}
     </div>
   );
 }

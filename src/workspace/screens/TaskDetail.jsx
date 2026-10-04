@@ -1,6 +1,6 @@
 import React from "react";
 import { Badge, Button, Icon, ProgressBar, Tabs } from "../../ds/index.js";
-import { ClickRow, DISPLAY, Page, StackedBar, bigNumber, card, h1Style, legendDot, mono } from "../ui.jsx";
+import { ClickRow, DISPLAY, Page, SegmentBar, bigNumber, card, h1Style, legendDot, mono } from "../ui.jsx";
 
 const statusCard = (accent) => card(16, {
   padding: 32, display: "flex", flexDirection: "column", gap: 16, maxWidth: 640,
@@ -80,11 +80,11 @@ export function TaskDetail({ v, ws, state, pad }) {
                 <span style={{ color: "var(--n-700)" }}>itens com alerta pendente</span>
               </div>
             </div>
-            <StackedBar segments={v.segs} />
+            <SegmentBar segments={v.segs} total={c.total} unit="itens" />
             <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
               {v.segs.map((g) => (
                 <div key={g.label} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
-                  <span style={legendDot(g.color)} /><span style={mono(undefined)}>{g.n}</span><span>{g.label}</span>
+                  <span aria-hidden="true" style={legendDot(g.color)} /><span style={{ ...mono(undefined), fontVariantNumeric: "tabular-nums" }}>{g.n}</span><span>{g.label}</span>
                 </div>
               ))}
             </div>

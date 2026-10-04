@@ -129,12 +129,14 @@ export function buildView(s, ws) {
   const task0 = ws.taskInfo(s.taskId, s) || ws.taskInfo("t1", s);
   const tkr = tasks.find((x) => x.id === task0.id) || {};
   const task = { ...task0, sTxt: tkr.status, sTone: tkr.tone, sIcon: tkr.icon, hasItems: !!task0.hasItems, isReady: !!task0.isReady };
+  // Estados dos itens, na ordem do fluxo. Cores de dataviz (tokens/dataviz.css): Em revisão em
+  // Petróleo como no Dashboard, Aprovada em Limão; as demais escolhidas para separar as vizinhas.
   const segs = [
-    { n: c.none, label: "sem rascunho", color: "var(--n-350)" },
-    { n: c.sug, label: "sugerida", color: "var(--brand-sage)" },
-    { n: c.emr, label: "em revisão", color: "var(--n-700)" },
-    { n: c.rev, label: "revisada", color: "var(--n-500)" },
-    { n: c.approved, label: "aprovada", color: "var(--n-900)" }
+    { n: c.none, label: "sem rascunho", color: "var(--dv-plum-solid)" },
+    { n: c.sug, label: "sugerida", color: "var(--dv-amber-solid)" },
+    { n: c.emr, label: "em revisão", color: "var(--dv-teal-solid)" },
+    { n: c.rev, label: "revisada", color: "var(--dv-terra-solid)" },
+    { n: c.approved, label: "aprovada", color: "var(--dv-series-6)" }
   ].map((g) => ({ ...g, width: (g.n / c.total) * 100 + "%" }));
 
   // filtros e lista
