@@ -1,6 +1,6 @@
 import React from "react";
 import { Badge, Button, Icon, MonoLabel, Tooltip } from "../../ds/index.js";
-import { ClickRow, Page, PageHeader, bigNumber, card, legendDot, mono } from "../ui.jsx";
+import { ClickRow, Page, SegmentBar, PageHeader, bigNumber, card, legendDot, mono } from "../ui.jsx";
 
 function Kpi({ icon, label, value, sub }) {
   return (
@@ -11,19 +11,6 @@ function Kpi({ icon, label, value, sub }) {
       </div>
       <span style={bigNumber}>{value}</span>
       <span style={{ fontSize: 13, color: "var(--n-500)", lineHeight: 1.5 }}>{sub}</span>
-    </div>
-  );
-}
-
-/** Barra empilhada de status: cores de dataviz, 2px de superfície entre segmentos. */
-function StatusBar({ groups, total }) {
-  return (
-    <div style={{ display: "flex", gap: 2, height: 12 }}>
-      {groups.map((g, i) => (
-        <Tooltip key={g.label} content={`${g.label}: ${g.n} de ${total} tarefas`} style={{ width: g.width, display: "block" }}>
-          <span tabIndex={0} aria-label={`${g.label}: ${g.n} de ${total} tarefas`} style={{ display: "block", height: 12, background: g.color, borderRadius: `${i === 0 ? 99 : 0}px ${i === groups.length - 1 ? 99 : 0}px ${i === groups.length - 1 ? 99 : 0}px ${i === 0 ? 99 : 0}px` }} />
-        </Tooltip>
-      ))}
     </div>
   );
 }
@@ -68,7 +55,7 @@ export function Dashboard({ v, ws, pad }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(340px,1fr))", gap: 20 }}>
         <div style={card(14, { padding: 24, display: "flex", flexDirection: "column", gap: 16 })}>
           <MonoLabel>Tarefas por status</MonoLabel>
-          <StatusBar groups={dash.status} total={dash.total} />
+          <SegmentBar segments={dash.status} total={dash.total} unit="tarefas" />
           <div role="table" aria-label="Tarefas por status" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {dash.status.map((g) => (
               <div role="row" key={g.label} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
