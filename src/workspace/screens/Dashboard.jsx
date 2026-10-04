@@ -1,6 +1,6 @@
 import React from "react";
-import { Badge, Button, Icon, MonoLabel } from "../../ds/index.js";
-import { ClickRow, DISPLAY, Page, PageHeader, StackedBar, bigNumber, card, legendDot, mono } from "../ui.jsx";
+import { Badge, Button, Icon, MonoLabel, Tooltip } from "../../ds/index.js";
+import { ClickRow, Page, PageHeader, bigNumber, card, legendDot, mono } from "../ui.jsx";
 
 function Kpi({ icon, label, value, sub }) {
   return (
@@ -11,6 +11,41 @@ function Kpi({ icon, label, value, sub }) {
       </div>
       <span style={bigNumber}>{value}</span>
       <span style={{ fontSize: 13, color: "var(--n-500)", lineHeight: 1.5 }}>{sub}</span>
+    </div>
+  );
+}
+
+/** Barra empilhada de status: cores de dataviz, 2px de superfície entre segmentos. */
+function StatusBar({ groups, total }) {
+  return (
+    <div style={{ display: "flex", gap: 2, height: 12 }}>
+      {groups.map((g, i) => (
+        <Tooltip key={g.label} content={`${g.label}: ${g.n} de ${total} tarefas`} style={{ width: g.width, display: "block" }}>
+          <span tabIndex={0} aria-label={`${g.label}: ${g.n} de ${total} tarefas`} style={{ display: "block", height: 12, background: g.color, borderRadius: `${i === 0 ? 99 : 0}px ${i === groups.length - 1 ? 99 : 0}px ${i === groups.length - 1 ? 99 : 0}px ${i === 0 ? 99 : 0}px` }} />
+        </Tooltip>
+      ))}
+    </div>
+  );
+}
+
+/** Colunas de série única (Petróleo, --dv-series-1), ancoradas na linha de base, com valor no topo. */
+function MonthBars({ months }) {
+  const PLOT = 112;
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "flex-end", gap: 12, height: PLOT + 22, borderBottom: "1px solid var(--n-200)" }}>
+        {months.map((m, i) => (
+          <div key={m.m} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 6, height: "100%" }}>
+            <span style={{ ...mono(12), fontVariantNumeric: "tabular-nums" }}>{m.n}</span>
+            <Tooltip content={`${m.n} RFPs concluídas em ${m.full}`} placement={i >= months.length - 2 ? "left" : "right"} style={{ width: "100%", maxWidth: 44, display: "block" }}>
+              <span tabIndex={0} aria-label={`${m.full}: ${m.n} RFPs concluídas`} className="tdr-dv-bar" style={{ display: "block", height: (m.pct / 100) * PLOT }} />
+            </Tooltip>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "flex", gap: 12, paddingTop: 8 }}>
+        {months.map((m) => <span key={m.m} style={{ flex: 1, textAlign: "center", ...mono(11, "var(--n-500)") }}>{m.m}</span>)}
+      </div>
     </div>
   );
 }
@@ -33,28 +68,21 @@ export function Dashboard({ v, ws, pad }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(340px,1fr))", gap: 20 }}>
         <div style={card(14, { padding: 24, display: "flex", flexDirection: "column", gap: 16 })}>
           <MonoLabel>Tarefas por status</MonoLabel>
-          <StackedBar segments={dash.status} />
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <StatusBar groups={dash.status} total={dash.total} />
+          <div role="table" aria-label="Tarefas por status" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {dash.status.map((g) => (
-              <div key={g.label} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
-                <span style={legendDot(g.color)} />
-                <span style={{ flex: 1 }}>{g.label}</span>
-                <span style={mono(undefined)}>{g.n}</span>
+              <div role="row" key={g.label} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
+                <span aria-hidden="true" style={legendDot(g.color)} />
+                <span role="cell" style={{ flex: 1 }}>{g.label}</span>
+                <span role="cell" style={{ ...mono(13), fontVariantNumeric: "tabular-nums" }}>{g.n}</span>
+                <span role="cell" style={{ ...mono(12, "var(--n-400)"), minWidth: 40, textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{g.pct}%</span>
               </div>
             ))}
           </div>
         </div>
         <div style={card(14, { padding: 24, display: "flex", flexDirection: "column", gap: 16 })}>
           <MonoLabel>RFPs concluídas por mês</MonoLabel>
-          <div style={{ display: "flex", alignItems: "flex-end", gap: 12, height: 132 }}>
-            {dash.months.map((m) => (
-              <div key={m.m} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 6, height: "100%" }}>
-                <span style={mono(12)}>{m.n}</span>
-                <div style={{ width: "100%", maxWidth: 44, borderRadius: "6px 6px 0 0", background: "var(--n-900)", height: m.height }} />
-                <span style={mono(11, "var(--n-500)")}>{m.m}</span>
-              </div>
-            ))}
-          </div>
+          <MonthBars months={dash.months} />
         </div>
       </div>
       <div style={card(14, { overflow: "hidden" })}>

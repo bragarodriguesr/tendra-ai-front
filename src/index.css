@@ -25,3 +25,7 @@ label:has(> [role="switch"]) * { box-sizing: border-box; }
 
 /* Foco: borda + halo sálvia, nunca o azul do navegador. */
 :focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+/* Dataviz: série única em Petróleo; hover/foco escurece para o degrau ink (nunca opacidade). */
+.tdr-dv-bar { background: var(--dv-series-1); border-radius: 4px 4px 0 0; transition: background var(--duration-fast) var(--ease-out); }
+.tdr-dv-bar:hover, .tdr-dv-bar:focus-visible { background: var(--dv-teal-ink); }
