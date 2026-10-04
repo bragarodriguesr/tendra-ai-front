@@ -29,3 +29,20 @@ label:has(> [role="switch"]) * { box-sizing: border-box; }
 /* Dataviz: série única em Petróleo; hover/foco escurece para o degrau ink (nunca opacidade). */
 .tdr-dv-bar { background: var(--dv-series-1); border-radius: 4px 4px 0 0; transition: background var(--duration-fast) var(--ease-out); }
 .tdr-dv-bar:hover, .tdr-dv-bar:focus-visible { background: var(--dv-teal-ink); }
+
+/* Celular estreito: o botão da barra superior vira "Workspace". */
+@media (max-width: 480px) { .tdr-ws-prefix { display: none; } }
+
+/* Abas que não cabem na largura rolam para os lados dentro da própria faixa. */
+.tdr-tabs-scroll { overflow-x: auto; scrollbar-width: none; }
+.tdr-tabs-scroll::-webkit-scrollbar { display: none; }
+.tdr-tabs-scroll [role="tablist"] { width: max-content; min-width: 100%; }
+.tdr-tabs-scroll [role="tab"] { white-space: nowrap; }
+
+/* Revisão no celular: botões de revisar e aprovar dividem a largura. */
+.tdr-review-actions > button { flex: 1 1 140px; }
+.tdr-review-actions > span { flex: 1 1 100%; }
+
+/* Celular: grupo de ações do cabeçalho ocupa a largura e os botões dividem a linha. */
+.tdr-stack-actions { width: 100%; }
+.tdr-stack-actions > button { flex: 1 1 140px; }

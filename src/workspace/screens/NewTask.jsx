@@ -3,7 +3,7 @@ import { Badge, Button, Field, Icon, Input, MonoLabel, Select } from "../../ds/i
 import { ClickRow, DISPLAY, Page, card, h1Style, mono } from "../ui.jsx";
 import { OWN, TODAY_ISO } from "../data.js";
 
-export function NewTask({ v, ws, pad }) {
+export function NewTask({ v, ws, pad, isMobile }) {
   const f = v.form;
   const set = (k) => (e) => ws.setState((x) => ({ form: { ...x.form, [k]: e.target.value } }));
   const create = () => {
@@ -28,7 +28,7 @@ export function NewTask({ v, ws, pad }) {
             </div>
           </ClickRow>
           <Field label="Nome" required error={f.errName} htmlFor="nt-name"><Input id="nt-name" value={f.name} onChange={set("name")} invalid={!!f.errName} /></Field>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "1fr 1fr", gap: 20 }}>
             <Field label="Empresa" required error={f.errCompany} htmlFor="nt-company"><Input id="nt-company" value={f.company} placeholder="Empresa que enviou o edital" onChange={set("company")} invalid={!!f.errCompany} /></Field>
             <Field label="Tipo" required htmlFor="nt-type"><Select id="nt-type" options={["RFP", "RFI"]} value={f.type} onChange={set("type")} /></Field>
             <Field label="Prazo de submissão" required error={f.errDue} htmlFor="nt-due"><Input id="nt-due" type="date" value={f.due} onChange={set("due")} invalid={!!f.errDue} /></Field>

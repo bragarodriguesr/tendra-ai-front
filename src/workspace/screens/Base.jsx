@@ -6,7 +6,46 @@ const COLS = "minmax(0,2.2fr) 100px 110px 170px minmax(150px,1fr) 120px 110px";
 const rowGrid = { display: "grid", minWidth: 1100, gridTemplateColumns: COLS, gap: 16 };
 const SORT_OPTIONS = [{ value: "idade", label: "Ordenar por idade" }, { value: "nome", label: "Ordenar por nome" }, { value: "upload", label: "Ordenar por envio" }];
 
-export function Base({ v, ws, state, pad }) {
+function DocActions({ d }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      {d.canRetry ? (
+        <Tooltip content="Tentar novamente" placement="top">
+          <IconButton icon="refresh-cw" label="Tentar novamente" variant="outline" size="sm" onClick={d.retry} />
+        </Tooltip>
+      ) : null}
+      <Tooltip content={d.toggleLabel} placement="top">
+        <Switch checked={d.active} onChange={d.toggle} aria-label={d.toggleLabel} />
+      </Tooltip>
+    </div>
+  );
+}
+
+/** Celular: cada documento vira um cartão com status, idade e ações no rodapé. */
+function DocCards({ docs }) {
+  return (
+    <div style={card(14, { overflow: "hidden" })}>
+      {docs.map((d, i) => (
+        <div key={d.id} style={{ display: "flex", flexDirection: "column", gap: 10, padding: "14px 16px", borderTop: i ? "1px solid var(--n-100)" : 0 }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ ...mono(13), overflowWrap: "anywhere" }}>{d.name}</div>
+            <div style={{ fontSize: 12, color: "var(--n-400)", marginTop: 2 }}>{d.version} · {d.type} · {d.by}</div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <Badge tone={d.tone} icon={d.icon}>{d.statusText}</Badge>
+            {d.old ? <Badge tone="danger" icon="clock">Mais de 120 dias</Badge> : null}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <span style={mono(12, "var(--n-500)")}>Atualizado {d.upd} · {d.ageText}</span>
+            <DocActions d={d} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function Base({ v, ws, state, pad, isMobile }) {
   return (
     <Page pad={pad}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 24, flexWrap: "wrap" }}>
@@ -15,12 +54,13 @@ export function Base({ v, ws, state, pad }) {
           <h1 style={h1Style}>{state.docs.length} documentos na base</h1>
           <span style={{ color: "var(--n-400)" }}>Prazo de aging em vigor: <b style={{ fontFamily: "'IBM Plex Mono',monospace", fontWeight: 500 }}>120 dias</b> sem atualização.</span>
         </div>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <div style={{ width: 200 }}><Select options={SORT_OPTIONS} value={state.sort} onChange={(e) => ws.setState({ sort: e.target.value })} size="sm" aria-label="Ordenação" /></div>
+        <div className={isMobile ? "tdr-stack-actions" : undefined} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+          <div style={{ width: isMobile ? "100%" : 200 }}><Select options={SORT_OPTIONS} value={state.sort} onChange={(e) => ws.setState({ sort: e.target.value })} size="sm" aria-label="Ordenação" /></div>
           <Button variant="secondary" icon="history" onClick={ws.uploadRfp}>Importar RFP passada</Button>
           <Button icon="upload" onClick={ws.uploadDocs}>Subir documentos</Button>
         </div>
       </div>
+      {isMobile ? <DocCards docs={v.docs} /> : (
       <div style={card(14, { overflowX: "auto", overflowY: "hidden" })}>
         <div style={{ ...rowGrid, padding: "12px 20px", background: "var(--n-050)", borderBottom: "1px solid var(--n-200)", ...mono(11, "var(--n-400)"), letterSpacing: ".1em", textTransform: "uppercase" }}>
           <span>Documento</span><span>Tipo</span><span>Atualizado</span><span>Idade</span><span>Status</span><span>Enviado por</span><span>Ações</span>
@@ -39,19 +79,11 @@ export function Base({ v, ws, state, pad }) {
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}><Badge tone={d.tone} icon={d.icon}>{d.statusText}</Badge></div>
             <span>{d.by}</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {d.canRetry ? (
-                <Tooltip content="Tentar novamente" placement="top">
-                  <IconButton icon="refresh-cw" label="Tentar novamente" variant="outline" size="sm" onClick={d.retry} />
-                </Tooltip>
-              ) : null}
-              <Tooltip content={d.toggleLabel} placement="top">
-                <Switch checked={d.active} onChange={d.toggle} aria-label={d.toggleLabel} />
-              </Tooltip>
-            </div>
+            <DocActions d={d} />
           </div>
         ))}
       </div>
+      )}
     </Page>
   );
 }

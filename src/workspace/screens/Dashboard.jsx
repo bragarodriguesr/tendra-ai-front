@@ -2,14 +2,14 @@ import React from "react";
 import { Badge, Button, Icon, MonoLabel, Tooltip } from "../../ds/index.js";
 import { ClickRow, Page, SegmentBar, PageHeader, bigNumber, card, legendDot, mono } from "../ui.jsx";
 
-function Kpi({ icon, label, value, sub }) {
+function Kpi({ icon, label, value, sub, compact }) {
   return (
-    <div style={card(14, { padding: 24, display: "flex", flexDirection: "column", gap: 12 })}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--n-500)" }}>
-        <Icon name={icon} size="md" />
+    <div style={card(14, { padding: compact ? 16 : 24, display: "flex", flexDirection: "column", gap: compact ? 8 : 12, minWidth: 0 })}>
+      <div style={{ display: "flex", alignItems: compact ? "flex-start" : "center", gap: 8, color: "var(--n-500)" }}>
+        <Icon name={icon} size="md" style={{ flex: "none" }} />
         <MonoLabel>{label}</MonoLabel>
       </div>
-      <span style={bigNumber}>{value}</span>
+      <span style={compact ? { ...bigNumber, fontSize: 32 } : bigNumber}>{value}</span>
       <span style={{ fontSize: 13, color: "var(--n-500)", lineHeight: 1.5 }}>{sub}</span>
     </div>
   );
@@ -41,18 +41,18 @@ export function DueText({ t, style }) {
   return <span style={{ fontSize: 13, color: t.dueColor, fontWeight: t.dueWeight, ...style }}>{t.dueText}</span>;
 }
 
-export function Dashboard({ v, ws, pad }) {
+export function Dashboard({ v, ws, pad, isMobile }) {
   const { dash } = v;
   return (
     <Page pad={pad}>
       <PageHeader eyebrow="Dashboard · últimos 90 dias" title="Visão geral do uso" action={<Button icon="plus" onClick={() => ws.go("new")}>Nova RFP/RFI</Button>} />
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 20 }}>
-        <Kpi icon="layout-grid" label="RFPs e RFIs trabalhadas" value={dash.worked} sub={dash.workedSub} />
-        <Kpi icon="circle-alert" label="Itens em aberto" value={dash.open} sub={dash.openSub} />
-        <Kpi icon="clock" label="Tempo médio por RFP" value={dash.avg} sub="Da importação à exportação do documento." />
-        <Kpi icon="shield-check" label="Itens aprovados" value={dash.approved} sub={dash.approvedSub} />
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,minmax(0,1fr))" : "repeat(auto-fit,minmax(240px,1fr))", gap: isMobile ? 12 : 20 }}>
+        <Kpi icon="layout-grid" label="RFPs e RFIs trabalhadas" value={dash.worked} sub={dash.workedSub} compact={isMobile} />
+        <Kpi icon="circle-alert" label="Itens em aberto" value={dash.open} sub={dash.openSub} compact={isMobile} />
+        <Kpi icon="clock" label="Tempo médio por RFP" value={dash.avg} sub="Da importação à exportação do documento." compact={isMobile} />
+        <Kpi icon="shield-check" label="Itens aprovados" value={dash.approved} sub={dash.approvedSub} compact={isMobile} />
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(340px,1fr))", gap: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "repeat(auto-fit,minmax(340px,1fr))", gap: 20 }}>
         <div style={card(14, { padding: 24, display: "flex", flexDirection: "column", gap: 16 })}>
           <MonoLabel>Tarefas por status</MonoLabel>
           <SegmentBar segments={dash.status} total={dash.total} unit="tarefas" />
@@ -78,7 +78,7 @@ export function Dashboard({ v, ws, pad }) {
           <Button size="sm" variant="ghost" iconEnd="arrow-right" onClick={() => ws.go("tasks")}>Ver todas as tarefas</Button>
         </div>
         {dash.deadlines.map((t) => (
-          <ClickRow key={t.id} onClick={t.open} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap", padding: "14px 24px", borderTop: "1px solid var(--n-100)" }}>
+          <ClickRow key={t.id} onClick={t.open} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap", padding: isMobile ? "14px 16px" : "14px 24px", borderTop: "1px solid var(--n-100)" }}>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontWeight: 600, color: "var(--n-900)" }}>{t.title}</div>
               <div style={{ fontSize: 13, color: "var(--n-500)", marginTop: 2 }}>{t.company} · {t.type} · {t.owner}</div>

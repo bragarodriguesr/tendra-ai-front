@@ -2,15 +2,15 @@ import React from "react";
 import { Badge, Button, MonoLabel } from "../../ds/index.js";
 import { DISPLAY, Page, card, mono } from "../ui.jsx";
 
-export function Onboarding({ v, ws, state, pad }) {
+export function Onboarding({ v, ws, state, pad, isMobile }) {
   return (
     <Page max={960} pad={pad} gap={32}>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <MonoLabel>Primeiros passos · 1 de 2</MonoLabel>
-        <h1 style={{ margin: 0, fontFamily: DISPLAY, fontWeight: 600, fontSize: 40, letterSpacing: "-.03em", lineHeight: 1.1, color: "var(--n-900)", maxWidth: "18ch" }}>Suba os documentos que a Tendra.ai vai consultar.</h1>
+        <h1 style={{ margin: 0, fontFamily: DISPLAY, fontWeight: 600, fontSize: isMobile ? 30 : 40, letterSpacing: "-.03em", lineHeight: 1.1, color: "var(--n-900)", maxWidth: "18ch" }}>Suba os documentos que a Tendra.ai vai consultar.</h1>
         <p style={{ margin: 0, maxWidth: "62ch", lineHeight: 1.6 }}>Propostas anteriores, whitepapers, políticas e RFPs respondidas. Mais documentos melhoram os rascunhos; cada resposta gerada aponta para o trecho de origem.</p>
       </div>
-      <div style={{ border: "1px dashed var(--n-350)", borderRadius: 16, background: "var(--n-000)", padding: 40, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 16 }}>
+      <div style={{ border: "1px dashed var(--n-350)", borderRadius: 16, background: "var(--n-000)", padding: isMobile ? 24 : 40, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 16 }}>
         <div style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 20, color: "var(--n-900)" }}>Arraste arquivos ou selecione do computador</div>
         <div style={{ ...mono(12, "var(--n-400)"), lineHeight: 1.6 }}>.doc · .docx · .xls · .xlsx · .md · .pdf · .ppt · .pptx · .txt · .csv · arquivos do Google (baixados como Office)</div>
         <Button icon="upload" onClick={ws.uploadDocs}>Subir documentos</Button>
@@ -22,7 +22,7 @@ export function Onboarding({ v, ws, state, pad }) {
         </div>
         <div style={card(14, { overflowX: "auto", overflowY: "hidden" })}>
           {v.docs.map((d) => (
-            <div key={d.id} style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: 16, alignItems: "center", padding: "12px 20px", borderTop: "1px solid var(--n-100)" }}>
+            <div key={d.id} style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: 16, alignItems: "center", padding: isMobile ? "12px 16px" : "12px 20px", borderTop: "1px solid var(--n-100)", ...(isMobile ? { gridTemplateColumns: "minmax(0,1fr)", gap: 8 } : null) }}>
               <div style={{ minWidth: 0 }}>
                 <div style={{ ...mono(13), overflow: "hidden", textOverflow: "ellipsis" }}>{d.name}</div>
                 <div style={{ fontSize: 13, color: "var(--n-400)", marginTop: 2 }}>{d.note}</div>

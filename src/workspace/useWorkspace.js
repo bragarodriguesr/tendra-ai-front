@@ -5,7 +5,7 @@ const initialState = ({ initialScreen, role }) => ({
   view: "site", tAi: 0, hfilter: "todos", alertAt: { id: null, i: 0 },
   screen: initialScreen, role,
   items: seedItems(), itemsTask: "t1", store: {}, sel: "r4", filter: "todos",
-  edit: false, showOrig: false, drawer: null, dialog: false, toast: null,
+  edit: false, showOrig: false, drawer: null, dialog: false, toast: null, reviewPane: "list",
   docs: seedDocs(), sort: "idade", taskId: "t1",
   exported: null, exported4: null, exported8: null, expanded: null,
   form: { name: "Perguntas_Meridian.xlsx", company: "", type: "RFP", due: "", owner: "", file: false, identified: false, tried: false },
@@ -48,7 +48,9 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
           const next = api.itemsOf(tid), first = next.find((i) => i.st !== "aprovada") || next[0];
           sw = { items: next, store: { ...st.store, [st.itemsTask]: st.items }, itemsTask: tid, sel: first.id, filter: "todos" };
         }
-        setState({ screen, navOpen: false, drawer: null, edit: false, showOrig: false, ...sw, ...extra });
+        // No celular a Revisão tem duas etapas: abre na lista, ou direto no item quando ele vem escolhido.
+        const reviewPane = screen === "review" && extra.sel ? "item" : "list";
+        setState({ screen, navOpen: false, drawer: null, edit: false, showOrig: false, reviewPane, ...sw, ...extra });
       },
       showView(view) { setState({ view }); window.scrollTo(0, 0); },
       toast(title, desc, tone = "success") {

@@ -2,13 +2,13 @@ import React from "react";
 import { Badge, Button, Icon, ProgressBar, Tabs } from "../../ds/index.js";
 import { ClickRow, DISPLAY, Page, SegmentBar, bigNumber, card, h1Style, legendDot, mono } from "../ui.jsx";
 
-const statusCard = (accent) => card(16, {
-  padding: 32, display: "flex", flexDirection: "column", gap: 16, maxWidth: 640,
+const statusCard = (accent, compact) => card(16, {
+  padding: compact ? 20 : 32, display: "flex", flexDirection: "column", gap: 16, maxWidth: 640,
   ...(accent ? { border: "1px solid var(--danger)", borderTop: "3px solid var(--danger)" } : null)
 });
 const cardTitle = { fontFamily: DISPLAY, fontWeight: 600, fontSize: 24, color: "var(--n-900)" };
 
-export function TaskDetail({ v, ws, state, pad }) {
+export function TaskDetail({ v, ws, state, pad, isMobile }) {
   const { task, counts: c } = v;
   return (
     <Page pad={pad}>
@@ -32,7 +32,7 @@ export function TaskDetail({ v, ws, state, pad }) {
       </div>
 
       {task.isProcessing ? (
-        <div style={statusCard()}>
+        <div style={statusCard(false, isMobile)}>
           <div><Badge tone="neutral" icon="loader-circle">Processando</Badge></div>
           <div style={cardTitle}>Processando: 42 de 180 perguntas.</div>
           <ProgressBar value={23} />
@@ -42,7 +42,7 @@ export function TaskDetail({ v, ws, state, pad }) {
       ) : null}
 
       {task.isFailed ? (
-        <div style={statusCard(true)}>
+        <div style={statusCard(true, isMobile)}>
           <div><Badge tone="danger" icon="triangle-alert">Falha no carregamento</Badge></div>
           <div style={cardTitle}>Não foi possível carregar este arquivo. Tente de novo ou fale com o suporte.</div>
           <div style={{ color: "var(--n-900)", lineHeight: 1.6 }}><b>Causa:</b> arquivo ilegível ou protegido por senha.</div>
@@ -54,7 +54,7 @@ export function TaskDetail({ v, ws, state, pad }) {
       ) : null}
 
       {task.isReady ? (
-        <div style={statusCard()}>
+        <div style={statusCard(false, isMobile)}>
           <div><Badge tone="approved" icon="check-check">Pronta para exportar</Badge></div>
           <div style={cardTitle}>{task.progText}</div>
           <ProgressBar value={100} />
@@ -66,7 +66,7 @@ export function TaskDetail({ v, ws, state, pad }) {
       {task.hasItems ? (
         <>
           <div style={card(16, { padding: 24, display: "flex", flexDirection: "column", gap: 20 })}>
-            <div style={{ display: "flex", gap: 48, alignItems: "flex-end", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: isMobile ? "16px 32px" : 48, alignItems: "flex-end", flexWrap: "wrap" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                 <span style={bigNumber}>{c.approved} <span style={{ fontSize: 24, color: "var(--n-400)" }}>de {c.total}</span></span>
                 <span style={{ color: "var(--n-700)" }}>itens aprovados</span>
@@ -89,19 +89,30 @@ export function TaskDetail({ v, ws, state, pad }) {
               ))}
             </div>
           </div>
-          <Tabs items={v.filterTabs} value={state.filter} onChange={ws.setFilter} />
+          <div className="tdr-tabs-scroll"><Tabs items={v.filterTabs} value={state.filter} onChange={ws.setFilter} /></div>
           <div style={card(14, { overflowX: "auto", overflowY: "hidden" })}>
             {v.rows.map((r) => (
-              <ClickRow key={r.id} onClick={r.openFromTask} style={{ display: "grid", minWidth: 980, gridTemplateColumns: "120px minmax(0,1fr) 150px 150px", gap: 16, alignItems: "center", padding: "14px 20px", borderTop: "1px solid var(--n-100)" }}>
-                <span style={mono(12)}>{r.code}</span>
-                <span style={{ color: "var(--n-900)" }}>{r.q}</span>
-                <div><Badge tone={r.tone} icon={r.icon}>{r.st}</Badge></div>
-                {r.hasAlert ? (
-                  <span style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--danger)", fontSize: 13, fontWeight: 500 }}>
-                    <Icon name="triangle-alert" size="sm" />{r.alertText}
-                  </span>
-                ) : <span />}
-              </ClickRow>
+              isMobile ? (
+                <ClickRow key={r.id} onClick={r.openFromTask} style={{ display: "flex", flexDirection: "column", gap: 8, padding: "14px 16px", borderTop: "1px solid var(--n-100)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                    <span style={mono(12)}>{r.code}</span>
+                    {r.hasAlert ? <span style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--danger)", fontSize: 12, fontWeight: 500 }}><Icon name="triangle-alert" size="sm" />{r.alertText}</span> : null}
+                  </div>
+                  <span style={{ color: "var(--n-900)", lineHeight: 1.4 }}>{r.q}</span>
+                  <div><Badge tone={r.tone} icon={r.icon}>{r.st}</Badge></div>
+                </ClickRow>
+              ) : (
+                <ClickRow key={r.id} onClick={r.openFromTask} style={{ display: "grid", minWidth: 980, gridTemplateColumns: "120px minmax(0,1fr) 150px 150px", gap: 16, alignItems: "center", padding: "14px 20px", borderTop: "1px solid var(--n-100)" }}>
+                  <span style={mono(12)}>{r.code}</span>
+                  <span style={{ color: "var(--n-900)" }}>{r.q}</span>
+                  <div><Badge tone={r.tone} icon={r.icon}>{r.st}</Badge></div>
+                  {r.hasAlert ? (
+                    <span style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--danger)", fontSize: 13, fontWeight: 500 }}>
+                      <Icon name="triangle-alert" size="sm" />{r.alertText}
+                    </span>
+                  ) : <span />}
+                </ClickRow>
+              )
             ))}
           </div>
         </>
