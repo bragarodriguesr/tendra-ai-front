@@ -27,10 +27,17 @@ const DOC_STATUS = {
 };
 const FORMATS = ".doc, .docx, .xls, .xlsx, .md, .pdf, .ppt, .pptx, .txt, .csv";
 
-const STATUS_COLORS = {
-  "Em revisão": "var(--n-700)", Processando: "var(--brand-sage)", Pronta: "var(--brand-lime)", Exportada: "var(--n-900)",
-  Vencido: "var(--danger)", Falha: "var(--n-500)", "Na fila": "var(--n-350)"
-};
+// Tarefas por status no Dashboard. Cores de dataviz do design system (tokens/dataviz.css),
+// em ordem fixa: a cor acompanha o status, não a posição. A ordem separa as vizinhas
+// (ΔE ≥ 15 para daltonismo). Tinta e Sálvia nunca preenchem série; o Limão é a 6ª série.
+const STATUS_GROUPS = [
+  { label: "Em revisão", of: ["Em revisão"], color: "var(--dv-teal-solid)", ink: "var(--dv-teal-ink)" },
+  { label: "Pronta ou exportada", of: ["Pronta", "Exportada"], color: "var(--dv-series-6)", ink: "var(--n-900)" },
+  { label: "Falha", of: ["Falha"], color: "var(--dv-plum-solid)", ink: "var(--dv-plum-ink)" },
+  { label: "Na fila", of: ["Na fila"], color: "var(--dv-amber-solid)", ink: "var(--dv-amber-ink)" },
+  { label: "Processando", of: ["Processando"], color: "var(--dv-slate-solid)", ink: "var(--dv-slate-ink)" },
+  { label: "Vencido", of: ["Vencido"], color: "var(--dv-terra-solid)", ink: "var(--dv-terra-ink)" }
+];
 
 const FILTERS = [["todos", "Todos"], ["sem-rascunho", "Sem rascunho"], ["sugerida", "Sugerida"], ["em-revisao", "Em revisão"], ["revisada", "Revisada"], ["aprovada", "Aprovada"], ["alerta", "Alerta pendente"]];
 
@@ -101,16 +108,20 @@ export function buildView(s, ws) {
   const dateKey = (x) => { const [d, m, y] = x.split("/"); return +(y + m + d); };
   const itc = ITEM_TASKS.map((id) => ws.counts(id, s));
   const openItems = itc.reduce((a, q) => a + q.total - q.approved, 0) + 138;
-  const stCount = {};
-  tasks.forEach((t) => { stCount[t.status] = (stCount[t.status] || 0) + 1; });
+  const statusGroups = STATUS_GROUPS
+    .map((g) => ({ ...g, n: tasks.filter((t) => g.of.includes(t.status)).length }))
+    .filter((g) => g.n > 0)
+    .map((g) => ({ ...g, pct: Math.round((g.n / tasks.length) * 100), width: (g.n / tasks.length) * 100 + "%" }));
+  const months = [["Abr", "abril", 2], ["Mai", "maio", 3], ["Jun", "junho", 3], ["Jul", "julho", 4], ["Ago", "agosto", 3], ["Set", "setembro", 3]];
+  const monthMax = Math.max(...months.map((m) => m[2]));
   const dash = {
     worked: String(tasks.length + 18), workedSub: tasks.length + " em andamento · 18 concluídas",
     open: String(openItems), openSub: "Em " + tasks.filter((t) => !t.isReady).length + " tarefas ativas, entre revisão e processamento.",
     avg: "2,4 dias",
     approved: (1284 + itc.reduce((a, q) => a + q.approved, 0)).toLocaleString("pt-BR"),
     approvedSub: "Todas com fonte rastreável até o documento de origem.",
-    status: Object.keys(stCount).map((k) => ({ label: k, n: stCount[k], width: (stCount[k] / tasks.length) * 100 + "%", color: STATUS_COLORS[k] })),
-    months: [["Abr", 2], ["Mai", 3], ["Jun", 3], ["Jul", 4], ["Ago", 3], ["Set", 3]].map(([m, n]) => ({ m, n, height: n * 22 })),
+    status: statusGroups, total: tasks.length,
+    months: months.map(([m, full, n]) => ({ m, full, n, pct: (n / monthMax) * 100 })),
     deadlines: tasks.filter((t) => { const m = /faltam (\d+)/.exec(t.dueText || ""); return m && +m[1] < 15; }).sort((a, b) => dateKey(a.due) - dateKey(b.due))
   };
 
