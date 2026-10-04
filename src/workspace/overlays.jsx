@@ -65,12 +65,15 @@ export function ConfirmEditDialog({ onCancel, onConfirm }) {
   );
 }
 
-export function ToastHost({ toast, onClose }) {
+export function ToastHost({ toast, onClose, isMobile }) {
   return (
     <>
       <div aria-live="polite" style={{ position: "absolute", left: -9999 }}>{toast ? `${toast.title}. ${toast.desc}` : ""}</div>
       {toast ? (
-        <div style={{ position: "absolute", right: 24, bottom: 24, zIndex: 40 }}>
+        <div style={isMobile
+          // No celular o aviso fica no topo, para não cobrir a barra de revisar/aprovar.
+          ? { position: "absolute", left: 16, right: 16, top: 12, zIndex: 40 }
+          : { position: "absolute", right: 24, bottom: 24, zIndex: 40 }}>
           <Toast title={toast.title} description={toast.desc} tone={toast.tone} onClose={onClose} />
         </div>
       ) : null}

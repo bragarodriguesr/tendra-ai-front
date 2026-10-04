@@ -1,7 +1,7 @@
 import React from "react";
 import { Button, IconButton, Logo, SidebarNav } from "../ds/index.js";
 import { buildView } from "./viewModel.js";
-import { DISPLAY, MONO } from "./ui.jsx";
+import { MONO } from "./ui.jsx";
 import { ConfirmEditDialog, SourceDrawer, ToastHost } from "./overlays.jsx";
 import { Dashboard } from "./screens/Dashboard.jsx";
 import { Tasks } from "./screens/Tasks.jsx";
@@ -61,26 +61,21 @@ export function WorkspaceApp({ state, ws, onSite }) {
 
   return (
     <div>
-      <div style={{ position: "sticky", top: 0, zIndex: 60, height: TOPBAR_H, boxSizing: "border-box", display: "flex", alignItems: "center", gap: 12, padding: "0 20px", background: "var(--n-000)", borderBottom: "1px solid var(--n-200)" }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 60, height: TOPBAR_H, boxSizing: "border-box", display: "flex", alignItems: "center", gap: isMobile ? 4 : 12, padding: isMobile ? "0 12px 0 8px" : "0 20px", background: "var(--n-000)", borderBottom: "1px solid var(--n-200)" }}>
+        {isMobile ? <IconButton icon="menu" label="Abrir menu" aria-expanded={state.navOpen} onClick={() => ws.setState({ navOpen: !state.navOpen })} /> : null}
         <a href="#" aria-label="Tendra.ai — voltar ao site" className="tdr-logo-link" onClick={(e) => { e.preventDefault(); onSite(); }} style={{ display: "flex", marginRight: 8, textDecoration: "none" }}>
           <Logo size={28} variant="paper" />
         </a>
         <div style={{ marginLeft: "auto", display: "flex" }}>
-          <Button size="sm" variant="accent" icon="layout-grid" aria-current="page" onClick={() => ws.go("dashboard")}>Produto · Workspace</Button>
+          <Button size="sm" variant="accent" icon="layout-grid" aria-current="page" onClick={() => ws.go("dashboard")}><span><span className="tdr-ws-prefix">Produto · </span>Workspace</span></Button>
         </div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : `${SIDEBAR_W}px minmax(0,1fr)`, height: `calc(100vh - ${TOPBAR_H}px)`, background: "var(--n-050)", fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 14, color: "var(--n-700)", position: "relative", overflow: "hidden" }}>
-        <ToastHost toast={state.toast} onClose={() => ws.setState({ toast: null })} />
+        <ToastHost toast={state.toast} isMobile={isMobile} onClose={() => ws.setState({ toast: null })} />
         {isMobile && state.navOpen ? <div onClick={() => ws.setState({ navOpen: false })} style={{ position: "absolute", inset: 0, zIndex: 49, background: "rgba(18,20,15,.4)" }} /> : null}
         <Sidebar v={v} ws={ws} state={state} isMobile={isMobile} />
 
         <main style={{ minWidth: 0, minHeight: 0, overflow: "auto", position: "relative" }}>
-          {isMobile ? (
-            <div style={{ position: "sticky", top: 0, zIndex: 10, display: "flex", alignItems: "center", gap: 12, padding: "8px 12px", background: "var(--n-050)", borderBottom: "1px solid var(--n-200)" }}>
-              <IconButton icon="menu" label="Abrir menu" onClick={() => ws.setState({ navOpen: true })} />
-              <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 18, color: "var(--n-900)" }}>Tendra.ai</span>
-            </div>
-          ) : null}
           {state.screen === "review" ? <Review {...props} height={`calc(100vh - ${TOPBAR_H}px)`} /> : Screen ? <Screen {...props} /> : null}
         </main>
 

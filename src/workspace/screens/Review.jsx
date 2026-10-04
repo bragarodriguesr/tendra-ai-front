@@ -1,5 +1,5 @@
 import React from "react";
-import { Badge, Button, EmptyState, Icon, MonoLabel, Select, Textarea } from "../../ds/index.js";
+import { Badge, Button, EmptyState, Icon, IconButton, MonoLabel, Select, Textarea } from "../../ds/index.js";
 import { AlertDeck, ClickRow, DISPLAY, card, mono } from "../ui.jsx";
 
 const FB_REASONS = ["Fonte incorreta", "Texto impreciso", "Informação desatualizada", "Outro"];
@@ -8,9 +8,9 @@ const fbStyle = (on) => ({
   ...(on ? { background: "var(--n-900)", color: "var(--n-050)", border: "1px solid var(--n-900)" } : { background: "var(--n-000)", color: "var(--n-900)", border: "1px solid var(--n-350)" })
 });
 
-function ItemList({ v, ws, state }) {
+function ItemList({ v, ws, state, isMobile }) {
   return (
-    <div style={{ borderRight: "1px solid var(--n-200)", display: "flex", flexDirection: "column", minHeight: 0, background: "var(--n-050)" }}>
+    <div style={{ borderRight: isMobile ? 0 : "1px solid var(--n-200)", display: "flex", flexDirection: "column", minHeight: 0, background: "var(--n-050)" }}>
       <div style={{ padding: "20px 20px 12px", display: "flex", flexDirection: "column", gap: 12 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 18, color: "var(--n-900)" }}>Itens</span>
@@ -21,7 +21,7 @@ function ItemList({ v, ws, state }) {
       </div>
       <div style={{ flex: 1, overflow: "auto" }}>
         {v.rows.map((r) => (
-          <ClickRow key={r.id} className="" onClick={r.open} aria-current={r.active || undefined} style={{
+          <ClickRow key={r.id} className="" onClick={() => { r.open(); if (isMobile) ws.setState({ reviewPane: "item" }); }} aria-current={r.active || undefined} style={{
             display: "flex", flexDirection: "column", gap: 6, padding: "14px 20px", borderTop: "1px solid var(--n-200)", fontSize: 14,
             background: r.active ? "var(--n-000)" : "transparent", boxShadow: r.active ? "inset 2px 0 0 var(--n-900)" : "none"
           }}>
@@ -65,7 +65,7 @@ function Answer({ v, ws, state, cur }) {
     <div style={card(16, { padding: 24, display: "flex", flexDirection: "column", gap: 16 })}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <MonoLabel>Resposta</MonoLabel>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <span style={mono(12, "var(--n-400)")}>{v.savedText}</span>
           {cur.edited ? (
             <>
@@ -119,7 +119,7 @@ function Sources({ cur }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <MonoLabel>Fontes · {cur.srcs.length}</MonoLabel>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(300px,100%),1fr))", gap: 16 }}>
         {cur.srcs.map((s) => (
           <div key={s.k} style={card(14, { display: "flex", flexDirection: "column", gap: 12, padding: 16, borderColor: s.conflict ? "var(--danger)" : "var(--n-200)" })}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -144,28 +144,46 @@ function Sources({ cur }) {
   );
 }
 
-export function Review({ v, ws, state, height }) {
+export function Review({ v, ws, state, height, isMobile }) {
   const cur = v.cur;
   const setFb = (val) => ws.setState((x) => ({ fb: { ...x.fb, [cur.id]: val } }));
+  // Celular: duas etapas (lista → item). Desktop: lista e item lado a lado.
+  const showList = !isMobile || state.reviewPane !== "item";
+  const showItem = !isMobile || state.reviewPane === "item";
+  const padX = isMobile ? 16 : 40;
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "minmax(260px,320px) minmax(0,1fr)", height }}>
-      <ItemList v={v} ws={ws} state={state} />
+    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "minmax(260px,320px) minmax(0,1fr)", height }}>
+      {showList ? <ItemList v={v} ws={ws} state={state} isMobile={isMobile} /> : null}
+      {showItem ? (
       <div style={{ display: "flex", flexDirection: "column", minHeight: 0, background: "var(--n-050)" }}>
+        {isMobile ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 8px 8px 4px", borderBottom: "1px solid var(--n-200)", background: "var(--n-000)" }}>
+            <Button size="sm" variant="ghost" icon="chevron-left" onClick={() => ws.setState({ reviewPane: "list", edit: false })}>Itens</Button>
+            <span style={{ ...mono(12, "var(--n-500)"), flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{v.revTask}</span>
+          </div>
+        ) : null}
         {cur ? (
           <>
-            <div style={{ flex: 1, overflow: "auto", padding: "28px 40px", display: "flex", flexDirection: "column", gap: 24 }}>
+            <div style={{ flex: 1, overflow: "auto", padding: isMobile ? "20px 16px" : "28px 40px", display: "flex", flexDirection: "column", gap: isMobile ? 20 : 24 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px 16px", flexWrap: "wrap" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <span style={{ ...mono(13), fontWeight: 500 }}>{cur.code}</span>
                   <Badge tone={cur.tone} icon={cur.icon}>{cur.st}</Badge>
                   {cur.edited ? <Badge tone="neutral" icon="pencil">Editado</Badge> : null}
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  <Button size="sm" variant="secondary" icon="chevron-left" onClick={() => ws.step(-1)} title="Item anterior (K)">Item anterior</Button>
-                  <Button size="sm" variant="secondary" iconEnd="chevron-right" onClick={() => ws.step(1)} title="Próximo item (J)">Próximo item</Button>
-                </div>
+                {isMobile ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <IconButton icon="chevron-left" variant="outline" label="Item anterior" onClick={() => ws.step(-1)} />
+                    <IconButton icon="chevron-right" variant="outline" label="Próximo item" onClick={() => ws.step(1)} />
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <Button size="sm" variant="secondary" icon="chevron-left" onClick={() => ws.step(-1)} title="Item anterior (K)">Item anterior</Button>
+                    <Button size="sm" variant="secondary" iconEnd="chevron-right" onClick={() => ws.step(1)} title="Próximo item (J)">Próximo item</Button>
+                  </div>
+                )}
               </div>
-              <h2 style={{ margin: 0, fontFamily: DISPLAY, fontWeight: 600, fontSize: 26, letterSpacing: "-.02em", lineHeight: 1.25, color: "var(--n-900)", maxWidth: "40ch", textWrap: "pretty" }}>{cur.q}</h2>
+              <h2 style={{ margin: 0, fontFamily: DISPLAY, fontWeight: 600, fontSize: isMobile ? 22 : 26, letterSpacing: "-.02em", lineHeight: 1.25, color: "var(--n-900)", maxWidth: "40ch", textWrap: "pretty" }}>{cur.q}</h2>
               {cur.alerts.length > 0 ? <ItemAlerts cur={cur} ws={ws} /> : null}
               <Answer v={v} ws={ws} state={state} cur={cur} />
               {cur.srcs.length > 0 ? <Sources cur={cur} /> : null}
@@ -176,11 +194,11 @@ export function Review({ v, ws, state, height }) {
                 {cur.fbDown ? <div style={{ width: 220 }}><Select options={FB_REASONS} placeholder="Motivo" size="sm" aria-label="Motivo" /></div> : null}
               </div>
             </div>
-            <div style={{ borderTop: "1px solid var(--n-200)", background: "var(--n-000)", padding: "16px 40px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+            <div style={{ borderTop: "1px solid var(--n-200)", background: "var(--n-000)", padding: `${isMobile ? 12 : 16}px ${padX}px`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: isMobile ? 10 : 16, flexWrap: "wrap" }}>
               <div style={{ fontSize: 13, lineHeight: 1.5, color: "var(--n-900)", display: "flex", alignItems: "center", gap: 8, maxWidth: 420 }}>
                 {cur.blockText ? <Icon name="info" size="md" /> : null}<span>{cur.blockText}</span>
               </div>
-              <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <div className={isMobile ? "tdr-review-actions" : undefined} style={{ display: "flex", gap: isMobile ? 8 : 12, alignItems: "center", flexWrap: "wrap", ...(isMobile ? { width: "100%" } : null) }}>
                 {cur.isApprovedOrRevised ? <span style={{ fontSize: 13, color: "var(--n-400)" }}>{cur.stateHint}</span> : null}
                 <Button variant="secondary" icon="check" disabled={cur.noRevise} onClick={() => ws.revise(cur.id)}>Marcar como revisado</Button>
                 <Button icon="shield-check" disabled={cur.noApprove} onClick={ws.approve}>Aprovar resposta</Button>
@@ -188,9 +206,10 @@ export function Review({ v, ws, state, height }) {
             </div>
           </>
         ) : (
-          <div style={{ padding: 40 }}><EmptyState icon="filter" title="Nenhum item neste filtro." description="Escolha outro estado para continuar a revisão." /></div>
+          <div style={{ padding: padX }}><EmptyState icon="filter" title="Nenhum item neste filtro." description="Escolha outro estado para continuar a revisão." /></div>
         )}
       </div>
+      ) : null}
     </div>
   );
 }
