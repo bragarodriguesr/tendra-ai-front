@@ -21,7 +21,7 @@ export function PricingPage() {
           </p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "var(--gutter-grid)", alignItems: "start" }}>
+        <div className="tdr-site-plans">
           {PLANS.map((pl) => (
             <Card key={pl.t} tone={pl.featured ? "ink" : "paper"} radius="2xl" padding="lg">
               <div style={{ display: "grid", gap: "var(--space-5)" }}>

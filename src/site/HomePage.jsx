@@ -11,7 +11,7 @@ export function HomePage({ onPage }) {
   return (
     <>
       <Section>
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.05fr) minmax(0, 0.95fr)", gap: "var(--space-12)", alignItems: "center" }}>
+        <div className="tdr-site-hero">
           <div style={{ display: "grid", gap: "var(--space-6)" }}>
             <MonoLabel tone="sage">RFP &amp; LICITAÇÕES</MonoLabel>
             <h1 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: "var(--weight-bold)", fontSize: "var(--text-d1-size)", lineHeight: "var(--text-d1-lh)", letterSpacing: "var(--text-d1-ls)", color: "var(--text-strong)", maxWidth: "20ch", textWrap: "pretty" }}>
@@ -20,7 +20,7 @@ export function HomePage({ onPage }) {
             <p style={{ margin: 0, fontSize: "var(--text-lead-size)", lineHeight: "var(--text-lead-lh)", color: "var(--text-body)", maxWidth: "var(--measure-lead)", textWrap: "pretty" }}>
               A Tendra.ai lê o edital, cruza com a sua base aprovada e devolve respostas completas — com a fonte de cada afirmação rastreável até o documento de origem.
             </p>
-            <div style={{ display: "flex", gap: "var(--space-3)", flexWrap: "wrap" }}>
+            <div className="tdr-site-cta" style={{ display: "flex", gap: "var(--space-3)", flexWrap: "wrap" }}>
               <Button size="lg" icon="calendar">Agendar demo</Button>
               <Button size="lg" variant="secondary" iconEnd="arrow-up-right" onClick={() => onPage("precos")}>Ver planos e preços</Button>
             </div>
@@ -33,7 +33,7 @@ export function HomePage({ onPage }) {
 
           <Card tone="ink" radius="3xl" padding="lg">
             <div style={{ display: "grid", gap: "var(--space-5)" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-4)" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-3) var(--space-4)", flexWrap: "wrap" }}>
                 <MonoLabel tone="inverse">REQ-084/210 · Banco Aurora</MonoLabel>
                 <Badge tone="approved-inverse" icon="check">Conformidade OK</Badge>
               </div>
@@ -63,7 +63,7 @@ export function HomePage({ onPage }) {
               Três passos, nenhuma resposta sem fonte
             </h2>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "var(--gutter-grid)" }}>
+          <div className="tdr-site-steps">
             {[
               { n: "01", icon: "upload", t: "Importe o edital", d: "PDF, planilha ou portal do cliente. A Tendra.ai separa os requisitos item por item." },
               { n: "02", icon: "sparkles", t: "Gere com rastreabilidade", d: "Cada resposta sai citando o documento e a página que a sustenta." },
@@ -87,7 +87,7 @@ export function HomePage({ onPage }) {
       </Section>
 
       <Section>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "var(--gutter-grid)" }}>
+        <div className="tdr-site-stats">
           {[
             { v: "4h 12m", k: "por edital de 200 itens" },
             { v: "83%", k: "de reaproveitamento da base" },
@@ -95,7 +95,7 @@ export function HomePage({ onPage }) {
             { v: "100%", k: "das respostas com fonte citada" }
           ].map((s) => (
             <div key={s.k} style={{ display: "grid", gap: "var(--space-2)", borderTop: "var(--border-width-accent) solid var(--brand-sage)", paddingTop: "var(--space-4)" }}>
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: 40, letterSpacing: "-0.03em", color: "var(--text-strong)" }}>{s.v}</div>
+              <div className="tdr-site-stat-value" style={{ fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: 40, letterSpacing: "-0.03em", color: "var(--text-strong)" }}>{s.v}</div>
               <div style={{ fontSize: "var(--text-sm-size)", lineHeight: 1.5, color: "var(--text-body)", textWrap: "pretty" }}>{s.k}</div>
             </div>
           ))}
@@ -103,7 +103,7 @@ export function HomePage({ onPage }) {
       </Section>
 
       <Section tone="ink">
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: "var(--space-12)", alignItems: "center" }}>
+        <div className="tdr-site-trust">
           <div style={{ display: "grid", gap: "var(--space-5)" }}>
             <MonoLabel tone="accent">POR QUE CONFIAM</MonoLabel>
             <h2 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: "var(--text-d2-size)", lineHeight: "var(--text-d2-lh)", letterSpacing: "var(--text-d2-ls)", color: "var(--text-on-inverse)", maxWidth: "22ch", textWrap: "pretty" }}>
