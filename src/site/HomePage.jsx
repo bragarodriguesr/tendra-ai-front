@@ -24,11 +24,6 @@ export function HomePage({ onPage }) {
               <Button size="lg" icon="calendar">Agendar demo</Button>
               <Button size="lg" variant="secondary" iconEnd="arrow-up-right" onClick={() => onPage("precos")}>Ver planos e preços</Button>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-6)", flexWrap: "wrap", paddingTop: "var(--space-2)" }}>
-              {["SOC 2 TIPO II", "ISO 27001", "LGPD"].map((c) => (
-                <MonoLabel key={c} tone="sage">{c}</MonoLabel>
-              ))}
-            </div>
           </div>
 
           <Card tone="ink" radius="3xl" padding="lg">
