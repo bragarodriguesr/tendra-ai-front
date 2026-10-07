@@ -36,6 +36,7 @@ export function SiteHeader({ page, onNav, onLogin }) {
   return (
     <>
       <BrandBar
+        animatedLogo
         logoLabel="Tendra.ai — página inicial"
         onLogo={() => { setOpen(false); onNav({ page: "home" }); }}
         leading={<IconButton className="tdr-site-menu-btn" icon={open ? "x" : "menu"} variant="inverse" label={open ? "Fechar menu" : "Abrir menu"} aria-expanded={open} onClick={() => setOpen(!open)} />}

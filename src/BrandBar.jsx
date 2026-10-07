@@ -1,14 +1,18 @@
 import React from "react";
-import { Logo, TopBar } from "./ds/index.js";
+import { AnimatedLogo, Logo, TopBar } from "./ds/index.js";
 
 /** Altura da barra superior, igual no site e no Workspace (padrão do TopBar do design system). */
 export const BRAND_BAR_H = 64;
+
+// O SVG do logo animado tem proporção 224×48: 131px de largura dão 28px de altura,
+// a mesma do símbolo no logo estático.
+const ANIMATED_LOGO_W = 131;
 
 /**
  * Barra superior única do produto, em campo tinta: logo à esquerda, ações à direita.
  * O site e o Workspace usam a mesma barra, então trocar de visão não muda tamanho nem posição.
  */
-export function BrandBar({ logoLabel, onLogo, leading, links, children }) {
+export function BrandBar({ logoLabel, onLogo, leading, links, animatedLogo = false, children }) {
   return (
     <TopBar
       tone="ink"
@@ -18,7 +22,10 @@ export function BrandBar({ logoLabel, onLogo, leading, links, children }) {
         <>
           {leading}
           <a href="#" aria-label={logoLabel} className="tdr-logo-link" onClick={(e) => { e.preventDefault(); onLogo(); }} style={{ display: "flex", textDecoration: "none" }}>
-            <Logo variant="ink" size={28} />
+            {animatedLogo
+              // Toca uma vez ao abrir e fica completo: em loop o logo some a cada 6 s.
+              ? <AnimatedLogo variant="ink" bare once style={{ width: ANIMATED_LOGO_W }} />
+              : <Logo variant="ink" size={28} />}
           </a>
           {links}
         </>
