@@ -104,3 +104,9 @@ label:has(> [role="switch"]) * { box-sizing: border-box; }
 .tdr-alerts-item { display: grid; gap: 6px; width: 100%; padding: 12px 16px; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--border-subtle); font: inherit; font-size: 14px; color: var(--n-700); cursor: pointer; }
 .tdr-alerts-item:last-child { border-bottom: 0; }
 .tdr-alerts-item:hover { background: var(--n-075); }
+
+/* Menu de filtros da lista de itens */
+.tdr-filter-menu { left: 0; right: auto; width: 248px; padding: 6px; display: grid; }
+.tdr-filter-item { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 36px; padding: 6px 10px; border: 0; border-radius: var(--radius-sm); background: none; font: inherit; font-size: 14px; color: var(--n-900); text-align: left; cursor: pointer; }
+.tdr-filter-item:hover, .tdr-filter-item:focus-visible { background: var(--n-075); }
+.tdr-filter-item[aria-checked="true"] { font-weight: 600; }

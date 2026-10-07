@@ -1,5 +1,6 @@
 import React from "react";
-import { Badge, Button, Icon, ProgressBar, Tabs } from "../../ds/index.js";
+import { Badge, Button, Icon, ProgressBar } from "../../ds/index.js";
+import { FilterMenu } from "../FilterMenu.jsx";
 import { ClickRow, DISPLAY, Page, SegmentBar, bigNumber, card, h1Style, legendDot, mono } from "../ui.jsx";
 
 const statusCard = (accent, compact) => card(16, {
@@ -66,19 +67,9 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
       {task.hasItems ? (
         <>
           <div style={card(16, { padding: 24, display: "flex", flexDirection: "column", gap: 20 })}>
-            <div style={{ display: "flex", gap: isMobile ? "16px 32px" : 48, alignItems: "flex-end", flexWrap: "wrap" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <span style={bigNumber}>{c.approved} <span style={{ fontSize: 24, color: "var(--n-400)" }}>de {c.total}</span></span>
-                <span style={{ color: "var(--n-700)" }}>itens aprovados</span>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <span style={{ ...cardTitle, fontSize: 28 }}>{c.withDraft} de {c.total}</span>
-                <span style={{ color: "var(--n-700)" }}>com sugestão</span>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <span style={{ ...cardTitle, fontSize: 28 }}>{c.alerts}</span>
-                <span style={{ color: "var(--n-700)" }}>itens com alerta pendente</span>
-              </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <span style={bigNumber}>{c.approved} <span style={{ fontSize: 24, color: "var(--n-400)" }}>de {c.total}</span></span>
+              <span style={{ color: "var(--n-700)" }}>itens aprovados</span>
             </div>
             <SegmentBar segments={v.segs} total={c.total} unit="itens" />
             <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
@@ -89,7 +80,7 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
               ))}
             </div>
           </div>
-          <div className="tdr-tabs-scroll"><Tabs items={v.filterTabs} value={state.filter} onChange={ws.setFilter} /></div>
+          <FilterMenu tabs={v.filterTabs} value={state.filter} onChange={ws.setFilter} />
           <div style={card(14, { overflowX: "auto", overflowY: "hidden" })}>
             {v.rows.map((r) => (
               isMobile ? (
