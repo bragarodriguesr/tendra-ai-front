@@ -34,6 +34,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
       setState,
       get s() { return ref.current; },
       name() { return ref.current.role === "Aprovador" ? "Marcelo Vieira" : "Kadu Mendes"; },
+      switchRole() { setState((s) => ({ role: s.role === "Aprovador" ? "Revisor" : "Aprovador" })); },
       hasItems: (id) => ITEM_TASKS.includes(id),
       genFor(id) {
         const g = generated.current;

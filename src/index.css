@@ -84,3 +84,10 @@ label:has(> [role="switch"]) * { box-sizing: border-box; }
 @media (max-width: 600px) { .tdr-file-status { grid-column: 2; } .tdr-file { grid-template-columns: auto minmax(0, 1fr); } }
 .tdr-mini-bar { height: 4px; max-width: 220px; margin-top: 6px; border-radius: 99px; background: var(--n-200); overflow: hidden; }
 .tdr-mini-bar i { display: block; height: 100%; width: 100%; background: var(--brand-sage); animation: tdr-fill linear both; }
+
+/* Menu do usuário na barra superior do Workspace */
+.tdr-user-menu { position: absolute; top: calc(100% + 8px); right: 0; z-index: 70; width: 232px; box-sizing: border-box; padding: 16px; display: grid; gap: 14px; background: var(--surface-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); box-shadow: var(--shadow-popover); color: var(--n-700); font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; }
+.tdr-user-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tdr-user-initials { display: none; }
+@media (max-width: 600px) { .tdr-user-name { display: none; } .tdr-user-initials { display: inline; } }
+@media (max-width: 359px) { .tdr-hide-xs { display: none; } }

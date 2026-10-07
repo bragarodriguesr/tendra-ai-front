@@ -3,6 +3,7 @@ import { Button, IconButton, SidebarNav } from "../ds/index.js";
 import { BRAND_BAR_H, BrandBar } from "../BrandBar.jsx";
 import { buildView } from "./viewModel.js";
 import { MONO } from "./ui.jsx";
+import { UserMenu } from "./UserMenu.jsx";
 import { ConfirmEditDialog, SourceDrawer, ToastHost } from "./overlays.jsx";
 import { Dashboard } from "./screens/Dashboard.jsx";
 import { Tasks } from "./screens/Tasks.jsx";
@@ -21,7 +22,6 @@ const MOBILE_BELOW = 900;
 const SCREENS = { dashboard: Dashboard, tasks: Tasks, new: NewTask, task: TaskDetail, export: Export, history: History, base: Base, onboarding: Onboarding };
 
 function Sidebar({ v, ws, state, isMobile }) {
-  const isA = state.role === "Aprovador";
   return (
     <div
       className="tdr-sidebar"
@@ -34,17 +34,9 @@ function Sidebar({ v, ws, state, isMobile }) {
       <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", minHeight: 0 }}>
         <SidebarNav groups={v.navGroups} value={v.navValue} width="100%" aria-label="Workspace" />
       </div>
-      <div style={{ padding: "12px 20px", borderTop: "1px solid var(--n-200)", display: "flex", flexDirection: "column", gap: 10 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <span style={{ fontWeight: 600, color: "var(--n-900)" }}>{v.userName}</span>
-          <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--n-400)" }}>{state.role}</span>
-        </div>
+      <div style={{ padding: "12px 20px", borderTop: "1px solid var(--n-200)" }}>
         <div style={{ border: "1px dashed var(--n-350)", borderRadius: 10, padding: "10px 12px", display: "flex", flexDirection: "column", gap: 10 }}>
           <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--n-400)" }}>Painel de demo</span>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            <Button size="sm" fullWidth variant={isA ? "secondary" : "primary"} aria-pressed={!isA} onClick={() => ws.setState({ role: "Revisor" })}>Revisor</Button>
-            <Button size="sm" fullWidth variant={isA ? "primary" : "secondary"} aria-pressed={isA} onClick={() => ws.setState({ role: "Aprovador" })}>Aprovador</Button>
-          </div>
           <Button size="sm" fullWidth variant="secondary" onClick={ws.demoAll}>Aprovar todos os itens</Button>
         </div>
       </div>
@@ -67,7 +59,8 @@ export function WorkspaceApp({ state, ws, onSite, onLogout }) {
         onLogo={onSite}
         leading={isMobile ? <IconButton icon="menu" variant="inverse" label="Abrir menu" aria-expanded={state.navOpen} onClick={() => ws.setState({ navOpen: !state.navOpen })} /> : null}
       >
-        <Button size="sm" variant="inverse-secondary" icon="log-out" onClick={onLogout}>Sair</Button>
+        <UserMenu name={v.userName} role={state.role} onSwitch={ws.switchRole} />
+        <Button size="sm" variant="inverse-secondary" icon="log-out" aria-label="Sair" onClick={onLogout}><span className="tdr-hide-xs">Sair</span></Button>
       </BrandBar>
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : `${SIDEBAR_W}px minmax(0,1fr)`, height: `calc(100vh - ${TOPBAR_H}px)`, background: "var(--n-050)", fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 14, color: "var(--n-700)", position: "relative", overflow: "hidden" }}>
         <ToastHost toast={state.toast} isMobile={isMobile} onClose={() => ws.setState({ toast: null })} />

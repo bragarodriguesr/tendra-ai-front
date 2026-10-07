@@ -6,6 +6,7 @@ import { Splash } from "./Splash.jsx";
 import { BrandBar } from "./BrandBar.jsx";
 import { Button } from "./ds/index.js";
 import { useWorkspace } from "./workspace/useWorkspace.js";
+import { UserMenu } from "./workspace/UserMenu.jsx";
 
 /**
  * Site institucional, login, abertura e Workspace numa só página. Site e Workspace ficam montados e
@@ -32,7 +33,8 @@ export function App() {
           // Mesma barra do Workspace, para a troca para o Dashboard não mexer no topo da tela.
           header={
             <BrandBar logoLabel="Tendra.ai — voltar ao site" onLogo={() => ws.showView("site")} leading={<span className="tdr-splash-menu-space" aria-hidden="true" />}>
-              <Button size="sm" variant="inverse-secondary" icon="log-out" onClick={logout}>Sair</Button>
+              <UserMenu name={ws.name()} role={state.role} onSwitch={ws.switchRole} />
+              <Button size="sm" variant="inverse-secondary" icon="log-out" aria-label="Sair" onClick={logout}><span className="tdr-hide-xs">Sair</span></Button>
             </BrandBar>
           }
         />
