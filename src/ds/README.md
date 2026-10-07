@@ -121,7 +121,7 @@ O logo existe em vetor (`assets/logo/`, quatro lockups + quatro app icons) e em 
 | `styles.css` | Entrada de CSS global — só `@import`. Importado por `src/index.css`. |
 | `index.js` | Barrel com todos os componentes: `import { Button } from "../ds"`. |
 | `tokens/` | `fonts` · `colors` · `typography` · `spacing` · `radii` · `elevation` · `motion` · `dataviz` |
-| `components/core/` | Button, IconButton, Badge, Tag, Card, Divider, ProgressBar, Logo, Icon, MonoLabel |
+| `components/core/` | Button, IconButton, Badge, Tag, Card, Divider, ProgressBar, Logo, AnimatedLogo (+ custom element `<tendra-logo>`), Icon, MonoLabel |
 | `components/forms/` | Field, Input, Textarea, Select, Checkbox, Radio, Switch |
 | `components/navigation/` | Tabs, Breadcrumb, SidebarNav, TopBar |
 | `components/feedback/` | Dialog, Toast, Tooltip, EmptyState, SourceTrail |

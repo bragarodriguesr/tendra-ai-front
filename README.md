@@ -13,6 +13,7 @@ npm run build    # gera dist/
 | Caminho | O que é |
 | --- | --- |
 | `src/ds/` | Design system Tendra.ai: tokens, `styles.css` e componentes (Button, Badge, SidebarNav…). Fonte: `project/_ds` e `project/uploads/…/components`. |
+| `src/ds/components/core/AnimatedLogo.jsx` | Logo animado (cronômetro, 6 s) em Tinta, Papel e Limão. Também disponível como custom element `<tendra-logo>` (`tendra-logo-element.js`). Demo: `/logo-animation.html` no `npm run dev`. |
 | `src/site/` | Site institucional (Home e Preços). "Produto · Workspace" abre o Dashboard. |
 | `src/workspace/data.js` | Dados de exemplo (tarefas, itens, documentos). Fictícios. |
 | `src/workspace/useWorkspace.js` | Estado do Workspace e as ações (aprovar, revisar, reconhecer alerta, exportar…). |

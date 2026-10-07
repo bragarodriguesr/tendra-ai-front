@@ -1,4 +1,5 @@
 // Design system Tendra.ai — componentes React (fonte: _ds/tendra-ai-design-system).
+export { AnimatedLogo } from "./components/core/AnimatedLogo.jsx";
 export { Badge } from "./components/core/Badge.jsx";
 export { Button } from "./components/core/Button.jsx";
 export { Card } from "./components/core/Card.jsx";
