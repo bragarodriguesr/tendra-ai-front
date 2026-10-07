@@ -263,10 +263,13 @@ export function buildView(s, ws) {
   const left = (id) => { const q = ws.counts(id, s); return q.total - q.approved; };
   const taskAlerts = [];
   taskAlerts.push(s.taskRetry
-    ? { icon: "clock", label: "Reprocessamento", name: "Orbis Energia", text: "voltou para a fila de processamento.", action: "Conferir processamento", go: () => ws.go("task", { taskId: "t5" }) }
-    : { icon: "triangle-alert", label: "Falha no carregamento", name: "Orbis Energia", text: "não pôde ser carregada. O arquivo está com 0% de conclusão.", action: "Conferir arquivo", go: () => ws.go("task", { taskId: "t5" }) });
-  taskAlerts.push({ icon: "clock", label: "Prazo vencido", name: "Cordel Seguros", text: "está vencida, com " + left("t3") + " itens sem aprovação.", action: "Abrir tarefa", go: () => ws.go("task", { taskId: "t3" }) });
-  if (!s.exported) taskAlerts.push({ icon: "clock", label: "Prazo próximo", name: "Banco Meridian", text: "vence em 4 dias com " + left("t1") + " itens sem aprovação.", action: "Revisar itens", go: () => ws.go("review", { taskId: "t1", sel: "r4", filter: "todos" }) });
+    ? { key: "orbis-retry", at: "29/09/2026 10:05", icon: "clock", label: "Reprocessamento", name: "Orbis Energia", text: "voltou para a fila de processamento.", action: "Conferir processamento", go: () => ws.go("task", { taskId: "t5" }) }
+    : { key: "orbis-falha", at: "29/09/2026 09:40", icon: "triangle-alert", label: "Falha no carregamento", name: "Orbis Energia", text: "não pôde ser carregada. O arquivo está com 0% de conclusão.", action: "Conferir arquivo", go: () => ws.go("task", { taskId: "t5" }) });
+  taskAlerts.push({ key: "cordel-vencido", at: "29/09/2026 08:00", icon: "clock", label: "Prazo vencido", name: "Cordel Seguros", text: "está vencida, com " + left("t3") + " itens sem aprovação.", action: "Abrir tarefa", go: () => ws.go("task", { taskId: "t3" }) });
+  if (!s.exported) taskAlerts.push({ key: "meridian-prazo", at: "28/09/2026 17:30", icon: "clock", label: "Prazo próximo", name: "Banco Meridian", text: "vence em 4 dias com " + left("t1") + " itens sem aprovação.", action: "Revisar itens", go: () => ws.go("review", { taskId: "t1", sel: "r4", filter: "todos" }) });
+  // os mesmos alertas no sino da barra superior, com o estado de leitura
+  taskAlerts.forEach((a) => { a.read = !!s.alertsRead[a.key]; });
+  const alertsUnread = taskAlerts.filter((a) => !a.read).length;
   const tAi = Math.min(s.tAi, Math.max(taskAlerts.length - 1, 0));
   const tDeck = { ...deckLayers(taskAlerts.length), a: taskAlerts[tAi], pos: `${tAi + 1} de ${taskAlerts.length}`, hasMany: taskAlerts.length > 1, index: tAi, count: taskAlerts.length };
 
@@ -284,7 +287,7 @@ export function buildView(s, ws) {
 
   return {
     isA, userName: ws.name(), navGroups, navValue,
-    docs, readyDocs, onb, tasks, taskAlerts, tDeck, dash, task, counts: c, segs, filterTabs, filterOptions, rows,
+    docs, readyDocs, onb, tasks, taskAlerts, alertsUnread, tDeck, dash, task, counts: c, segs, filterTabs, filterOptions, rows,
     revTask: (ws.taskInfo(s.itemsTask, s) || {}).name, cur, savedText, drawer, exportCards, exportTitle, history, historyTabs, form
   };
 }

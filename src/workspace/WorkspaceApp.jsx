@@ -4,6 +4,7 @@ import { BRAND_BAR_H, BrandBar } from "../BrandBar.jsx";
 import { buildView } from "./viewModel.js";
 import { MONO } from "./ui.jsx";
 import { UserMenu } from "./UserMenu.jsx";
+import { AlertsMenu } from "./AlertsMenu.jsx";
 import { ConfirmEditDialog, SourceDrawer, ToastHost } from "./overlays.jsx";
 import { Dashboard } from "./screens/Dashboard.jsx";
 import { Tasks } from "./screens/Tasks.jsx";
@@ -44,6 +45,19 @@ function Sidebar({ v, ws, state, isMobile }) {
   );
 }
 
+/** Lado direito da barra do Workspace: sino de alertas, usuário e "Sair". Também usado na abertura. */
+export function WorkspaceBarActions({ v, state, ws, onLogout }) {
+  return (
+    <>
+      <AlertsMenu alerts={v.taskAlerts} unread={v.alertsUnread} onRead={ws.readAlert} onReadAll={() => ws.readAllAlerts(v.taskAlerts.map((a) => a.key))} />
+      <UserMenu name={v.userName} role={state.role} onSwitch={ws.switchRole} onLogout={onLogout} />
+      <span className="tdr-bar-logout">
+        <Button size="sm" variant="inverse-secondary" icon="log-out" onClick={onLogout}>Sair</Button>
+      </span>
+    </>
+  );
+}
+
 /** Área do produto: barra superior fixa, menu lateral e as telas T0–T9. */
 export function WorkspaceApp({ state, ws, onSite, onLogout }) {
   const v = buildView(state, ws);
@@ -59,8 +73,7 @@ export function WorkspaceApp({ state, ws, onSite, onLogout }) {
         onLogo={onSite}
         leading={isMobile ? <IconButton icon="menu" variant="inverse" label="Abrir menu" aria-expanded={state.navOpen} onClick={() => ws.setState({ navOpen: !state.navOpen })} /> : null}
       >
-        <UserMenu name={v.userName} role={state.role} onSwitch={ws.switchRole} />
-        <Button size="sm" variant="inverse-secondary" icon="log-out" aria-label="Sair" onClick={onLogout}><span className="tdr-hide-xs">Sair</span></Button>
+        <WorkspaceBarActions v={v} state={state} ws={ws} onLogout={onLogout} />
       </BrandBar>
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : `${SIDEBAR_W}px minmax(0,1fr)`, height: `calc(100vh - ${TOPBAR_H}px)`, background: "var(--n-050)", fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 14, color: "var(--n-700)", position: "relative", overflow: "hidden" }}>
         <ToastHost toast={state.toast} isMobile={isMobile} onClose={() => ws.setState({ toast: null })} />
