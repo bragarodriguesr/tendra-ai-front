@@ -1,6 +1,5 @@
 import React from "react";
-import { Badge, Button, Icon, ProgressBar } from "../../ds/index.js";
-import { FilterMenu } from "../FilterMenu.jsx";
+import { Badge, Button, Icon, ProgressBar, FilterMenu } from "../../ds/index.js";
 import { ClickRow, DISPLAY, Page, SegmentBar, bigNumber, card, h1Style, legendDot, mono } from "../ui.jsx";
 
 const statusCard = (accent, compact) => card(16, {
@@ -80,7 +79,7 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
               ))}
             </div>
           </div>
-          <FilterMenu tabs={v.filterTabs} value={state.filter} onChange={ws.setFilter} />
+          <FilterMenu items={v.filterTabs} value={state.filter} onChange={ws.setFilter} />
           <div style={card(14, { overflowX: "auto", overflowY: "hidden" })}>
             {v.rows.map((r) => (
               isMobile ? (

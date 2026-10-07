@@ -24,6 +24,7 @@ export { Select } from "./components/forms/Select.jsx";
 export { Switch } from "./components/forms/Switch.jsx";
 export { Textarea } from "./components/forms/Textarea.jsx";
 export { Breadcrumb } from "./components/navigation/Breadcrumb.jsx";
+export { FilterMenu } from "./components/navigation/FilterMenu.jsx";
 export { SidebarNav } from "./components/navigation/SidebarNav.jsx";
 export { Tabs } from "./components/navigation/Tabs.jsx";
 export { TopBar } from "./components/navigation/TopBar.jsx";
