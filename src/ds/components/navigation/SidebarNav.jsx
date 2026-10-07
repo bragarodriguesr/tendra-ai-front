@@ -17,7 +17,6 @@ function Item({ item, active, inverse, collapsed }) {
       style={{
         display: "flex",
         alignItems: "center",
-        justifyContent: collapsed ? "center" : undefined,
         gap: "var(--space-3)",
         padding: "10px 12px",
         minHeight: "var(--hit-min)",
@@ -71,7 +70,11 @@ export function SidebarNav({ groups = [], value, tone = "paper", header, footer,
         {groups.map((g, gi) => (
           <div key={gi} style={{ display: "grid", gap: "var(--space-1)" }}>
             {g.label && collapsed ? (
-              gi > 0 ? <span aria-hidden="true" style={{ height: 1, margin: "0 8px 6px", background: inverse ? "var(--border-inverse)" : "var(--border-default)" }} /> : null
+              // ocupa a mesma altura do título, para os ícones não mudarem de lugar ao recolher
+              <span aria-hidden="true" style={{ position: "relative", display: "block" }}>
+                <MonoLabel style={{ display: "block", padding: "0 12px 6px", visibility: "hidden", whiteSpace: "nowrap", overflow: "hidden" }}>{g.label}</MonoLabel>
+                {gi > 0 ? <span style={{ position: "absolute", left: 8, right: 8, top: "calc(50% - 3px)", height: 1, background: inverse ? "var(--border-inverse)" : "var(--border-default)" }} /> : null}
+              </span>
             ) : g.label ? (
               <MonoLabel tone={inverse ? "inverse" : "default"} style={{ padding: "0 12px 6px" }}>{g.label}</MonoLabel>
             ) : null}

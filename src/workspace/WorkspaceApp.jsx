@@ -18,7 +18,8 @@ import { Onboarding } from "./screens/Onboarding.jsx";
 
 const TOPBAR_H = BRAND_BAR_H;
 const SIDEBAR_W = 272;
-const SIDEBAR_COLLAPSED_W = 72;
+// 12 + 12 de respiro dos dois lados do ícone de 20 px: o ícone fica no mesmo x do menu aberto
+const SIDEBAR_COLLAPSED_W = 68;
 const MOBILE_BELOW = 900;
 
 const SCREENS = { dashboard: Dashboard, tasks: Tasks, new: NewTask, task: TaskDetail, export: Export, history: History, base: Base, onboarding: Onboarding };
