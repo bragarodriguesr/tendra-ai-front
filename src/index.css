@@ -30,6 +30,9 @@ label:has(> [role="switch"]) * { box-sizing: border-box; }
 .tdr-dv-bar { background: var(--dv-series-1); border-radius: 4px 4px 0 0; transition: background var(--duration-fast) var(--ease-out); }
 .tdr-dv-bar:hover, .tdr-dv-bar:focus-visible { background: var(--dv-teal-ink); }
 
+/* Barra superior (BrandBar): mesma altura e respiro no site e no Workspace. */
+:root { --brandbar-pad: var(--space-6); }
+@media (max-width: 600px) { :root { --brandbar-pad: var(--space-3); } }
 /* Celular estreito: o botão da barra superior vira "Workspace". */
 @media (max-width: 480px) { .tdr-ws-prefix { display: none; } }
 

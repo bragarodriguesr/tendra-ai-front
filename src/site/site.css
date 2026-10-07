@@ -8,8 +8,6 @@
 .tdr-site-trust { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-12); align-items: center; }
 .tdr-site-plans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gutter-grid); align-items: start; }
 .tdr-site-footer-cols { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)); gap: var(--space-10); }
-.tdr-site-header-row { display: flex; align-items: center; gap: var(--space-8); }
-.tdr-site-header-nav { display: flex; align-items: center; gap: var(--space-6); margin-left: auto; }
 
 @media (max-width: 900px) {
   .tdr-site { --gutter-section: var(--space-16); --text-d1-size: 44px; --text-d2-size: 34px; }
@@ -30,14 +28,8 @@
     --text-d2-size: 28px;
     --text-lead-size: 17px;
   }
-  .tdr-site-header-row { gap: var(--space-3); }
-  .tdr-site-header-nav { gap: var(--space-2); }
   .tdr-site-footer-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tdr-site-stat-value { font-size: 32px !important; }
   .tdr-site-cta > button { flex: 1 1 100%; }
 }
 
-/* Celular estreito: "Produto · Workspace" vira "Workspace" para caber ao lado de Preços. */
-@media (max-width: 480px) {
-  .tdr-site-ws-prefix { display: none; }
-}
