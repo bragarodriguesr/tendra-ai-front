@@ -10,7 +10,7 @@ const initialState = ({ initialScreen, role }) => ({
   exported: null, exported4: null, exported8: null, expanded: null,
   form: { name: "Perguntas_Meridian.xlsx", company: "", type: "RFP", due: "", owner: "", file: false, identified: false, tried: false },
   fb: {}, saved: 0, tick: 0, taskRetry: false, alertsRead: {},
-  vw: typeof window !== "undefined" ? window.innerWidth : 1440, navOpen: false
+  vw: typeof window !== "undefined" ? window.innerWidth : 1440, navOpen: false, sideCollapsed: false
 });
 
 /**

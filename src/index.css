@@ -63,9 +63,8 @@ label:has(> [role="switch"]) * { box-sizing: border-box; }
 .tdr-stack-actions { width: 100%; }
 .tdr-stack-actions > button { flex: 1 1 140px; }
 
-/* Abertura: no celular reserva o lugar do botão de menu do Workspace, para o logo não pular. */
-.tdr-splash-menu-space { display: none; }
-@media (max-width: 899px) { .tdr-splash-menu-space { display: block; width: 40px; height: 40px; flex: none; } }
+/* Abertura: reserva o lugar do botão de menu do Workspace, para o logo não pular. */
+.tdr-splash-menu-space { display: block; width: 40px; height: 40px; flex: none; }
 
 /* Primeiros passos: etapas, área de envio e lista de arquivos */
 .tdr-onb-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }

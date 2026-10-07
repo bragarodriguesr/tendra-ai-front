@@ -18,13 +18,15 @@ import { Onboarding } from "./screens/Onboarding.jsx";
 
 const TOPBAR_H = BRAND_BAR_H;
 const SIDEBAR_W = 272;
+const SIDEBAR_COLLAPSED_W = 72;
 const MOBILE_BELOW = 900;
 
 const SCREENS = { dashboard: Dashboard, tasks: Tasks, new: NewTask, task: TaskDetail, export: Export, history: History, base: Base, onboarding: Onboarding };
 
-function Sidebar({ v, ws, state, isMobile }) {
+function Sidebar({ v, ws, state, isMobile, collapsed }) {
   return (
     <div
+      id="tdr-sidebar"
       className="tdr-sidebar"
       aria-hidden={isMobile && !state.navOpen ? true : undefined}
       style={{
@@ -33,14 +35,18 @@ function Sidebar({ v, ws, state, isMobile }) {
       }}
     >
       <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", minHeight: 0 }}>
-        <SidebarNav groups={v.navGroups} value={v.navValue} width="100%" aria-label="Workspace" />
+        <SidebarNav groups={v.navGroups} value={v.navValue} width="100%" collapsed={collapsed} aria-label="Workspace" />
       </div>
-      <div style={{ padding: "12px 20px", borderTop: "1px solid var(--n-200)" }}>
+      {collapsed ? (
+        <div style={{ padding: "12px 0", borderTop: "1px solid var(--n-200)", display: "flex", justifyContent: "center" }}>
+          <IconButton icon="check-check" variant="outline" label="Painel de demo: aprovar todos os itens" onClick={ws.demoAll} />
+        </div>
+      ) : <div style={{ padding: "12px 20px", borderTop: "1px solid var(--n-200)" }}>
         <div style={{ border: "1px dashed var(--n-350)", borderRadius: 10, padding: "10px 12px", display: "flex", flexDirection: "column", gap: 10 }}>
           <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--n-400)" }}>Painel de demo</span>
           <Button size="sm" fullWidth variant="secondary" onClick={ws.demoAll}>Aprovar todos os itens</Button>
         </div>
-      </div>
+      </div>}
     </div>
   );
 }
@@ -62,6 +68,8 @@ export function WorkspaceBarActions({ v, state, ws, onLogout }) {
 export function WorkspaceApp({ state, ws, onSite, onLogout }) {
   const v = buildView(state, ws);
   const isMobile = state.vw < MOBILE_BELOW;
+  // No desktop o menu lateral pode ser recolhido a uma barra só de ícones, para dar mais espaço ao conteúdo.
+  const collapsed = !isMobile && state.sideCollapsed;
   const pad = isMobile ? "20px 16px" : "40px";
   const Screen = SCREENS[state.screen];
   const props = { v, ws, state, pad, isMobile };
@@ -71,14 +79,16 @@ export function WorkspaceApp({ state, ws, onSite, onLogout }) {
       <BrandBar
         logoLabel="Tendra.ai — voltar ao site"
         onLogo={onSite}
-        leading={isMobile ? <IconButton icon="menu" variant="inverse" label="Abrir menu" aria-expanded={state.navOpen} onClick={() => ws.setState({ navOpen: !state.navOpen })} /> : null}
+        leading={isMobile
+          ? <IconButton icon="menu" variant="inverse" label="Abrir menu" aria-expanded={state.navOpen} aria-controls="tdr-sidebar" onClick={() => ws.setState({ navOpen: !state.navOpen })} />
+          : <IconButton icon="menu" variant="inverse" label={collapsed ? "Expandir menu" : "Recolher menu"} aria-expanded={!collapsed} aria-controls="tdr-sidebar" onClick={() => ws.setState({ sideCollapsed: !collapsed })} />}
       >
         <WorkspaceBarActions v={v} state={state} ws={ws} onLogout={onLogout} />
       </BrandBar>
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : `${SIDEBAR_W}px minmax(0,1fr)`, height: `calc(100vh - ${TOPBAR_H}px)`, background: "var(--n-050)", fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 14, color: "var(--n-700)", position: "relative", overflow: "hidden" }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : `${collapsed ? SIDEBAR_COLLAPSED_W : SIDEBAR_W}px minmax(0,1fr)`, height: `calc(100vh - ${TOPBAR_H}px)`, background: "var(--n-050)", fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 14, color: "var(--n-700)", position: "relative", overflow: "hidden" }}>
         <ToastHost toast={state.toast} isMobile={isMobile} onClose={() => ws.setState({ toast: null })} />
         {isMobile && state.navOpen ? <div onClick={() => ws.setState({ navOpen: false })} style={{ position: "absolute", inset: 0, zIndex: 49, background: "rgba(18,20,15,.4)" }} /> : null}
-        <Sidebar v={v} ws={ws} state={state} isMobile={isMobile} />
+        <Sidebar v={v} ws={ws} state={state} isMobile={isMobile} collapsed={collapsed} />
 
         <main style={{ minWidth: 0, minHeight: 0, overflow: "auto", position: "relative" }}>
           {state.screen === "review" ? <Review {...props} height={`calc(100vh - ${TOPBAR_H}px)`} /> : Screen ? <Screen {...props} /> : null}
