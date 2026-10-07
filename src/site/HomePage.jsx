@@ -97,10 +97,10 @@ export function HomePage({ onPage }) {
         </div>
       </Section>
 
-      <Section tone="ink" id="por-que-tendra">
+      <Section tone="ink" id="seguranca">
         <div className="tdr-site-trust">
           <div style={{ display: "grid", gap: "var(--space-5)" }}>
-            <MonoLabel tone="accent">Por que a <span style={{ textTransform: "none" }}>Tendra.ai</span></MonoLabel>
+            <MonoLabel tone="accent">Segurança e confiança</MonoLabel>
             <h2 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: "var(--text-d2-size)", lineHeight: "var(--text-d2-lh)", letterSpacing: "var(--text-d2-ls)", color: "var(--text-on-inverse)", maxWidth: "22ch", textWrap: "pretty" }}>
               Nenhuma resposta sai sem revisão humana
             </h2>
