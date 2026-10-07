@@ -25,10 +25,7 @@ export function LoginPage({ ws, onEnter, onSite }) {
         <div className="tdr-login-aside">
           <div style={{ display: "grid", gap: 20, maxWidth: 460 }}>
             <MonoLabel tone="accent">Workspace</MonoLabel>
-            <h2 className="tdr-login-headline">Um só <span className="tdr-login-mark">cérebro</span> para responder RFPs e editais</h2>
-            <p className="tdr-login-lead">
-              Conecte seus documentos, propostas antigas e políticas internas — pare de escrever do zero, a Tendra.ai gera respostas confiáveis e rastreáveis para você!
-            </p>
+            <h2 className="tdr-login-headline">O seu segundo <span className="tdr-login-mark">cérebro</span> para responder RFPs e editais.</h2>
           </div>
         </div>
         <div className="tdr-login-main">
