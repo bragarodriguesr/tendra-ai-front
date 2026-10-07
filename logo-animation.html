@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tendra.ai — Logo animado</title>
+<link rel="icon" type="image/svg+xml" href="/favicon/favicon-32.svg">
+<script type="module" src="/src/ds/components/core/tendra-logo-element.js"></script>
+<style>
+  :root { color-scheme: light; --ink: #12140F; --paper: #F5F6F1; --sage: #6E7268; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 32px 16px 64px; background: var(--paper); color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; display: grid; gap: 32px; }
+  h1 { font: 700 28px/1.2 "Space Grotesk", sans-serif; letter-spacing: -0.5px; margin: 0; }
+  figure { margin: 0; }
+  figcaption { display: flex; justify-content: space-between; align-items: center; margin-top: 10px;
+    font-size: 14px; color: var(--sage); }
+  tendra-logo { border-radius: 8px; }
+  button { font: 500 13px "IBM Plex Sans", system-ui, sans-serif; padding: 6px 12px; border-radius: 6px;
+    border: 1px solid #C6CBBC; background: #fff; color: var(--ink); cursor: pointer; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Tendra.ai — logo animado</h1>
+  <figure><tendra-logo variant="ink"></tendra-logo>
+    <figcaption><span>Tinta — <code>&lt;tendra-logo variant="ink"&gt;</code></span><button>Reiniciar</button></figcaption></figure>
+  <figure><tendra-logo variant="paper" style="outline: 1px solid #E3E6DC"></tendra-logo>
+    <figcaption><span>Papel — <code>&lt;tendra-logo variant="paper"&gt;</code></span><button>Reiniciar</button></figcaption></figure>
+  <figure><tendra-logo variant="lime"></tendra-logo>
+    <figcaption><span>Limão — <code>&lt;tendra-logo variant="lime"&gt;</code></span><button>Reiniciar</button></figcaption></figure>
+</main>
+<script>
+  document.querySelectorAll('figure').forEach((f) =>
+    f.querySelector('button').addEventListener('click', () => f.querySelector('tendra-logo').replay()));
+</script>
+</body>
+</html>
