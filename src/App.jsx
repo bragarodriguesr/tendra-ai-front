@@ -20,7 +20,7 @@ export function App() {
         <WebsiteApp key={siteKey} onLogin={() => ws.showView("login")} />
       </div>
       {view === "login" ? (
-        <LoginPage ws={ws} state={state} onSite={() => ws.showView("site")} onEnter={() => { ws.go("dashboard"); ws.showView("app"); }} />
+        <LoginPage ws={ws} onSite={() => ws.showView("site")} onEnter={() => { ws.go("dashboard"); ws.showView("app"); }} />
       ) : null}
       <div style={show("app")}>
         <WorkspaceApp
