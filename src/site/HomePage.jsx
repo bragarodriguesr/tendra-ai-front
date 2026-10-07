@@ -79,6 +79,14 @@ export function HomePage({ onPage }) {
             ))}
           </div>
         </div>
+        <div className="tdr-site-teams">
+          <span style={{ fontSize: "var(--text-ui-size)", color: "var(--text-strong)" }}>Feito para os times que respondem propostas</span>
+          <ul aria-label="Times">
+            {["Pré-vendas", "RevOps", "Segurança da informação", "Jurídico e compliance"].map((t) => (
+              <li key={t}><MonoLabel tone="strong">{t}</MonoLabel></li>
+            ))}
+          </ul>
+        </div>
       </Section>
 
       <Section>
@@ -126,14 +134,6 @@ export function HomePage({ onPage }) {
               </Card>
             ))}
           </div>
-        </div>
-        <div className="tdr-site-teams">
-          <span style={{ fontSize: "var(--text-ui-size)", color: "var(--text-on-inverse)" }}>Feito para os times que respondem propostas</span>
-          <ul aria-label="Times">
-            {["Pré-vendas", "RevOps", "Segurança da informação", "Jurídico e compliance"].map((t) => (
-              <li key={t}><MonoLabel tone="inverse">{t}</MonoLabel></li>
-            ))}
-          </ul>
         </div>
       </Section>
 
