@@ -70,3 +70,14 @@
 @media (max-width: 600px) {
   .tdr-site-contact-row { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* "Feito para os times…": linha ao pé de "Como funciona", times separados por filete vertical. */
+.tdr-site-teams { margin-top: var(--space-12); padding-top: var(--space-6); border-top: 1px solid var(--border-strong); display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-6); }
+.tdr-site-teams ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; }
+.tdr-site-teams li { display: flex; align-items: center; }
+.tdr-site-teams li + li::before { content: ""; width: 1px; height: 14px; background: var(--border-strong); margin: 0 var(--space-4); }
+@media (max-width: 600px) {
+  .tdr-site-teams { margin-top: var(--space-10); }
+  .tdr-site-teams ul { flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+  .tdr-site-teams li + li::before { display: none; }
+}
