@@ -1,18 +1,14 @@
 import React from "react";
-import { Button, Field, Icon, Input, MonoLabel, SourceTrail } from "./ds/index.js";
+import { Button, Field, Icon, Input, MonoLabel } from "./ds/index.js";
 import { BRAND_BAR_H, BrandBar } from "./BrandBar.jsx";
-import { code } from "./workspace/data.js";
 
 /**
  * Login ilustrativo (sem validação): "Entrar no Tendra.ai" leva ao Dashboard do Workspace.
- * À esquerda, um resumo do que espera revisão; à direita, o formulário.
+ * À esquerda, o banner da marca; à direita, o formulário.
  */
 export function LoginPage({ ws, state, onEnter, onSite }) {
   const [loading, setLoading] = React.useState(false);
   const name = ws.name();
-  const items = ws.itemsOf("t1", state);
-  const open = items.filter((i) => i.st !== "aprovada").length;
-  const last = items.filter((i) => i.st === "aprovada" && i.at).sort((a, b) => (a.at < b.at ? 1 : -1))[0];
   const email = name.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(" ", ".") + "@empresa.com.br";
 
   const enter = (e) => {
@@ -29,10 +25,10 @@ export function LoginPage({ ws, state, onEnter, onSite }) {
         <div className="tdr-login-aside">
           <div style={{ display: "grid", gap: 20, maxWidth: 460 }}>
             <MonoLabel tone="accent">Workspace</MonoLabel>
-            <div className="tdr-login-headline">
-              {open} {open === 1 ? "item espera" : "itens esperam"} revisão ou aprovação no questionário do Banco Meridian.
-            </div>
-            {last ? <SourceTrail tone="ink" label="Última atividade" sources={[{ file: `${code(last)} aprovado por ${last.by} · ${last.at}` }]} /> : null}
+            <h2 className="tdr-login-headline">Um só cérebro para responder RFPs e editais</h2>
+            <p className="tdr-login-lead">
+              Conecte seus documentos, propostas antigas e políticas internas — pare de escrever do zero, a Tendra.ai gera respostas confiáveis e rastreáveis para você!
+            </p>
           </div>
         </div>
         <div className="tdr-login-main">
