@@ -2,10 +2,11 @@ import React from "react";
 import { WebsiteApp } from "./site/WebsiteApp.jsx";
 import { WorkspaceApp } from "./workspace/WorkspaceApp.jsx";
 import { LoginPage } from "./LoginPage.jsx";
+import { Splash } from "./Splash.jsx";
 import { useWorkspace } from "./workspace/useWorkspace.js";
 
 /**
- * Site institucional, login e Workspace numa só página. Site e Workspace ficam montados e
+ * Site institucional, login, abertura e Workspace numa só página. Site e Workspace ficam montados e
  * alternam sem recarregar, então cada um volta exatamente onde o usuário estava.
  */
 export function App() {
@@ -20,8 +21,9 @@ export function App() {
         <WebsiteApp key={siteKey} onLogin={() => ws.showView("login")} />
       </div>
       {view === "login" ? (
-        <LoginPage ws={ws} onSite={() => ws.showView("site")} onEnter={() => { ws.go("dashboard"); ws.showView("app"); }} />
+        <LoginPage ws={ws} onSite={() => ws.showView("site")} onEnter={() => { ws.go("dashboard"); ws.showView("splash"); }} />
       ) : null}
+      {view === "splash" ? <Splash onDone={() => ws.showView("app")} /> : null}
       <div style={show("app")}>
         <WorkspaceApp
           state={state}
