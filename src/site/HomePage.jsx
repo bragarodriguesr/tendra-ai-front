@@ -97,25 +97,23 @@ export function HomePage({ onPage }) {
         </div>
       </Section>
 
-      <Section tone="ink" id="por-que-confiam">
+      <Section tone="ink" id="por-que-tendra">
         <div className="tdr-site-trust">
           <div style={{ display: "grid", gap: "var(--space-5)" }}>
-            <MonoLabel tone="accent">POR QUE CONFIAM</MonoLabel>
+            <MonoLabel tone="accent">Por que a <span style={{ textTransform: "none" }}>Tendra.ai</span></MonoLabel>
             <h2 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: "var(--text-d2-size)", lineHeight: "var(--text-d2-lh)", letterSpacing: "var(--text-d2-ls)", color: "var(--text-on-inverse)", maxWidth: "22ch", textWrap: "pretty" }}>
               Nenhuma resposta sai sem revisão humana
             </h2>
             <p style={{ margin: 0, fontSize: "var(--text-body-size)", lineHeight: 1.65, color: "var(--ink-200)", maxWidth: "var(--measure-lead)", textWrap: "pretty" }}>
               A trilha de auditoria registra quem aprovou cada item, com qual fonte e em que versão do documento. É o que o seu time de segurança pede quando questiona conteúdo gerado.
             </p>
-            <div>
-              <Button variant="inverse-secondary" iconEnd="arrow-right" onClick={() => onPage("precos")}>Ver planos e preços</Button>
-            </div>
           </div>
           <div style={{ display: "grid", gap: "var(--gutter-grid)" }}>
             {[
               { icon: "shield-check", t: "Isolamento por tenant", d: "Seus documentos nunca treinam modelo compartilhado." },
               { icon: "history", t: "Auditoria imutável", d: "Registro append-only de cada aprovação e edição." },
-              { icon: "users", t: "Aprovação nominal", d: "Cada item tem um revisor responsável identificado." }
+              { icon: "users", t: "Aprovação nominal", d: "Cada item tem um revisor responsável identificado." },
+              { icon: "database", t: "Base curada e governada", d: "Cada resposta tem dono, versão e validade. A base fica melhor a cada proposta aprovada e avisa quando o conhecimento está vencido ou defasado." }
             ].map((r) => (
               <Card key={r.t} tone="ink-panel" radius="lg" padding="sm">
                 <div style={{ display: "flex", gap: "var(--space-4)", alignItems: "flex-start" }}>
@@ -128,6 +126,14 @@ export function HomePage({ onPage }) {
               </Card>
             ))}
           </div>
+        </div>
+        <div className="tdr-site-teams">
+          <span style={{ fontSize: "var(--text-ui-size)", color: "var(--text-on-inverse)" }}>Feito para os times que respondem propostas</span>
+          <ul aria-label="Times">
+            {["Pré-vendas", "RevOps", "Segurança da informação", "Jurídico e compliance"].map((t) => (
+              <li key={t}><MonoLabel tone="inverse">{t}</MonoLabel></li>
+            ))}
+          </ul>
         </div>
       </Section>
 
