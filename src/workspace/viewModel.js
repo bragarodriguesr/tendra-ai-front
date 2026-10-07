@@ -270,8 +270,10 @@ export function buildView(s, ws) {
   // os mesmos alertas no sino da barra superior, com o estado de leitura
   taskAlerts.forEach((a) => { a.read = !!s.alertsRead[a.key]; });
   const alertsUnread = taskAlerts.filter((a) => !a.read).length;
-  const tAi = Math.min(s.tAi, Math.max(taskAlerts.length - 1, 0));
-  const tDeck = { ...deckLayers(taskAlerts.length), a: taskAlerts[tAi], pos: `${tAi + 1} de ${taskAlerts.length}`, hasMany: taskAlerts.length > 1, index: tAi, count: taskAlerts.length };
+  // o card da tela de Tarefas mostra só os alertas ainda não lidos no sino
+  const pendingAlerts = taskAlerts.filter((a) => !a.read);
+  const tAi = Math.min(s.tAi, Math.max(pendingAlerts.length - 1, 0));
+  const tDeck = { ...deckLayers(pendingAlerts.length), a: pendingAlerts[tAi], pos: `${tAi + 1} de ${pendingAlerts.length}`, hasMany: pendingAlerts.length > 1, index: tAi, count: pendingAlerts.length };
 
   // formulário de nova RFP
   const f = s.form, tried = f.tried;
