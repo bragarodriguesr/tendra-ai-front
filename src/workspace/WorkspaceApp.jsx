@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, IconButton, SidebarNav } from "../ds/index.js";
-import { BRAND_BAR_H, BrandBar, WorkspaceLabel } from "../BrandBar.jsx";
+import { BRAND_BAR_H, BrandBar } from "../BrandBar.jsx";
 import { buildView } from "./viewModel.js";
 import { MONO } from "./ui.jsx";
 import { ConfirmEditDialog, SourceDrawer, ToastHost } from "./overlays.jsx";
@@ -53,7 +53,7 @@ function Sidebar({ v, ws, state, isMobile }) {
 }
 
 /** Área do produto: barra superior fixa, menu lateral e as telas T0–T9. */
-export function WorkspaceApp({ state, ws, onSite }) {
+export function WorkspaceApp({ state, ws, onSite, onLogout }) {
   const v = buildView(state, ws);
   const isMobile = state.vw < MOBILE_BELOW;
   const pad = isMobile ? "20px 16px" : "40px";
@@ -67,7 +67,7 @@ export function WorkspaceApp({ state, ws, onSite }) {
         onLogo={onSite}
         leading={isMobile ? <IconButton icon="menu" variant="inverse" label="Abrir menu" aria-expanded={state.navOpen} onClick={() => ws.setState({ navOpen: !state.navOpen })} /> : null}
       >
-        <Button size="sm" variant="accent" icon="layout-grid" aria-current="page" onClick={() => ws.go("dashboard")}><WorkspaceLabel /></Button>
+        <Button size="sm" variant="inverse-secondary" icon="log-out" onClick={onLogout}>Sair</Button>
       </BrandBar>
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : `${SIDEBAR_W}px minmax(0,1fr)`, height: `calc(100vh - ${TOPBAR_H}px)`, background: "var(--n-050)", fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 14, color: "var(--n-700)", position: "relative", overflow: "hidden" }}>
         <ToastHost toast={state.toast} isMobile={isMobile} onClose={() => ws.setState({ toast: null })} />

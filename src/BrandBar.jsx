@@ -27,8 +27,3 @@ export function BrandBar({ logoLabel, onLogo, leading, links, children }) {
     />
   );
 }
-
-/** Rótulo do botão do Workspace: vira só "Workspace" em celular estreito. */
-export function WorkspaceLabel() {
-  return <span><span className="tdr-ws-prefix">Produto · </span>Workspace</span>;
-}

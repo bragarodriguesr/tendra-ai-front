@@ -7,7 +7,7 @@ import { ContactPage } from "./ContactPage.jsx";
 import { BRAND_BAR_H } from "../BrandBar.jsx";
 import "./site.css";
 
-export function WebsiteApp({ onWorkspace }) {
+export function WebsiteApp({ onLogin }) {
   const [page, setPage] = React.useState("home");
   const [anchor, setAnchor] = React.useState(null);
 
@@ -26,7 +26,7 @@ export function WebsiteApp({ onWorkspace }) {
 
   return (
     <div className="tdr-site" style={{ background: "var(--surface-page)", minHeight: "100%" }}>
-      <SiteHeader page={page} onNav={onNav} onWorkspace={onWorkspace} />
+      <SiteHeader page={page} onNav={onNav} onLogin={onLogin} />
       {page === "home" ? <HomePage onPage={onPage} /> : null}
       {page === "precos" ? <PricingPage /> : null}
       {page === "contato" ? <ContactPage onPage={onPage} /> : null}

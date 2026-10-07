@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, IconButton } from "../ds/index.js";
-import { BrandBar, WorkspaceLabel } from "../BrandBar.jsx";
+import { BrandBar } from "../BrandBar.jsx";
 
 // Itens do menu do site. "section" rola a Home até a seção; "page" abre outra página.
 export const SITE_LINKS = [
@@ -31,7 +31,7 @@ function SiteLinks({ page, onNav, className, onPick }) {
   );
 }
 
-export function SiteHeader({ page, onNav, onWorkspace }) {
+export function SiteHeader({ page, onNav, onLogin }) {
   const [open, setOpen] = React.useState(false);
   return (
     <>
@@ -41,7 +41,7 @@ export function SiteHeader({ page, onNav, onWorkspace }) {
         leading={<IconButton className="tdr-site-menu-btn" icon={open ? "x" : "menu"} variant="inverse" label={open ? "Fechar menu" : "Abrir menu"} aria-expanded={open} onClick={() => setOpen(!open)} />}
         links={<SiteLinks page={page} onNav={onNav} className="tdr-site-links" />}
       >
-        <Button size="sm" variant="inverse-secondary" icon="layout-grid" onClick={onWorkspace}><WorkspaceLabel /></Button>
+        <Button size="sm" variant="inverse-secondary" icon="log-in" onClick={() => { setOpen(false); onLogin(); }}>Entrar</Button>
       </BrandBar>
       {open ? <SiteLinks page={page} onNav={onNav} onPick={() => setOpen(false)} className="tdr-site-links-mobile" /> : null}
     </>
