@@ -4,7 +4,7 @@ import { MONO } from "./ui.jsx";
 import { usePopover } from "./usePopover.js";
 
 /** "Todos" fixo + botão de filtro com menu suspenso das demais visões, cada uma com a quantidade de itens. */
-export function FilterMenu({ tabs, value, onChange }) {
+export function FilterMenu({ tabs, value, onChange, label = "Filtrar itens" }) {
   const { open, setOpen, root, focusTrigger } = usePopover();
   const all = tabs[0];
   const rest = tabs.slice(1);
@@ -31,7 +31,7 @@ export function FilterMenu({ tabs, value, onChange }) {
           {active ? <>{active.label} <span style={{ fontFamily: MONO, fontWeight: 400, opacity: 0.75 }}>{active.count}</span></> : "Filtrar"}
         </Button>
         {open ? (
-          <div id={menuId} className="tdr-popover tdr-filter-menu" role="menu" aria-label="Filtrar itens">
+          <div id={menuId} className="tdr-popover tdr-filter-menu" role="menu" aria-label={label}>
             {rest.map((t) => (
               <button key={t.value} type="button" role="menuitemradio" aria-checked={t.value === value} className="tdr-filter-item" onClick={() => pick(t.value)}>
                 <span style={{ width: 16, display: "inline-flex" }}>{t.value === value ? <Icon name="check" size={14} /> : null}</span>

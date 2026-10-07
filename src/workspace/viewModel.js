@@ -151,7 +151,6 @@ export function buildView(s, ws) {
   // filtros e lista
   const cnt = (k) => (k === "todos" ? s.items.length : k === "alerta" ? c.alerts : s.items.filter((i) => i.st === k).length);
   const filterTabs = FILTERS.map(([value, label]) => ({ value, label, count: cnt(value) }));
-  const filterOptions = FILTERS.map(([value, label]) => ({ value, label }));
   const vis = ws.visible(s);
   const rows = vis.map((i) => {
     const st = ST[i.st], p = ws.pendingCount(i);
@@ -289,7 +288,7 @@ export function buildView(s, ws) {
 
   return {
     isA, userName: ws.name(), navGroups, navValue,
-    docs, readyDocs, onb, tasks, taskAlerts, alertsUnread, tDeck, dash, task, counts: c, segs, filterTabs, filterOptions, rows,
+    docs, readyDocs, onb, tasks, taskAlerts, alertsUnread, tDeck, dash, task, counts: c, segs, filterTabs, rows,
     revTask: (ws.taskInfo(s.itemsTask, s) || {}).name, cur, savedText, drawer, exportCards, exportTitle, history, historyTabs, form
   };
 }

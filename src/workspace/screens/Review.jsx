@@ -1,6 +1,7 @@
 import React from "react";
 import { Badge, Button, EmptyState, Icon, IconButton, MonoLabel, Select, Textarea } from "../../ds/index.js";
 import { AlertDeck, ClickRow, DISPLAY, card, mono } from "../ui.jsx";
+import { FilterMenu } from "../FilterMenu.jsx";
 
 const FB_REASONS = ["Fonte incorreta", "Texto impreciso", "Informação desatualizada", "Outro"];
 const fbStyle = (on) => ({
@@ -17,7 +18,7 @@ function ItemList({ v, ws, state, isMobile }) {
           <span style={mono(12, "var(--n-400)")}>{v.rows.length} de {v.counts.total}</span>
         </div>
         <div style={{ fontSize: 12, color: "var(--n-500)", lineHeight: 1.4 }}>{v.revTask}</div>
-        <Select options={v.filterOptions} value={state.filter} onChange={(e) => ws.setFilter(e.target.value)} size="sm" aria-label="Filtrar itens" />
+        <FilterMenu tabs={v.filterTabs} value={state.filter} onChange={ws.setFilter} />
       </div>
       <div style={{ flex: 1, overflow: "auto" }}>
         {v.rows.map((r) => (

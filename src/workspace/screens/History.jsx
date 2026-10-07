@@ -1,5 +1,6 @@
 import React from "react";
-import { Badge, Button, Icon, Tabs } from "../../ds/index.js";
+import { Badge, Button, Icon } from "../../ds/index.js";
+import { FilterMenu } from "../FilterMenu.jsx";
 import { ClickRow, Page, PageHeader, card, mono } from "../ui.jsx";
 
 export function History({ v, ws, state, pad, isMobile }) {
@@ -7,7 +8,7 @@ export function History({ v, ws, state, pad, isMobile }) {
   return (
     <Page pad={pad}>
       <PageHeader eyebrow="Histórico de aprovações e revisões" title={`${n} ${n === 1 ? "registro" : "registros"}`} />
-      <div className="tdr-tabs-scroll"><Tabs items={v.historyTabs} value={state.hfilter} onChange={(hfilter) => ws.setState({ hfilter })} /></div>
+      <FilterMenu tabs={v.historyTabs} value={state.hfilter} onChange={(hfilter) => ws.setState({ hfilter })} label="Filtrar registros" />
       <div style={card(14, { overflowX: "auto", overflowY: "hidden" })}>
         {v.history.map((h) => (
           <div key={h.key} style={{ borderTop: "1px solid var(--n-100)" }}>
