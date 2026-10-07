@@ -64,3 +64,7 @@ label:has(> [role="switch"]) * { box-sizing: border-box; }
 /* Celular: grupo de ações do cabeçalho ocupa a largura e os botões dividem a linha. */
 .tdr-stack-actions { width: 100%; }
 .tdr-stack-actions > button { flex: 1 1 140px; }
+
+/* Abertura: no celular reserva o lugar do botão de menu do Workspace, para o logo não pular. */
+.tdr-splash-menu-space { display: none; }
+@media (max-width: 899px) { .tdr-splash-menu-space { display: block; width: 40px; height: 40px; flex: none; } }
