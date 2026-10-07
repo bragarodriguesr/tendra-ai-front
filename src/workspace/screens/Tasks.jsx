@@ -15,7 +15,7 @@ export function TaskAlerts({ v, ws }) {
       pos={tDeck.hasMany ? tDeck.pos : null} onPrev={() => move(-1)} onNext={() => move(1)}
     >
       <div style={{ color: "var(--n-900)", lineHeight: 1.5 }}><b>{a.name}</b> {a.text}</div>
-      <div><Button size="sm" variant="secondary" iconEnd="arrow-right" onClick={a.go}>{a.action}</Button></div>
+      <div><Button size="sm" variant="secondary" iconEnd="arrow-right" onClick={() => ws.readAlert(a)}>{a.action}</Button></div>
     </AlertDeck>
   );
 }
