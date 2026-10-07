@@ -25,6 +25,8 @@ export interface SidebarNavProps extends React.HTMLAttributes<HTMLElement> {
   header?: React.ReactNode;
   footer?: React.ReactNode;
   width?: number;
+  /** Só os ícones; o rótulo (texto) vira aria-label e title, e os títulos de grupo viram um traço */
+  collapsed?: boolean;
 }
 
 export declare function SidebarNav(props: SidebarNavProps): JSX.Element;

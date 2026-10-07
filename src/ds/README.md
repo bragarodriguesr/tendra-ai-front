@@ -89,6 +89,7 @@ Curto e decidido, **sem bounce e sem escala em hover**. 140ms para hover e foco;
 - **Press**: nenhum efeito próprio; a resposta é imediata na ação.
 - **Foco**: borda sálvia + halo sálvia de 3px (`rgba(110,114,104,.18)`). Nunca o azul do navegador.
 - **Ativo em navegação**: sublinhado de 2px (abas) ou filete de 2px à esquerda + fundo afundado (lateral) — nunca pílula preenchida.
+- **Filtros de lista e tabela**: sempre `FilterMenu` — "Todos" fixo + botão "Filtrar" (funil) com menu das demais visões e a contagem de cada uma. A visão ativa é o botão preenchido (primário). Não use abas nem `Select` para filtrar; `Select` fica para ordenação.
 - **Desabilitado**: 42% de opacidade + `not-allowed`.
 
 ### Transparência e blur
@@ -123,7 +124,7 @@ O logo existe em vetor (`assets/logo/`, quatro lockups + quatro app icons) e em 
 | `tokens/` | `fonts` · `colors` · `typography` · `spacing` · `radii` · `elevation` · `motion` · `dataviz` |
 | `components/core/` | Button, IconButton, Badge, Tag, Card, Divider, ProgressBar, Logo, AnimatedLogo (+ custom element `<tendra-logo>`), Icon, MonoLabel |
 | `components/forms/` | Field, Input, Textarea, Select, Checkbox, Radio, Switch |
-| `components/navigation/` | Tabs, Breadcrumb, SidebarNav, TopBar |
+| `components/navigation/` | Tabs, FilterMenu, Breadcrumb, SidebarNav, TopBar |
 | `components/feedback/` | Dialog, Toast, Tooltip, EmptyState, SourceTrail |
 | `assets/logo/`, `assets/icons/` | Marca e iconografia (SVG-fonte dos glifos de `icon-paths.js`) |
 | `/public/favicon/` | Favicons, servidos na raiz pelo Vite |
@@ -134,6 +135,7 @@ O logo existe em vetor (`assets/logo/`, quatro lockups + quatro app icons) e em 
 ### Adições intencionais ao conjunto padrão
 - **`SourceTrail`** (feedback) — a rastreabilidade até o documento de origem é a promessa central do produto e aparece em toda resposta gerada; deixá-la como composição solta garantiria inconsistência.
 - **`MonoLabel`** (core) — a "voz sistema" em mono tem regras próprias de tracking e caixa em dois tamanhos; sem componente, cada tela reinventaria os valores.
+- **`FilterMenu`** (navigation) — filtro padrão de listas e tabelas; as telas usavam abas e seletores de jeitos diferentes para a mesma tarefa.
 - **`Icon`** (core) — invólucro do conjunto Lucide adotado, para que ninguém cole SVG solto.
 
 ### Como consumir

@@ -9,8 +9,8 @@ const initialState = ({ initialScreen, role }) => ({
   docs: seedDocs(), sort: "idade", taskId: "t1",
   exported: null, exported4: null, exported8: null, expanded: null,
   form: { name: "Perguntas_Meridian.xlsx", company: "", type: "RFP", due: "", owner: "", file: false, identified: false, tried: false },
-  fb: {}, saved: 0, tick: 0, taskRetry: false,
-  vw: typeof window !== "undefined" ? window.innerWidth : 1440, navOpen: false
+  fb: {}, saved: 0, tick: 0, taskRetry: false, alertsRead: {},
+  vw: typeof window !== "undefined" ? window.innerWidth : 1440, navOpen: false, sideCollapsed: false
 });
 
 /**
@@ -34,6 +34,9 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
       setState,
       get s() { return ref.current; },
       name() { return ref.current.role === "Aprovador" ? "Marcelo Vieira" : "Kadu Mendes"; },
+      readAlert(a) { setState((s) => ({ alertsRead: { ...s.alertsRead, [a.key]: true } })); a.go(); },
+      readAllAlerts(keys) { setState((s) => ({ alertsRead: { ...s.alertsRead, ...Object.fromEntries(keys.map((k) => [k, true])) } })); },
+      switchRole() { setState((s) => ({ role: s.role === "Aprovador" ? "Revisor" : "Aprovador" })); },
       hasItems: (id) => ITEM_TASKS.includes(id),
       genFor(id) {
         const g = generated.current;

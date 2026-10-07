@@ -151,7 +151,6 @@ export function buildView(s, ws) {
   // filtros e lista
   const cnt = (k) => (k === "todos" ? s.items.length : k === "alerta" ? c.alerts : s.items.filter((i) => i.st === k).length);
   const filterTabs = FILTERS.map(([value, label]) => ({ value, label, count: cnt(value) }));
-  const filterOptions = FILTERS.map(([value, label]) => ({ value, label }));
   const vis = ws.visible(s);
   const rows = vis.map((i) => {
     const st = ST[i.st], p = ws.pendingCount(i);
@@ -263,12 +262,17 @@ export function buildView(s, ws) {
   const left = (id) => { const q = ws.counts(id, s); return q.total - q.approved; };
   const taskAlerts = [];
   taskAlerts.push(s.taskRetry
-    ? { icon: "clock", label: "Reprocessamento", name: "Orbis Energia", text: "voltou para a fila de processamento.", action: "Conferir processamento", go: () => ws.go("task", { taskId: "t5" }) }
-    : { icon: "triangle-alert", label: "Falha no carregamento", name: "Orbis Energia", text: "não pôde ser carregada. O arquivo está com 0% de conclusão.", action: "Conferir arquivo", go: () => ws.go("task", { taskId: "t5" }) });
-  taskAlerts.push({ icon: "clock", label: "Prazo vencido", name: "Cordel Seguros", text: "está vencida, com " + left("t3") + " itens sem aprovação.", action: "Abrir tarefa", go: () => ws.go("task", { taskId: "t3" }) });
-  if (!s.exported) taskAlerts.push({ icon: "clock", label: "Prazo próximo", name: "Banco Meridian", text: "vence em 4 dias com " + left("t1") + " itens sem aprovação.", action: "Revisar itens", go: () => ws.go("review", { taskId: "t1", sel: "r4", filter: "todos" }) });
-  const tAi = Math.min(s.tAi, Math.max(taskAlerts.length - 1, 0));
-  const tDeck = { ...deckLayers(taskAlerts.length), a: taskAlerts[tAi], pos: `${tAi + 1} de ${taskAlerts.length}`, hasMany: taskAlerts.length > 1, index: tAi, count: taskAlerts.length };
+    ? { key: "orbis-retry", at: "29/09/2026 10:05", icon: "clock", label: "Reprocessamento", name: "Orbis Energia", text: "voltou para a fila de processamento.", action: "Conferir processamento", go: () => ws.go("task", { taskId: "t5" }) }
+    : { key: "orbis-falha", at: "29/09/2026 09:40", icon: "triangle-alert", label: "Falha no carregamento", name: "Orbis Energia", text: "não pôde ser carregada. O arquivo está com 0% de conclusão.", action: "Conferir arquivo", go: () => ws.go("task", { taskId: "t5" }) });
+  taskAlerts.push({ key: "cordel-vencido", at: "29/09/2026 08:00", icon: "clock", label: "Prazo vencido", name: "Cordel Seguros", text: "está vencida, com " + left("t3") + " itens sem aprovação.", action: "Abrir tarefa", go: () => ws.go("task", { taskId: "t3" }) });
+  if (!s.exported) taskAlerts.push({ key: "meridian-prazo", at: "28/09/2026 17:30", icon: "clock", label: "Prazo próximo", name: "Banco Meridian", text: "vence em 4 dias com " + left("t1") + " itens sem aprovação.", action: "Revisar itens", go: () => ws.go("review", { taskId: "t1", sel: "r4", filter: "todos" }) });
+  // os mesmos alertas no sino da barra superior, com o estado de leitura
+  taskAlerts.forEach((a) => { a.read = !!s.alertsRead[a.key]; });
+  const alertsUnread = taskAlerts.filter((a) => !a.read).length;
+  // o card da tela de Tarefas mostra só os alertas ainda não lidos no sino
+  const pendingAlerts = taskAlerts.filter((a) => !a.read);
+  const tAi = Math.min(s.tAi, Math.max(pendingAlerts.length - 1, 0));
+  const tDeck = { ...deckLayers(pendingAlerts.length), a: pendingAlerts[tAi], pos: `${tAi + 1} de ${pendingAlerts.length}`, hasMany: pendingAlerts.length > 1, index: tAi, count: pendingAlerts.length };
 
   // formulário de nova RFP
   const f = s.form, tried = f.tried;
@@ -284,7 +288,7 @@ export function buildView(s, ws) {
 
   return {
     isA, userName: ws.name(), navGroups, navValue,
-    docs, readyDocs, onb, tasks, taskAlerts, tDeck, dash, task, counts: c, segs, filterTabs, filterOptions, rows,
+    docs, readyDocs, onb, tasks, taskAlerts, alertsUnread, tDeck, dash, task, counts: c, segs, filterTabs, rows,
     revTask: (ws.taskInfo(s.itemsTask, s) || {}).name, cur, savedText, drawer, exportCards, exportTitle, history, historyTabs, form
   };
 }

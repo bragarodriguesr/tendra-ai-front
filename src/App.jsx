@@ -1,6 +1,7 @@
 import React from "react";
 import { WebsiteApp } from "./site/WebsiteApp.jsx";
-import { WorkspaceApp } from "./workspace/WorkspaceApp.jsx";
+import { WorkspaceApp, WorkspaceBarActions } from "./workspace/WorkspaceApp.jsx";
+import { buildView } from "./workspace/viewModel.js";
 import { LoginPage } from "./LoginPage.jsx";
 import { Splash } from "./Splash.jsx";
 import { BrandBar } from "./BrandBar.jsx";
@@ -32,7 +33,7 @@ export function App() {
           // Mesma barra do Workspace, para a troca para o Dashboard não mexer no topo da tela.
           header={
             <BrandBar logoLabel="Tendra.ai — voltar ao site" onLogo={() => ws.showView("site")} leading={<span className="tdr-splash-menu-space" aria-hidden="true" />}>
-              <Button size="sm" variant="inverse-secondary" icon="log-out" onClick={logout}>Sair</Button>
+              <WorkspaceBarActions v={buildView(state, ws)} state={state} ws={ws} onLogout={logout} />
             </BrandBar>
           }
         />

@@ -41,13 +41,11 @@ label:has(> [role="switch"]) * { box-sizing: border-box; }
 .tdr-login-headline { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 40px; line-height: 1.1; letter-spacing: -0.03em; color: var(--text-on-inverse); text-wrap: balance; }
 /* Marcador limão atrás da palavra (limão é preenchimento; o texto sobre ele é tinta), como no hero do site. */
 .tdr-login-mark { background: var(--brand-lime); color: var(--brand-ink); padding: 0 6px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
-.tdr-login-lead { margin: 0; font-size: var(--text-lead-size); line-height: var(--text-lead-lh); color: var(--ink-200); max-width: 46ch; text-wrap: pretty; }
 .tdr-login-main { display: flex; align-items: center; justify-content: center; padding: 40px clamp(16px, 5vw, 40px); }
 @media (max-width: 900px) {
   .tdr-login { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
   .tdr-login-aside { padding: 24px 16px 28px; }
   .tdr-login-headline { font-size: 26px; }
-  .tdr-login-lead { font-size: 16px; }
   .tdr-login-main { align-items: flex-start; padding: 32px 16px 48px; }
 }
 
@@ -65,9 +63,8 @@ label:has(> [role="switch"]) * { box-sizing: border-box; }
 .tdr-stack-actions { width: 100%; }
 .tdr-stack-actions > button { flex: 1 1 140px; }
 
-/* Abertura: no celular reserva o lugar do botão de menu do Workspace, para o logo não pular. */
-.tdr-splash-menu-space { display: none; }
-@media (max-width: 899px) { .tdr-splash-menu-space { display: block; width: 40px; height: 40px; flex: none; } }
+/* Abertura: reserva o lugar do botão de menu do Workspace, para o logo não pular. */
+.tdr-splash-menu-space { display: block; width: 40px; height: 40px; flex: none; }
 
 /* Primeiros passos: etapas, área de envio e lista de arquivos */
 .tdr-onb-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
@@ -86,3 +83,25 @@ label:has(> [role="switch"]) * { box-sizing: border-box; }
 @media (max-width: 600px) { .tdr-file-status { grid-column: 2; } .tdr-file { grid-template-columns: auto minmax(0, 1fr); } }
 .tdr-mini-bar { height: 4px; max-width: 220px; margin-top: 6px; border-radius: 99px; background: var(--n-200); overflow: hidden; }
 .tdr-mini-bar i { display: block; height: 100%; width: 100%; background: var(--brand-sage); animation: tdr-fill linear both; }
+
+/* Menu do usuário na barra superior do Workspace */
+.tdr-popover { position: absolute; top: calc(100% + 8px); right: 0; z-index: 70; box-sizing: border-box; background: var(--surface-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); box-shadow: var(--shadow-popover); color: var(--n-700); font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; animation: tdr-rise var(--duration-fast) var(--ease-out); }
+.tdr-user-menu { width: 232px; padding: 16px; display: grid; gap: 14px; }
+.tdr-user-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tdr-user-initials { display: none; }
+@media (max-width: 600px) { .tdr-user-name { display: none; } .tdr-user-initials { display: inline; } }
+.tdr-menu-logout { display: none; }
+@media (max-width: 600px) { .tdr-bar-logout { display: none; } .tdr-menu-logout { display: block; margin-top: -6px; } }
+
+/* Sino de alertas */
+.tdr-dot { width: 8px; height: 8px; border-radius: 99px; background: var(--danger); display: inline-block; flex: none; }
+.tdr-bell-dot { position: absolute; top: 8px; right: 8px; box-shadow: 0 0 0 2px var(--brand-ink); pointer-events: none; }
+.tdr-alerts-menu { width: min(360px, calc(100vw - 24px)); overflow: hidden; }
+@media (max-width: 600px) { .tdr-alerts-menu { position: fixed; top: 72px; right: 12px; } }
+.tdr-alerts-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border-default); }
+.tdr-linkbtn { background: none; border: 0; padding: 0; font: inherit; font-size: 13px; font-weight: 600; color: var(--n-900); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.tdr-linkbtn:disabled { color: var(--n-400); text-decoration: none; cursor: default; }
+.tdr-alerts-item { display: grid; gap: 6px; width: 100%; padding: 12px 16px; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--border-subtle); font: inherit; font-size: 14px; color: var(--n-700); cursor: pointer; }
+.tdr-alerts-item:last-child { border-bottom: 0; }
+.tdr-alerts-item:hover { background: var(--n-075); }
+

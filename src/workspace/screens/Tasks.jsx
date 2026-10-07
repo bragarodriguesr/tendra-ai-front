@@ -15,7 +15,7 @@ export function TaskAlerts({ v, ws }) {
       pos={tDeck.hasMany ? tDeck.pos : null} onPrev={() => move(-1)} onNext={() => move(1)}
     >
       <div style={{ color: "var(--n-900)", lineHeight: 1.5 }}><b>{a.name}</b> {a.text}</div>
-      <div><Button size="sm" variant="secondary" iconEnd="arrow-right" onClick={a.go}>{a.action}</Button></div>
+      <div><Button size="sm" variant="secondary" iconEnd="arrow-right" onClick={() => ws.readAlert(a)}>{a.action}</Button></div>
     </AlertDeck>
   );
 }
@@ -24,7 +24,7 @@ export function Tasks({ v, ws, pad, isMobile }) {
   return (
     <Page pad={pad}>
       <PageHeader eyebrow="Painel de tarefas" title={`${v.tasks.length} RFPs e RFIs em andamento`} action={<Button icon="plus" onClick={() => ws.go("new")}>Nova RFP/RFI</Button>} />
-      {v.taskAlerts.length > 0 ? <TaskAlerts v={v} ws={ws} /> : null}
+      {v.tDeck.count > 0 ? <TaskAlerts v={v} ws={ws} /> : null}
       {!isMobile ? (
         <div role="table" aria-label="Tarefas" style={card(14, { overflowX: "auto", overflowY: "hidden" })}>
           <div role="row" style={{ ...rowGrid, padding: "12px 20px", background: "var(--n-050)", borderBottom: "1px solid var(--n-200)", ...mono(11, "var(--n-500)"), letterSpacing: ".1em", textTransform: "uppercase" }}>
