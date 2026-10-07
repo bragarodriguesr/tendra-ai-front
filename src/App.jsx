@@ -1,22 +1,34 @@
 import React from "react";
 import { WebsiteApp } from "./site/WebsiteApp.jsx";
 import { WorkspaceApp } from "./workspace/WorkspaceApp.jsx";
+import { LoginPage } from "./LoginPage.jsx";
 import { useWorkspace } from "./workspace/useWorkspace.js";
 
 /**
- * Site institucional e Workspace numa só página. As duas visões ficam montadas e
- * alternam sem recarregar, então cada uma volta exatamente onde o usuário estava.
+ * Site institucional, login e Workspace numa só página. Site e Workspace ficam montados e
+ * alternam sem recarregar, então cada um volta exatamente onde o usuário estava.
  */
 export function App() {
   const { state, ws } = useWorkspace();
-  const onSite = state.view === "site";
+  const view = state.view;
+  // "Sair" volta à Home do site: remontar o site o leva para a página inicial.
+  const [siteKey, setSiteKey] = React.useState(0);
+  const show = (v) => (view === v ? { display: "block" } : { display: "none" });
   return (
     <>
-      <div style={onSite ? { minHeight: "100vh", background: "#F5F6F1" } : { display: "none" }}>
-        <WebsiteApp onWorkspace={() => { ws.go("dashboard"); ws.showView("app"); }} />
+      <div style={view === "site" ? { minHeight: "100vh", background: "#F5F6F1" } : { display: "none" }}>
+        <WebsiteApp key={siteKey} onLogin={() => ws.showView("login")} />
       </div>
-      <div style={onSite ? { display: "none" } : { display: "block" }}>
-        <WorkspaceApp state={state} ws={ws} onSite={() => ws.showView("site")} />
+      {view === "login" ? (
+        <LoginPage ws={ws} state={state} onSite={() => ws.showView("site")} onEnter={() => { ws.go("dashboard"); ws.showView("app"); }} />
+      ) : null}
+      <div style={show("app")}>
+        <WorkspaceApp
+          state={state}
+          ws={ws}
+          onSite={() => ws.showView("site")}
+          onLogout={() => { setSiteKey((k) => k + 1); ws.setState({ navOpen: false }); ws.showView("site"); }}
+        />
       </div>
     </>
   );

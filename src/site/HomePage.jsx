@@ -1,8 +1,8 @@
 import React from "react";
 import { Badge, Button, Card, Divider, Icon, MonoLabel, ProgressBar, SourceTrail } from "../ds/index.js";
 
-const Section = ({ children, tone, style }) => (
-  <section style={{ background: tone === "ink" ? "var(--surface-inverse)" : tone === "sunken" ? "var(--surface-sunken)" : "transparent", ...style }}>
+const Section = ({ children, tone, style, id }) => (
+  <section id={id} style={{ background: tone === "ink" ? "var(--surface-inverse)" : tone === "sunken" ? "var(--surface-sunken)" : "transparent", ...style }}>
     <div style={{ maxWidth: "var(--page-max)", margin: "0 auto", padding: "var(--gutter-section) var(--page-pad)" }}>{children}</div>
   </section>
 );
@@ -21,13 +21,7 @@ export function HomePage({ onPage }) {
               A Tendra.ai lê o edital, cruza com a sua base aprovada e devolve respostas completas — com a fonte de cada afirmação rastreável até o documento de origem.
             </p>
             <div className="tdr-site-cta" style={{ display: "flex", gap: "var(--space-3)", flexWrap: "wrap" }}>
-              <Button size="lg" icon="calendar">Agendar demo</Button>
-              <Button size="lg" variant="secondary" iconEnd="arrow-up-right" onClick={() => onPage("precos")}>Ver planos e preços</Button>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-6)", flexWrap: "wrap", paddingTop: "var(--space-2)" }}>
-              {["SOC 2 TIPO II", "ISO 27001", "LGPD"].map((c) => (
-                <MonoLabel key={c} tone="sage">{c}</MonoLabel>
-              ))}
+              <Button size="lg" icon="calendar" onClick={() => onPage("contato")}>Agendar demo</Button>
             </div>
           </div>
 
@@ -55,16 +49,17 @@ export function HomePage({ onPage }) {
         </div>
       </Section>
 
-      <Section tone="sunken">
+      <Section tone="sunken" id="como-funciona">
         <div style={{ display: "grid", gap: "var(--space-10)" }}>
           <div style={{ display: "grid", gap: "var(--space-4)" }}>
             <MonoLabel>Como funciona</MonoLabel>
             <h2 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: "var(--text-d2-size)", lineHeight: "var(--text-d2-lh)", letterSpacing: "var(--text-d2-ls)", color: "var(--text-strong)", maxWidth: "24ch", textWrap: "pretty" }}>
-              Três passos, nenhuma resposta sem fonte
+              Quatro passos, nenhuma resposta sem fonte
             </h2>
           </div>
           <div className="tdr-site-steps">
             {[
+              { n: "00", icon: "link", t: "Conecte suas fontes", d: "Drives, intranet, documentações, certificações e propostas/RFPs anteriores. A Tendra.ai organiza o que está espalhado." },
               { n: "01", icon: "upload", t: "Importe o edital", d: "PDF, planilha ou portal do cliente. A Tendra.ai separa os requisitos item por item." },
               { n: "02", icon: "sparkles", t: "Gere com rastreabilidade", d: "Cada resposta sai citando o documento e a página que a sustenta." },
               { n: "03", icon: "check-check", t: "Revise e aprove", d: "O time responsável aprova nominalmente; a trilha de auditoria registra tudo." }
@@ -102,7 +97,7 @@ export function HomePage({ onPage }) {
         </div>
       </Section>
 
-      <Section tone="ink">
+      <Section tone="ink" id="por-que-confiam">
         <div className="tdr-site-trust">
           <div style={{ display: "grid", gap: "var(--space-5)" }}>
             <MonoLabel tone="accent">POR QUE CONFIAM</MonoLabel>

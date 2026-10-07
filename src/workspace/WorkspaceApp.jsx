@@ -1,5 +1,6 @@
 import React from "react";
-import { Button, IconButton, Logo, SidebarNav } from "../ds/index.js";
+import { Button, IconButton, SidebarNav } from "../ds/index.js";
+import { BRAND_BAR_H, BrandBar } from "../BrandBar.jsx";
 import { buildView } from "./viewModel.js";
 import { MONO } from "./ui.jsx";
 import { ConfirmEditDialog, SourceDrawer, ToastHost } from "./overlays.jsx";
@@ -13,7 +14,7 @@ import { History } from "./screens/History.jsx";
 import { Base } from "./screens/Base.jsx";
 import { Onboarding } from "./screens/Onboarding.jsx";
 
-const TOPBAR_H = 56;
+const TOPBAR_H = BRAND_BAR_H;
 const SIDEBAR_W = 272;
 const MOBILE_BELOW = 900;
 
@@ -52,7 +53,7 @@ function Sidebar({ v, ws, state, isMobile }) {
 }
 
 /** Área do produto: barra superior fixa, menu lateral e as telas T0–T9. */
-export function WorkspaceApp({ state, ws, onSite }) {
+export function WorkspaceApp({ state, ws, onSite, onLogout }) {
   const v = buildView(state, ws);
   const isMobile = state.vw < MOBILE_BELOW;
   const pad = isMobile ? "20px 16px" : "40px";
@@ -61,15 +62,13 @@ export function WorkspaceApp({ state, ws, onSite }) {
 
   return (
     <div>
-      <div style={{ position: "sticky", top: 0, zIndex: 60, height: TOPBAR_H, boxSizing: "border-box", display: "flex", alignItems: "center", gap: isMobile ? 4 : 12, padding: isMobile ? "0 12px 0 8px" : "0 20px", background: "var(--n-000)", borderBottom: "1px solid var(--n-200)" }}>
-        {isMobile ? <IconButton icon="menu" label="Abrir menu" aria-expanded={state.navOpen} onClick={() => ws.setState({ navOpen: !state.navOpen })} /> : null}
-        <a href="#" aria-label="Tendra.ai — voltar ao site" className="tdr-logo-link" onClick={(e) => { e.preventDefault(); onSite(); }} style={{ display: "flex", marginRight: 8, textDecoration: "none" }}>
-          <Logo size={28} variant="paper" />
-        </a>
-        <div style={{ marginLeft: "auto", display: "flex" }}>
-          <Button size="sm" variant="accent" icon="layout-grid" aria-current="page" onClick={() => ws.go("dashboard")}><span><span className="tdr-ws-prefix">Produto · </span>Workspace</span></Button>
-        </div>
-      </div>
+      <BrandBar
+        logoLabel="Tendra.ai — voltar ao site"
+        onLogo={onSite}
+        leading={isMobile ? <IconButton icon="menu" variant="inverse" label="Abrir menu" aria-expanded={state.navOpen} onClick={() => ws.setState({ navOpen: !state.navOpen })} /> : null}
+      >
+        <Button size="sm" variant="inverse-secondary" icon="log-out" onClick={onLogout}>Sair</Button>
+      </BrandBar>
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : `${SIDEBAR_W}px minmax(0,1fr)`, height: `calc(100vh - ${TOPBAR_H}px)`, background: "var(--n-050)", fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 14, color: "var(--n-700)", position: "relative", overflow: "hidden" }}>
         <ToastHost toast={state.toast} isMobile={isMobile} onClose={() => ws.setState({ toast: null })} />
         {isMobile && state.navOpen ? <div onClick={() => ws.setState({ navOpen: false })} style={{ position: "absolute", inset: 0, zIndex: 49, background: "rgba(18,20,15,.4)" }} /> : null}
