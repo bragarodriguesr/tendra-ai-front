@@ -22,7 +22,6 @@ export function HomePage({ onPage }) {
             </p>
             <div className="tdr-site-cta" style={{ display: "flex", gap: "var(--space-3)", flexWrap: "wrap" }}>
               <Button size="lg" icon="calendar" onClick={() => onPage("contato")}>Agendar demo</Button>
-              <Button size="lg" variant="secondary" iconEnd="arrow-up-right" onClick={() => onPage("precos")}>Ver planos e preços</Button>
             </div>
           </div>
 
