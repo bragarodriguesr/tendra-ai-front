@@ -68,3 +68,21 @@ label:has(> [role="switch"]) * { box-sizing: border-box; }
 /* Abertura: no celular reserva o lugar do botão de menu do Workspace, para o logo não pular. */
 .tdr-splash-menu-space { display: none; }
 @media (max-width: 899px) { .tdr-splash-menu-space { display: block; width: 40px; height: 40px; flex: none; } }
+
+/* Primeiros passos: etapas, área de envio e lista de arquivos */
+.tdr-onb-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 700px) { .tdr-onb-steps { grid-template-columns: minmax(0, 1fr); } }
+.tdr-onb-step { border-top: 2px solid var(--border-default); padding-top: 12px; display: grid; gap: 4px; }
+.tdr-onb-step.is-on { border-top-color: var(--brand-ink); }
+.tdr-onb-step.is-done { border-top-color: var(--brand-sage); }
+.tdr-onb-two { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 1100px) { .tdr-onb-two { grid-template-columns: minmax(0, 1fr); } }
+.tdr-dropzone { border: 1px dashed var(--border-strong); border-radius: var(--radius-xl); background: var(--surface-card); padding: 28px 24px; display: grid; justify-items: start; gap: 12px; transition: border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out); }
+.tdr-dropzone.is-over { border-color: var(--brand-ink); background: var(--n-075); }
+.tdr-dropzone-frame { width: 56px; height: 56px; border-radius: 12px; border: 1px solid var(--border-default); background: var(--surface-page); display: flex; align-items: center; justify-content: center; color: var(--brand-sage); }
+.tdr-files { border: 1px solid var(--border-default); border-radius: var(--radius-xl); background: var(--surface-card); overflow: hidden; }
+.tdr-file { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); }
+.tdr-file:last-child { border-bottom: 0; }
+@media (max-width: 600px) { .tdr-file-status { grid-column: 2; } .tdr-file { grid-template-columns: auto minmax(0, 1fr); } }
+.tdr-mini-bar { height: 4px; max-width: 220px; margin-top: 6px; border-radius: 99px; background: var(--n-200); overflow: hidden; }
+.tdr-mini-bar i { display: block; height: 100%; width: 100%; background: var(--brand-sage); animation: tdr-fill linear both; }

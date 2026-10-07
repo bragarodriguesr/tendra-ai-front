@@ -74,10 +74,26 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
 
       addDocs(list) {
         const base = Date.now();
-        const add = list.map((d, k) => ({ id: "n" + base + k, upd: "29/09/2026", age: 0, by: api.name(), ver: "", ...d }));
+        // cada arquivo em processamento termina um pouco depois do anterior; `fate` simula falha ou suporte
+        let k = 0;
+        const add = list.map((d, i) => ({ id: "n" + base + i, upd: "29/09/2026", age: 0, by: api.name(), ver: "", ...d, ...(d.st === "processando" ? { ms: 1800 + 700 * k++ } : null) }));
         setState((s) => ({ docs: [...s.docs, ...add] }));
         add.filter((d) => d.st === "processando").forEach((d) =>
-          setTimeout(() => setState((s) => ({ docs: s.docs.map((x) => (x.id === d.id ? { ...x, st: "pronto" } : x)) })), 1800));
+          setTimeout(() => setState((s) => ({ docs: s.docs.map((x) => (x.id === d.id ? { ...x, st: x.fate || "pronto", fate: null } : x)) })), d.ms));
+      },
+      onboardFiles(files) {
+        const ok = /\.(docx?|xlsx?|md|pdf|pptx?|txt|csv)$/i;
+        api.addDocs(files.map((f) => ({ name: f.name, type: "Documento", origin: "onb", st: ok.test(f.name) ? "processando" : "formato" })));
+      },
+      onboardSample() {
+        api.addDocs([
+          { name: "Politica_Seguranca_Informacao_v6.pdf", st: "processando" },
+          { name: "Proposta_Tecnica_Fintech_Horizonte_2025.docx", st: "processando" },
+          { name: "Matriz_Controles_ISO27001.xlsx", st: "processando" },
+          { name: "Contrato_Assinado_Digitalizado_2021.pdf", st: "suporte" },
+          { name: "Tabela_Precos.numbers", st: "formato" },
+          { name: "FAQ_Produto.md", st: "processando", fate: "erro" }
+        ].map((d) => ({ type: "Documento", origin: "onb", ...d })));
       },
       uploadDocs() {
         api.addDocs([
@@ -88,7 +104,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
       },
       uploadRfp() { api.addDocs([{ name: "RFP_Vetta_2026.xlsx", type: "RFP passada", st: "processando" }]); },
       retryDoc(id) {
-        setState((s) => ({ docs: s.docs.map((x) => (x.id === id ? { ...x, st: "processando" } : x)) }));
+        setState((s) => ({ docs: s.docs.map((x) => (x.id === id ? { ...x, st: "processando", fate: null, ms: 1800 } : x)) }));
         setTimeout(() => setState((s) => ({ docs: s.docs.map((x) => (x.id === id ? { ...x, st: "pronto" } : x)) })), 1800);
       },
       toggleDoc(d) {

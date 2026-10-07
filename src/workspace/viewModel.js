@@ -83,6 +83,15 @@ export function buildView(s, ws) {
     };
   });
   const readyDocs = s.docs.filter((d) => d.st === "pronto" && !d.off).length;
+  // arquivos enviados pela tela Primeiros passos, mais recentes primeiro
+  const sent = new Map(s.docs.map((d, i) => [d.id, i]));
+  const onbList = docs.filter((d) => d.origin === "onb").sort((a, b) => sent.get(b.id) - sent.get(a.id));
+  const onbSent = onbList.filter((d) => d.st !== "formato");
+  const onb = {
+    list: onbList, sent: onbSent.length,
+    ready: onbSent.filter((d) => d.st === "pronto" && !d.off).length,
+    done: onbSent.filter((d) => ["pronto", "erro", "suporte"].includes(d.st)).length
+  };
 
   // tarefas
   const tasks = TASK_IDS.map((id) => {
@@ -275,7 +284,7 @@ export function buildView(s, ws) {
 
   return {
     isA, userName: ws.name(), navGroups, navValue,
-    docs, readyDocs, tasks, taskAlerts, tDeck, dash, task, counts: c, segs, filterTabs, filterOptions, rows,
+    docs, readyDocs, onb, tasks, taskAlerts, tDeck, dash, task, counts: c, segs, filterTabs, filterOptions, rows,
     revTask: (ws.taskInfo(s.itemsTask, s) || {}).name, cur, savedText, drawer, exportCards, exportTitle, history, historyTabs, form
   };
 }
