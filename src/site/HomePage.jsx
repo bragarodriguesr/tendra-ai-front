@@ -1,8 +1,8 @@
 import React from "react";
 import { Badge, Button, Card, Divider, Icon, MonoLabel, ProgressBar, SourceTrail } from "../ds/index.js";
 
-const Section = ({ children, tone, style }) => (
-  <section style={{ background: tone === "ink" ? "var(--surface-inverse)" : tone === "sunken" ? "var(--surface-sunken)" : "transparent", ...style }}>
+const Section = ({ children, tone, style, id }) => (
+  <section id={id} style={{ background: tone === "ink" ? "var(--surface-inverse)" : tone === "sunken" ? "var(--surface-sunken)" : "transparent", ...style }}>
     <div style={{ maxWidth: "var(--page-max)", margin: "0 auto", padding: "var(--gutter-section) var(--page-pad)" }}>{children}</div>
   </section>
 );
@@ -21,7 +21,7 @@ export function HomePage({ onPage }) {
               A Tendra.ai lê o edital, cruza com a sua base aprovada e devolve respostas completas — com a fonte de cada afirmação rastreável até o documento de origem.
             </p>
             <div className="tdr-site-cta" style={{ display: "flex", gap: "var(--space-3)", flexWrap: "wrap" }}>
-              <Button size="lg" icon="calendar">Agendar demo</Button>
+              <Button size="lg" icon="calendar" onClick={() => onPage("contato")}>Agendar demo</Button>
               <Button size="lg" variant="secondary" iconEnd="arrow-up-right" onClick={() => onPage("precos")}>Ver planos e preços</Button>
             </div>
           </div>
@@ -50,7 +50,7 @@ export function HomePage({ onPage }) {
         </div>
       </Section>
 
-      <Section tone="sunken">
+      <Section tone="sunken" id="como-funciona">
         <div style={{ display: "grid", gap: "var(--space-10)" }}>
           <div style={{ display: "grid", gap: "var(--space-4)" }}>
             <MonoLabel>Como funciona</MonoLabel>
@@ -97,7 +97,7 @@ export function HomePage({ onPage }) {
         </div>
       </Section>
 
-      <Section tone="ink">
+      <Section tone="ink" id="por-que-confiam">
         <div className="tdr-site-trust">
           <div style={{ display: "grid", gap: "var(--space-5)" }}>
             <MonoLabel tone="accent">POR QUE CONFIAM</MonoLabel>

@@ -33,3 +33,38 @@
   .tdr-site-cta > button { flex: 1 1 100%; }
 }
 
+
+/* Menu do site na barra superior: links em texto sobre tinta; a página atual fica em limão
+   (limão como texto só é permitido em campo tinta). */
+.tdr-site-links { display: flex; align-items: center; gap: var(--space-8); margin-left: var(--space-6); }
+.tdr-site-link { font-size: var(--text-ui-size); font-weight: var(--weight-medium); color: var(--text-on-inverse-body) !important; text-decoration: none; white-space: nowrap; transition: color var(--duration-fast) var(--ease-out); }
+.tdr-site-link:hover, .tdr-site-link:focus-visible { color: var(--text-on-inverse) !important; }
+.tdr-site-link[aria-current="page"] { color: var(--brand-lime) !important; }
+.tdr-site-menu-btn { display: none !important; }
+.tdr-site-links-mobile { display: none; }
+
+@media (max-width: 900px) {
+  .tdr-site-links { display: none; }
+  .tdr-site-menu-btn { display: inline-flex !important; }
+  .tdr-site-links-mobile {
+    display: grid; position: sticky; top: 64px; z-index: 59;
+    background: var(--surface-inverse); border-bottom: 1px solid var(--border-inverse);
+    padding: var(--space-2) var(--brandbar-pad) var(--space-4);
+  }
+  .tdr-site-links-mobile .tdr-site-link { padding: var(--space-3) 0; min-height: var(--hit-min); box-sizing: border-box; display: flex; align-items: center; border-top: 1px solid var(--border-inverse); }
+  .tdr-site-links-mobile .tdr-site-link:first-child { border-top: 0; }
+}
+
+/* Contato */
+.tdr-site-contact { max-width: var(--page-max); margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 80px; padding: 72px var(--page-pad) 112px; align-items: start; }
+.tdr-site-contact-title { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 60px; line-height: 1.06; letter-spacing: -0.035em; color: var(--text-on-inverse); max-width: 16ch; text-wrap: pretty; }
+.tdr-site-contact-form { padding-top: 48px; }
+.tdr-site-contact-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 900px) {
+  .tdr-site-contact { grid-template-columns: minmax(0, 1fr); gap: var(--space-10); padding-top: var(--space-12); padding-bottom: var(--space-16); }
+  .tdr-site-contact-title { font-size: var(--text-d1-size); }
+  .tdr-site-contact-form { padding-top: 0; }
+}
+@media (max-width: 600px) {
+  .tdr-site-contact-row { grid-template-columns: minmax(0, 1fr); }
+}

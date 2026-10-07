@@ -8,7 +8,7 @@ export const BRAND_BAR_H = 64;
  * Barra superior única do produto, em campo tinta: logo à esquerda, ações à direita.
  * O site e o Workspace usam a mesma barra, então trocar de visão não muda tamanho nem posição.
  */
-export function BrandBar({ logoLabel, onLogo, leading, children }) {
+export function BrandBar({ logoLabel, onLogo, leading, links, children }) {
   return (
     <TopBar
       tone="ink"
@@ -20,9 +20,10 @@ export function BrandBar({ logoLabel, onLogo, leading, children }) {
           <a href="#" aria-label={logoLabel} className="tdr-logo-link" onClick={(e) => { e.preventDefault(); onLogo(); }} style={{ display: "flex", textDecoration: "none" }}>
             <Logo variant="ink" size={28} />
           </a>
+          {links}
         </>
       }
-      end={<nav aria-label="Navegação principal" style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>{children}</nav>}
+      end={<div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>{children}</div>}
     />
   );
 }

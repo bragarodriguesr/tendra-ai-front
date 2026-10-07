@@ -4,6 +4,8 @@ body { margin: 0; background: #F5F6F1; color: #3E4238; font-family: 'IBM Plex Sa
 a { color: #12140F; }
 a:hover { color: #6E7268; }
 button { font-family: inherit; }
+/* Campos do design system: padding dentro da altura (44px, como o Select) e sem vazar da largura. */
+input, textarea, select { box-sizing: border-box; }
 
 /* Barra de progresso em 100%: sobretom limão. */
 [role="progressbar"][aria-valuenow="100"] > div { background: var(--brand-lime) !important; }
