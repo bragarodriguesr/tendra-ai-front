@@ -3,6 +3,18 @@ import { AL, ST, code, plural, TASK_IDS, ITEM_TASKS, TODAY_ISO } from "./data.js
 const DANGER = "#A8402E";
 
 // Camadas de "cartões sobrepostos" atrás do alerta visível (até duas bordas).
+/** Confere os dois dígitos verificadores do CNPJ (14 dígitos, sem máscara). */
+function cnpjValid(d) {
+  if (/^(\d)\1{13}$/.test(d)) return false;
+  const dv = (len) => {
+    let sum = 0, w = len - 7;
+    for (let i = 0; i < len; i++) { sum += +d[i] * w--; if (w < 2) w = 9; }
+    const r = sum % 11;
+    return r < 2 ? 0 : 11 - r;
+  };
+  return dv(12) === +d[12] && dv(13) === +d[13];
+}
+
 export function deckLayers(count) {
   const L = Math.min(count - 1, 2);
   return {
@@ -277,8 +289,19 @@ export function buildView(s, ws) {
   // formulário de nova RFP
   const f = s.form, tried = f.tried;
   const dueErr = tried && (!f.due ? "Informe o prazo de submissão." : f.due < TODAY_ISO ? "O prazo não pode estar no passado." : null);
+  const cnpjDigits = f.cnpj.replace(/\D/g, "");
+  const errCnpj = !f.cnpj ? null : cnpjDigits.length < 14 ? "CNPJ incompleto." : !cnpjValid(cnpjDigits) ? "CNPJ inválido." : null;
+  const contacts = f.contacts.map((ct) => ({
+    ...ct,
+    errEmail: ct.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ct.email) ? "E-mail inválido." : null,
+    errPhone: ct.phone && ct.phone.replace(/\D/g, "").length < 10 ? "Telefone incompleto." : null
+  }));
   const form = {
     ...f,
+    contacts,
+    // CNPJ e contatos são opcionais; o que for preenchido precisa estar válido
+    errCnpj: (tried || cnpjDigits.length === 14) && errCnpj ? errCnpj : null,
+    hasErrors: !!errCnpj || contacts.some((ct) => ct.errEmail || ct.errPhone),
     errName: tried && !f.name ? "Informe o nome da tarefa." : null,
     errCompany: tried && !f.company ? "Informe a empresa." : null,
     errDue: dueErr || null,
