@@ -3,7 +3,7 @@ import { Badge, Button, IconButton, MonoLabel, Select, Switch, Tooltip } from ".
 import { Page, card, h1Style, mono } from "../ui.jsx";
 
 const COLS = "minmax(0,2.2fr) 100px 110px 170px minmax(150px,1fr) 120px 110px";
-const rowGrid = { display: "grid", minWidth: 1100, gridTemplateColumns: COLS, gap: 16 };
+const rowGrid = { display: "grid", minWidth: 1040, gridTemplateColumns: COLS, gap: 16 };
 const SORT_OPTIONS = [{ value: "idade", label: "Ordenar por idade" }, { value: "nome", label: "Ordenar por nome" }, { value: "upload", label: "Ordenar por envio" }];
 
 function DocActions({ d }) {
@@ -77,7 +77,10 @@ export function Base({ v, ws, state, pad, isMobile }) {
               <span style={mono(13)}>{d.ageText}</span>
               {d.old ? <Badge tone="danger" icon="clock">Mais de 120 dias</Badge> : null}
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}><Badge tone={d.tone} icon={d.icon}>{d.statusText}</Badge></div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", minWidth: 0 }}>
+              {/* rótulos longos ("Em tratamento pelo suporte") quebram dentro da coluna em vez de invadir a vizinha */}
+              <Badge tone={d.tone} icon={d.icon} style={{ whiteSpace: "normal", maxWidth: "100%", boxSizing: "border-box" }}>{d.statusText}</Badge>
+            </div>
             <span>{d.by}</span>
             <DocActions d={d} />
           </div>

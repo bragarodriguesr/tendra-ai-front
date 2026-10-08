@@ -1,6 +1,9 @@
 import React from "react";
 import { seedItems, seedDocs, genItems, nowStr, ITEM_TASKS, GENERATED, TASKS } from "./data.js";
 
+let contactSeq = 0;
+export const newContact = () => ({ id: "c" + ++contactSeq, name: "", role: "", phone: "", email: "" });
+
 const initialState = ({ initialScreen, role }) => ({
   view: "site", tAi: 0, hfilter: "todos", alertAt: { id: null, i: 0 },
   screen: initialScreen, role,
@@ -8,7 +11,7 @@ const initialState = ({ initialScreen, role }) => ({
   edit: false, showOrig: false, drawer: null, dialog: false, toast: null, reviewPane: "list",
   docs: seedDocs(), sort: "idade", taskId: "t1",
   exported: null, exported4: null, exported8: null, expanded: null,
-  form: { name: "Perguntas_Meridian.xlsx", company: "", type: "RFP", due: "", owner: "", file: false, identified: false, tried: false },
+  form: { name: "Perguntas_Meridian.xlsx", company: "", cnpj: "", type: "RFP", due: "", owner: "", contacts: [newContact()], file: false, identified: false, tried: false },
   fb: {}, saved: 0, tick: 0, taskRetry: false, alertsRead: {},
   vw: typeof window !== "undefined" ? window.innerWidth : 1440, navOpen: false, sideCollapsed: false
 });
