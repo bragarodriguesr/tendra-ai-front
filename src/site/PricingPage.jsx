@@ -2,8 +2,8 @@ import React from "react";
 import { Badge, Button, Card, Divider, Icon, MonoLabel } from "../ds/index.js";
 
 const PLANS = [
-  { t: "Equipe", p: "R$ 4.900", per: "/mês", d: "Até 5 revisores e 20 editais por trimestre.", cta: "Começar", feats: ["Base de respostas", "Trilha de fonte", "Exportação em Word e Excel", "Suporte por e-mail"] },
-  { t: "Enterprise", p: "Sob consulta", per: "", d: "Volume ilimitado, SSO e revisão nominal obrigatória.", cta: "Falar com vendas", featured: true, feats: ["Tudo do Equipe", "SSO SAML + SCIM", "Trilha de auditoria exportável", "Isolamento por tenant", "Gerente de conta dedicado"] },
+  { t: "Basic", p: "Sob consulta", per: "", d: "Até 5 revisores e 20 editais por semestre.", cta: "Falar com vendas", feats: ["Base de respostas", "Trilha de fonte", "Exportação em Word e Excel", "Suporte por e-mail"] },
+  { t: "Enterprise", p: "Sob consulta", per: "", d: "Volume ilimitado, SSO e revisão nominal obrigatória.", cta: "Falar com vendas", featured: true, feats: ["Tudo do Basic", "SSO SAML + SCIM", "Trilha de auditoria exportável", "Isolamento por tenant", "Gerente de conta dedicado"] },
   { t: "Setor público", p: "Sob consulta", per: "", d: "Licitações, pregões e dispensas com exigências formais.", cta: "Falar com vendas", feats: ["Tudo do Enterprise", "Modelos de edital público", "Residência de dados no Brasil"] }
 ];
 
