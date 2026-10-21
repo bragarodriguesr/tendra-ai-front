@@ -1,0 +1,1 @@
+Arquivo de texto simples: deve ser ignorado pela carga (formato não aceito).
