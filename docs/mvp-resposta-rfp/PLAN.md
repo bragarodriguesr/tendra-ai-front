@@ -30,7 +30,7 @@ Cada etapa abaixo é uma mudança pequena, com objetivo claro, testes próprios 
 | # | Pendência | Bloqueia | Sugestão |
 |---|---|---|---|
 | P1 | Chave de testes da API definida e testada | Fase A | Variável de ambiente local. O primeiro teste é a etapa A1. |
-| P2 | Base `.md`, planilha de RFP sintética e gabarito | Fase A, etapa A4 em diante | Conforme a seção 5 de `ARQUITETURA_MAPPING.md` e `docs/FORMATO_BASE_MD.md`. |
+| P2 | Base `.md`, planilha de RFP sintética e gabarito | Fase A, etapa A4 em diante | Conforme a seção 5 de `ARQUITETURA_MAPPING.md` e `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`. |
 | P3 | Método de medir a fidelidade (limite de 90% já decidido) | Etapa A10 | Revisão humana de todas as respostas do gabarito (cerca de 30), com lista de conferência. |
 | P4 | Motor do banco local | Etapa A4 | PGlite (Postgres embutido), porque a fase D usa o Postgres do Supabase. |
 | P5 | Interface do comando de carga (nome e opções) | Etapa A4 | `carregar-base <pasta>` com `--enviado-por`; confirmar na etapa. |
@@ -49,7 +49,7 @@ Cada etapa abaixo é uma mudança pequena, com objetivo claro, testes próprios 
 | Banco | PGlite (Postgres embutido) em `dados/`, com query builder tipado e migrações versionadas |
 | Entrada da RFP | Só `.xlsx`: assinatura do arquivo conferida (não só a extensão), até 10 MB, nome gerado pelo backend |
 | Planilhas | `exceljs` para ler e escrever |
-| Base | Comando `carregar-base`: cabeçalho YAML validado, texto dividido em blocos com `seção` e `linha`, gravados em `documentos` e `blocos` (`docs/FORMATO_BASE_MD.md`) |
+| Base | Comando `carregar-base`: cabeçalho YAML validado, texto dividido em blocos com `seção` e `linha`, gravados em `documentos` e `blocos` (`docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`) |
 | Integração com LLM | SDK oficial da Anthropic, isolado num módulo cliente com erros tipados, novas tentativas em falhas temporárias e registro de cada requisição. Sem agente nem framework intermediário. |
 | Identificação de perguntas com IA | Só quando a regra da coluna "Pergunta" falha: modelo pequeno (candidato: Haiku 5.5) com saída estruturada `{linha, texto}`, seguido de validação literal |
 | Geração | Documentos da base como documentos de conteúdo em blocos, com citações ativadas e cache; perguntas em lotes |
@@ -149,7 +149,7 @@ Ver etapa A1.
 
 ### A4. Carga da base
 - Migração do esquema do banco para `documentos` e `blocos` (PGlite).
-- Comando `carregar-base`: validação do cabeçalho, divisão em blocos com seção e linha, gravação, recarga com hash, órfãos, resumo e código de saída (cenários 7, 8, 9 e 39, e os 16 cenários de `docs/FORMATO_BASE_MD.md`).
+- Comando `carregar-base`: validação do cabeçalho, divisão em blocos com seção e linha, gravação, recarga com hash, órfãos, resumo e código de saída (cenários 7, 8, 9 e 39, e os 16 cenários de `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`).
 - Ativar e desativar documento no banco (cenário 40, parte do banco).
 - **Verificação:** testes dos cenários 7 a 9, 39 e 40 passando; carregar a base sintética e conferir o resumo, incluindo os arquivos inválidos recusados com o motivo.
 

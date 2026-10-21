@@ -30,7 +30,7 @@ constitution: 1.0.0
 - **Contrato com o front:** os itens seguem o formato de `src/workspace/data.js` (campos `q`, `paras`, `srcs`, `alerts`, `st`, `orig`), que a tela de revisão já sabe exibir.
 - **Termos:**
   - **base** é o conjunto de documentos carregados no banco e marcados como ativos; só eles são fontes autorizadas;
-  - **carga** é o comando `carregar-base`, que lê uma pasta de arquivos `.md` e grava documentos e blocos no banco. O formato do arquivo está em `docs/FORMATO_BASE_MD.md`;
+  - **carga** é o comando `carregar-base`, que lê uma pasta de arquivos `.md` e grava documentos e blocos no banco. O formato do arquivo está em `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`;
   - **teto da base** é o limite de 25 MB e 400 mil tokens somados dos documentos ativos usados numa execução;
   - **pessoa que age** é uma das pessoas sintéticas da lista de configuração, enviada pelo front em cada ação de revisão (exceção E1);
   - **data e hora do backend** é o relógio da máquina onde o backend roda, nunca um valor enviado pelo navegador.
@@ -77,7 +77,7 @@ Verificação feita em 21/10/2026, na máquina local de desenvolvimento.
   - **Acesso verificado:** não. O repositório não tem integração contínua configurada.
   - `[DECISÃO PENDENTE: proteção da branch main exigindo a integração contínua aprovada antes do merge. Depende de configuração do repositório.]`
 - **Dados sintéticos**
-  - **Recurso:** pasta de documentos `.md` com o cabeçalho de `docs/FORMATO_BASE_MD.md`, planilha de RFP `.xlsx` sintética e gabarito, conforme a seção 5 de `ARQUITETURA_MAPPING.md`.
+  - **Recurso:** pasta de documentos `.md` com o cabeçalho de `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`, planilha de RFP `.xlsx` sintética e gabarito, conforme a seção 5 de `ARQUITETURA_MAPPING.md`.
   - **Acesso verificado:** não. O material ainda não existe.
   - `[BLOQUEIO: criar a base `.md`, a planilha de RFP sintética e o gabarito antes de aprovar o spec.]`
 - **Repositório (`github.com/bragarodriguesr/tendra-ai-front`)**
@@ -132,7 +132,7 @@ Verificação feita em 21/10/2026, na máquina local de desenvolvimento.
 
 ### Base de conhecimento
 
-O formato do arquivo e as regras de validação do cabeçalho estão em `docs/FORMATO_BASE_MD.md` (seções 4 e 6). Os cenários abaixo cobrem o comportamento do produto; os 16 cenários daquele documento são verificados pelos mesmos testes da carga.
+O formato do arquivo e as regras de validação do cabeçalho estão em `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md` (seções 4 e 6). Os cenários abaixo cobrem o comportamento do produto; os 16 cenários daquele documento são verificados pelos mesmos testes da carga.
 
 #### Cenário 7: carga de documento válido
 - **Given** um arquivo `.md` com cabeçalho válido (`titulo`, `tipo`, `atualizado_em`)
@@ -258,7 +258,7 @@ O formato do arquivo e as regras de validação do cabeçalho estão em `docs/FO
 - **Given** um item com uma fonte cujo `atualizado_em` tem mais de 120 dias em relação à data do backend
 - **When** o resultado é checado
 - **Then** o item recebe o alerta `old`
-- **Nota:** a data de atualização de cada documento é o campo `atualizado_em` do cabeçalho do `.md`, sem alternativa pela data do arquivo (`docs/FORMATO_BASE_MD.md`).
+- **Nota:** a data de atualização de cada documento é o campo `atualizado_em` do cabeçalho do `.md`, sem alternativa pela data do arquivo (`docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`).
 
 #### Cenário 21: pergunta com termo crítico
 - **Given** uma pergunta que contém um termo da lista de termos críticos, comparada sem diferenciar maiúsculas, minúsculas nem acentos
