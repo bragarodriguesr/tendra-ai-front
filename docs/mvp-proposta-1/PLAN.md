@@ -1,18 +1,18 @@
 ---
 fase: 1-estrutura-e-login
 status: draft
-spec: docs/SPEC.md (mapa geral); o spec curto da fase 1 ainda não foi escrito
+spec: docs/mvp-proposta-1/SPEC.md (mapa geral); o spec curto da fase 1 ainda não foi escrito
 ---
 
 # Plano da fase 1: estrutura e login
 
-*Rascunho de 13/10/2026. Pela regra do SDD, o plano deriva de um spec aprovado. Este plano usa os cenários da fase 1 listados em `docs/SPEC.md` (seção "Faseamento da entrega") e deve ser conferido contra o spec curto da fase 1 quando ele for escrito e aprovado.*
+*Rascunho de 13/10/2026. Pela regra do SDD, o plano deriva de um spec aprovado. Este plano usa os cenários da fase 1 listados em `docs/mvp-proposta-1/SPEC.md` (seção "Faseamento da entrega") e deve ser conferido contra o spec curto da fase 1 quando ele for escrito e aprovado.*
 
 ## Objetivo
 
 Publicar o backend no ambiente compartilhado com login e logout reais, contas guardadas no Supabase e o front usando esse login no lugar do login ilustrativo. As telas do Workspace continuam com os dados fictícios de hoje; dados reais começam na fase 2.
 
-**Cenários cobertos (de `docs/SPEC.md`):** 1, 2, 3, 4, 48, 49, 50, 51, 52.
+**Cenários cobertos (de `docs/mvp-proposta-1/SPEC.md`):** 1, 2, 3, 4, 48, 49, 50, 51, 52.
 
 ## Pendências que precisam ser resolvidas
 
@@ -21,7 +21,7 @@ Publicar o backend no ambiente compartilhado com login e logout reais, contas gu
 | **P1** | **Método de cadastro das contas.** O front não tem botão nem tela de cadastro, e o SPEC deixa cadastro pela interface fora de escopo. | Etapa 3 | (a) O PM cria cada conta no painel do Supabase (Authentication → Add user) e preenche o perfil (nome e papel). (b) Um script no repositório cria as contas a partir de uma lista de e-mails, nomes e papéis, sem senhas no repositório; as senhas temporárias são entregues fora do repositório. (c) Convite por e-mail do Supabase; exige uma tela no front para definir a senha, que não existe. (d) Tela de cadastro no front; fora do escopo da versão 1. **Sugestão:** (a) para começar, por não exigir código; (b) se o número de contas crescer ou o ambiente precisar ser recriado com frequência. |
 | P2 | **E-mails das contas.** Usar e-mails reais dos membros do grupo ou e-mails sintéticos (por exemplo `aprovador@tendra.test`). | Etapa 3 | E-mails sintéticos evitam dado pessoal no banco e combinam com as pessoas sintéticas. Exigem criar a conta já confirmada, porque não recebem e-mail. |
 | P3 | **Como o login é feito** (ver "Decisão técnica proposta" abaixo). | Etapa 4 | Supabase Auth para conferir a senha, com sessão própria do backend (proposta) · login inteiramente próprio, com senhas numa tabela do backend. |
-| P4 | **Hospedagem do front.** O cookie de sessão exige front e backend no mesmo endereço (cenário 51). Vercel em avaliação. | Etapa 8 | Ver `docs/ARQUITETURA_MAPPING.md`, "Front na Vercel". |
+| P4 | **Hospedagem do front.** O cookie de sessão exige front e backend no mesmo endereço (cenário 51). Vercel em avaliação. | Etapa 8 | Ver `docs/mvp-proposta-1/ARQUITETURA_MAPPING.md`, "Front na Vercel". |
 | P5 | **Fluxo de revisão do código (S12).** | Primeiro commit | Branch + PR revisado por outra pessoa · commit direto. |
 | P6 | **Cenário 48 na fase 1.** Ele exige que o backend não inicie sem a chave da Anthropic, mas a fase 1 não usa a IA. | Etapa 1 | Exigir na fase 1 só as variáveis que ela usa e acrescentar a chave na fase 4a (sugestão) · exigir a chave desde já. |
 | P7 | **Duração da sessão.** O SPEC não define quando a sessão expira. | Etapa 4 | Sugestão: expira após 8 horas sem uso, e o usuário volta para a tela de login. |
@@ -50,7 +50,7 @@ Backend (Render)
    └─ responde com nome e papel, e grava o cookie de sessão (HttpOnly, Secure, SameSite)
 ```
 
-**Mudança em relação ao mapa:** `docs/ARQUITETURA_MAPPING.md` (SEG-1) recomendava login inteiramente próprio. Esta proposta troca a conferência de senha pelo Supabase Auth. Se for aceita, o mapa precisa ser atualizado.
+**Mudança em relação ao mapa:** `docs/mvp-proposta-1/ARQUITETURA_MAPPING.md` (SEG-1) recomendava login inteiramente próprio. Esta proposta troca a conferência de senha pelo Supabase Auth. Se for aceita, o mapa precisa ser atualizado.
 
 ## Estrutura de dados no Supabase
 
