@@ -253,7 +253,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 
 **F-02 · P0 · Subir documentos para a base** (MoSCoW: Must) — Implementado no front (processamento Simulado). **Fora do MVP (v3): upload pela interface**
 
-> **Decisão da v3:** no MVP não há upload pela interface. A equipe escreve um arquivo `.md` por documento, com cabeçalho (tipo, data de atualização e versão opcional), e o carrega por um comando que grava os blocos no banco (seção 20). A T2 passa a ser a visão de leitura da base: lista, idade, selo de 120 dias e chave Ativar/Desativar. Upload pela tela, múltiplos formatos e os estados por arquivo (Na fila, Processando, Erro, Em tratamento pelo suporte, Formato não aceito) voltam na Fase 2. O texto abaixo descreve o comportamento já construído no front.
+> **Decisão da v3:** no MVP não há upload pela interface. A equipe escreve um arquivo `.md` por documento, com cabeçalho (título, tipo, data de atualização e versão opcional; formato em `docs/FORMATO_BASE_MD.md`), e o carrega por um comando que grava os blocos no banco (seção 20). A T2 passa a ser a visão de leitura da base: lista, idade, selo de 120 dias e chave Ativar/Desativar. Upload pela tela, múltiplos formatos e os estados por arquivo (Na fila, Processando, Erro, Em tratamento pelo suporte, Formato não aceito) voltam na Fase 2. O texto abaixo descreve o comportamento já construído no front.
 
 - Vários arquivos por vez. Cada um mostra o próprio estado, com ícone e rótulo:
   - **Na fila**;
@@ -264,7 +264,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
   - **Formato não aceito / Não enviado**: "Formato não aceito. Formatos aceitos: [lista]."
 - Formatos aceitos no front: .doc, .docx, .xls, .xlsx, .md, .pdf, .ppt, .pptx, .txt, .csv e arquivos do Google baixados (Docs, Planilhas e Apresentações). Um arquivo recusado não interrompe os demais. **No MVP (v3), o único formato carregado é `.md`, por comando.**
 - O usuário pode sair da tela durante o processamento; ao voltar, o estado está atualizado.
-- Cada documento tem "Última atualização" (padrão: data de modificação do arquivo) e "Versão" opcional. A idade conta os dias desde a última atualização.
+- Cada documento tem "Última atualização" (padrão no front: data de modificação do arquivo) e "Versão" opcional. A idade conta os dias desde a última atualização. **No MVP (v3), a data vem do campo obrigatório `atualizado_em` do cabeçalho do `.md`, sem alternativa pela data do arquivo.**
 
 **F-03 · P0 · Importar RFPs passadas** (MoSCoW: Must) — Implementado no front. **No MVP (v3):** a RFP passada entra na base como um `.md` com o tipo "RFP passada" no cabeçalho, pelo mesmo comando de carga.
 
@@ -821,7 +821,7 @@ O diagrama completo está em `docs/PIPELINE_IA_MVP.md` e, editável, no board do
 
 | # | Etapa | Quem executa | Resultado para o front |
 | --- | --- | --- | --- |
-| 1 | Preparar a base: escrever os `.md` com cabeçalho, rodar o comando de carga, dividir em blocos com localização (arquivo, seção, linha), gravar no banco | Equipe e código, sem IA | T2 lista os documentos com idade e selo de 120 dias |
+| 1 | Preparar a base: escrever os `.md` com cabeçalho (`titulo`, `tipo`, `atualizado_em` e `versao` opcional; ver `docs/FORMATO_BASE_MD.md`), rodar o comando de carga, dividir em blocos com localização (arquivo, seção, linha), gravar no banco | Equipe e código, sem IA | T2 lista os documentos com idade e selo de 120 dias |
 | 2 | Entender a RFP: validar o `.xlsx`, criar a tarefa, ler a planilha, achar as perguntas pela coluna "Pergunta"; plano B com modelo pequeno e saída estruturada se a coluna não for achada; confirmar a lista | Código; IA só no plano B | T4 mostra "Identificamos N perguntas" |
 | 3 | Gerar respostas: montar o contexto (documentos ativos e prontos), redigir por lote de cerca de 10 perguntas com citações, conferir cada citação, calcular alertas (sem contexto, baixa confiança, fonte antiga, termo crítico), detectar conflito entre as fontes citadas, gravar os itens | Código; IA 1 (redação) e IA 2 (conflito) | T5 e T6 recebem estados, parágrafos, fontes e alertas no contrato da seção 16 |
 | 4 | Revisar, aprovar e exportar: tratamento de alertas, revisão, aprovação, exportação em `.xlsx` e registro de eventos | Pessoas; código na exportação | T6, T8 e T9, como já descritos |
@@ -852,8 +852,7 @@ O diagrama completo está em `docs/PIPELINE_IA_MVP.md` e, editável, no board do
 
 - Método de medir a fidelidade: revisão humana de uma amostra ou avaliador automático com modelo. Proposta: começar pela revisão humana da amostra do gabarito.
 - Modelo da redação (Sonnet 5.5 ou Opus 5.5) e tamanho do lote: decididos pela avaliação contra o gabarito.
-- Formato exato do cabeçalho dos arquivos `.md` e interface do comando de carga.
-- Origem da data de atualização do documento: o cabeçalho do `.md` (proposta) ou a data do arquivo.
+- Interface do comando de carga (nome e opções). O formato dos arquivos `.md` está definido em `docs/FORMATO_BASE_MD.md`.
 
 ## Anexo A. Mudanças da v1 para a v2
 
@@ -886,4 +885,5 @@ O diagrama completo está em `docs/PIPELINE_IA_MVP.md` e, editável, no board do
 | Telas T1 e T2 | Upload funcional (simulado) | Upload fora do MVP; T2 é a visão de leitura da base |
 | Identificação das perguntas | Não especificada | Regra pela coluna "Pergunta"; modelo pequeno como plano B (F-15 perde urgência) |
 | Limites de qualidade da IA | Não definidos | Relevância 80% e fidelidade 90% (Q-25) |
+| Formato dos `.md` da base | Não definido | Cabeçalho YAML com `titulo`, `tipo`, `atualizado_em` (obrigatórios) e `versao` (opcional); identidade pelo caminho do arquivo; data sem alternativa pela data do arquivo; campo desconhecido gera aviso (`docs/FORMATO_BASE_MD.md`) |
 | Fases | Upload e formatos não faseados | Upload, conversão de formatos e outras entradas de RFP na Fase 2 (seção 19) |
