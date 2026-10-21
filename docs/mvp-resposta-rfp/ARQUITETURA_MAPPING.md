@@ -202,6 +202,7 @@ Sem eles o fluxo não pode ser testado nem avaliado.
 | Busca vetorial (pgvector ou GBrain) | Quando a base não couber numa requisição |
 | Retomada automática do processamento após reinício | Fase D (cenário 54 de `docs/referencia/mvp-proposta-1/SPEC.md`) |
 | Cadastro de contas, recuperação de senha, SSO | Depois da versão 1 |
+| Tradução das respostas para o idioma da RFP ou para outros idiomas | Evolução futura do produto; no MVP as respostas são em português |
 
 ---
 
@@ -217,6 +218,8 @@ Sem eles o fluxo não pode ser testado nem avaliado.
 | Limites de qualidade: relevância 80%, fidelidade 90% | PRD v3, seção 20 |
 | Fluxo fixo, sem agente e sem busca vetorial | Esta arquitetura |
 | Login com Supabase Auth e sessão própria do backend, na fase D | `docs/referencia/mvp-proposta-1/PLAN.md` |
+| A resposta sugerida segue o modelo da RFP: quando a planilha tem coluna de resposta com valores permitidos (por exemplo, de 0 a 4) e coluna de comentários, a Tendra sugere um valor permitido e o texto com as fontes | Decisão de 21/10/2026; cenários 51 a 56 do SPEC |
+| Respostas sempre em português, qualquer que seja o idioma da RFP; tradução é evolução futura | Decisão de 21/10/2026; cenário 50 do SPEC |
 
 ### Pendentes
 

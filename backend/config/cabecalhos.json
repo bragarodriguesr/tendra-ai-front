@@ -1,0 +1,5 @@
+{
+  "pergunta": ["Pergunta", "Questão", "Question"],
+  "resposta": ["Resposta", "Resposta do fornecedor", "Vendor response", "Response"],
+  "comentario": ["Comentários", "Observações", "Comments"]
+}

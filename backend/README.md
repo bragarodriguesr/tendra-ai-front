@@ -1,6 +1,6 @@
 # Backend da Tendra.ai
 
-Backend do MVP descrito em [`docs/mvp-resposta-rfp/`](../docs/mvp-resposta-rfp/). Esta versão contém só o esqueleto da etapa A2 do plano: configuração, armazenamento de arquivos e logs.
+Backend do MVP descrito em [`docs/mvp-resposta-rfp/`](../docs/mvp-resposta-rfp/). Esta versão contém o esqueleto da etapa A2 do plano (configuração, armazenamento de arquivos e logs) e a leitura da planilha de RFP da etapa A3.
 
 ## Requisitos
 
@@ -24,8 +24,11 @@ Execute a partir da pasta `backend/`:
 |---|---|
 | `src/config/` | Leitura e validação das variáveis de ambiente |
 | `src/armazenamento/` | Leitura e gravação de arquivos, sempre com nome gerado pelo backend |
+| `src/documentos/` | Validação e leitura da planilha `.xlsx` de RFP, identificação das perguntas e do modelo de resposta (colunas de resposta e de comentário e lista de valores permitidos) |
+| `config/` | Listas configuráveis, como os nomes aceitos para os cabeçalhos das colunas de pergunta, resposta e comentário (`cabecalhos.json`) |
 | `src/observabilidade/` | Logs estruturados, sem a chave da API |
 | `src/cli/` | Comandos de terminal |
 | `test/unitarios/`, `test/integracao/` | Testes; o nome de cada um cita o cenário do SPEC que cobre |
+| `test/fixtures/` | Planilhas sintéticas usadas nos testes |
 
 Os dados locais (planilhas, resultados, registros) ficam em `dados/`, na raiz do repositório, fora do controle de versão.
