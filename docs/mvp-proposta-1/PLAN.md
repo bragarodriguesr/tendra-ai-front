@@ -18,7 +18,7 @@ Publicar o backend no ambiente compartilhado com login e logout reais, contas gu
 
 | # | Pendência | Bloqueia | Opções |
 |---|---|---|---|
-| **P1** | **Método de cadastro das contas.** O front não tem botão nem tela de cadastro, e o SPEC deixa cadastro pela interface fora de escopo. | Etapa 3 | (a) O PM cria cada conta no painel do Supabase (Authentication → Add user) e preenche o perfil (nome e papel). (b) Um script no repositório cria as contas a partir de uma lista de e-mails, nomes e papéis, sem senhas no repositório; as senhas temporárias são entregues fora do repositório. (c) Convite por e-mail do Supabase; exige uma tela no front para definir a senha, que não existe. (d) Tela de cadastro no front; fora do escopo da versão 1. **Sugestão:** (a) para começar, por não exigir código; (b) se o número de contas crescer ou o ambiente precisar ser recriado com frequência. |
+| **P1** | **Método de cadastro das contas.** O front não tem botão nem tela de cadastro, e o SPEC deixa cadastro pela interface fora de escopo. | Etapa 3 | (a) Criar cada conta no painel do Supabase (Authentication → Add user) e preencher o perfil (nome e papel). (b) Um script no repositório cria as contas a partir de uma lista de e-mails, nomes e papéis, sem senhas no repositório; as senhas temporárias são entregues fora do repositório. (c) Convite por e-mail do Supabase; exige uma tela no front para definir a senha, que não existe. (d) Tela de cadastro no front; fora do escopo da versão 1. **Sugestão:** (a) para começar, por não exigir código; (b) se o número de contas crescer ou o ambiente precisar ser recriado com frequência. |
 | P2 | **E-mails das contas.** Usar e-mails reais dos membros do grupo ou e-mails sintéticos (por exemplo `aprovador@tendra.test`). | Etapa 3 | E-mails sintéticos evitam dado pessoal no banco e combinam com as pessoas sintéticas. Exigem criar a conta já confirmada, porque não recebem e-mail. |
 | P3 | **Como o login é feito** (ver "Decisão técnica proposta" abaixo). | Etapa 4 | Supabase Auth para conferir a senha, com sessão própria do backend (proposta) · login inteiramente próprio, com senhas numa tabela do backend. |
 | P4 | **Hospedagem do front.** O cookie de sessão exige front e backend no mesmo endereço (cenário 51). Vercel em avaliação. | Etapa 8 | Ver `docs/mvp-proposta-1/ARQUITETURA_MAPPING.md`, "Front na Vercel". |
@@ -69,7 +69,7 @@ Backend (Render)
 
 ## Etapas
 
-Cada etapa termina com uma verificação que o PM consegue fazer sem ler código.
+Cada etapa termina com uma verificação que pode ser feita sem ler código.
 
 ### Etapa 0: pré-requisitos
 - Resolver P1, P2, P3, P5 e P6.
@@ -131,7 +131,7 @@ Cada etapa termina com uma verificação que o PM consegue fazer sem ler código
 ### Etapa 8: publicação e aceite
 - Deploy do backend no Render, com as variáveis no cofre.
 - Publicação do front conforme P4, com `/api` encaminhado para o backend.
-- **Verificação (critério de pronto da fase):** todos os testes da fase passando; demonstração do login no ambiente compartilhado; checklist abaixo conferido pelo PM; PR revisado por outra pessoa.
+- **Verificação (critério de pronto da fase):** todos os testes da fase passando; demonstração do login no ambiente compartilhado; checklist abaixo conferido; PR revisado por outra pessoa.
 
 ## Variáveis de ambiente da fase 1
 
@@ -143,7 +143,7 @@ Cada etapa termina com uma verificação que o PM consegue fazer sem ler código
 | `FRONT_ORIGIN` | Origem do front aceita (cenário 51) | Cofre do Render e `.env` local |
 | `ANTHROPIC_API_KEY` | Não usada na fase 1; depende de P6 | Nenhum lugar até a fase 4a, se P6 seguir a sugestão |
 
-## Checklist de aceite do PM
+## Checklist de aceite
 
 | Cenário | Como conferir |
 |---|---|

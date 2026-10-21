@@ -35,7 +35,7 @@ A versão 1 é entregue em fases pequenas, para que cada uma possa ser validada 
 - Cada fase tem seu próprio spec, com 5 a 10 cenários, e seu próprio `PLAN.md`, no mesmo diretório.
 - Cada fase entrega também a parte correspondente do front, descrita no spec da fase.
 - Uma fase só começa quando a anterior foi aceita.
-- **Critério de pronto de toda fase:** todos os cenários da fase com teste automático aprovado (o nome do teste traz o número do cenário); demonstração no ambiente compartilhado; checklist conferido pelo PM; pull request revisado por outra pessoa.
+- **Critério de pronto de toda fase:** todos os cenários da fase com teste automático aprovado (o nome do teste traz o número do cenário); demonstração no ambiente compartilhado; checklist de aceite conferido; pull request revisado por outra pessoa.
 
 | Fase | Entrega | Cenários | Infraestrutura nova | Depende de |
 |---|---|---|---|---|
@@ -57,13 +57,13 @@ Verificação feita em 10/10/2026 e atualizada em 11/10/2026.
 
 - **API do Claude (Anthropic)**
   - **Recurso:** API de mensagens da Anthropic, com documentos como entrada e citações. Provedor externo.
-  - **Credencial:** chave de testes da conta da Anthropic do PM do projeto. A conta usa créditos pré-pagos, com **recarga automática desligada**: o gasto máximo é o saldo disponível. Por isso a versão 1 não tem cota de uso por usuário (decisão de 11/10/2026).
+  - **Credencial:** chave de testes de uma conta da Anthropic. A conta usa créditos pré-pagos, com **recarga automática desligada**: o gasto máximo é o saldo disponível. Por isso a versão 1 não tem cota de uso por usuário (decisão de 11/10/2026).
   - **Acesso verificado:** ainda não. Em 10/10/2026, a variável `ANTHROPIC_API_KEY` não estava definida no ambiente local, e nenhuma requisição foi feita.
-  - **Fluxo de mudança:** a chave fica só no cofre de segredos do Render (ambiente compartilhado) e em variável de ambiente local de quem desenvolve, nunca no repositório (cenário 48). Não há processo de rotação; se a chave vazar, o PM a revoga no console da Anthropic.
-  - **Validação de início de implementação** (exceção consciente à regra de verificar o acesso antes de aprovar o spec, decidida pelo PM em 10/10/2026): a primeira etapa da implementação é definir a chave e fazer uma requisição de teste bem-sucedida. Se o teste falhar, a implementação para até o acesso ser resolvido.
+  - **Fluxo de mudança:** a chave fica só no cofre de segredos do Render (ambiente compartilhado) e em variável de ambiente local de quem desenvolve, nunca no repositório (cenário 48). Não há processo de rotação; se a chave vazar, ela deve ser revogada no console da Anthropic.
+  - **Validação de início de implementação** (exceção consciente à regra de verificar o acesso antes de aprovar o spec, decidida em 10/10/2026): a primeira etapa da implementação é definir a chave e fazer uma requisição de teste bem-sucedida. Se o teste falhar, a implementação para até o acesso ser resolvido.
 - **Política de dados do provedor de IA**
   - A política de retenção e de não-treinamento da Anthropic para documentos enviados está pendente de estudo.
-  - **Restrição adotada:** no MVP, só são usados **dados sintéticos** (documentos e RFPs fictícios criados pelo grupo). Nenhum documento de cliente real ou de empresa real é enviado ao provedor.
+  - **Restrição adotada:** no MVP, só são usados **dados sintéticos** (documentos e RFPs fictícios). Nenhum documento de cliente real ou de empresa real é enviado ao provedor.
   - `[DECISÃO PENDENTE: concluir o estudo da política de dados antes de qualquer uso com documentos reais. Esta pendência não bloqueia o MVP com dados sintéticos.]`
 - **Banco de dados e armazenamento de arquivos: Supabase**
   - **Recurso:** projeto Supabase com Postgres gerenciado (tarefas, itens, documentos, contas, avaliações) e object storage (arquivos enviados). Plano gratuito (decisão de 11/10/2026). O projeto pausa após um período sem uso e precisa ser reativado no painel.
@@ -80,11 +80,11 @@ Verificação feita em 10/10/2026 e atualizada em 11/10/2026.
   - `[DECISÃO PENDENTE: onde publicar o front. Decidir no spec do front.]`
 - **Repositório compartilhado do grupo (`github.com/bragarodriguesr/tendra-ai-front`)**
   - **Recurso:** o repositório onde estão o front oficial e onde o backend será publicado. Branch principal: `main`.
-  - **Acesso verificado:** sim. Em 10/10/2026, pela API do GitHub com o CLI `gh` autenticado, a conta do PM tem permissão de escrita (push) no repositório.
+  - **Acesso verificado:** sim. Em 10/10/2026, pela API do GitHub com o CLI `gh` autenticado, a conta usada tem permissão de escrita (push) no repositório.
   - **Visibilidade:** o repositório é **público**. Código e histórico de commits podem ser lidos por qualquer pessoa, o que torna obrigatórios os cenários 48 e 49. A visibilidade do repositório não controla o acesso ao ambiente compartilhado, que é protegido pelo login.
   - **Fluxo de mudança:** o backend entra no mesmo repositório, na pasta `backend/`, sem alterar o código do front nesta tarefa. Este spec fica em `docs/mvp-proposta-1/SPEC.md`.
-  - `[DECISÃO PENDENTE: fluxo de revisão do grupo (branch + pull request revisado por outra pessoa, ou commit direto).]`
-  - `[DECISÃO PENDENTE: manter o repositório público ou torná-lo privado, a decidir pelo grupo.]`
+  - `[DECISÃO PENDENTE: fluxo de revisão de código (branch + pull request revisado por outra pessoa, ou commit direto).]`
+  - `[DECISÃO PENDENTE: manter o repositório público ou torná-lo privado.]`
 - **GBrain:** nenhuma dependência. O MVP usa a alternativa A1. A troca do motor de recuperação é etapa posterior.
 
 ## Acceptance Criteria (versão 1)

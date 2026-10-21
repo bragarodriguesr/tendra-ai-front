@@ -1,6 +1,6 @@
 # Mapa de pendências de arquitetura do backend do MVP
 
-*Levantamento de 10/10/2026. Complementa `docs/mvp-proposta-1/SPEC.md` (status `draft`) e o handoff da sessão de análise do backend (documento local, fora do repositório). Nenhuma das decisões abaixo está tomada; as colunas "Recomendação" são propostas para discussão do grupo.*
+*Levantamento de 10/10/2026. Complementa `docs/mvp-proposta-1/SPEC.md` (status `draft`) e o handoff da sessão de análise do backend (documento local, fora do repositório). Nenhuma das decisões abaixo está tomada; as colunas "Recomendação" são propostas para discussão.*
 
 **Enquadramento:** servidor, banco, autenticação, armazenamento e chaves **não são decisões independentes**. Quase todas derivam de uma única decisão (seção 0). Por isso o mapa começa por ela.
 
@@ -11,7 +11,7 @@
 | Modo de uso | Consequência em cascata |
 |---|---|
 | **Local**: uma pessoa roda e conduz as sessões | Não precisa de hospedagem, autenticação real nem armazenamento em nuvem. A chave da API fica na máquina de quem roda. |
-| **Compartilhado**: cada pessoa acessa no seu tempo | Precisa de hospedagem, banco gerenciado, armazenamento de arquivos, autenticação real e cofre de segredos. A chave passa a ser usada por todos, e o custo cai na conta do PM. |
+| **Compartilhado**: cada pessoa acessa no seu tempo | Precisa de hospedagem, banco gerenciado, armazenamento de arquivos, autenticação real e cofre de segredos. A chave passa a ser usada por todos, e o custo se concentra numa única conta da API. |
 
 As seções 1 a 4 abaixo ficam **bloqueadas** por essa escolha. As seções 5 a 10 valem para os dois modos.
 
@@ -30,7 +30,7 @@ As seções 1 a 4 abaixo ficam **bloqueadas** por essa escolha. As seções 5 a 
 
 - **Supabase:** o projeto pausa após cerca de 7 dias sem uso e precisa ser reativado no painel. Espaço limitado de banco e de arquivos, suficiente para dados sintéticos.
 - **Render:** o serviço "dorme" após cerca de 15 minutos sem acesso, e o primeiro acesso seguinte demora para responder. Se a pessoa fechar o navegador no meio de uma geração, o serviço pode dormir e interromper o job; por isso JOB-4 (retomar de onde parou) passa a ser obrigatório. O disco é apagado a cada deploy, então arquivos ficam só no Supabase.
-- **Rotina antes de cada sessão do grupo:** abrir o painel do Supabase (se pausado) e acessar o backend uma vez para "acordá-lo".
+- **Rotina antes de cada sessão de uso:** abrir o painel do Supabase (se pausado) e acessar o backend uma vez para "acordá-lo".
 
 **Front na Vercel**, se confirmado:
 
@@ -42,7 +42,7 @@ As seções 1 a 4 abaixo ficam **bloqueadas** por essa escolha. As seções 5 a 
 
 1. Gasto da API por qualquer pessoa logada. **Decisão (11/10/2026): sem cota por usuário.** A conta da Anthropic usa créditos pré-pagos sem recarga automática, então o gasto máximo é o saldo.
 2. Força bruta no login: limite de tentativas por IP e por conta.
-3. Envio de dados reais: aviso fixo na interface e regra de uso combinada no grupo.
+3. Envio de dados reais: aviso fixo na interface e regra de uso do ambiente.
 4. URL pública: HTTPS, cookie seguro e CORS restrito obrigatórios.
 
 **Contexto:** no SPEC atual, "servidor" significa o próprio backend, um processo Node.js rodando na máquina de quem o inicia, com dados no disco local. Se cada pessoa rodar o backend no próprio computador, cada uma terá um banco separado, e a taxa de aceitação sai fragmentada por máquina.
@@ -84,7 +84,7 @@ As seções 1 a 4 abaixo ficam **bloqueadas** por essa escolha. As seções 5 a 
 | SEG-1 | Autenticação | Pessoas sintéticas sem senha · e-mail e senha próprios · provedor (Supabase Auth, Clerk) | Local: **pessoas sintéticas**, com o backend aceitando só conexões da própria máquina. Compartilhado: **e-mail e senha com hash** ou o provedor do banco escolhido. |
 | SEG-2 | Sessão | Token no navegador · cookie `httpOnly` | **Cookie `httpOnly`**, que não fica acessível a scripts da página. |
 | SEG-3 | Chave da API | Variável de ambiente local · cofre de segredos do PaaS | Local: variável de usuário do Windows (S3). Compartilhado: cofre do PaaS. |
-| SEG-4 | Dono da chave e teto de gasto | Chave pessoal do PM · workspace dedicado na Anthropic | Criar um **workspace "Tendra MVP"** no console da Anthropic, com **limite de gasto mensal**. Assim, uma chave vazada ou um laço com erro não gera custo sem limite. |
+| SEG-4 | Conta da chave e teto de gasto | Chave de uma conta pessoal · workspace dedicado na Anthropic | Criar um **workspace "Tendra MVP"** no console da Anthropic, com **limite de gasto mensal**. Assim, uma chave vazada ou um laço com erro não gera custo sem limite. |
 
 ---
 
@@ -154,12 +154,12 @@ Esta é a seção de maior risco técnico. Várias decisões aqui pedem um **tes
 | OPS-1 | Logs | Console · logs estruturados (pino) | **Estruturados, sem conteúdo de documentos.** O cenário 28 pede o registro do que vai para a IA: guardar só metadados e a lista de campos enviados, ou o conteúdo apenas em desenvolvimento. É um conflito a decidir. |
 | OPS-2 | Testes | Manuais · Vitest com a API da Anthropic simulada, mais alguns testes reais marcados | **Simulada por padrão.** Testes que chamam a API de verdade gastam dinheiro e devem ser rodados conscientemente. |
 | OPS-3 | CI | Nenhuma · GitHub Actions com lint, testes e varredura de segredos (gitleaks) | **Actions com gitleaks.** O repositório é público, então os minutos são gratuitos e a varredura protege os cenários 48 e 49. |
-| OPS-4 | Fluxo de revisão de código | Já registrado como S12 no handoff | Pendente com o grupo. |
+| OPS-4 | Fluxo de revisão de código | Já registrado como S12 no handoff | Pendente. |
 | OPS-5 | Deploy | Manual · automático a partir da `main` | Só existe no modo compartilhado. |
 
-## 10. Riscos que não são decisões, mas precisam de dono
+## 10. Riscos que não são decisões, mas precisam de tratamento
 
-- **Custo na conta pessoal do PM:** se o modo for compartilhado, todos gastam a chave dele. Resolver com SEG-4.
+- **Custo concentrado numa única conta:** se o modo for compartilhado, todos os usuários consomem a mesma chave. Resolver com SEG-4.
 - **Repositório público (S1):** independe da arquitetura, mas o CI com gitleaks reduz o risco enquanto não há decisão.
 - **Dependência do front:** sem `api.js` no front, o backend não é demonstrável na interface, só por testes ou chamadas manuais à API. Com o faseamento, cada fase entrega também a sua parte do front.
 
@@ -167,7 +167,7 @@ Esta é a seção de maior risco técnico. Várias decisões aqui pedem um **tes
 
 ## Ordem de decisão sugerida
 
-1. **Modo de uso** (seção 0). Decisão do grupo. Desbloqueia as seções 1 a 4.
+1. **Modo de uso** (seção 0). Desbloqueia as seções 1 a 4.
 2. **Teste da chave** (D6 do handoff) junto com o **workspace com teto de gasto** (SEG-4). É barato e já está previsto como a primeira etapa.
 3. **Stack e banco** (STK-1, STK-2 e DAD-1). Proposta: TypeScript, Fastify e Postgres como dialeto.
 4. **Spike de IA** (IA-4, IA-2 e IA-6), com 2 ou 3 documentos sintéticos. Transforma as maiores incertezas em fatos antes do `PLAN.md`.
