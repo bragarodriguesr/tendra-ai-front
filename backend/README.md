@@ -24,8 +24,8 @@ Execute a partir da pasta `backend/`:
 |---|---|
 | `src/config/` | Leitura e validação das variáveis de ambiente |
 | `src/armazenamento/` | Leitura e gravação de arquivos, sempre com nome gerado pelo backend |
-| `src/documentos/` | Validação e leitura da planilha `.xlsx` de RFP e identificação das perguntas |
-| `config/` | Listas configuráveis, como os nomes aceitos para o cabeçalho da coluna de perguntas |
+| `src/documentos/` | Validação e leitura da planilha `.xlsx` de RFP, identificação das perguntas e do modelo de resposta (colunas de resposta e de comentário e lista de valores permitidos) |
+| `config/` | Listas configuráveis, como os nomes aceitos para os cabeçalhos das colunas de pergunta, resposta e comentário (`cabecalhos.json`) |
 | `src/observabilidade/` | Logs estruturados, sem a chave da API |
 | `src/cli/` | Comandos de terminal |
 | `test/unitarios/`, `test/integracao/` | Testes; o nome de cada um cita o cenário do SPEC que cobre |

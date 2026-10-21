@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
-import { carregarCabecalhosDePergunta } from "../../src/config/cabecalhosDePergunta.ts";
+import { carregarCabecalhos } from "../../src/config/cabecalhos.ts";
 import {
   identificarPerguntas,
   lerPlanilha,
@@ -29,7 +29,7 @@ beforeAll(async () => {
   validarArquivoDePlanilha(path.basename(ARQUIVO), conteudo);
   planilha = await lerPlanilha(conteudo);
   resultado = await identificarPerguntas(planilha, {
-    nomesAceitos: await carregarCabecalhosDePergunta(),
+    nomes: await carregarCabecalhos(),
     identificadorComIA: async () => {
       throw new Error("A IA não deveria ser chamada para esta planilha");
     },
@@ -72,5 +72,20 @@ describe("Cenários 1 e 2 · planilha de exemplo 123BANK", () => {
     const linhas = new Set(resultado.perguntas.map((pergunta) => pergunta.linha));
     expect(linhas.has(3)).toBe(false);
     expect(linhas.has(5)).toBe(false);
+  });
+});
+
+describe("Cenários 51 e 52 · modelo de resposta da planilha 123BANK", () => {
+  it("reconhece Vendor response como resposta e Comments como comentário", () => {
+    expect(resultado.modelo).toMatchObject({
+      colunaDeResposta: 5,
+      cabecalhoDaResposta: "Vendor response",
+      colunaDeComentario: 6,
+      cabecalhoDoComentario: "Comments (enter descriptions and/or clarification)",
+    });
+  });
+
+  it("lê os valores de 0 a 4 da lista que aponta para a aba oculta", () => {
+    expect(resultado.modelo?.valoresPermitidos).toEqual(["0", "1", "2", "3", "4"]);
   });
 });

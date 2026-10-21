@@ -22,12 +22,15 @@ constitution: 1.0.0
 - **Comportamento atual:** não existe backend. A tela Nova RFP não tem seletor de arquivo real, a nova tarefa sempre "identifica 12 perguntas", e as respostas e ações da revisão são fictícias e se perdem ao recarregar a página (`src/workspace/data.js` e `src/workspace/useWorkspace.js`).
 - **Comportamento esperado:**
   - a partir de uma planilha `.xlsx` de RFP e dos documentos ativos carregados na base, o sistema identifica as perguntas e gera, para cada uma, uma resposta sugerida com fontes verificáveis (documento, localização e trecho), ou indica explicitamente que a base não tem a resposta;
+  - quando a RFP traz um modelo de resposta próprio (por exemplo, uma coluna de resposta com valores de 0 a 4 e uma coluna de comentários), a resposta sugerida segue esse modelo: um valor permitido e o texto com as fontes (cenários 51 a 56);
+  - as respostas sugeridas são sempre escritas em **português**, qualquer que seja o idioma da RFP (cenário 50);
   - todas as respostas saem como **sugestões pendentes de revisão humana**; o sistema nunca aprova uma resposta;
   - a pessoa edita, restaura a sugestão, aprova e avalia cada item, e o sistema grava quem fez o quê e quando;
   - a **taxa de aceitação** de cada tarefa pode ser consultada, a métrica da hipótese central do MVP. Como os revisores são o próprio grupo, com dados sintéticos, a taxa é um indicador aproximado, não uma validação com usuários reais;
   - o mesmo processamento pode ser executado por comandos de terminal, sem servidor nem front;
   - a qualidade das respostas é medida contra um gabarito, com critérios explícitos (seção "Critérios de avaliação da IA").
-- **Contrato com o front:** os itens seguem o formato de `src/workspace/data.js` (campos `q`, `paras`, `srcs`, `alerts`, `st`, `orig`), que a tela de revisão já sabe exibir.
+- **Contrato com o front:** os itens seguem o formato de `src/workspace/data.js` (campos `q`, `paras`, `srcs`, `alerts`, `st`, `orig`), que a tela de revisão já sabe exibir. Quando a RFP tem modelo de resposta, o item também traz o valor sugerido e os valores permitidos.
+  - `[DECISÃO PENDENTE: nome e formato dos campos do valor sugerido e dos valores permitidos no contrato com o front. A mudança de contrato precisa ser feita no backend e no front ao mesmo tempo.]`
 - **Termos:**
   - **base** é o conjunto de documentos carregados no banco e marcados como ativos; só eles são fontes autorizadas;
   - **carga** é o comando `carregar-base`, que lê uma pasta de arquivos `.md` e grava documentos e blocos no banco. O formato do arquivo está em `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`;
@@ -282,7 +285,7 @@ O formato do arquivo e as regras de validação do cabeçalho estão em `docs/mv
 - **Then** recebe os itens no formato de `src/workspace/data.js`, e a tela de revisão exibe pergunta, resposta sugerida, fontes e alertas de cada item
 
 #### Cenário 24: planilha preenchida
-- **Given** uma tarefa `pronta`
+- **Given** uma tarefa `pronta` de uma RFP sem modelo de resposta reconhecido (cenário 51)
 - **When** a planilha preenchida é solicitada
 - **Then** é gerada uma cópia da planilha original com duas colunas novas, "Resposta sugerida (não revisada)" e "Fonte", na mesma linha de cada pergunta
 - **And** a coluna "Fonte" lista cada fonte como `documento · localização`
@@ -295,6 +298,59 @@ O formato do arquivo e as regras de validação do cabeçalho estão em `docs/mv
 - **When** o comando `responder` é executado com o caminho da planilha
 - **Then** são gerados um arquivo JSON com os itens no formato de `src/workspace/data.js` e a planilha preenchida do cenário 24, sem iniciar servidor nem front
 - **And** os itens são equivalentes aos que o backend produziria para a mesma planilha e a mesma base
+
+### Idioma e modelo de resposta da RFP
+
+Decisões de 21/10/2026: a Tendra sugere a resposta seguindo o modelo da própria RFP, e as respostas são escritas em português. A tradução para outros idiomas é uma evolução futura (ver "Fora de escopo").
+
+#### Cenário 50: respostas em português
+- **Given** uma pergunta escrita em outro idioma (por exemplo, inglês)
+- **When** a tarefa é processada
+- **Then** o texto sugerido está em português
+- **And** `q` mantém o texto original da pergunta, e `ex` mantém o trecho literal do documento citado
+
+#### Cenário 51: modelo de resposta da RFP
+- **Given** uma planilha em que, na linha do cabeçalho da coluna de perguntas, uma coluna tem cabeçalho que começa com um dos nomes aceitos para resposta e, opcionalmente, outra com um dos nomes aceitos para comentário
+- **When** a planilha é lida
+- **Then** a tarefa registra essas colunas como o modelo de resposta da RFP
+- **And** sem coluna de resposta reconhecida, a tarefa segue sem modelo, e a planilha preenchida segue o cenário 24
+- **Nota:** os nomes aceitos ficam num arquivo de configuração, comparados sem diferenciar maiúsculas, minúsculas, acentos nem espaços nas pontas. Listas iniciais: resposta: "Resposta", "Resposta do fornecedor", "Vendor response", "Response"; comentário: "Comentários", "Observações", "Comments". Na planilha 123BANK, são as colunas "Vendor response" e "Comments (enter descriptions and/or clarification)".
+
+#### Cenário 52: valores permitidos da resposta
+- **Given** uma coluna de resposta com validação de dados em lista (por exemplo, os valores de 0 a 4)
+- **When** a planilha é lida
+- **Then** os valores da lista são registrados como as únicas respostas possíveis, na ordem da lista
+- **And** sem validação em lista, a coluna de resposta recebe texto livre e não há valor sugerido
+- `[DECISÃO PENDENTE: como obter o significado de cada valor, que a IA precisa para escolher (na planilha 123BANK, ele está na aba "Instructions to the Vendor"). Sugestão: enviar à IA o texto das abas visíveis sem perguntas, junto com as perguntas.]`
+
+#### Cenário 53: valor sugerido com fonte
+- **Given** uma pergunta com resposta na base e uma coluna de resposta com valores permitidos
+- **When** a tarefa é processada
+- **Then** o item recebe um valor sugerido, que é um dos valores permitidos, apoiado nas mesmas fontes do texto sugerido
+- **And** o texto sugerido segue as regras dos cenários 12 e 13
+- **And** se a IA devolver um valor fora da lista, ele é descartado, nenhum valor é sugerido e o item recebe o alerta `lowconf`
+
+#### Cenário 54: sem evidência, sem valor
+- **Given** uma pergunta sem resposta na base, numa RFP com valores permitidos
+- **When** a tarefa é processada
+- **Then** nenhum valor é sugerido e o item fica como no cenário 14
+- **And** o sistema nunca sugere um valor que afirme uma capacidade sem fonte na base
+
+#### Cenário 55: planilha preenchida no modelo da RFP
+- **Given** uma tarefa `pronta` de uma RFP com modelo de resposta
+- **When** a planilha preenchida é solicitada
+- **Then** na linha de cada pergunta, o valor sugerido vai para a coluna de resposta e o texto sugerido, seguido das fontes no formato `documento · localização`, vai para a coluna de comentário
+- **And** uma coluna nova, "Situação", marca cada linha respondida como "Sugestão não revisada"
+- **And** itens sem rascunho mostram "Sem fonte na base" na coluna de comentário e não recebem valor
+- **And** sem coluna de comentário no modelo, o texto e as fontes vão para uma coluna nova, "Resposta sugerida (não revisada)"
+- **And** as demais células da planilha original não são alteradas, e a planilha não é gerada para tarefas em `processando` ou `falha`
+- `[DECISÃO PENDENTE: substituir valores já preenchidos na coluna de resposta (como o "0" que a planilha 123BANK traz em todas as linhas) ou preencher só células vazias. Sugestão: substituir, porque o valor padrão do modelo não é uma resposta.]`
+
+#### Cenário 56: alterar o valor sugerido na revisão
+- **Given** um item com valor sugerido
+- **When** a pessoa escolhe outro valor da lista de valores permitidos
+- **Then** o valor do item muda, o valor sugerido original é mantido para o relatório de aceitação, o item vai para `"em-revisao"` e o evento é registrado com pessoa e data e hora do backend
+- **And** um valor fora da lista é recusado com resposta 400, e nada é alterado
 
 ### Revisão e aceitação
 
@@ -425,12 +481,15 @@ Exigidos pela constitution (IV). São medidos pelo comando de avaliação (cená
 | Isolamento da base | Citações de documentos fora da base autorizada | Nenhuma |
 | Consistência dos guardrails | Execuções em que a instrução maliciosa e a pergunta de compromisso não sustentado foram tratadas corretamente | 3 de 3 execuções |
 | Fidelidade do conteúdo | Proporção das respostas cujo texto diz o mesmo que os trechos citados | 90% (decidido em 21/10/2026) |
+| Acerto do valor sugerido | Nas RFPs com valores permitidos, proporção das perguntas com resposta no gabarito cujo valor sugerido é o valor esperado | `[DECISÃO PENDENTE: limite; o gabarito precisa trazer o valor esperado de cada pergunta]` |
+| Idioma da resposta | Proporção das respostas sugeridas escritas em português | 100% |
 
 ## Fora de escopo
 
 - Login, sessão, hospedagem, banco gerenciado, armazenamento de arquivos em nuvem e qualquer acesso pela rede: **fase D**, com cenários de `docs/referencia/mvp-proposta-1/SPEC.md` (1 a 4, 37, 44, 50 a 52 e 54). Os cuidados de preparação estão na seção 8 de `ARQUITETURA_MAPPING.md`.
 - Upload da base pela interface e qualquer formato de base que não seja `.md`. A base entra por comando.
 - RFP em formato diferente de `.xlsx`.
+- **Tradução das respostas para o idioma da RFP ou para outros idiomas.** No MVP, as respostas são sempre escritas em português (cenário 50). A tradução fica registrada como evolução futura do produto.
 - Reconhecimento de alerta persistido, escolha de fonte em conflito, resposta manual em item sem fonte, "marcar como revisado" e bloqueio de aprovação por papel (cenários 31 a 35 e 37 de `docs/referencia/mvp-proposta-1/SPEC.md`). Nesta versão, a tela não oferece o editor para itens sem rascunho.
 - Exportação final aprovada, histórico e trilha de auditoria completa. A planilha do cenário 24 contém respostas sugeridas, identificadas como não revisadas.
 - Tela da taxa de aceitação: o relatório é consultado por rota e por comando.

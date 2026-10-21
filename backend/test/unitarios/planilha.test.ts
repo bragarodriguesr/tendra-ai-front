@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
 import { describe, expect, it, vi } from "vitest";
+import type { NomesDeCabecalho } from "../../src/config/cabecalhos.ts";
 import {
   ErroDePlanilha,
   identificarPerguntas,
@@ -9,16 +10,29 @@ import {
   lerPlanilha,
   validarArquivoDePlanilha,
   type IdentificadorDePerguntasComIA,
+  type PlanilhaLida,
 } from "../../src/documentos/planilha.ts";
+import { contem, lerCelula, lerIntervalos } from "../../src/documentos/validacoesDeLista.ts";
 
-const NOMES_ACEITOS = ["Pergunta", "Questão", "Question"];
+const NOMES: NomesDeCabecalho = {
+  pergunta: ["Pergunta", "Questão", "Question"],
+  resposta: ["Resposta", "Resposta do fornecedor", "Vendor response", "Response"],
+  comentario: ["Comentários", "Observações", "Comments"],
+};
 
 type Valor = string | number | null;
 
+interface DefinicaoDeAba {
+  nome: string;
+  linhas: Valor[][];
+  oculta?: boolean;
+  mesclagens?: string[];
+  /** Validações em lista: célula ou intervalo e a fórmula da lista. */
+  listas?: { celulas: string; formula: string }[];
+}
+
 /** Monta uma planilha em memória: cada aba é uma lista de linhas, a partir da linha 1. */
-async function montarPlanilha(
-  abas: { nome: string; linhas: Valor[][]; oculta?: boolean; mesclagens?: string[] }[],
-): Promise<Uint8Array> {
+async function montarPlanilha(abas: DefinicaoDeAba[]): Promise<Uint8Array> {
   const pasta = new ExcelJS.Workbook();
   for (const definicao of abas) {
     const aba = pasta.addWorksheet(definicao.nome, { state: definicao.oculta ? "hidden" : "visible" });
@@ -28,8 +42,21 @@ async function montarPlanilha(
       });
     });
     for (const intervalo of definicao.mesclagens ?? []) aba.mergeCells(intervalo);
+    for (const { celulas, formula } of definicao.listas ?? []) {
+      for (const intervalo of lerIntervalos(celulas)) {
+        for (let linha = intervalo.linhaInicial; linha <= intervalo.linhaFinal; linha++) {
+          for (let coluna = intervalo.colunaInicial; coluna <= intervalo.colunaFinal; coluna++) {
+            aba.getCell(linha, coluna).dataValidation = { type: "list", allowBlank: true, formulae: [formula] };
+          }
+        }
+      }
+    }
   }
   return new Uint8Array(await pasta.xlsx.writeBuffer());
+}
+
+function perguntasPorRegra(planilha: PlanilhaLida) {
+  return identificarPerguntasPorRegra(planilha, NOMES.pergunta)?.perguntas ?? null;
 }
 
 const semIA: IdentificadorDePerguntasComIA = async () => {
@@ -51,7 +78,7 @@ describe("Cenário 1 · coluna de perguntas identificável", () => {
       ]),
     );
 
-    const resultado = await identificarPerguntas(planilha, { nomesAceitos: NOMES_ACEITOS, identificadorComIA: semIA });
+    const resultado = await identificarPerguntas(planilha, { nomes: NOMES, identificadorComIA: semIA });
 
     expect(resultado.origem).toBe("regra");
     expect(resultado.perguntas).toEqual([
@@ -66,9 +93,7 @@ describe("Cenário 1 · coluna de perguntas identificável", () => {
       const planilha = await lerPlanilha(
         await montarPlanilha([{ nome: "RFP", linhas: [[cabecalho], ["Pergunta de teste?"]] }]),
       );
-      expect(identificarPerguntasPorRegra(planilha, NOMES_ACEITOS)).toEqual([
-        { aba: "RFP", linha: 2, texto: "Pergunta de teste?" },
-      ]);
+      expect(perguntasPorRegra(planilha)).toEqual([{ aba: "RFP", linha: 2, texto: "Pergunta de teste?" }]);
     },
   );
 
@@ -81,10 +106,8 @@ describe("Cenário 1 · coluna de perguntas identificável", () => {
     const dentro = await lerPlanilha(await montarPlanilha([{ nome: "A", linhas: linhasAte20 }]));
     const fora = await lerPlanilha(await montarPlanilha([{ nome: "A", linhas: linhasAte21 }]));
 
-    expect(identificarPerguntasPorRegra(dentro, NOMES_ACEITOS)).toEqual([
-      { aba: "A", linha: 21, texto: "Dentro do limite?" },
-    ]);
-    expect(identificarPerguntasPorRegra(fora, NOMES_ACEITOS)).toBeNull();
+    expect(perguntasPorRegra(dentro)).toEqual([{ aba: "A", linha: 21, texto: "Dentro do limite?" }]);
+    expect(perguntasPorRegra(fora)).toBeNull();
   });
 
   it("usa a primeira aba visível com cabeçalho e ignora abas ocultas", async () => {
@@ -98,16 +121,14 @@ describe("Cenário 1 · coluna de perguntas identificável", () => {
     );
 
     expect(planilha.abas.map((aba) => aba.nome)).toEqual(["Instruções", "Primeira", "Segunda"]);
-    expect(identificarPerguntasPorRegra(planilha, NOMES_ACEITOS)).toEqual([
-      { aba: "Primeira", linha: 2, texto: "Desta aba?" },
-    ]);
+    expect(perguntasPorRegra(planilha)).toEqual([{ aba: "Primeira", linha: 2, texto: "Desta aba?" }]);
   });
 
   it("não confunde o cabeçalho com um texto que só contém o nome", async () => {
     const planilha = await lerPlanilha(
       await montarPlanilha([{ nome: "A", linhas: [["Perguntas frequentes do questionário"], ["Texto?"]] }]),
     );
-    expect(identificarPerguntasPorRegra(planilha, NOMES_ACEITOS)).toBeNull();
+    expect(perguntasPorRegra(planilha)).toBeNull();
   });
 });
 
@@ -131,7 +152,7 @@ describe("Cenário 2 · linhas vazias, linhas sem pergunta e títulos de seção
       ]),
     );
 
-    expect(identificarPerguntasPorRegra(planilha, NOMES_ACEITOS)).toEqual([
+    expect(perguntasPorRegra(planilha)).toEqual([
       { aba: "RFP", linha: 3, texto: "Possui ISO 27001?" },
       { aba: "RFP", linha: 7, texto: "Qual é o RPO?" },
     ]);
@@ -156,14 +177,12 @@ describe("Cenário 3 · planilha sem coluna de perguntas identificável", () => 
       { aba: "Questionário", linha: 2, texto: "Possui ISO 27001?" },
     ]);
 
-    const resultado = await identificarPerguntas(planilha, {
-      nomesAceitos: NOMES_ACEITOS,
-      identificadorComIA: identificador,
-    });
+    const resultado = await identificarPerguntas(planilha, { nomes: NOMES, identificadorComIA: identificador });
 
     expect(identificador).toHaveBeenCalledTimes(1);
     expect(identificador.mock.calls[0]?.[0].abas.map((aba) => aba.nome)).toEqual(["Questionário"]);
     expect(resultado.origem).toBe("ia");
+    expect(resultado.modelo).toBeNull();
     expect(resultado.perguntas).toEqual([
       { aba: "Questionário", linha: 2, texto: "Possui ISO 27001?" },
       { aba: "Questionário", linha: 3, texto: "Qual é o RPO?" },
@@ -184,29 +203,144 @@ describe("Cenário 5 · planilha sem perguntas", () => {
   it("falha com a mensagem do SPEC quando nem a regra nem a IA encontram perguntas", async () => {
     const planilha = await lerPlanilha(await montarPlanilha([{ nome: "A", linhas: [["Instruções gerais."]] }]));
 
-    await expect(
-      identificarPerguntas(planilha, { nomesAceitos: NOMES_ACEITOS, identificadorComIA: async () => [] }),
-    ).rejects.toThrow("Nenhuma pergunta encontrada na planilha");
+    await expect(identificarPerguntas(planilha, { nomes: NOMES, identificadorComIA: async () => [] })).rejects.toThrow(
+      "Nenhuma pergunta encontrada na planilha",
+    );
   });
 
   it("falha sem chamar a IA quando há cabeçalho mas a coluna está vazia", async () => {
     const planilha = await lerPlanilha(await montarPlanilha([{ nome: "A", linhas: [["Pergunta"], [null]] }]));
 
-    await expect(
-      identificarPerguntas(planilha, { nomesAceitos: NOMES_ACEITOS, identificadorComIA: semIA }),
-    ).rejects.toMatchObject({ motivo: "sem-perguntas" });
+    await expect(identificarPerguntas(planilha, { nomes: NOMES, identificadorComIA: semIA })).rejects.toMatchObject({
+      motivo: "sem-perguntas",
+    });
+  });
+});
+
+describe("Cenário 51 · modelo de resposta da RFP", () => {
+  it("reconhece as colunas de resposta e de comentário na linha do cabeçalho", async () => {
+    const planilha = await lerPlanilha(
+      await montarPlanilha([
+        {
+          nome: "RFP",
+          linhas: [
+            ["Ref", "Pergunta", "Resposta do fornecedor", "Comentários (descreva)"],
+            ["1", "Possui ISO 27001?", null, null],
+          ],
+        },
+      ]),
+    );
+
+    const { modelo } = await identificarPerguntas(planilha, { nomes: NOMES, identificadorComIA: semIA });
+
+    expect(modelo).toEqual({
+      colunaDeResposta: 3,
+      cabecalhoDaResposta: "Resposta do fornecedor",
+      colunaDeComentario: 4,
+      cabecalhoDoComentario: "Comentários (descreva)",
+      valoresPermitidos: null,
+    });
+  });
+
+  it("aceita modelo só com coluna de resposta", async () => {
+    const planilha = await lerPlanilha(
+      await montarPlanilha([{ nome: "RFP", linhas: [["Question", "Response"], ["Do you have ISO 27001?", null]] }]),
+    );
+
+    const { modelo } = await identificarPerguntas(planilha, { nomes: NOMES, identificadorComIA: semIA });
+
+    expect(modelo).toMatchObject({ colunaDeResposta: 2, colunaDeComentario: null });
+  });
+
+  it("segue sem modelo quando não há coluna de resposta reconhecida", async () => {
+    const planilha = await lerPlanilha(
+      await montarPlanilha([
+        { nome: "RFP", linhas: [["Pergunta", "Comentários", "Responsável"], ["Possui ISO 27001?", null, null]] },
+      ]),
+    );
+
+    const { modelo } = await identificarPerguntas(planilha, { nomes: NOMES, identificadorComIA: semIA });
+
+    expect(modelo).toBeNull();
+  });
+
+  it("não confunde a coluna de resposta com cabeçalhos que só começam com as mesmas letras", async () => {
+    const planilha = await lerPlanilha(
+      await montarPlanilha([{ nome: "RFP", linhas: [["Pergunta", "Respostas anteriores"], ["Possui ISO 27001?", null]] }]),
+    );
+
+    const { modelo } = await identificarPerguntas(planilha, { nomes: NOMES, identificadorComIA: semIA });
+
+    expect(modelo).toBeNull();
+  });
+});
+
+describe("Cenário 52 · valores permitidos da resposta", () => {
+  const linhas: Valor[][] = [
+    ["Pergunta", "Resposta"],
+    ["Possui ISO 27001?", null],
+    ["Qual é o RPO?", null],
+  ];
+
+  it("lê a lista escrita na própria validação", async () => {
+    const planilha = await lerPlanilha(
+      await montarPlanilha([{ nome: "RFP", linhas, listas: [{ celulas: "B2:B3", formula: '"Sim,Não,Parcial"' }] }]),
+    );
+
+    const { modelo } = await identificarPerguntas(planilha, { nomes: NOMES, identificadorComIA: semIA });
+
+    expect(modelo?.valoresPermitidos).toEqual(["Sim", "Não", "Parcial"]);
+  });
+
+  it("lê a lista de células de outra aba, mesmo oculta, na ordem da lista", async () => {
+    const planilha = await lerPlanilha(
+      await montarPlanilha([
+        { nome: "RFP", linhas, listas: [{ celulas: "B2:B3", formula: "Escala!$A$1:$A$5" }] },
+        { nome: "Escala", oculta: true, linhas: [[0], [1], [2], [3], [4]] },
+      ]),
+    );
+
+    const { modelo } = await identificarPerguntas(planilha, { nomes: NOMES, identificadorComIA: semIA });
+
+    expect(modelo?.valoresPermitidos).toEqual(["0", "1", "2", "3", "4"]);
+  });
+
+  it("considera texto livre quando a lista não cobre a coluna de resposta", async () => {
+    const planilha = await lerPlanilha(
+      await montarPlanilha([{ nome: "RFP", linhas, listas: [{ celulas: "C2:C3", formula: '"Sim,Não"' }] }]),
+    );
+
+    const { modelo } = await identificarPerguntas(planilha, { nomes: NOMES, identificadorComIA: semIA });
+
+    expect(modelo).toMatchObject({ colunaDeResposta: 2, valoresPermitidos: null });
+  });
+});
+
+describe("Cenário 52 · referências de células das listas", () => {
+  it("converte referências de célula e de intervalo, com ou sem $", () => {
+    expect(lerCelula("E6")).toEqual({ linha: 6, coluna: 5 });
+    expect(lerCelula("AA10")).toEqual({ linha: 10, coluna: 27 });
+    expect(lerCelula("6E")).toBeUndefined();
+    expect(lerIntervalos("$E$6:$E$216 G2")).toEqual([
+      { linhaInicial: 6, linhaFinal: 216, colunaInicial: 5, colunaFinal: 5 },
+      { linhaInicial: 2, linhaFinal: 2, colunaInicial: 7, colunaFinal: 7 },
+    ]);
+  });
+
+  it("confere se uma célula está dentro do intervalo", () => {
+    const [intervalo] = lerIntervalos("E6:E216");
+    expect(intervalo && contem(intervalo, 6, 5)).toBe(true);
+    expect(intervalo && contem(intervalo, 217, 5)).toBe(false);
+    expect(intervalo && contem(intervalo, 10, 6)).toBe(false);
   });
 });
 
 describe("Cenários 4 e 31 · validação do arquivo", () => {
-  it.each(["rfp.csv", "rfp.docx", "rfp.pdf", "rfp.xls", "rfp"])(
-    "recusa %j com a mensagem de formato",
-    (nome) => {
-      expect(() => validarArquivoDePlanilha(nome, new Uint8Array([0x50, 0x4b, 0x03, 0x04]))).toThrow(
-        "Envie a RFP em formato .xlsx",
-      );
-    },
-  );
+  it.each(["rfp.csv", "rfp.docx", "rfp.pdf", "rfp.xls", "rfp"])("recusa %j com a mensagem de formato", (nome) => {
+    expect(() => validarArquivoDePlanilha(nome, new Uint8Array([0x50, 0x4b, 0x03, 0x04]))).toThrow(
+      "Envie a RFP em formato .xlsx",
+    );
+  });
 
   it("aceita a extensão sem diferenciar maiúsculas", async () => {
     const conteudo = await montarPlanilha([{ nome: "A", linhas: [["Pergunta"]] }]);
