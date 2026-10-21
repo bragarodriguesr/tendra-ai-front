@@ -91,19 +91,21 @@ Verificação feita em 21/10/2026, na máquina local de desenvolvimento.
 ### Entrada da RFP
 
 #### Cenário 1: planilha com coluna de perguntas identificável
-- **Given** uma planilha `.xlsx` em que uma coluna tem no cabeçalho a palavra "Pergunta" (sem diferenciar maiúsculas, minúsculas nem acentos)
+- **Given** uma planilha `.xlsx` em que uma célula das 20 primeiras linhas de uma aba visível tem como conteúdo um dos nomes de cabeçalho aceitos, comparados sem diferenciar maiúsculas, minúsculas, acentos nem espaços nas pontas
 - **When** a planilha é enviada
-- **Then** é criada uma tarefa com um item para cada linha preenchida dessa coluna, na ordem da planilha
-- **And** cada item tem em `q` o texto exato da célula e guarda o número da linha de origem
+- **Then** é criada uma tarefa com um item para cada célula preenchida abaixo desse cabeçalho, na mesma coluna e na ordem da planilha
+- **And** cada item tem em `q` o texto exato da célula e guarda a aba e o número da linha de origem
+- **And** quando mais de uma aba tem cabeçalho aceito, vale a primeira aba visível, na ordem da planilha
 - **And** nenhuma chamada à IA é feita para identificar as perguntas
+- **Nota:** os nomes aceitos ficam num arquivo de configuração. Lista inicial: "Pergunta", "Questão" e "Question". Abas ocultas são ignoradas.
 
-#### Cenário 2: linhas vazias e títulos de seção
-- **Given** uma planilha com linhas vazias e linhas de título de seção (texto em outra coluna e célula de pergunta vazia)
+#### Cenário 2: linhas vazias, linhas sem pergunta e títulos de seção
+- **Given** uma planilha com linhas vazias, linhas com outras colunas preenchidas e a célula de pergunta vazia (por exemplo, só a referência), e títulos de seção em células mescladas que ocupam mais de uma coluna
 - **When** a planilha é enviada
-- **Then** essas linhas não geram itens, e a contagem de itens é igual ao número de células de pergunta preenchidas
+- **Then** essas linhas não geram itens, e a contagem de itens é igual ao número de células de pergunta preenchidas e não mescladas
 
 #### Cenário 3: planilha sem coluna de perguntas identificável
-- **Given** uma planilha `.xlsx` sem cabeçalho com a palavra "Pergunta"
+- **Given** uma planilha `.xlsx` sem nenhuma célula com um nome de cabeçalho aceito nas 20 primeiras linhas das abas visíveis
 - **When** a planilha é enviada
 - **Then** a identificação das perguntas é feita com IA a partir do conteúdo da planilha
 - **And** só viram itens os textos que aparecem literalmente numa célula da planilha; textos reescritos pela IA são descartados
