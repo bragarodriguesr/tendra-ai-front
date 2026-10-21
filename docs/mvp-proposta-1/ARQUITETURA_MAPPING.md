@@ -1,6 +1,6 @@
 # Mapa de pendências de arquitetura do backend do MVP
 
-*Levantamento de 10/10/2026. Complementa `docs/SPEC.md` (status `draft`) e `docs/HANDOFF_SESSAO_BACKEND.md`. Nenhuma das decisões abaixo está tomada; as colunas "Recomendação" são propostas para discussão do grupo.*
+*Levantamento de 10/10/2026. Complementa `docs/mvp-proposta-1/SPEC.md` (status `draft`) e o handoff da sessão de análise do backend (documento local, fora do repositório). Nenhuma das decisões abaixo está tomada; as colunas "Recomendação" são propostas para discussão do grupo.*
 
 **Enquadramento:** servidor, banco, autenticação, armazenamento e chaves **não são decisões independentes**. Quase todas derivam de uma única decisão (seção 0). Por isso o mapa começa por ela.
 
@@ -180,7 +180,7 @@ Esta é a seção de maior risco técnico. Várias decisões aqui pedem um **tes
 
 ## Decisões por fase de entrega
 
-*Adicionado em 12/10/2026.* A entrega da versão 1 foi dividida em fases (ver "Faseamento da entrega" em `docs/SPEC.md`). Cada decisão deste mapa é resolvida no `PLAN.md` da primeira fase que precisa dela, e não antes. Os itens 3 a 6 da ordem acima passam a seguir esta tabela; o item 4 (spike de IA) corresponde à fase 0.
+*Adicionado em 12/10/2026.* A entrega da versão 1 foi dividida em fases (ver "Faseamento da entrega" em `docs/mvp-proposta-1/SPEC.md`). Cada decisão deste mapa é resolvida no `PLAN.md` da primeira fase que precisa dela, e não antes. Os itens 3 a 6 da ordem acima passam a seguir esta tabela; o item 4 (spike de IA) corresponde à fase 0.
 
 | Fase | Decisões resolvidas no `PLAN.md` da fase |
 |---|---|
