@@ -1,8 +1,10 @@
-# PRD Front-end — Tendra.ai (MVP) · v2
+# PRD Front-end — Tendra.ai (MVP) · v3
 
-Oct 12, 2026 · @Rafael Braga · Substitui a v1 de 29/09/2026
+Oct 21, 2026 · @Rafael Braga · Substitui a v2 de 12/10/2026
 
-**O que mudou nesta versão.** A v1 especificava o front antes de ele existir. Esta v2 descreve o front **como está publicado** (repositório `tendra-ai-front`, branch `main`, PRs #1 a #14) e marca, em cada requisito, o que já está implementado, o que está parcial e o que continua pendente. Ela é a base para o pedido de construção do backend: a seção 16 lista os dados e as ações que o front espera receber e disparar. O registro completo das mudanças está no Anexo A.
+**O que mudou na v3.** Define o **pipeline de IA do MVP** (seção 20; diagrama em `docs/PIPELINE_IA_MVP.md`) e fecha três decisões que mudam o escopo do front: (1) a **entrada da RFP é só `.xlsx`**; (2) a **base de conhecimento é carregada pela equipe, por comando, a partir de arquivos `.md`**, sem upload pela interface; (3) os limites de qualidade da IA são **80% de relevância e 90% de fidelidade**. Os requisitos afetados (F-01 a F-04, F-09, F-15, Q-02, Q-14) estão marcados abaixo, e o registro completo está no Anexo B. O texto abaixo desta nota descreve a v2 com essas correções aplicadas.
+
+**O que mudou nesta versão.** A v1 especificava o front antes de ele existir. Esta v2 descreve o front **como está publicado** (repositório `tendra-ai-front`, branch `main`, PRs #1 a #14); a v3 acrescenta o pipeline de IA e as decisões de escopo acima e marca, em cada requisito, o que já está implementado, o que está parcial e o que continua pendente. Ela é a base para o pedido de construção do backend: a seção 16 lista os dados e as ações que o front espera receber e disparar. O registro completo das mudanças está no Anexo A.
 
 **Legenda de status usada nos requisitos**
 
@@ -132,10 +134,10 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 | L1 | Login | Entrar no Workspace | Público | P0 | Implementado (autenticação simulada) |
 | L2 | Abertura | Logo animado entre o login e o Dashboard | Ambos | P2 | Implementado |
 | D1 | Dashboard | Visão geral do uso: KPIs, tarefas por status, concluídas por mês, prazos próximos | Ambos | P1 | Implementado (números simulados) |
-| T1 | Primeiros passos (antes "Onboarding") | Guiar a empresa a subir os primeiros documentos | Ambos | P0 | Implementado |
-| T2 | Base de conhecimento | Ver, subir, ativar/desativar e avaliar a idade dos documentos e RFPs passadas | Ambos | P0 | Implementado |
+| T1 | Primeiros passos (antes "Onboarding") | Guiar a empresa pelos primeiros passos; no MVP a base é carregada pela equipe por comando, e o upload pela tela fica fora (F-02) | Ambos | P0 | Implementado (upload fora do MVP) |
+| T2 | Base de conhecimento | Ver, ativar/desativar e avaliar a idade dos documentos e RFPs passadas; no MVP, só leitura quanto à entrada (carga por comando) | Ambos | P0 | Implementado (upload fora do MVP) |
 | T3 | Painel de tarefas | Listar RFPs e RFIs com progresso, prazo, responsável e status; alertas de tarefa | Ambos | P0 | Implementado |
-| T4 | Nova RFP/RFI | Importar a lista de perguntas e cadastrar a tarefa e a empresa | Ambos | P0 | Implementado |
+| T4 | Nova RFP/RFI | Importar a lista de perguntas (`.xlsx`) e cadastrar a tarefa e a empresa | Ambos | P0 | Implementado |
 | T5 | Detalhe da tarefa | Itens, estados, progresso e status de processamento | Ambos | P0 | Implementado |
 | T6 | Revisão (split view) | Conferir fonte, tratar alertas, editar, revisar e aprovar item a item | Ambos | P0 | Implementado |
 | T7 | Visualizador de fonte | Abrir o documento de origem no trecho exato, sem sair da revisão | Ambos | P0 | Implementado (trecho simulado) |
@@ -235,6 +237,8 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 
 **F-01 · P0 · Primeiros passos** (antes "Onboarding no primeiro uso"; MoSCoW: Must) — Parcial
 
+> **v3:** no MVP a base é carregada pela equipe por comando (F-02). O passo 1 e a área de envio ficam como protótipo, sem ligação com o backend; "Criar primeira RFP" passa a depender de haver ao menos um documento pronto na base, carregado por comando.
+
 - **Cabeçalho:** "Primeiro uso · Banco de conhecimento", o título "Suba os documentos que sustentam suas respostas" e um texto de apoio.
 - **Três passos:**
   1. Subir documentos — "N enviados · N processados" ou "Nenhum documento enviado".
@@ -247,7 +251,9 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 - Cartão "O que costuma dar mais contexto": whitepaper e políticas de segurança; RFPs e RFIs já respondidas; contrato padrão e anexos de SLA; certificados e relatórios de auditoria. Mais o texto "Não há número mínimo de documentos…".
 - **Pendente:** abrir esta tela automaticamente no primeiro acesso de uma empresa sem documentos. Hoje o login leva ao Dashboard e Primeiros passos fica no menu lateral.
 
-**F-02 · P0 · Subir documentos para a base** (MoSCoW: Must) — Implementado (processamento Simulado)
+**F-02 · P0 · Subir documentos para a base** (MoSCoW: Must) — Implementado no front (processamento Simulado). **Fora do MVP (v3): upload pela interface**
+
+> **Decisão da v3:** no MVP não há upload pela interface. A equipe escreve um arquivo `.md` por documento, com cabeçalho (tipo, data de atualização e versão opcional), e o carrega por um comando que grava os blocos no banco (seção 20). A T2 passa a ser a visão de leitura da base: lista, idade, selo de 120 dias e chave Ativar/Desativar. Upload pela tela, múltiplos formatos e os estados por arquivo (Na fila, Processando, Erro, Em tratamento pelo suporte, Formato não aceito) voltam na Fase 2. O texto abaixo descreve o comportamento já construído no front.
 
 - Vários arquivos por vez. Cada um mostra o próprio estado, com ícone e rótulo:
   - **Na fila**;
@@ -256,11 +262,11 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
   - **Erro**: "Falha ao processar. Tente novamente.", com o botão "Tentar novamente";
   - **Em tratamento pelo suporte**: "Este arquivo precisa de tratamento pelo suporte. Avisaremos aqui quando estiver pronto.";
   - **Formato não aceito / Não enviado**: "Formato não aceito. Formatos aceitos: [lista]."
-- Formatos aceitos: .doc, .docx, .xls, .xlsx, .md, .pdf, .ppt, .pptx, .txt, .csv e arquivos do Google baixados (Docs, Planilhas e Apresentações). Um arquivo recusado não interrompe os demais.
+- Formatos aceitos no front: .doc, .docx, .xls, .xlsx, .md, .pdf, .ppt, .pptx, .txt, .csv e arquivos do Google baixados (Docs, Planilhas e Apresentações). Um arquivo recusado não interrompe os demais. **No MVP (v3), o único formato carregado é `.md`, por comando.**
 - O usuário pode sair da tela durante o processamento; ao voltar, o estado está atualizado.
 - Cada documento tem "Última atualização" (padrão: data de modificação do arquivo) e "Versão" opcional. A idade conta os dias desde a última atualização.
 
-**F-03 · P0 · Importar RFPs passadas** (MoSCoW: Must) — Implementado
+**F-03 · P0 · Importar RFPs passadas** (MoSCoW: Must) — Implementado no front. **No MVP (v3):** a RFP passada entra na base como um `.md` com o tipo "RFP passada" no cabeçalho, pelo mesmo comando de carga.
 
 - Na T2, o botão "Importar RFP passada" usa o mesmo fluxo de upload, com o tipo "RFP passada".
 - No Histórico, respostas vindas de RFPs importadas aparecem com o selo "Histórico importado" e sem aprovador (Q-04).
@@ -307,7 +313,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 
 **F-09 · P0 · Criar tarefa importando as perguntas** (T4; MoSCoW: Must) — Implementado (processamento Simulado)
 
-- **Arquivo:** área "Selecionar planilha ou documento de perguntas" (planilha, documento, apresentação ou arquivo do Google).
+- **Arquivo:** área "Selecionar planilha ou documento de perguntas" (planilha, documento, apresentação ou arquivo do Google). **No MVP (v3), só planilha `.xlsx`**, com as perguntas numa coluna de cabeçalho "Pergunta"; outros formatos de entrada ficam para a Fase 2 e a tela deve recusá-los com a mensagem "Formato não aceito. Use uma planilha .xlsx."
 - **Campos da tarefa:**
   - **Nome** — obrigatório; vem preenchido com o nome do arquivo e pode ser editado.
   - **Empresa** — obrigatório.
@@ -370,7 +376,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 
 **F-14 · P1 · Busca e filtros de tarefas** (MoSCoW: Should) — Pendente. Quando construído, usar o `FilterMenu`.
 
-**F-15 · P1 · Corrigir a lista de perguntas identificadas** — Pendente.
+**F-15 · P1 · Corrigir a lista de perguntas identificadas** — Pendente. Com a entrada só em `.xlsx` e a identificação por regra (seção 20), a lista tende a sair correta; a correção manual só se justifica se o piloto mostrar planilhas fora do padrão.
 
 **F-16 · P2 · Painel de ROI para o comprador** — Pendente. O Dashboard (F-39) cobre parte com tempo médio e volume.
 
@@ -670,10 +676,10 @@ Esta seção lista o que o front já consome e dispara. Os nomes são descritivo
 | --- | --- | --- |
 | Entrar / sair | L1, barra | Sessão autenticada; papel do usuário (Q-19) |
 | Pedido de contato | S3 | Destino do formulário (Q-23) |
-| Enviar documentos (vários) | T1, T2 | Validar formato; processar de forma assíncrona; expor status e progresso |
+| Enviar documentos (vários) | T1, T2 | **Fora do MVP (v3):** a base é carregada por comando a partir de `.md`. Na Fase 2: validar formato; processar de forma assíncrona; expor status e progresso |
 | Tentar novamente o processamento de um documento | T1, T2 | — |
 | Ativar / desativar documento | T2 | Documento inativo não entra em novas respostas; respostas aprovadas não mudam |
-| Criar tarefa (arquivo + campos + CNPJ + contatos) | T4 | Validar obrigatórios, prazo não passado, CNPJ e contatos quando preenchidos; processar de forma assíncrona; devolver nº de perguntas |
+| Criar tarefa (arquivo + campos + CNPJ + contatos) | T4 | Validar obrigatórios, prazo não passado, CNPJ e contatos quando preenchidos; aceitar só `.xlsx` no MVP; processar de forma assíncrona; devolver nº de perguntas |
 | Tentar de novo uma tarefa com falha | T5 | Gera o alerta "Reprocessamento" |
 | Salvar texto da resposta (automático) | T6 | Aplicar as transições da seção 6; manter o texto original da sugestão |
 | Restaurar sugestão original | T6 | — |
@@ -719,6 +725,10 @@ Esta seção lista o que o front já consome e dispara. Os nomes são descritivo
 | Alertas de tarefa | Sino + cartão na T3, sincronizados por estado de leitura | F-37, F-38 |
 | Cadastro da empresa na tarefa | CNPJ e contatos opcionais | F-09, Q-17 |
 | Formato da exportação no protótipo | Planilha (.xlsx) | F-26, Q-10 |
+| Entrada da RFP (v3) | Somente `.xlsx` | F-09, seção 20 |
+| Entrada da base (v3) | Arquivos `.md` carregados pela equipe por comando; sem upload pela interface | F-02, seção 20 |
+| Arquitetura de IA (v3) | Fluxo fixo em código, sem agente e sem busca vetorial; IA só para redigir com citações, para o plano B de identificação das perguntas e para detectar conflito | Seção 20 |
+| Limites de qualidade (v3) | Relevância 80%, fidelidade 90% | Seção 20, Q-25 |
 
 **Conflitos e resolução**
 
@@ -761,19 +771,20 @@ Esta seção lista o que o front já consome e dispara. Os nomes são descritivo
 
 | ID | Decisão | Onde |
 | --- | --- | --- |
-| Q-02 | Formatos aceitos: .doc, .docx, .xls, .xlsx, .md, .pdf, .ppt, .pptx, .txt, .csv e arquivos do Google baixados | F-02, F-09 |
+| Q-02 | Formatos aceitos. **Revisada na v3:** MVP com entrada de RFP só em `.xlsx` e base só em `.md`, por comando. Os demais (.doc, .docx, .xls, .pdf, .ppt, .pptx, .txt, .csv e arquivos do Google baixados) voltam na Fase 2 | F-02, F-09, seção 20 |
 | Q-03 | Alerta para fontes com mais de 120 dias sem atualização | Seção 6, F-04 |
 | Q-06 | Alertas usam o token danger (`#A8402E`, contraste medido) e a escala tipográfica de produto foi derivada no design system do front | Seções 4, 13 e 15 |
 | Q-09 | Resposta manual sem fonte pode ser aprovada, com alerta reconhecido e autoria | Seção 6 |
 | Q-11 | Sem número mínimo de documentos; aviso de base pequena com menos de 3 documentos prontos | F-01, F-09 |
-| Q-14 | Arquivos do Google entram por upload do arquivo baixado; sem conexão com o Drive no MVP | F-02 |
+| Q-14 | Arquivos do Google entram por upload do arquivo baixado; sem conexão com o Drive no MVP. **v3:** no MVP, quem tiver outro formato converte para `.md` antes da carga | F-02 |
+| Q-25 | Limites de qualidade da IA: relevância da recuperação em 80% e fidelidade do conteúdo em 90% | Seção 20 |
 | Q-15 | O arquivo exportado traz o texto final aprovado, com as edições do revisor | F-26 |
 
 ## 19. Fases e próximos passos
 
 1. **Front do piloto (concluído).** Todas as telas do MVP navegáveis com dados de exemplo, no site publicado e no repositório `tendra-ai-front`. Inclui os P0 de interface e parte dos P1: F-13, F-36, F-37, F-38 e F-39.
 2. **Fase 1, piloto fechado (meses 1 a 3, 3 a 5 clientes).**
-   - **Backend:** construir o contrato da seção 16 e substituir tudo o que está marcado como Simulado.
+   - **Backend:** construir o contrato da seção 16 e substituir tudo o que está marcado como Simulado. A base entra por comando a partir de `.md` e a RFP só em `.xlsx` (seção 20).
    - **Front:** fechar os P0 parciais e pendentes:
      - F-01 (abrir Primeiros passos no primeiro acesso);
      - F-04 (estado vazio);
@@ -785,7 +796,7 @@ Esta seção lista o que o front já consome e dispara. Os nomes são descritivo
    - Instrumentar a telemetria da seção 14.
    - **Antes de começar:** responder Q-05, Q-10, Q-19, Q-20 e Q-22, que bloqueiam partes do backend.
    - **Portão de saída:** metas do piloto atingidas ou revistas e Q-13 respondida.
-3. **Fase 2, soft launch (meses 4 a 6, 15 a 20 empresas).** F-05, F-14, F-15, F-24, F-28, F-29, F-30 e exclusão de documentos (F-06).
+3. **Fase 2, soft launch (meses 4 a 6, 15 a 20 empresas).** Upload pela interface (F-02, F-03), conversão de PDF, DOCX, XLSX e PPTX para blocos, e entrada de RFP em outros formatos. F-05, F-14, F-15, F-24, F-28, F-29, F-30 e exclusão de documentos (F-06).
 4. **Fase 3, lançamento aberto (mês 7 em diante).** P2 conforme o piloto (F-07, F-08, F-16, F-17, F-25, F-31) e o roadmap do pitch: integrações (Drive, SharePoint, CRM), aprovação multinível, MCP, base pré-carregada de normas, modo assistente e setor público.
 
 **Parking lot** (boas ideias fora do escopo, sem compromisso):
@@ -794,6 +805,55 @@ Esta seção lista o que o front já consome e dispara. Os nomes são descritivo
 - Aprovar dentro do Slack ou do Teams.
 - Auto-preenchimento de planilhas e portais de compras por extensão.
 - Abrir itens já prontos enquanto o restante da RFP ainda processa.
+
+## 20. Pipeline de IA do MVP (novo na v3)
+
+O diagrama completo está em `docs/PIPELINE_IA_MVP.md` e, editável, no board do Miro do projeto. Esta seção registra as decisões que afetam o produto; a arquitetura detalhada continua em `docs/mvp-resposta-rfp/` e `docs/mvp-proposta-1/`.
+
+**Princípios**
+
+- **Fluxo fixo em código, sem agente.** As etapas são previsíveis; o backend as executa em ordem e chama o Claude só onde há linguagem natural a tratar. Isso torna o fluxo testável e auditável.
+- **A IA sugere, a pessoa decide.** Nenhuma etapa da IA aprova, revisa ou exporta. Todo item sai como *Sugerida* ou *Sem rascunho*, e as regras de estado, alertas e bloqueios são lógica de código.
+- **Sem fonte verificável, não há resposta.** Cada citação é conferida contra o documento antes de aparecer. Texto sem citação válida é removido; item sem nenhuma citação válida vira *Sem rascunho* com o alerta de sem contexto.
+- **Sem busca vetorial no MVP.** A base inteira vai ao Claude, que encontra e cita os trechos. A recuperação fica atrás de um módulo próprio, trocável depois.
+
+**Etapas**
+
+| # | Etapa | Quem executa | Resultado para o front |
+| --- | --- | --- | --- |
+| 1 | Preparar a base: escrever os `.md` com cabeçalho, rodar o comando de carga, dividir em blocos com localização (arquivo, seção, linha), gravar no banco | Equipe e código, sem IA | T2 lista os documentos com idade e selo de 120 dias |
+| 2 | Entender a RFP: validar o `.xlsx`, criar a tarefa, ler a planilha, achar as perguntas pela coluna "Pergunta"; plano B com modelo pequeno e saída estruturada se a coluna não for achada; confirmar a lista | Código; IA só no plano B | T4 mostra "Identificamos N perguntas" |
+| 3 | Gerar respostas: montar o contexto (documentos ativos e prontos), redigir por lote de cerca de 10 perguntas com citações, conferir cada citação, calcular alertas (sem contexto, baixa confiança, fonte antiga, termo crítico), detectar conflito entre as fontes citadas, gravar os itens | Código; IA 1 (redação) e IA 2 (conflito) | T5 e T6 recebem estados, parágrafos, fontes e alertas no contrato da seção 16 |
+| 4 | Revisar, aprovar e exportar: tratamento de alertas, revisão, aprovação, exportação em `.xlsx` e registro de eventos | Pessoas; código na exportação | T6, T8 e T9, como já descritos |
+| 5 | Medir a qualidade: gabarito sintético de cerca de 30 perguntas, critérios, bloqueio de mudanças abaixo dos limites | Código | Fora das telas; alimenta o piloto |
+
+**Proteções que o produto precisa garantir**
+
+- CNPJ e contatos da empresa nunca vão para a IA; só o texto das perguntas.
+- O conteúdo dos documentos e da planilha é tratado como dado, nunca como instrução.
+- Só documentos *ativos* e *prontos* da empresa entram no contexto; documento fora da base nunca é usado.
+- Base vazia: todos os itens saem *Sem rascunho*, sem chamar a IA. Base acima do teto de tokens: a tarefa falha com mensagem explícita, sem resultado parcial.
+- Falha do provedor de IA: nova tentativa espaçada e, persistindo, tarefa em *Falha* com "Tentar de novo" apenas nos lotes pendentes. Nunca se mostra resultado parcial como concluído.
+
+**Critérios de qualidade da IA** (medidos pelo comando de avaliação sobre o gabarito sintético)
+
+| Critério | Limite |
+| --- | --- |
+| Validade das fontes (citação confere literalmente com o documento) | 100% |
+| Texto apresentado sempre com ao menos uma fonte válida | 100% |
+| Relevância da recuperação (a fonte inclui o documento esperado) | **80%** (decidido na v3) |
+| Pergunta sem resposta no gabarito fica sem rascunho | 100% |
+| Conflito embutido na base marcado com o alerta de conflito | 100% |
+| Citações de documentos fora da base autorizada | Nenhuma |
+| Instrução maliciosa e pedido de compromisso não sustentado tratados corretamente | 3 de 3 execuções |
+| Fidelidade do conteúdo (o texto diz o mesmo que os trechos citados) | **90%** (decidido na v3) |
+
+**Decisões em aberto deste pipeline**
+
+- Método de medir a fidelidade: revisão humana de uma amostra ou avaliador automático com modelo. Proposta: começar pela revisão humana da amostra do gabarito.
+- Modelo da redação (Sonnet 5.5 ou Opus 5.5) e tamanho do lote: decididos pela avaliação contra o gabarito.
+- Formato exato do cabeçalho dos arquivos `.md` e interface do comando de carga.
+- Origem da data de atualização do documento: o cabeçalho do `.md` (proposta) ou a data do arquivo.
 
 ## Anexo A. Mudanças da v1 para a v2
 
@@ -815,3 +875,15 @@ Esta seção lista o que o front já consome e dispara. Os nomes são descritivo
 | Celular | Só leitura abaixo de 768 px | Todas as telas utilizáveis, de 320 px em diante |
 | Sistema visual | Sálvia como ação primária; escala tipográfica em aberto | Tinta como ação primária; paleta de dataviz; `FilterMenu` e `SidebarNav` recolhível no design system |
 | Backend | Fora do documento | Seção 16 com o contrato de dados e a lista do que é simulado |
+
+## Anexo B. Mudanças da v2 para a v3
+
+| Área | v2 (12/10/2026) | v3 (21/10/2026) |
+| --- | --- | --- |
+| Pipeline de IA | Fora do documento (só o contrato de dados) | Seção 20: fluxo fixo em código, sem agente, com critérios de qualidade; diagrama em `docs/PIPELINE_IA_MVP.md` |
+| Entrada da RFP | Planilha, documento, apresentação ou arquivo do Google | Somente `.xlsx` no MVP (F-09, Q-02) |
+| Entrada da base | Upload pela interface, vários formatos | Carga por comando a partir de arquivos `.md`; upload pela tela e demais formatos na Fase 2 (F-01 a F-03, Q-02, Q-14) |
+| Telas T1 e T2 | Upload funcional (simulado) | Upload fora do MVP; T2 é a visão de leitura da base |
+| Identificação das perguntas | Não especificada | Regra pela coluna "Pergunta"; modelo pequeno como plano B (F-15 perde urgência) |
+| Limites de qualidade da IA | Não definidos | Relevância 80% e fidelidade 90% (Q-25) |
+| Fases | Upload e formatos não faseados | Upload, conversão de formatos e outras entradas de RFP na Fase 2 (seção 19) |
