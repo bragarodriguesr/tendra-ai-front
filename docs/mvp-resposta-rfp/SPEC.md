@@ -8,7 +8,7 @@ constitution: 1.0.0
 
 ## Contexto
 
-- **Papel deste documento:** descreve o comportamento do backend nas fases A a C do plano (`docs/mvp-resposta-rfp/PLAN.md`), com tudo rodando numa máquina local e com documentos sintéticos. A fase D (login e hospedagem compartilhada) usa os cenários de `docs/mvp-proposta-1/SPEC.md` e ganha spec próprio quando começar.
+- **Papel deste documento:** descreve o comportamento do backend nas fases A a C do plano (`docs/mvp-resposta-rfp/PLAN.md`), com tudo rodando numa máquina local e com documentos sintéticos. A fase D (login e hospedagem compartilhada) usa os cenários de `docs/referencia/mvp-proposta-1/SPEC.md` e ganha spec próprio quando começar.
 - **Fluxo/local afetado:** o fluxo principal da Tendra.ai, de ponta a ponta:
   1. carga da base de conhecimento, por comando, a partir de arquivos `.md`;
   2. inclusão da planilha `.xlsx` de RFP;
@@ -84,7 +84,7 @@ Verificação feita em 21/10/2026, na máquina local de desenvolvimento.
   - O código entra na pasta `backend/` e nas telas afetadas do front. O repositório é público, o que torna obrigatórios os cenários 27 e 28.
   - `[DECISÃO PENDENTE: fluxo de revisão de código (branch + pull request revisado por outra pessoa, ou commit direto).]`
 - **Hospedagem (Render, Supabase e front)**
-  - Não são necessárias para as fases A a C. Contas, limites dos planos gratuitos e bloqueios da fase D estão em `docs/mvp-proposta-1/SPEC.md` e `docs/mvp-proposta-1/ARQUITETURA_MAPPING.md`.
+  - Não são necessárias para as fases A a C. Contas, limites dos planos gratuitos e bloqueios da fase D estão em `docs/referencia/mvp-proposta-1/SPEC.md` e `docs/referencia/mvp-proposta-1/ARQUITETURA_MAPPING.md`.
 
 ## Acceptance Criteria
 
@@ -296,7 +296,7 @@ O formato do arquivo e as regras de validação do cabeçalho estão em `docs/FO
 
 ### Revisão e aceitação
 
-Estes cenários vêm de `docs/mvp-proposta-1/SPEC.md` (30, 36, 38, 39, 40, 41 e 47), adaptados às fases A a C. Reconhecer alerta, escolher fonte em conflito, escrever resposta em item sem fonte, revisar e o bloqueio por papel ficam para depois da versão 1.
+Estes cenários vêm de `docs/referencia/mvp-proposta-1/SPEC.md` (30, 36, 38, 39, 40, 41 e 47), adaptados às fases A a C. Reconhecer alerta, escolher fonte em conflito, escrever resposta em item sem fonte, revisar e o bloqueio por papel ficam para depois da versão 1.
 
 #### Cenário 41: pessoa que age
 - **Given** uma ação de revisão (editar, restaurar, aprovar ou avaliar)
@@ -426,10 +426,10 @@ Exigidos pela constitution (IV). São medidos pelo comando de avaliação (cená
 
 ## Fora de escopo
 
-- Login, sessão, hospedagem, banco gerenciado, armazenamento de arquivos em nuvem e qualquer acesso pela rede: **fase D**, com cenários de `docs/mvp-proposta-1/SPEC.md` (1 a 4, 37, 44, 50 a 52 e 54). Os cuidados de preparação estão na seção 8 de `ARQUITETURA_MAPPING.md`.
+- Login, sessão, hospedagem, banco gerenciado, armazenamento de arquivos em nuvem e qualquer acesso pela rede: **fase D**, com cenários de `docs/referencia/mvp-proposta-1/SPEC.md` (1 a 4, 37, 44, 50 a 52 e 54). Os cuidados de preparação estão na seção 8 de `ARQUITETURA_MAPPING.md`.
 - Upload da base pela interface e qualquer formato de base que não seja `.md`. A base entra por comando.
 - RFP em formato diferente de `.xlsx`.
-- Reconhecimento de alerta persistido, escolha de fonte em conflito, resposta manual em item sem fonte, "marcar como revisado" e bloqueio de aprovação por papel (cenários 31 a 35 e 37 de `docs/mvp-proposta-1/SPEC.md`). Nesta versão, a tela não oferece o editor para itens sem rascunho.
+- Reconhecimento de alerta persistido, escolha de fonte em conflito, resposta manual em item sem fonte, "marcar como revisado" e bloqueio de aprovação por papel (cenários 31 a 35 e 37 de `docs/referencia/mvp-proposta-1/SPEC.md`). Nesta versão, a tela não oferece o editor para itens sem rascunho.
 - Exportação final aprovada, histórico e trilha de auditoria completa. A planilha do cenário 24 contém respostas sugeridas, identificadas como não revisadas.
 - Tela da taxa de aceitação: o relatório é consultado por rota e por comando.
 - Envio de qualquer resposta ao cliente final.

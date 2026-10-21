@@ -1,6 +1,6 @@
 # Arquitetura essencial: backend do MVP, do fluxo local à publicação compartilhada
 
-*Proposta de 21/10/2026, reescrita em 21/10/2026 para combinar este caminho (risco primeiro, local) com as partes úteis de `docs/mvp-proposta-1/` (revisão persistida, métrica de aceitação e, no fim, login e hospedagem). Status: `draft`.*
+*Proposta de 21/10/2026, reescrita em 21/10/2026 para combinar este caminho (risco primeiro, local) com as partes úteis de `docs/referencia/mvp-proposta-1/` (revisão persistida, métrica de aceitação e, no fim, login e hospedagem). Status: `draft`.*
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ Provar, com o menor caminho possível e usando documentos sintéticos, a hipóte
 
 Tudo o que não serve a esses três objetivos fica de fora (seção 6).
 
-**Relação com `docs/mvp-proposta-1/`:** aquela proposta é o caminho compartilhado completo, em sete fases. Este documento adota a ordem de risco daqui (a IA primeiro) e traz de lá a revisão persistida, a métrica de aceitação e a fase de login e hospedagem, que passa a ser a **fase D**. As decisões de IA e os cenários de geração continuam compartilhados.
+**Relação com `docs/referencia/mvp-proposta-1/`:** aquela proposta é o caminho compartilhado completo, em sete fases, e está guardada como **material de referência para uso futuro**: não é consultada nem usada nesta fase, a menos que seja pedido expressamente. Este documento adota a ordem de risco daqui (a IA primeiro) e traz de lá a revisão persistida, a métrica de aceitação e a fase de login e hospedagem, que passa a ser a **fase D**. As decisões de IA e os cenários de geração continuam compartilhados.
 
 **Decisões do produto que esta arquitetura segue** (PRD v3, seção 20):
 
@@ -133,7 +133,7 @@ A checagem é **determinística** e acontece em dois momentos.
 | **Quem age** | Nas fases A a C não há login. A pessoa é uma das pessoas sintéticas do front (Kadu Mendes, Marcelo Vieira), enviada em cada requisição e validada contra uma lista de configuração. Na fase D essa informação passa a vir da sessão. Ver exceção E1. |
 | **Eventos** | Uma tabela de eventos só de inclusão registra edição, restauração, aprovação, remoção de aprovação e avaliação. |
 | **Taxa de aceitação** | Relatório por tarefa: itens com rascunho, aprovados sem nenhuma edição, porcentagem média de texto alterado, itens sem rascunho e avaliações positivas e negativas. Consulta por rota e por comando. |
-| **Fica fora** | Reconhecimento de alerta persistido, bloqueio de aprovação por papel, exportação final aprovada e histórico: estão em "Após a versão 1" de `docs/mvp-proposta-1/SPEC.md`. |
+| **Fica fora** | Reconhecimento de alerta persistido, bloqueio de aprovação por papel, exportação final aprovada e histórico: estão em "Após a versão 1" de `docs/referencia/mvp-proposta-1/SPEC.md`. |
 
 ---
 
@@ -167,7 +167,7 @@ A organização das pastas está no `PLAN.md`.
 | **A. Prova da IA (linha de comando)** | Comandos `carregar-base`, `responder` e `avaliar`: da planilha e da base aos itens (JSON) e à planilha preenchida, mais o relatório contra o gabarito. Sem servidor e sem front. | Testes automáticos e avaliação com a RFP sintética contra os limites do SPEC |
 | **B. Backend local com revisão** | As mesmas etapas atrás de rotas HTTP, com tarefas, estados e progresso gravados; edição, aprovação e avaliação persistidas; relatório de aceitação | Testes de integração e uma tarefa acompanhada até o fim, com revisão e relatório |
 | **C. Front conectado** | Seletor de arquivo real na Nova RFP, progresso, Base em leitura, revisão com ações gravadas | Jornada ponta a ponta, da planilha à taxa de aceitação |
-| **D. Publicação compartilhada** | Login real, sessão, hospedagem (Render e Supabase) e segurança de exposição, conforme a fase 1 de `docs/mvp-proposta-1/PLAN.md` | Demonstração no ambiente compartilhado; checklist daquela fase |
+| **D. Publicação compartilhada** | Login real, sessão, hospedagem (Render e Supabase) e segurança de exposição, conforme a fase 1 de `docs/referencia/mvp-proposta-1/PLAN.md` | Demonstração no ambiente compartilhado; checklist daquela fase |
 
 A fase A sozinha mostra se a ideia funciona. Se a qualidade das respostas não atingir os critérios, o ajuste acontece antes de investir em servidor, tela ou hospedagem. A fase D só começa depois de A, B e C aceitas.
 
@@ -196,11 +196,11 @@ Sem eles o fluxo não pode ser testado nem avaliado.
 | Item | Quando entra |
 |---|---|
 | Upload da base pela interface, formatos além de `.md` na base e entrada de RFP além de `.xlsx` | Fase 2 do PRD v3, depois da validação |
-| Reconhecimento de alerta persistido e bloqueio de aprovação por papel | Depois da versão 1 (cenários 33, 34, 37 de `docs/mvp-proposta-1/SPEC.md`), junto com o login |
+| Reconhecimento de alerta persistido e bloqueio de aprovação por papel | Depois da versão 1 (cenários 33, 34, 37 de `docs/referencia/mvp-proposta-1/SPEC.md`), junto com o login |
 | Exportação final aprovada, histórico e auditoria | Depois da versão 1 |
 | Tela da taxa de aceitação | Depois da versão 1; no MVP, por rota e por comando |
 | Busca vetorial (pgvector ou GBrain) | Quando a base não couber numa requisição |
-| Retomada automática do processamento após reinício | Fase D (cenário 54 de `docs/mvp-proposta-1/SPEC.md`) |
+| Retomada automática do processamento após reinício | Fase D (cenário 54 de `docs/referencia/mvp-proposta-1/SPEC.md`) |
 | Cadastro de contas, recuperação de senha, SSO | Depois da versão 1 |
 
 ---
@@ -216,7 +216,7 @@ Sem eles o fluxo não pode ser testado nem avaliado.
 | Cabeçalho do `.md`: `titulo`, `tipo`, `atualizado_em`, `versao`; identidade pelo caminho; data obrigatória | `docs/FORMATO_BASE_MD.md` |
 | Limites de qualidade: relevância 80%, fidelidade 90% | PRD v3, seção 20 |
 | Fluxo fixo, sem agente e sem busca vetorial | Esta arquitetura |
-| Login com Supabase Auth e sessão própria do backend, na fase D | `docs/mvp-proposta-1/PLAN.md` |
+| Login com Supabase Auth e sessão própria do backend, na fase D | `docs/referencia/mvp-proposta-1/PLAN.md` |
 
 ### Pendentes
 
@@ -236,7 +236,7 @@ Sem eles o fluxo não pode ser testado nem avaliado.
 
 ## 8. Fase D: publicação compartilhada
 
-Esta fase reaproveita `docs/mvp-proposta-1/` e não é detalhada aqui. O que ela herda do trabalho das fases A a C:
+Esta fase reaproveita `docs/referencia/mvp-proposta-1/` e não é detalhada aqui. O que ela herda do trabalho das fases A a C:
 
 | Item | Como chega pronto |
 |---|---|
@@ -246,9 +246,9 @@ Esta fase reaproveita `docs/mvp-proposta-1/` e não é detalhada aqui. O que ela
 | Arquivos das RFPs | Atrás de um módulo único de armazenamento (PUB-3): trocar para o Supabase Storage |
 | Progresso | Já gravado por lote (PUB-5): base para a retomada após reinício |
 | Quem age | A "pessoa atual" das fases A a C é substituída pela sessão; o seletor "Trocar usuário" do front sai |
-| Login, sessão, limite de tentativas, HTTPS, cookie, CORS | Etapas 0 a 8 de `docs/mvp-proposta-1/PLAN.md` |
+| Login, sessão, limite de tentativas, HTTPS, cookie, CORS | Etapas 0 a 8 de `docs/referencia/mvp-proposta-1/PLAN.md` |
 
-Limites dos planos gratuitos (o serviço do Render "dorme" e o projeto Supabase pausa) estão em `docs/mvp-proposta-1/ARQUITETURA_MAPPING.md`, seção 0.
+Limites dos planos gratuitos (o serviço do Render "dorme" e o projeto Supabase pausa) estão em `docs/referencia/mvp-proposta-1/ARQUITETURA_MAPPING.md`, seção 0.
 
 ---
 

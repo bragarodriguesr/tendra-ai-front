@@ -808,7 +808,7 @@ Esta seção lista o que o front já consome e dispara. Os nomes são descritivo
 
 ## 20. Pipeline de IA do MVP (novo na v3)
 
-O diagrama completo está em `docs/PIPELINE_IA_MVP.md` e, editável, no board do Miro do projeto. Esta seção registra as decisões que afetam o produto; a arquitetura detalhada continua em `docs/mvp-resposta-rfp/` e `docs/mvp-proposta-1/`.
+O diagrama completo está em `docs/PIPELINE_IA_MVP.md` e, editável, no board do Miro do projeto. Esta seção registra as decisões que afetam o produto; a arquitetura detalhada continua em `docs/mvp-resposta-rfp/` e `docs/referencia/mvp-proposta-1/`.
 
 **Princípios**
 
