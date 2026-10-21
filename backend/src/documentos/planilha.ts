@@ -140,6 +140,9 @@ function lerLinhas(aba: ExcelJS.Worksheet): Linha[] {
       if (mesclagem !== undefined) {
         colunasPorMesclagem.set(mesclagem, (colunasPorMesclagem.get(mesclagem) ?? 0) + 1);
       }
+      // Numa mesclagem, só a célula principal guarda o texto. As demais repetem o mesmo valor
+      // e, numa mesclagem na vertical, duplicariam a linha inteira.
+      if (mesclagem !== undefined && mesclagem !== celula.address) continue;
       const texto = textoDaCelula(celula);
       if (texto.trim() !== "") lidas.push({ coluna, texto, mesclagem });
     }
@@ -207,13 +210,16 @@ function comecaComONome(cabecalho: string, nome: string): boolean {
 
 /**
  * Identifica as perguntas pela coluna cujo cabeçalho é um dos nomes aceitos (cenários 1 e 2).
- * Devolve null quando nenhuma aba visível tem esse cabeçalho.
+ * Vale a primeira aba visível com cabeçalho e ao menos uma pergunta. Se há cabeçalho mas nenhuma
+ * aba tem perguntas, devolve a primeira identificação, com a lista vazia. Devolve null quando
+ * nenhuma aba visível tem esse cabeçalho.
  */
 export function identificarPerguntasPorRegra(
   planilha: PlanilhaLida,
   nomesAceitos: string[],
 ): IdentificacaoPorRegra | null {
   const aceitos = new Set(nomesAceitos.map(normalizar));
+  let semPerguntas: IdentificacaoPorRegra | null = null;
 
   for (const aba of planilha.abas) {
     for (const linha of aba.linhas) {
@@ -230,10 +236,18 @@ export function identificarPerguntasPorRegra(
             .filter((celula) => celula.coluna === cabecalho.coluna && !celula.mescladaEmVariasColunas)
             .map((celula) => ({ aba: aba.nome, linha: outra.numero, texto: celula.texto })),
         );
-      return { aba: aba.nome, linhaDoCabecalho: linha.numero, colunaDasPerguntas: cabecalho.coluna, perguntas };
+      const identificacao = {
+        aba: aba.nome,
+        linhaDoCabecalho: linha.numero,
+        colunaDasPerguntas: cabecalho.coluna,
+        perguntas,
+      };
+      if (perguntas.length > 0) return identificacao;
+      semPerguntas ??= identificacao;
+      break;
     }
   }
-  return null;
+  return semPerguntas;
 }
 
 /**
@@ -275,9 +289,16 @@ export function identificarModeloDeResposta(
   };
 }
 
+/** Texto sem espaços nas pontas e com sequências de espaços e quebras de linha reduzidas a um espaço. */
+function semEspacosExtras(texto: string): string {
+  return texto.replace(/\s+/g, " ").trim();
+}
+
 /**
  * Usa a IA para apontar as perguntas e mantém só as que aparecem literalmente numa célula
- * da linha e da aba indicadas (cenário 3). Textos reescritos ou fora do lugar são descartados.
+ * da linha e da aba indicadas (cenário 3). A comparação ignora espaços nas pontas e repetidos,
+ * porque os modelos costumam devolver o texto aparado, e a pergunta guardada é sempre o texto
+ * exato da célula. Textos reescritos ou fora do lugar são descartados.
  */
 export async function identificarPerguntasComIA(
   planilha: PlanilhaLida,
@@ -291,11 +312,13 @@ export async function identificarPerguntasComIA(
   for (const sugerida of sugeridas) {
     const aba = planilha.abas.find((candidata) => candidata.nome === sugerida.aba);
     const linha = aba?.linhas.find((candidata) => candidata.numero === sugerida.linha);
-    const existe = linha?.celulas.some((celula) => celula.texto === sugerida.texto) ?? false;
-    const chave = `${sugerida.aba}\u0000${sugerida.linha}\u0000${sugerida.texto}`;
-    if (!existe || vistas.has(chave)) continue;
+    const alvo = semEspacosExtras(sugerida.texto);
+    const celula = linha?.celulas.find((candidata) => semEspacosExtras(candidata.texto) === alvo);
+    if (celula === undefined) continue;
+    const chave = `${sugerida.aba}\u0000${sugerida.linha}\u0000${celula.texto}`;
+    if (vistas.has(chave)) continue;
     vistas.add(chave);
-    validas.push({ aba: sugerida.aba, linha: sugerida.linha, texto: sugerida.texto });
+    validas.push({ aba: sugerida.aba, linha: sugerida.linha, texto: celula.texto });
   }
 
   return validas.sort(

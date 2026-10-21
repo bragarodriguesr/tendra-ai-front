@@ -5,6 +5,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { carregarCabecalhos } from "../../src/config/cabecalhos.ts";
 import {
   identificarPerguntas,
+  identificarPerguntasComIA,
   lerPlanilha,
   validarArquivoDePlanilha,
   type PlanilhaLida,
@@ -87,5 +88,18 @@ describe("Cenários 51 e 52 · modelo de resposta da planilha 123BANK", () => {
 
   it("lê os valores de 0 a 4 da lista que aponta para a aba oculta", () => {
     expect(resultado.modelo?.valoresPermitidos).toEqual(["0", "1", "2", "3", "4"]);
+  });
+});
+
+describe("Cenário 3 · plano B com IA na planilha de exemplo 123BANK", () => {
+  it("mantém a última pergunta, que termina com espaço, quando a IA devolve o texto aparado", async () => {
+    const ultima = resultado.perguntas.at(-1);
+    expect(ultima?.texto.endsWith(" ")).toBe(true);
+
+    const comIA = await identificarPerguntasComIA(planilha, async () => [
+      { aba: "Questionnaire", linha: ultima?.linha ?? 0, texto: ultima?.texto.trim() ?? "" },
+    ]);
+
+    expect(comIA).toEqual([ultima]);
   });
 });
