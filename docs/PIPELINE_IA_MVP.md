@@ -27,12 +27,12 @@ O pipeline cobre a jornada completa: da base de conhecimento e da planilha de RF
 
 ## 1. Preparar a base de conhecimento
 
-Acontece antes das RFPs e a cada novo documento. Nenhuma chamada de IA.
+Acontece antes das RFPs e a cada novo documento. Nenhuma chamada de IA. O formato do cabeçalho está em [`FORMATO_BASE_MD.md`](FORMATO_BASE_MD.md).
 
 ```mermaid
 flowchart LR
-    A1["1 · Escrever os documentos em .md<br/>Pessoa · equipe<br/>Cabeçalho: tipo, data de atualização, versão"]:::pessoa
-    A2["2 · Rodar o comando de carga<br/>Sistema · linha de comando<br/>Confere o cabeçalho de cada arquivo"]:::sistema
+    A1["1 · Escrever os documentos em .md<br/>Pessoa · equipe<br/>Cabeçalho: titulo, tipo, atualizado_em, versao"]:::pessoa
+    A2["2 · Rodar o comando de carga<br/>Sistema · linha de comando<br/>Confere o cabeçalho; mesmo caminho substitui"]:::sistema
     A3["3 · Dividir em blocos<br/>Sistema · sem IA<br/>Localização: arquivo, seção, linha"]:::sistema
     A4[("4 · Gravar no banco<br/>Blocos, data, versão, tipo, tokens")]:::dados
     A5["5 · Conferir na tela da Base<br/>Pessoa · só leitura<br/>Idade em dias e selo de 120 dias"]:::pessoa
@@ -164,6 +164,5 @@ As métricas do piloto vêm do registro de eventos do quadro 4 e não dependem d
 
 - Método de medir a fidelidade: revisão humana de uma amostra ou avaliador automático com modelo. Proposta: começar pela revisão humana da amostra do gabarito.
 - Modelo da redação (Sonnet 5.5 ou Opus 5.5) e tamanho do lote: decididos pela avaliação contra o gabarito.
-- Formato exato do cabeçalho dos arquivos `.md` e interface do comando de carga.
-- Origem da data de atualização do documento: o cabeçalho do `.md` (proposta) ou a data do arquivo.
+- Interface do comando de carga (nome e opções). O formato dos arquivos `.md` está definido em [`FORMATO_BASE_MD.md`](FORMATO_BASE_MD.md).
 - A segunda chamada de IA (conflito) existe porque a API não combina citações com saída estruturada na mesma chamada; o teste prático da primeira etapa pode eliminá-la.
