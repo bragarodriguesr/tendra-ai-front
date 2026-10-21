@@ -1,6 +1,6 @@
 # Pipeline de IA do MVP · Tendra.ai
 
-*Proposta de 21/10/2026. Status: `draft`. Complementa a seção 20 do `PRD_Front-end_Tendra.ai_MVP_v3.md`, `docs/mvp-resposta-rfp/` e `docs/mvp-proposta-1/`.*
+*Proposta de 21/10/2026. Status: `draft`. Complementa a seção 20 do `PRD_Front-end_Tendra.ai_MVP_v3.md`, `docs/mvp-resposta-rfp/` e `docs/referencia/mvp-proposta-1/`.*
 
 Versão editável do diagrama, no board do projeto: [Miro](https://miro.com/app/board/uXjVHg0R4nQ=/?moveToWidget=3458764688008238401).
 

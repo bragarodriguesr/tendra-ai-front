@@ -8,7 +8,7 @@ constitution: 1.0.0
 
 ## Contexto
 
-- **Papel deste documento:** descreve o comportamento do backend nas fases A a C do plano (`docs/mvp-resposta-rfp/PLAN.md`), com tudo rodando numa máquina local e com documentos sintéticos. A fase D (login e hospedagem compartilhada) usa os cenários de `docs/mvp-proposta-1/SPEC.md` e ganha spec próprio quando começar.
+- **Papel deste documento:** descreve o comportamento do backend nas fases A a C do plano (`docs/mvp-resposta-rfp/PLAN.md`), com tudo rodando numa máquina local e com documentos sintéticos. A fase D (login e hospedagem compartilhada) usa os cenários de `docs/referencia/mvp-proposta-1/SPEC.md` e ganha spec próprio quando começar.
 - **Fluxo/local afetado:** o fluxo principal da Tendra.ai, de ponta a ponta:
   1. carga da base de conhecimento, por comando, a partir de arquivos `.md`;
   2. inclusão da planilha `.xlsx` de RFP;
@@ -30,7 +30,7 @@ constitution: 1.0.0
 - **Contrato com o front:** os itens seguem o formato de `src/workspace/data.js` (campos `q`, `paras`, `srcs`, `alerts`, `st`, `orig`), que a tela de revisão já sabe exibir.
 - **Termos:**
   - **base** é o conjunto de documentos carregados no banco e marcados como ativos; só eles são fontes autorizadas;
-  - **carga** é o comando `carregar-base`, que lê uma pasta de arquivos `.md` e grava documentos e blocos no banco. O formato do arquivo está em `docs/FORMATO_BASE_MD.md`;
+  - **carga** é o comando `carregar-base`, que lê uma pasta de arquivos `.md` e grava documentos e blocos no banco. O formato do arquivo está em `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`;
   - **teto da base** é o limite de 25 MB e 400 mil tokens somados dos documentos ativos usados numa execução;
   - **pessoa que age** é uma das pessoas sintéticas da lista de configuração, enviada pelo front em cada ação de revisão (exceção E1);
   - **data e hora do backend** é o relógio da máquina onde o backend roda, nunca um valor enviado pelo navegador.
@@ -77,14 +77,14 @@ Verificação feita em 21/10/2026, na máquina local de desenvolvimento.
   - **Acesso verificado:** não. O repositório não tem integração contínua configurada.
   - `[DECISÃO PENDENTE: proteção da branch main exigindo a integração contínua aprovada antes do merge. Depende de configuração do repositório.]`
 - **Dados sintéticos**
-  - **Recurso:** pasta de documentos `.md` com o cabeçalho de `docs/FORMATO_BASE_MD.md`, planilha de RFP `.xlsx` sintética e gabarito, conforme a seção 5 de `ARQUITETURA_MAPPING.md`.
+  - **Recurso:** pasta de documentos `.md` com o cabeçalho de `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`, planilha de RFP `.xlsx` sintética e gabarito, conforme a seção 5 de `ARQUITETURA_MAPPING.md`.
   - **Acesso verificado:** não. O material ainda não existe.
   - `[BLOQUEIO: criar a base `.md`, a planilha de RFP sintética e o gabarito antes de aprovar o spec.]`
 - **Repositório (`github.com/bragarodriguesr/tendra-ai-front`)**
   - O código entra na pasta `backend/` e nas telas afetadas do front. O repositório é público, o que torna obrigatórios os cenários 27 e 28.
   - `[DECISÃO PENDENTE: fluxo de revisão de código (branch + pull request revisado por outra pessoa, ou commit direto).]`
 - **Hospedagem (Render, Supabase e front)**
-  - Não são necessárias para as fases A a C. Contas, limites dos planos gratuitos e bloqueios da fase D estão em `docs/mvp-proposta-1/SPEC.md` e `docs/mvp-proposta-1/ARQUITETURA_MAPPING.md`.
+  - Não são necessárias para as fases A a C. Contas, limites dos planos gratuitos e bloqueios da fase D estão em `docs/referencia/mvp-proposta-1/SPEC.md` e `docs/referencia/mvp-proposta-1/ARQUITETURA_MAPPING.md`.
 
 ## Acceptance Criteria
 
@@ -132,7 +132,7 @@ Verificação feita em 21/10/2026, na máquina local de desenvolvimento.
 
 ### Base de conhecimento
 
-O formato do arquivo e as regras de validação do cabeçalho estão em `docs/FORMATO_BASE_MD.md` (seções 4 e 6). Os cenários abaixo cobrem o comportamento do produto; os 16 cenários daquele documento são verificados pelos mesmos testes da carga.
+O formato do arquivo e as regras de validação do cabeçalho estão em `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md` (seções 4 e 6). Os cenários abaixo cobrem o comportamento do produto; os 16 cenários daquele documento são verificados pelos mesmos testes da carga.
 
 #### Cenário 7: carga de documento válido
 - **Given** um arquivo `.md` com cabeçalho válido (`titulo`, `tipo`, `atualizado_em`)
@@ -258,7 +258,7 @@ O formato do arquivo e as regras de validação do cabeçalho estão em `docs/FO
 - **Given** um item com uma fonte cujo `atualizado_em` tem mais de 120 dias em relação à data do backend
 - **When** o resultado é checado
 - **Then** o item recebe o alerta `old`
-- **Nota:** a data de atualização de cada documento é o campo `atualizado_em` do cabeçalho do `.md`, sem alternativa pela data do arquivo (`docs/FORMATO_BASE_MD.md`).
+- **Nota:** a data de atualização de cada documento é o campo `atualizado_em` do cabeçalho do `.md`, sem alternativa pela data do arquivo (`docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`).
 
 #### Cenário 21: pergunta com termo crítico
 - **Given** uma pergunta que contém um termo da lista de termos críticos, comparada sem diferenciar maiúsculas, minúsculas nem acentos
@@ -296,7 +296,7 @@ O formato do arquivo e as regras de validação do cabeçalho estão em `docs/FO
 
 ### Revisão e aceitação
 
-Estes cenários vêm de `docs/mvp-proposta-1/SPEC.md` (30, 36, 38, 39, 40, 41 e 47), adaptados às fases A a C. Reconhecer alerta, escolher fonte em conflito, escrever resposta em item sem fonte, revisar e o bloqueio por papel ficam para depois da versão 1.
+Estes cenários vêm de `docs/referencia/mvp-proposta-1/SPEC.md` (30, 36, 38, 39, 40, 41 e 47), adaptados às fases A a C. Reconhecer alerta, escolher fonte em conflito, escrever resposta em item sem fonte, revisar e o bloqueio por papel ficam para depois da versão 1.
 
 #### Cenário 41: pessoa que age
 - **Given** uma ação de revisão (editar, restaurar, aprovar ou avaliar)
@@ -426,10 +426,10 @@ Exigidos pela constitution (IV). São medidos pelo comando de avaliação (cená
 
 ## Fora de escopo
 
-- Login, sessão, hospedagem, banco gerenciado, armazenamento de arquivos em nuvem e qualquer acesso pela rede: **fase D**, com cenários de `docs/mvp-proposta-1/SPEC.md` (1 a 4, 37, 44, 50 a 52 e 54). Os cuidados de preparação estão na seção 8 de `ARQUITETURA_MAPPING.md`.
+- Login, sessão, hospedagem, banco gerenciado, armazenamento de arquivos em nuvem e qualquer acesso pela rede: **fase D**, com cenários de `docs/referencia/mvp-proposta-1/SPEC.md` (1 a 4, 37, 44, 50 a 52 e 54). Os cuidados de preparação estão na seção 8 de `ARQUITETURA_MAPPING.md`.
 - Upload da base pela interface e qualquer formato de base que não seja `.md`. A base entra por comando.
 - RFP em formato diferente de `.xlsx`.
-- Reconhecimento de alerta persistido, escolha de fonte em conflito, resposta manual em item sem fonte, "marcar como revisado" e bloqueio de aprovação por papel (cenários 31 a 35 e 37 de `docs/mvp-proposta-1/SPEC.md`). Nesta versão, a tela não oferece o editor para itens sem rascunho.
+- Reconhecimento de alerta persistido, escolha de fonte em conflito, resposta manual em item sem fonte, "marcar como revisado" e bloqueio de aprovação por papel (cenários 31 a 35 e 37 de `docs/referencia/mvp-proposta-1/SPEC.md`). Nesta versão, a tela não oferece o editor para itens sem rascunho.
 - Exportação final aprovada, histórico e trilha de auditoria completa. A planilha do cenário 24 contém respostas sugeridas, identificadas como não revisadas.
 - Tela da taxa de aceitação: o relatório é consultado por rota e por comando.
 - Envio de qualquer resposta ao cliente final.

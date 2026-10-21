@@ -2,7 +2,7 @@
 
 Oct 21, 2026 · @Rafael Braga · Substitui a v2 de 12/10/2026
 
-**O que mudou na v3.** Define o **pipeline de IA do MVP** (seção 20; diagrama em `docs/PIPELINE_IA_MVP.md`) e fecha três decisões que mudam o escopo do front: (1) a **entrada da RFP é só `.xlsx`**; (2) a **base de conhecimento é carregada pela equipe, por comando, a partir de arquivos `.md`**, sem upload pela interface; (3) os limites de qualidade da IA são **80% de relevância e 90% de fidelidade**. Os requisitos afetados (F-01 a F-04, F-09, F-15, Q-02, Q-14) estão marcados abaixo, e o registro completo está no Anexo B. O texto abaixo desta nota descreve a v2 com essas correções aplicadas.
+**O que mudou na v3.** Define o **pipeline de IA do MVP** (seção 20; diagrama em `docs/mvp-resposta-rfp/PIPELINE_IA_MVP.md`) e fecha três decisões que mudam o escopo do front: (1) a **entrada da RFP é só `.xlsx`**; (2) a **base de conhecimento é carregada pela equipe, por comando, a partir de arquivos `.md`**, sem upload pela interface; (3) os limites de qualidade da IA são **80% de relevância e 90% de fidelidade**. Os requisitos afetados (F-01 a F-04, F-09, F-15, Q-02, Q-14) estão marcados abaixo, e o registro completo está no Anexo B. O texto abaixo desta nota descreve a v2 com essas correções aplicadas.
 
 **O que mudou nesta versão.** A v1 especificava o front antes de ele existir. Esta v2 descreve o front **como está publicado** (repositório `tendra-ai-front`, branch `main`, PRs #1 a #14); a v3 acrescenta o pipeline de IA e as decisões de escopo acima e marca, em cada requisito, o que já está implementado, o que está parcial e o que continua pendente. Ela é a base para o pedido de construção do backend: a seção 16 lista os dados e as ações que o front espera receber e disparar. O registro completo das mudanças está no Anexo A.
 
@@ -253,7 +253,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 
 **F-02 · P0 · Subir documentos para a base** (MoSCoW: Must) — Implementado no front (processamento Simulado). **Fora do MVP (v3): upload pela interface**
 
-> **Decisão da v3:** no MVP não há upload pela interface. A equipe escreve um arquivo `.md` por documento, com cabeçalho (título, tipo, data de atualização e versão opcional; formato em `docs/FORMATO_BASE_MD.md`), e o carrega por um comando que grava os blocos no banco (seção 20). A T2 passa a ser a visão de leitura da base: lista, idade, selo de 120 dias e chave Ativar/Desativar. Upload pela tela, múltiplos formatos e os estados por arquivo (Na fila, Processando, Erro, Em tratamento pelo suporte, Formato não aceito) voltam na Fase 2. O texto abaixo descreve o comportamento já construído no front.
+> **Decisão da v3:** no MVP não há upload pela interface. A equipe escreve um arquivo `.md` por documento, com cabeçalho (título, tipo, data de atualização e versão opcional; formato em `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`), e o carrega por um comando que grava os blocos no banco (seção 20). A T2 passa a ser a visão de leitura da base: lista, idade, selo de 120 dias e chave Ativar/Desativar. Upload pela tela, múltiplos formatos e os estados por arquivo (Na fila, Processando, Erro, Em tratamento pelo suporte, Formato não aceito) voltam na Fase 2. O texto abaixo descreve o comportamento já construído no front.
 
 - Vários arquivos por vez. Cada um mostra o próprio estado, com ícone e rótulo:
   - **Na fila**;
@@ -808,7 +808,7 @@ Esta seção lista o que o front já consome e dispara. Os nomes são descritivo
 
 ## 20. Pipeline de IA do MVP (novo na v3)
 
-O diagrama completo está em `docs/PIPELINE_IA_MVP.md` e, editável, no board do Miro do projeto. Esta seção registra as decisões que afetam o produto; a arquitetura detalhada continua em `docs/mvp-resposta-rfp/` e `docs/mvp-proposta-1/`.
+O diagrama completo está em `docs/mvp-resposta-rfp/PIPELINE_IA_MVP.md` e, editável, no board do Miro do projeto. Esta seção registra as decisões que afetam o produto; a arquitetura detalhada continua em `docs/mvp-resposta-rfp/` e `docs/referencia/mvp-proposta-1/`.
 
 **Princípios**
 
@@ -821,7 +821,7 @@ O diagrama completo está em `docs/PIPELINE_IA_MVP.md` e, editável, no board do
 
 | # | Etapa | Quem executa | Resultado para o front |
 | --- | --- | --- | --- |
-| 1 | Preparar a base: escrever os `.md` com cabeçalho (`titulo`, `tipo`, `atualizado_em` e `versao` opcional; ver `docs/FORMATO_BASE_MD.md`), rodar o comando de carga, dividir em blocos com localização (arquivo, seção, linha), gravar no banco | Equipe e código, sem IA | T2 lista os documentos com idade e selo de 120 dias |
+| 1 | Preparar a base: escrever os `.md` com cabeçalho (`titulo`, `tipo`, `atualizado_em` e `versao` opcional; ver `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`), rodar o comando de carga, dividir em blocos com localização (arquivo, seção, linha), gravar no banco | Equipe e código, sem IA | T2 lista os documentos com idade e selo de 120 dias |
 | 2 | Entender a RFP: validar o `.xlsx`, criar a tarefa, ler a planilha, achar as perguntas pela coluna "Pergunta"; plano B com modelo pequeno e saída estruturada se a coluna não for achada; confirmar a lista | Código; IA só no plano B | T4 mostra "Identificamos N perguntas" |
 | 3 | Gerar respostas: montar o contexto (documentos ativos e prontos), redigir por lote de cerca de 10 perguntas com citações, conferir cada citação, calcular alertas (sem contexto, baixa confiança, fonte antiga, termo crítico), detectar conflito entre as fontes citadas, gravar os itens | Código; IA 1 (redação) e IA 2 (conflito) | T5 e T6 recebem estados, parágrafos, fontes e alertas no contrato da seção 16 |
 | 4 | Revisar, aprovar e exportar: tratamento de alertas, revisão, aprovação, exportação em `.xlsx` e registro de eventos | Pessoas; código na exportação | T6, T8 e T9, como já descritos |
@@ -852,7 +852,7 @@ O diagrama completo está em `docs/PIPELINE_IA_MVP.md` e, editável, no board do
 
 - Método de medir a fidelidade: revisão humana de uma amostra ou avaliador automático com modelo. Proposta: começar pela revisão humana da amostra do gabarito.
 - Modelo da redação (Sonnet 5.5 ou Opus 5.5) e tamanho do lote: decididos pela avaliação contra o gabarito.
-- Interface do comando de carga (nome e opções). O formato dos arquivos `.md` está definido em `docs/FORMATO_BASE_MD.md`.
+- Interface do comando de carga (nome e opções). O formato dos arquivos `.md` está definido em `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`.
 
 ## Anexo A. Mudanças da v1 para a v2
 
@@ -879,11 +879,11 @@ O diagrama completo está em `docs/PIPELINE_IA_MVP.md` e, editável, no board do
 
 | Área | v2 (12/10/2026) | v3 (21/10/2026) |
 | --- | --- | --- |
-| Pipeline de IA | Fora do documento (só o contrato de dados) | Seção 20: fluxo fixo em código, sem agente, com critérios de qualidade; diagrama em `docs/PIPELINE_IA_MVP.md` |
+| Pipeline de IA | Fora do documento (só o contrato de dados) | Seção 20: fluxo fixo em código, sem agente, com critérios de qualidade; diagrama em `docs/mvp-resposta-rfp/PIPELINE_IA_MVP.md` |
 | Entrada da RFP | Planilha, documento, apresentação ou arquivo do Google | Somente `.xlsx` no MVP (F-09, Q-02) |
 | Entrada da base | Upload pela interface, vários formatos | Carga por comando a partir de arquivos `.md`; upload pela tela e demais formatos na Fase 2 (F-01 a F-03, Q-02, Q-14) |
 | Telas T1 e T2 | Upload funcional (simulado) | Upload fora do MVP; T2 é a visão de leitura da base |
 | Identificação das perguntas | Não especificada | Regra pela coluna "Pergunta"; modelo pequeno como plano B (F-15 perde urgência) |
 | Limites de qualidade da IA | Não definidos | Relevância 80% e fidelidade 90% (Q-25) |
-| Formato dos `.md` da base | Não definido | Cabeçalho YAML com `titulo`, `tipo`, `atualizado_em` (obrigatórios) e `versao` (opcional); identidade pelo caminho do arquivo; data sem alternativa pela data do arquivo; campo desconhecido gera aviso (`docs/FORMATO_BASE_MD.md`) |
+| Formato dos `.md` da base | Não definido | Cabeçalho YAML com `titulo`, `tipo`, `atualizado_em` (obrigatórios) e `versao` (opcional); identidade pelo caminho do arquivo; data sem alternativa pela data do arquivo; campo desconhecido gera aviso (`docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`) |
 | Fases | Upload e formatos não faseados | Upload, conversão de formatos e outras entradas de RFP na Fase 2 (seção 19) |

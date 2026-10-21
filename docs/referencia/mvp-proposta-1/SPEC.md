@@ -23,7 +23,7 @@ status: draft
 - **Usuários:** contas pré-cadastradas para os membros do grupo, com senha. O nome e o papel (Revisor ou Aprovador) de cada conta são de uma **pessoa sintética**. Não há cadastro pela interface.
 - **Contrato com o front:** os formatos de item, fonte, alerta, documento e tarefa, e as regras de estado, são os de `src/workspace/data.js` do front oficial, descritos na seção 9.2 do documento de análise (`analise-gbrain-tendra.md`). As rotas de referência estão na seção 9.3 do mesmo documento.
 - **Termos:** neste spec, "backend" é o serviço publicado no ambiente compartilhado. "Data e hora do backend" é o relógio desse serviço, nunca um valor enviado pelo navegador.
-- **Decisões de arquitetura:** registradas em `docs/mvp-proposta-1/ARQUITETURA_MAPPING.md`. Este spec só repete as que mudam o comportamento observável.
+- **Decisões de arquitetura:** registradas em `docs/referencia/mvp-proposta-1/ARQUITETURA_MAPPING.md`. Este spec só repete as que mudam o comportamento observável.
 - **Como reproduzir:** não se aplica (feature nova).
 
 ## Faseamento da entrega
@@ -47,7 +47,7 @@ A versão 1 é entregue em fases pequenas, para que cada uma possa ser validada 
 | **4b. Alertas** | Fonte antiga, conflito, termo crítico e baixa confiança | 22, 23, 24, 25 | Nenhuma | 4a |
 | **5. Revisão mínima e métrica** | Editar, restaurar, aprovar, avaliar, persistência e relatório de aceitação | 30, 36, 38, 39, 40, 41, 47 | Nenhuma | 4a |
 
-**Sobre a fase 0:** é **possível seguir para a fase 1 sem executá-la**. Ela não depende de nenhuma outra fase e pode rodar antes ou em paralelo com a fase 1. Se não for feita, o risco de IA passa para a fase 4a: as decisões de modelo, de como obter citações e alertas na mesma geração e de como citar planilhas e DOCX (IA-1, IA-4 e IA-6 em `docs/mvp-proposta-1/ARQUITETURA_MAPPING.md`) passam a ser tomadas no `PLAN.md` da fase 4a, que fica maior, e uma qualidade de geração ruim só aparece depois das fases 1 a 3 entregues.
+**Sobre a fase 0:** é **possível seguir para a fase 1 sem executá-la**. Ela não depende de nenhuma outra fase e pode rodar antes ou em paralelo com a fase 1. Se não for feita, o risco de IA passa para a fase 4a: as decisões de modelo, de como obter citações e alertas na mesma geração e de como citar planilhas e DOCX (IA-1, IA-4 e IA-6 em `docs/referencia/mvp-proposta-1/ARQUITETURA_MAPPING.md`) passam a ser tomadas no `PLAN.md` da fase 4a, que fica maior, e uma qualidade de geração ruim só aparece depois das fases 1 a 3 entregues.
 
 **Sobre as dependências de infraestrutura abaixo:** os bloqueios do Render e do Supabase (banco) valem para a fase 1; o do Supabase Storage, para a fase 2. A fase 0 só depende da chave da Anthropic.
 
@@ -82,7 +82,7 @@ Verificação feita em 10/10/2026 e atualizada em 11/10/2026.
   - **Recurso:** o repositório onde estão o front oficial e onde o backend será publicado. Branch principal: `main`.
   - **Acesso verificado:** sim. Em 10/10/2026, pela API do GitHub com o CLI `gh` autenticado, a conta usada tem permissão de escrita (push) no repositório.
   - **Visibilidade:** o repositório é **público**. Código e histórico de commits podem ser lidos por qualquer pessoa, o que torna obrigatórios os cenários 48 e 49. A visibilidade do repositório não controla o acesso ao ambiente compartilhado, que é protegido pelo login.
-  - **Fluxo de mudança:** o backend entra no mesmo repositório, na pasta `backend/`, sem alterar o código do front nesta tarefa. Este spec fica em `docs/mvp-proposta-1/SPEC.md`.
+  - **Fluxo de mudança:** o backend entra no mesmo repositório, na pasta `backend/`, sem alterar o código do front nesta tarefa. Este spec fica em `docs/referencia/mvp-proposta-1/SPEC.md`.
   - `[DECISÃO PENDENTE: fluxo de revisão de código (branch + pull request revisado por outra pessoa, ou commit direto).]`
   - `[DECISÃO PENDENTE: manter o repositório público ou torná-lo privado.]`
 - **GBrain:** nenhuma dependência. O MVP usa a alternativa A1. A troca do motor de recuperação é etapa posterior.
@@ -438,4 +438,4 @@ Cenários já especificados, mantidos aqui para não se perderem. Não são impl
 - Reaproveitamento automático de respostas aprovadas em novas gerações.
 - Visualização da página original do PDF no visualizador de fonte. O backend devolve só o trecho e a localização.
 - Notificações, alertas de prazo e contadores do Dashboard, que o front já calcula a partir das tarefas.
-- Escolha de modelo, de parâmetros de geração e demais decisões técnicas listadas em `docs/mvp-proposta-1/ARQUITETURA_MAPPING.md`. Isso é decisão do `PLAN.md`, respeitando o custo estimado na seção 10 do documento de análise.
+- Escolha de modelo, de parâmetros de geração e demais decisões técnicas listadas em `docs/referencia/mvp-proposta-1/ARQUITETURA_MAPPING.md`. Isso é decisão do `PLAN.md`, respeitando o custo estimado na seção 10 do documento de análise.

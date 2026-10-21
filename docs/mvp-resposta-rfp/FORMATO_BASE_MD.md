@@ -1,6 +1,6 @@
 # Formato dos arquivos `.md` da base de conhecimento
 
-*Definido em 21/10/2026. Status: `draft`. Complementa a seção 20 do `PRD_Front-end_Tendra.ai_MVP_v3.md` e o quadro 1 de `docs/PIPELINE_IA_MVP.md`.*
+*Definido em 21/10/2026. Status: `draft`. Complementa a seção 20 do `PRD_Front-end_Tendra.ai_MVP_v3.md` e o quadro 1 de `docs/mvp-resposta-rfp/PIPELINE_IA_MVP.md`.*
 
 No MVP, a base de conhecimento entra no banco por um comando de carga, a partir de arquivos `.md` escritos pela equipe. Este documento define o cabeçalho obrigatório desses arquivos, o que o comando valida e como o arquivo vira fonte citável.
 

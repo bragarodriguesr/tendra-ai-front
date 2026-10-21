@@ -7,7 +7,7 @@ constitution: 1.0.0
 
 # Plano de execução: backend do MVP, da prova da IA à publicação compartilhada
 
-*Proposta de 21/10/2026, reescrita em 21/10/2026 para combinar este caminho (a IA primeiro, local) com a revisão persistida e a métrica de aceitação de `docs/mvp-proposta-1/` e, no fim, com o login e a hospedagem daquela proposta. Pela regra do SDD, o plano deriva de um spec aprovado. O spec ainda está em `draft`, com bloqueios abertos; este plano deve ser conferido contra ele quando for aprovado.*
+*Proposta de 21/10/2026, reescrita em 21/10/2026 para combinar este caminho (a IA primeiro, local) com a revisão persistida e a métrica de aceitação de `docs/referencia/mvp-proposta-1/` e, no fim, com o login e a hospedagem daquela proposta. Pela regra do SDD, o plano deriva de um spec aprovado. O spec ainda está em `draft`, com bloqueios abertos; este plano deve ser conferido contra ele quando for aprovado.*
 
 ## Objetivo
 
@@ -19,7 +19,7 @@ Chegar a um backend que **prove a hipótese central do MVP** (a pessoa aceita as
 | **A. Prova da IA** | Comandos `carregar-base`, `responder` e `avaliar`: da planilha e da base aos itens e à planilha preenchida, com relatório contra o gabarito | 1 a 15, 17 a 22, 24 a 27, 29, 31, 33 a 40 |
 | **B. Backend local com revisão** | As etapas atrás de rotas HTTP, com tarefas, progresso, revisão persistida e relatório de aceitação | 4, 16, 17, 23, 24, 28, 30, 31, 32, 40 a 49 |
 | **C. Front conectado** | Nova RFP com arquivo real, progresso, Base em leitura e revisão com ações gravadas | 6, 16, 23, 24, 33, 40, 42 a 46 |
-| **D. Publicação compartilhada** | Login, sessão, hospedagem e segurança de exposição (fase 1 de `docs/mvp-proposta-1/PLAN.md`) | Cenários de `docs/mvp-proposta-1/SPEC.md`; spec próprio quando a fase começar |
+| **D. Publicação compartilhada** | Login, sessão, hospedagem e segurança de exposição (fase 1 de `docs/referencia/mvp-proposta-1/PLAN.md`) | Cenários de `docs/referencia/mvp-proposta-1/SPEC.md`; spec próprio quando a fase começar |
 
 A fase A concentra o risco técnico. Se a avaliação não atingir os limites do SPEC, o ajuste acontece **antes** de investir em servidor, tela ou hospedagem. A fase D só começa depois de A, B e C aceitas e de haver taxa de aceitação medida.
 
@@ -30,7 +30,7 @@ Cada etapa abaixo é uma mudança pequena, com objetivo claro, testes próprios 
 | # | Pendência | Bloqueia | Sugestão |
 |---|---|---|---|
 | P1 | Chave de testes da API definida e testada | Fase A | Variável de ambiente local. O primeiro teste é a etapa A1. |
-| P2 | Base `.md`, planilha de RFP sintética e gabarito | Fase A, etapa A4 em diante | Conforme a seção 5 de `ARQUITETURA_MAPPING.md` e `docs/FORMATO_BASE_MD.md`. |
+| P2 | Base `.md`, planilha de RFP sintética e gabarito | Fase A, etapa A4 em diante | Conforme a seção 5 de `ARQUITETURA_MAPPING.md` e `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`. |
 | P3 | Método de medir a fidelidade (limite de 90% já decidido) | Etapa A10 | Revisão humana de todas as respostas do gabarito (cerca de 30), com lista de conferência. |
 | P4 | Motor do banco local | Etapa A4 | PGlite (Postgres embutido), porque a fase D usa o Postgres do Supabase. |
 | P5 | Interface do comando de carga (nome e opções) | Etapa A4 | `carregar-base <pasta>` com `--enviado-por`; confirmar na etapa. |
@@ -49,7 +49,7 @@ Cada etapa abaixo é uma mudança pequena, com objetivo claro, testes próprios 
 | Banco | PGlite (Postgres embutido) em `dados/`, com query builder tipado e migrações versionadas |
 | Entrada da RFP | Só `.xlsx`: assinatura do arquivo conferida (não só a extensão), até 10 MB, nome gerado pelo backend |
 | Planilhas | `exceljs` para ler e escrever |
-| Base | Comando `carregar-base`: cabeçalho YAML validado, texto dividido em blocos com `seção` e `linha`, gravados em `documentos` e `blocos` (`docs/FORMATO_BASE_MD.md`) |
+| Base | Comando `carregar-base`: cabeçalho YAML validado, texto dividido em blocos com `seção` e `linha`, gravados em `documentos` e `blocos` (`docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`) |
 | Integração com LLM | SDK oficial da Anthropic, isolado num módulo cliente com erros tipados, novas tentativas em falhas temporárias e registro de cada requisição. Sem agente nem framework intermediário. |
 | Identificação de perguntas com IA | Só quando a regra da coluna "Pergunta" falha: modelo pequeno (candidato: Haiku 5.5) com saída estruturada `{linha, texto}`, seguido de validação literal |
 | Geração | Documentos da base como documentos de conteúdo em blocos, com citações ativadas e cache; perguntas em lotes |
@@ -149,7 +149,7 @@ Ver etapa A1.
 
 ### A4. Carga da base
 - Migração do esquema do banco para `documentos` e `blocos` (PGlite).
-- Comando `carregar-base`: validação do cabeçalho, divisão em blocos com seção e linha, gravação, recarga com hash, órfãos, resumo e código de saída (cenários 7, 8, 9 e 39, e os 16 cenários de `docs/FORMATO_BASE_MD.md`).
+- Comando `carregar-base`: validação do cabeçalho, divisão em blocos com seção e linha, gravação, recarga com hash, órfãos, resumo e código de saída (cenários 7, 8, 9 e 39, e os 16 cenários de `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`).
 - Ativar e desativar documento no banco (cenário 40, parte do banco).
 - **Verificação:** testes dos cenários 7 a 9, 39 e 40 passando; carregar a base sintética e conferir o resumo, incluindo os arquivos inválidos recusados com o motivo.
 
@@ -247,7 +247,7 @@ Ver etapa A1.
 
 ## Fase D: publicação compartilhada
 
-Só começa com A, B e C aceitas e uma taxa de aceitação medida. Usa as etapas 0 a 8 de `docs/mvp-proposta-1/PLAN.md`, com estas adaptações:
+Só começa com A, B e C aceitas e uma taxa de aceitação medida. Nesse momento, e somente se for pedido expressamente, consulta-se o material de referência em `docs/referencia/mvp-proposta-1/` (etapas 0 a 8 do `PLAN.md` dele), com estas adaptações:
 
 | Item | Adaptação |
 |---|---|
@@ -256,7 +256,7 @@ Só começa com A, B e C aceitas e uma taxa de aceitação medida. Usa as etapas
 | Arquivos das RFPs | Trocar o módulo de armazenamento para o Supabase Storage |
 | Login e sessão | Supabase Auth para conferir a senha e sessão própria do backend; limite de tentativas; HTTPS, cookie e CORS |
 | Pessoa que age | Sai da lista de configuração e passa a vir da sessão; remover "Trocar usuário" do front |
-| Papéis | Bloqueio do Revisor para aprovar e exportar (cenários 37 e 44 de `docs/mvp-proposta-1/SPEC.md`) entra junto com o login |
+| Papéis | Bloqueio do Revisor para aprovar e exportar (cenários 37 e 44 de `docs/referencia/mvp-proposta-1/SPEC.md`) entra junto com o login |
 | Retomada após reinício | Passa a retomar do último lote gravado (cenário 54), porque os planos gratuitos "dormem" |
 | Base | A carga continua por comando, agora apontando para o banco compartilhado |
 
@@ -299,4 +299,4 @@ Uma etapa só é concluída quando:
 ## Fora deste plano
 
 - Tudo o que está em "Fora de escopo" no SPEC.
-- O detalhamento da fase D, que vem de `docs/mvp-proposta-1/` e é escrito quando ela começar.
+- O detalhamento da fase D, que vem de `docs/referencia/mvp-proposta-1/` e é escrito quando ela começar.
