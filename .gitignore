@@ -1,2 +1,7 @@
 node_modules
 dist
+.claude/
+
+# Backend: segredos e dados locais (cenários 27 e 28 de docs/mvp-resposta-rfp/SPEC.md)
+.env
+dados/
