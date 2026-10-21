@@ -98,7 +98,7 @@ Verificação feita em 21/10/2026, na máquina local de desenvolvimento.
 - **When** a planilha é enviada
 - **Then** é criada uma tarefa com um item para cada célula preenchida abaixo desse cabeçalho, na mesma coluna e na ordem da planilha
 - **And** cada item tem em `q` o texto exato da célula e guarda a aba e o número da linha de origem
-- **And** quando mais de uma aba tem cabeçalho aceito, vale a primeira aba visível, na ordem da planilha
+- **And** quando mais de uma aba tem cabeçalho aceito, vale a primeira aba visível, na ordem da planilha, que tenha ao menos uma pergunta abaixo do cabeçalho; uma aba com o cabeçalho e sem perguntas (uma legenda, por exemplo) é pulada
 - **And** nenhuma chamada à IA é feita para identificar as perguntas
 - **Nota:** os nomes aceitos ficam num arquivo de configuração. Lista inicial: "Pergunta", "Questão" e "Question". Abas ocultas são ignoradas.
 
@@ -106,12 +106,13 @@ Verificação feita em 21/10/2026, na máquina local de desenvolvimento.
 - **Given** uma planilha com linhas vazias, linhas com outras colunas preenchidas e a célula de pergunta vazia (por exemplo, só a referência), e títulos de seção em células mescladas que ocupam mais de uma coluna
 - **When** a planilha é enviada
 - **Then** essas linhas não geram itens, e a contagem de itens é igual ao número de células de pergunta preenchidas e não mescladas
+- **And** uma pergunta em células mescladas na vertical gera um único item, na linha da célula principal da mesclagem
 
 #### Cenário 3: planilha sem coluna de perguntas identificável
 - **Given** uma planilha `.xlsx` sem nenhuma célula com um nome de cabeçalho aceito nas 20 primeiras linhas das abas visíveis
 - **When** a planilha é enviada
 - **Then** a identificação das perguntas é feita com IA a partir do conteúdo da planilha
-- **And** só viram itens os textos que aparecem literalmente numa célula da planilha; textos reescritos pela IA são descartados
+- **And** só viram itens os textos que aparecem literalmente numa célula da linha indicada, sem diferenciar espaços nas pontas nem espaços e quebras de linha repetidos; o texto guardado é sempre o da célula, e textos reescritos pela IA são descartados
 - **And** cada item guarda o número da linha de origem
 
 #### Cenário 4: arquivo que não é planilha `.xlsx`

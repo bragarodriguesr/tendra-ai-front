@@ -132,6 +132,41 @@ describe("Cenário 1 · coluna de perguntas identificável", () => {
   });
 });
 
+describe("Cenário 1 · abas com cabeçalho e sem perguntas", () => {
+  it("passa para a próxima aba quando a primeira tem o cabeçalho mas nenhuma pergunta", async () => {
+    const planilha = await lerPlanilha(
+      await montarPlanilha([
+        { nome: "Legenda", linhas: [["Question", "Significado"]] },
+        { nome: "Real", linhas: [["Pergunta"], ["Pergunta real?"]] },
+      ]),
+    );
+
+    expect(identificarPerguntasPorRegra(planilha, NOMES.pergunta)).toMatchObject({
+      aba: "Real",
+      linhaDoCabecalho: 1,
+      perguntas: [{ aba: "Real", linha: 2, texto: "Pergunta real?" }],
+    });
+  });
+
+  it("falha sem chamar a IA quando todas as abas com cabeçalho estão sem perguntas", async () => {
+    const planilha = await lerPlanilha(
+      await montarPlanilha([
+        { nome: "A", linhas: [["Pergunta"]] },
+        { nome: "B", linhas: [["Question"]] },
+      ]),
+    );
+
+    await expect(identificarPerguntas(planilha, { nomes: NOMES, identificadorComIA: semIA })).rejects.toMatchObject({
+      motivo: "sem-perguntas",
+    });
+  });
+
+  it("devolve null quando nenhuma aba tem o cabeçalho", async () => {
+    const planilha = await lerPlanilha(await montarPlanilha([{ nome: "A", linhas: [["Item"], ["Texto?"]] }]));
+    expect(identificarPerguntasPorRegra(planilha, NOMES.pergunta)).toBeNull();
+  });
+});
+
 describe("Cenário 2 · linhas vazias, linhas sem pergunta e títulos de seção", () => {
   it("ignora linhas vazias, linhas só com referência e títulos mesclados", async () => {
     const planilha = await lerPlanilha(
@@ -156,6 +191,39 @@ describe("Cenário 2 · linhas vazias, linhas sem pergunta e títulos de seção
       { aba: "RFP", linha: 3, texto: "Possui ISO 27001?" },
       { aba: "RFP", linha: 7, texto: "Qual é o RPO?" },
     ]);
+  });
+});
+
+describe("Cenário 2 · células mescladas na coluna de perguntas", () => {
+  it("não duplica a pergunta mesclada na vertical", async () => {
+    const planilha = await lerPlanilha(
+      await montarPlanilha([
+        {
+          nome: "RFP",
+          linhas: [["Pergunta", "Resposta"], ["Pergunta longa em três linhas?", null], [null, null], [null, null], ["Outra?", null]],
+          mesclagens: ["A2:A4"],
+        },
+      ]),
+    );
+
+    expect(perguntasPorRegra(planilha)).toEqual([
+      { aba: "RFP", linha: 2, texto: "Pergunta longa em três linhas?" },
+      { aba: "RFP", linha: 5, texto: "Outra?" },
+    ]);
+  });
+
+  it("continua ignorando o título de seção mesclado na horizontal", async () => {
+    const planilha = await lerPlanilha(
+      await montarPlanilha([
+        {
+          nome: "RFP",
+          linhas: [["Pergunta", "Resposta", "Nota"], ["SEÇÃO 1", null, null], ["Possui ISO 27001?", null, null]],
+          mesclagens: ["A2:C2"],
+        },
+      ]),
+    );
+
+    expect(perguntasPorRegra(planilha)).toEqual([{ aba: "RFP", linha: 3, texto: "Possui ISO 27001?" }]);
   });
 });
 
@@ -193,9 +261,37 @@ describe("Cenário 3 · planilha sem coluna de perguntas identificável", () => 
     const planilha = await lerPlanilha(await conteudo());
     const perguntas = await identificarPerguntasComIA(planilha, async () => [
       { aba: "Questionário", linha: 2, texto: "possui iso 27001?" },
-      { aba: "Questionário", linha: 3, texto: "Qual é o RPO? " },
+      { aba: "Questionário", linha: 3, texto: "Qual o RPO?" },
+      { aba: "Questionário", linha: 3, texto: "Qual é o RPO? Detalhe." },
     ]);
     expect(perguntas).toEqual([]);
+  });
+
+  it("aceita o texto devolvido sem os espaços das pontas e guarda o texto exato da célula", async () => {
+    const planilha = await lerPlanilha(
+      await montarPlanilha([
+        { nome: "Q", linhas: [["Item", "Descrição"], ["1", "Descreva as mensagens.  "], ["2", "  Qual é o RPO?"]] },
+      ]),
+    );
+    const perguntas = await identificarPerguntasComIA(planilha, async () => [
+      { aba: "Q", linha: 2, texto: "Descreva as mensagens." },
+      { aba: "Q", linha: 2, texto: "Descreva as mensagens.  " },
+      { aba: "Q", linha: 3, texto: "Qual é o RPO?" },
+    ]);
+    expect(perguntas).toEqual([
+      { aba: "Q", linha: 2, texto: "Descreva as mensagens.  " },
+      { aba: "Q", linha: 3, texto: "  Qual é o RPO?" },
+    ]);
+  });
+
+  it("aceita o texto devolvido com quebras de linha e espaços repetidos reduzidos a um espaço", async () => {
+    const planilha = await lerPlanilha(
+      await montarPlanilha([{ nome: "Q", linhas: [["Item", "Descrição"], ["1", "Descreva o plano\nde continuidade   e o RTO."]] }]),
+    );
+    const perguntas = await identificarPerguntasComIA(planilha, async () => [
+      { aba: "Q", linha: 2, texto: "Descreva o plano de continuidade e o RTO." },
+    ]);
+    expect(perguntas).toEqual([{ aba: "Q", linha: 2, texto: "Descreva o plano\nde continuidade   e o RTO." }]);
   });
 });
 
