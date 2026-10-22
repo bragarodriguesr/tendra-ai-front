@@ -7,7 +7,7 @@ constitution: 1.0.0
 
 # Plano de execução: backend do MVP, da prova da IA à publicação compartilhada
 
-*Proposta de 21/10/2026, reescrita em 21/10/2026 para combinar este caminho (a IA primeiro, local) com a revisão persistida e a métrica de aceitação de `docs/referencia/mvp-proposta-1/` e, no fim, com o login e a hospedagem daquela proposta. Pela regra do SDD, o plano deriva de um spec aprovado. O spec ainda está em `draft`, com bloqueios abertos; este plano deve ser conferido contra ele quando for aprovado.*
+*Proposta de 21/10/2026, revisada em 22/10/2026 para a carga da base pela tela (etapa A4), reescrita em 21/10/2026 para combinar este caminho (a IA primeiro, local) com a revisão persistida e a métrica de aceitação de `docs/referencia/mvp-proposta-1/` e, no fim, com o login e a hospedagem daquela proposta. Pela regra do SDD, o plano deriva de um spec aprovado. O spec ainda está em `draft`, com bloqueios abertos; este plano deve ser conferido contra ele quando for aprovado.*
 
 ## Objetivo
 
@@ -16,9 +16,9 @@ Chegar a um backend que **prove a hipótese central do MVP** (a pessoa aceita as
 | Fase | Entrega | Cenários do SPEC |
 |---|---|---|
 | **0. Pré-requisitos** | Chave de testes da API testada; base `.md`, planilha de RFP e gabarito sintéticos | Remove os dois bloqueios do SPEC |
-| **A. Prova da IA** | Comandos `carregar-base`, `responder` e `avaliar`: da planilha e da base aos itens e à planilha preenchida, com relatório contra o gabarito | 1 a 15, 17 a 22, 24 a 27, 29, 31, 33 a 40 |
+| **A. Prova da IA** | Carga da base pela tela Base de conhecimento (servidor local mínimo) e pelo comando `carregar-base`; comandos `responder` e `avaliar`: da planilha e da base aos itens e à planilha preenchida, com relatório contra o gabarito | 1 a 15, 17 a 22, 24 a 27, 29, 31, 33 a 40 |
 | **B. Backend local com revisão** | As etapas atrás de rotas HTTP, com tarefas, progresso, revisão persistida e relatório de aceitação | 4, 16, 17, 23, 24, 28, 30, 31, 32, 40 a 49 |
-| **C. Front conectado** | Nova RFP com arquivo real, progresso, Base em leitura e revisão com ações gravadas | 6, 16, 23, 24, 33, 40, 42 a 46 |
+| **C. Front conectado** | Nova RFP com arquivo real, progresso e revisão com ações gravadas (a Base já sai conectada da A4) | 6, 16, 23, 24, 33, 40, 42 a 46 |
 | **D. Publicação compartilhada** | Login, sessão, hospedagem e segurança de exposição (fase 1 de `docs/referencia/mvp-proposta-1/PLAN.md`) | Cenários de `docs/referencia/mvp-proposta-1/SPEC.md`; spec próprio quando a fase começar |
 
 A fase A concentra o risco técnico. Se a avaliação não atingir os limites do SPEC, o ajuste acontece **antes** de investir em servidor, tela ou hospedagem. A fase D só começa depois de A, B e C aceitas e de haver taxa de aceitação medida.
@@ -32,8 +32,8 @@ Cada etapa abaixo é uma mudança pequena, com objetivo claro, testes próprios 
 | P1 | Chave de testes da API definida e testada | Fase A | Variável de ambiente local. O primeiro teste é a etapa A1. |
 | P2 | Base `.md`, planilha de RFP sintética e gabarito | Fase A, etapa A4 em diante | Conforme a seção 5 de `ARQUITETURA_MAPPING.md` e `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`. |
 | P3 | Método de medir a fidelidade (limite de 90% já decidido) | Etapa A10 | Revisão humana de todas as respostas do gabarito (cerca de 30), com lista de conferência. |
-| P4 | Motor do banco local | Etapa A4 | PGlite (Postgres embutido), porque a fase D usa o Postgres do Supabase. |
-| P5 | Interface do comando de carga (nome e opções) | Etapa A4 | `carregar-base <pasta>` com `--enviado-por`; confirmar na etapa. |
+| P4 | Motor do banco local | Etapa A4 | **Decidido na A4:** PGlite 0.5.8 (Postgres embutido), porque a fase D usa o Postgres do Supabase. |
+| P5 | Interface da carga (nome e opções) | Etapa A4 | **Decidido na A4 (revisto em 22/10/2026):** a carga principal é pela tela Base de conhecimento, com "Subir documentos" abrindo o seletor de arquivos `.md` do computador. O comando `npm run carregar-base -- <pasta> [--enviado-por <nome>]` continua, com a mesma carga, e termina com código 1 quando algum arquivo é recusado. A identidade do documento passou a ser o nome do arquivo. |
 | P6 | Formato das citações enviado ao Claude: blocos ou texto corrido | Etapa A5 | Blocos, que devolvem o índice do bloco já ligado a `seção · linha`. Validar com uma execução real. |
 | P7 | Fluxo de revisão de código e proteção da `main` exigindo a integração contínua | Primeiro commit de código | Branch + pull request revisado por outra pessoa, com CI obrigatória. |
 | P8 | Modelo da geração e tamanho do lote | Fim da fase A | Decididos pela etapa A10, com dados. |
@@ -45,11 +45,11 @@ Cada etapa abaixo é uma mudança pequena, com objetivo claro, testes próprios 
 
 | Tema | Proposta |
 |---|---|
-| Linguagem e estrutura | Node 24 + TypeScript, pasta `backend/` com `package.json` próprio, Fastify |
-| Banco | PGlite (Postgres embutido) em `dados/`, com query builder tipado e migrações versionadas |
+| Linguagem e estrutura | Node 24 + TypeScript, pasta `backend/` com `package.json` próprio, Fastify (5.12.5, adotado na A4 para as rotas da base) |
+| Banco | PGlite (Postgres embutido) em `dados/banco`, com SQL parametrizado num módulo de persistência e migrações versionadas em `backend/migracoes/`. O query builder tipado ficou de fora na A4 para não somar uma dependência a mais; pode entrar quando as consultas crescerem. |
 | Entrada da RFP | Só `.xlsx`: assinatura do arquivo conferida (não só a extensão), até 10 MB, nome gerado pelo backend |
 | Planilhas | `exceljs` para ler e escrever |
-| Base | Comando `carregar-base`: cabeçalho YAML validado, texto dividido em blocos com `seção` e `linha`, gravados em `documentos` e `blocos` (`docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`) |
+| Base | Envio de `.md` pela tela (rota `POST /api/base/documentos`) e comando `carregar-base`, com a mesma carga: cabeçalho YAML validado, texto dividido em blocos com `seção` e `linha`, gravados em `documentos` e `blocos`; identidade pelo nome do arquivo (`docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`). Os arquivos chegam em JSON com o conteúdo em base64, sem dependência de multipart. O banco aceita um processo por vez, com trava: o comando não roda com o servidor aberto. |
 | Integração com LLM | SDK oficial da Anthropic, isolado num módulo cliente com erros tipados, novas tentativas em falhas temporárias e registro de cada requisição. Sem agente nem framework intermediário. |
 | Identificação de perguntas com IA | Só quando a regra da coluna "Pergunta" falha: modelo pequeno (candidato: Haiku 5.5) com saída estruturada `{linha, texto}`, seguido de validação literal |
 | Geração | Documentos da base como documentos de conteúdo em blocos, com citações ativadas e cache; perguntas em lotes |
@@ -74,7 +74,7 @@ backend/
     config/                 variáveis, termos críticos e lista de pessoas (cenário 27)
     armazenamento/          leitura e gravação dos arquivos das RFPs
     documentos/             planilha (ler, validar, escrever)
-    base/                   carga dos .md: cabeçalho, blocos, resumo (comando carregar-base)
+    base/                   carga dos .md: cabeçalho, blocos, resumo (tela da Base e comando carregar-base)
     recuperacao/            buscarFontes: contexto dos documentos ativos (cenários 10, 11, 35, 40)
     ia/                     cliente da API do Claude (erros, novas tentativas, registro)
       instrucoes/           instruções versionadas enviadas ao modelo
@@ -85,8 +85,8 @@ backend/
     revisao/                editar, restaurar, aprovar, avaliar e relatório de aceitação
     observabilidade/        registro de requisições, métricas por tarefa, logs
     fluxo/                  processarTarefa: executa as etapas na ordem e grava o progresso
-    cli/                    carregar-base, responder, avaliar e aceitacao
-    http/                   servidor e rotas (fase B)
+    cli/                    servidor, carregar-base, responder, avaliar e aceitacao
+    http/                   servidor e rotas (rotas da base desde a A4; tarefas e revisão na fase B)
   config/
     termos-criticos.json
     pessoas.json            pessoas sintéticas (nome, papel)
@@ -134,6 +134,7 @@ Ver etapa A1.
 ### A1. Teste da chave
 - Definir a chave de testes em variável de ambiente local e fazer uma requisição mínima à API.
 - **Verificação:** a requisição retorna resposta. Se falhar, a implementação para até o acesso ser resolvido.
+- **Situação (22/10/2026): adiada por decisão do grupo.** A chave ainda não estava disponível no ambiente, e a implementação seguiu para a A4, que não usa a chave. A A1 precisa ser feita antes da A5, a primeira etapa que chama a API.
 
 ### A2. Esqueleto e integração contínua
 - Criar `backend/` com TypeScript, Vitest e os módulos `config`, `armazenamento` e `observabilidade`.
@@ -149,9 +150,15 @@ Ver etapa A1.
 
 ### A4. Carga da base
 - Migração do esquema do banco para `documentos` e `blocos` (PGlite).
-- Comando `carregar-base`: validação do cabeçalho, divisão em blocos com seção e linha, gravação, recarga com hash, órfãos, resumo e código de saída (cenários 7, 8, 9 e 39, e os 16 cenários de `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`).
-- Ativar e desativar documento no banco (cenário 40, parte do banco).
-- **Verificação:** testes dos cenários 7 a 9, 39 e 40 passando; carregar a base sintética e conferir o resumo, incluindo os arquivos inválidos recusados com o motivo.
+- Carga: validação do cabeçalho, divisão em blocos com seção e linha, gravação, recarga com hash, resumo (cenários 7, 8, 9 e 39, e os cenários de `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`). A identidade do documento é o nome do arquivo.
+- **Carga pela tela (decisão do grupo, 22/10/2026):** a pessoa sobe os `.md` pela tela Base de conhecimento. Por isso esta etapa antecipa uma parte das fases B e C:
+  - servidor local mínimo (`npm run servidor`, só em 127.0.0.1) com as rotas da base de B3 e o envio `POST /api/base/documentos`;
+  - no front, o proxy do Vite e `src/api.js` de C1, e a tela Base de C4: "Subir documentos" e "Importar RFP passada" abrem o seletor de arquivos do computador, o quadro "Resultado do envio" mostra o motivo de cada recusa, e a chave Ativar/Desativar grava no banco;
+  - sem o servidor, a tela avisa e mostra a lista de exemplo.
+- Comando `carregar-base`: a mesma carga sobre uma pasta, com órfãos e código de saída.
+- Ativar e desativar documento no banco e pela tela (cenário 40, partes do banco e da tela).
+- O tamanho em tokens de cada documento é uma estimativa (caracteres divididos por 4). A contagem exata pela API, usada no teto da base, entra na A5.
+- **Verificação:** testes dos cenários 7 a 9, 39 e 40 e das rotas da base passando; no navegador, subir os `.md` da base sintética e os casos de carga pela tela e conferir o resultado do envio, a lista, a desativação e a atualização; carregar a base sintética pelo comando e conferir o resumo.
 
 ### A5. Contexto, integração com o Claude e geração
 - Contexto: só documentos ativos; base vazia sem chamar a IA; teto de 25 MB e 400 mil tokens com contagem pela API (cenários 10, 11 e 35).
@@ -203,9 +210,8 @@ Ver etapa A1.
 - **Verificação:** testes de integração das rotas passando.
 
 ### B3. Rotas da base
-- `GET /api/base/documentos`: lista com título, tipo, versão, data de atualização, idade, ativo e enviado por.
-- `PATCH /api/base/documentos/:id`: ativar e desativar (cenário 40).
-- **Verificação:** testes de integração passando; documento desativado não é citado em nova tarefa.
+- **Antecipadas na A4**, junto com o envio pela tela: `GET /api/base/documentos` (nome do arquivo, título, tipo, versão, data de atualização, ativo, enviado por e data da carga; a idade é calculada na tela), `POST /api/base/documentos` (envio de `.md`) e `PATCH /api/base/documentos/:id` (ativar e desativar, cenário 40).
+- Falta nesta etapa: **Verificação** de que um documento desativado não é citado em nova tarefa, que depende da geração (A5).
 
 ### B4. Tarefa interrompida
 - Ao iniciar, marcar como falha toda tarefa que estava em `processando` (cenário 32).
@@ -226,6 +232,7 @@ Ver etapa A1.
 
 ### C1. Conexão com o backend
 - Proxy do Vite para `/api`; `src/api.js` como camada única de chamadas, com tratamento explícito de erro e enviando a pessoa que age.
+- **Parte feita na A4:** o proxy e `src/api.js` já existem para a tela da Base; esta etapa estende a camada para as tarefas e a revisão.
 - **Verificação:** o front em `npm run dev` consulta o backend.
 
 ### C2. Nova RFP
@@ -237,9 +244,10 @@ Ver etapa A1.
 - Ao terminar, carregar os itens reais na tela de revisão, todos como sugestões pendentes (cenário 33); botão para baixar a planilha preenchida.
 - **Verificação:** a jornada da planilha às respostas com fonte funciona na tela.
 
-### C4. Base em leitura
-- A tela Base lê `GET /api/base/documentos`, mantém a chave Ativar/Desativar e perde o envio de arquivo (PRD v3, F-02). Primeiros passos deixa de depender do envio.
-- **Verificação:** a lista mostra os documentos carregados pelo comando, com idade e selo de 120 dias.
+### C4. Base conectada
+- **Feita na A4:** a tela Base lê `GET /api/base/documentos`, envia `.md` pelo seletor de arquivos do computador e grava a chave Ativar/Desativar (PRD v3, F-02).
+- Falta: a área de envio de Primeiros passos usa a mesma rota, e "Criar primeira RFP" passa a depender de haver ao menos um documento ativo no banco.
+- **Verificação:** a lista mostra os documentos enviados pela tela e pelo comando, com idade e selo de 120 dias; Primeiros passos mostra os mesmos documentos.
 
 ### C5. Revisão com ações gravadas
 - Editar, restaurar, aprovar e avaliar chamam as rotas de B5; o reconhecimento de alerta continua só na tela. Sem editor em itens sem rascunho nesta versão. O seletor "Trocar usuário" passa a definir a pessoa que age.
@@ -258,7 +266,7 @@ Só começa com A, B e C aceitas e uma taxa de aceitação medida. Nesse momento
 | Pessoa que age | Sai da lista de configuração e passa a vir da sessão; remover "Trocar usuário" do front |
 | Papéis | Bloqueio do Revisor para aprovar e exportar (cenários 37 e 44 de `docs/referencia/mvp-proposta-1/SPEC.md`) entra junto com o login |
 | Retomada após reinício | Passa a retomar do último lote gravado (cenário 54), porque os planos gratuitos "dormem" |
-| Base | A carga continua por comando, agora apontando para o banco compartilhado |
+| Base | A carga continua pela tela e pelo comando, agora no banco compartilhado; a pessoa que envia passa a vir da sessão. A trava de um processo por vez some com o Postgres do Supabase. |
 
 O spec curto e o plano detalhado da fase D são escritos quando ela for começar.
 
@@ -282,7 +290,7 @@ Uma etapa só é concluída quando:
 |---|---|
 | 1 a 5, 31 | Enviar as planilhas de teste (com coluna "Pergunta", sem ela, vazia, em outro formato, corrompida e acima do limite) e conferir itens ou mensagens |
 | 6 e 29 | Abrir o registro de requisições de uma tarefa com CNPJ e contatos e procurar por eles |
-| 7 a 9, 39 | Rodar `carregar-base` com a base sintética, depois de novo sem mudança, com um arquivo alterado, um renomeado e os inválidos; conferir o resumo |
+| 7 a 9, 39 | Subir pela tela os `.md` da base sintética, de novo sem mudança, com um arquivo alterado e os inválidos; conferir o resultado do envio. Rodar `carregar-base` com a pasta e um arquivo renomeado; conferir o resumo e os órfãos |
 | 10, 11, 35, 40 | Executar com bases de teste (completa, vazia, acima do teto, com documento desativado e com `.md` não carregado) |
 | 12 a 15, 34 | Conferir as respostas da RFP sintética contra o gabarito, o caso de instrução maliciosa e a pergunta de compromisso |
 | 16, 17, 32 | Acompanhar o progresso; executar com uma chave inválida; encerrar o backend no meio de uma tarefa e reiniciar |

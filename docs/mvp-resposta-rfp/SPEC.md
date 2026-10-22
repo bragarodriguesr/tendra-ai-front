@@ -10,7 +10,7 @@ constitution: 1.0.0
 
 - **Papel deste documento:** descreve o comportamento do backend nas fases A a C do plano (`docs/mvp-resposta-rfp/PLAN.md`), com tudo rodando numa máquina local e com documentos sintéticos. A fase D (login e hospedagem compartilhada) usa os cenários de `docs/referencia/mvp-proposta-1/SPEC.md` e ganha spec próprio quando começar.
 - **Fluxo/local afetado:** o fluxo principal da Tendra.ai, de ponta a ponta:
-  1. carga da base de conhecimento, por comando, a partir de arquivos `.md`;
+  1. carga da base de conhecimento a partir de arquivos `.md`, pela tela Base de conhecimento (ou pelo comando equivalente);
   2. inclusão da planilha `.xlsx` de RFP;
   3. leitura da planilha e identificação das perguntas;
   4. busca de referências na base;
@@ -18,7 +18,7 @@ constitution: 1.0.0
   6. preenchimento das respostas sugeridas;
   7. revisão: editar, restaurar, aprovar e avaliar, com cálculo da taxa de aceitação.
 
-  No front oficial (`tendra-ai-front`, React 18 + Vite), são afetadas a tela Nova RFP (envio da planilha), a tela Base (leitura e ativar/desativar), o painel de tarefas (progresso) e a tela de revisão (respostas e ações). A arquitetura está em `docs/mvp-resposta-rfp/ARQUITETURA_MAPPING.md`.
+  No front oficial (`tendra-ai-front`, React 18 + Vite), são afetadas a tela Nova RFP (envio da planilha), a tela Base (lista, envio de `.md` e ativar/desativar), o painel de tarefas (progresso) e a tela de revisão (respostas e ações). A arquitetura está em `docs/mvp-resposta-rfp/ARQUITETURA_MAPPING.md`.
 - **Comportamento atual:** não existe backend. A tela Nova RFP não tem seletor de arquivo real, a nova tarefa sempre "identifica 12 perguntas", e as respostas e ações da revisão são fictícias e se perdem ao recarregar a página (`src/workspace/data.js` e `src/workspace/useWorkspace.js`).
 - **Comportamento esperado:**
   - a partir de uma planilha `.xlsx` de RFP e dos documentos ativos carregados na base, o sistema identifica as perguntas e gera, para cada uma, uma resposta sugerida com fontes verificáveis (documento, localização e trecho), ou indica explicitamente que a base não tem a resposta;
@@ -33,7 +33,7 @@ constitution: 1.0.0
   - `[DECISÃO PENDENTE: nome e formato dos campos do valor sugerido e dos valores permitidos no contrato com o front. A mudança de contrato precisa ser feita no backend e no front ao mesmo tempo.]`
 - **Termos:**
   - **base** é o conjunto de documentos carregados no banco e marcados como ativos; só eles são fontes autorizadas;
-  - **carga** é o comando `carregar-base`, que lê uma pasta de arquivos `.md` e grava documentos e blocos no banco. O formato do arquivo está em `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`;
+  - **carga** é a gravação de arquivos `.md` como documentos e blocos no banco. Ela acontece pela tela Base de conhecimento ("Subir documentos", com os arquivos escolhidos no computador) ou pelo comando `carregar-base`, que lê uma pasta; as duas usam as mesmas regras. A identidade do documento é o nome do arquivo. O formato do arquivo está em `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`;
   - **teto da base** é o limite de 25 MB e 400 mil tokens somados dos documentos ativos usados numa execução;
   - **pessoa que age** é uma das pessoas sintéticas da lista de configuração, enviada pelo front em cada ação de revisão (exceção E1);
   - **data e hora do backend** é o relógio da máquina onde o backend roda, nunca um valor enviado pelo navegador.
@@ -138,32 +138,33 @@ Verificação feita em 21/10/2026, na máquina local de desenvolvimento.
 
 ### Base de conhecimento
 
-O formato do arquivo e as regras de validação do cabeçalho estão em `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md` (seções 4 e 6). Os cenários abaixo cobrem o comportamento do produto; os 16 cenários daquele documento são verificados pelos mesmos testes da carga.
+O formato do arquivo e as regras de validação do cabeçalho estão em `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md` (seções 4 e 6). Os cenários abaixo cobrem o comportamento do produto; os cenários daquele documento são verificados pelos mesmos testes da carga. "Executar a carga" vale para a tela e para o comando, salvo quando o cenário diz qual.
 
 #### Cenário 7: carga de documento válido
 - **Given** um arquivo `.md` com cabeçalho válido (`titulo`, `tipo`, `atualizado_em`)
-- **When** o comando `carregar-base` é executado sobre a pasta
-- **Then** o documento é gravado no banco com título, tipo, data de atualização e versão, e o texto é dividido em blocos
-- **And** cada bloco guarda o caminho do arquivo, a seção e a linha em que começa, contada desde a primeira linha do arquivo, cabeçalho incluído
-- **And** o resumo lista o documento em "Carregados"
+- **When** a pessoa o escolhe em "Subir documentos", na tela Base, ou o comando `carregar-base` é executado sobre a pasta
+- **Then** o documento é gravado no banco com título, tipo, data de atualização, versão e quem enviou, e o texto é dividido em blocos
+- **And** cada bloco guarda o nome do arquivo, a seção e a linha em que começa, contada desde a primeira linha do arquivo, cabeçalho incluído
+- **And** o resultado do envio (ou o resumo do comando) lista o documento em "Carregados", e ele aparece na lista da tela Base
 
-#### Cenário 8: arquivo que não é `.md` na pasta
-- **Given** um arquivo de outro formato na pasta (por exemplo `.pdf`, `.docx`, `.xlsx`, `.txt` ou `.png`)
+#### Cenário 8: arquivo que não é `.md`
+- **Given** um arquivo de outro formato escolhido na tela ou presente na pasta (por exemplo `.pdf`, `.docx`, `.xlsx`, `.txt` ou `.png`)
 - **When** a carga é executada
-- **Then** o arquivo não é gravado, nunca é enviado ao provedor de IA e aparece no resumo com o motivo "formato não aceito nesta versão"
+- **Then** o arquivo não é gravado, nunca é enviado ao provedor de IA e aparece em "Ignorados" com o motivo "formato não aceito nesta versão"
 
 #### Cenário 9: `.md` com cabeçalho inválido
 - **Given** um `.md` sem cabeçalho, com campo obrigatório ausente, `tipo` fora de `documento` e `rfp-passada`, `atualizado_em` inválido ou no futuro, corpo vazio ou fora de UTF-8
 - **When** a carga é executada
-- **Then** o arquivo é recusado com a mensagem do motivo e os demais arquivos da pasta são carregados
-- **And** o comando termina com código de saída de erro
+- **Then** o arquivo é recusado com a mensagem do motivo, mostrada na tela em "Resultado do envio", e os demais arquivos são carregados
+- **And** o comando, quando usado, termina com código de saída de erro
 
 #### Cenário 39: recarga da base
 - **Given** documentos já carregados
 - **When** a carga é executada de novo
-- **Then** um arquivo com o mesmo caminho e conteúdo igual aparece em "Sem mudança" e não é regravado
-- **And** um arquivo com o mesmo caminho e conteúdo alterado substitui a versão anterior, mantendo o estado ativo ou inativo, e aparece em "Atualizados"
-- **And** um documento do banco sem arquivo na pasta (por exemplo, por renomeação) aparece em "Órfãos" e não é apagado
+- **Then** um arquivo com o mesmo nome e conteúdo igual aparece em "Sem mudança" e não é regravado
+- **And** um arquivo com o mesmo nome e conteúdo alterado substitui a versão anterior, mantendo o estado ativo ou inativo, e aparece em "Atualizados", venha ele da tela ou do comando
+- **And** dois arquivos com o mesmo nome na mesma carga são recusados, e o documento já gravado com esse nome não muda
+- **And** no comando, um documento do banco sem arquivo de mesmo nome na pasta (por exemplo, por renomeação) aparece em "Órfãos" e não é apagado
 
 #### Cenário 40: ativar e desativar documento
 - **Given** um documento da base e um pedido de desativação (pela tela Base ou pela rota correspondente)
@@ -295,7 +296,7 @@ O formato do arquivo e as regras de validação do cabeçalho estão em `docs/mv
 - **And** a planilha não é gerada para tarefas em `processando` ou `falha`
 
 #### Cenário 25: execução pelo terminal
-- **Given** uma planilha de RFP e uma base já carregada pelo comando `carregar-base`
+- **Given** uma planilha de RFP e uma base já carregada (pela tela ou pelo comando `carregar-base`)
 - **When** o comando `responder` é executado com o caminho da planilha
 - **Then** são gerados um arquivo JSON com os itens no formato de `src/workspace/data.js` e a planilha preenchida do cenário 24, sem iniciar servidor nem front
 - **And** os itens são equivalentes aos que o backend produziria para a mesma planilha e a mesma base
@@ -488,7 +489,7 @@ Exigidos pela constitution (IV). São medidos pelo comando de avaliação (cená
 ## Fora de escopo
 
 - Login, sessão, hospedagem, banco gerenciado, armazenamento de arquivos em nuvem e qualquer acesso pela rede: **fase D**, com cenários de `docs/referencia/mvp-proposta-1/SPEC.md` (1 a 4, 37, 44, 50 a 52 e 54). Os cuidados de preparação estão na seção 8 de `ARQUITETURA_MAPPING.md`.
-- Upload da base pela interface e qualquer formato de base que não seja `.md`. A base entra por comando.
+- Qualquer formato de base que não seja `.md`, conversão de outros formatos e exclusão de documentos. A base entra pela tela ou pelo comando, sempre em `.md`.
 - RFP em formato diferente de `.xlsx`.
 - **Tradução das respostas para o idioma da RFP ou para outros idiomas.** No MVP, as respostas são sempre escritas em português (cenário 50). A tradução fica registrada como evolução futura do produto.
 - Reconhecimento de alerta persistido, escolha de fonte em conflito, resposta manual em item sem fonte, "marcar como revisado" e bloqueio de aprovação por papel (cenários 31 a 35 e 37 de `docs/referencia/mvp-proposta-1/SPEC.md`). Nesta versão, a tela não oferece o editor para itens sem rascunho.

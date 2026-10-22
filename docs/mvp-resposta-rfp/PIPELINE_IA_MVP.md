@@ -1,6 +1,6 @@
 # Pipeline de IA do MVP · Tendra.ai
 
-*Proposta de 21/10/2026. Status: `draft`. Complementa a seção 20 do `PRD_Front-end_Tendra.ai_MVP_v3.md`, `docs/mvp-resposta-rfp/` e `docs/referencia/mvp-proposta-1/`.*
+*Proposta de 21/10/2026; quadro 1 revisto em 22/10/2026 (carga pela tela). Status: `draft`. Complementa a seção 20 do `PRD_Front-end_Tendra.ai_MVP_v3.md`, `docs/mvp-resposta-rfp/` e `docs/referencia/mvp-proposta-1/`.*
 
 Versão editável do diagrama, no board do projeto: [Miro](https://miro.com/app/board/uXjVHg0R4nQ=/?moveToWidget=3458764688008238401).
 
@@ -10,7 +10,7 @@ O pipeline cobre a jornada completa: da base de conhecimento e da planilha de RF
 
 - **Fluxo fixo em código, sem agente.** O backend executa as etapas em ordem e chama o Claude só onde há linguagem natural a tratar.
 - **Entrada da RFP: somente `.xlsx`.**
-- **Base de conhecimento: arquivos `.md` carregados pela equipe, por comando**, direto no banco. Sem upload pela interface no MVP.
+- **Base de conhecimento: arquivos `.md` enviados pela tela Base de conhecimento** ("Subir documentos", com o seletor de arquivos do computador), direto no banco. O comando `carregar-base` faz a mesma carga a partir de uma pasta. Outros formatos ficam fora do MVP.
 - **Sem busca vetorial.** A base inteira vai ao Claude, que encontra e cita os trechos. A recuperação fica atrás de um módulo próprio (`buscarFontes`), trocável depois.
 - **A IA sugere, a pessoa decide.** Nada é aprovado nem exportado pela IA.
 - **Limites de qualidade:** relevância 80% e fidelidade 90%.
@@ -32,11 +32,11 @@ Acontece antes das RFPs e a cada novo documento. Nenhuma chamada de IA. O format
 ```mermaid
 flowchart LR
     A1["1 · Escrever os documentos em .md<br/>Pessoa · equipe<br/>Cabeçalho: titulo, tipo, atualizado_em, versao"]:::pessoa
-    A2["2 · Rodar o comando de carga<br/>Sistema · linha de comando<br/>Confere o cabeçalho; mesmo caminho substitui"]:::sistema
-    A3["3 · Dividir em blocos<br/>Sistema · sem IA<br/>Localização: arquivo, seção, linha"]:::sistema
+    A2["2 · Subir os .md pela tela da Base<br/>Pessoa · seletor de arquivos do computador<br/>Ou o comando carregar-base, com uma pasta"]:::pessoa
+    A3["3 · Validar e dividir em blocos<br/>Sistema · sem IA<br/>Confere o cabeçalho; mesmo nome substitui<br/>Localização: arquivo, seção, linha"]:::sistema
     A4[("4 · Gravar no banco<br/>Blocos, data, versão, tipo, tokens")]:::dados
-    A5["5 · Conferir na tela da Base<br/>Pessoa · só leitura<br/>Idade em dias e selo de 120 dias"]:::pessoa
-    X1["Fora do MVP<br/>Upload pela interface e outros formatos<br/>Arquivo inválido é recusado com o motivo"]:::excecao
+    A5["5 · Conferir na tela da Base<br/>Pessoa · resultado do envio e lista<br/>Idade em dias, selo de 120 dias, ativar/desativar"]:::pessoa
+    X1["Arquivo inválido ou outro formato<br/>Recusado ou ignorado, com o motivo na tela<br/>Conversão de outros formatos: fora do MVP"]:::excecao
     X2["Índice de busca: fora do MVP<br/>Sem embeddings; a base inteira vai ao Claude<br/>Módulo de busca trocável depois"]:::excecao
 
     A1 --> A2 --> A3 --> A4 --> A5
@@ -164,5 +164,5 @@ As métricas do piloto vêm do registro de eventos do quadro 4 e não dependem d
 
 - Método de medir a fidelidade: revisão humana de uma amostra ou avaliador automático com modelo. Proposta: começar pela revisão humana da amostra do gabarito.
 - Modelo da redação (Sonnet 5.5 ou Opus 5.5) e tamanho do lote: decididos pela avaliação contra o gabarito.
-- Interface do comando de carga (nome e opções). O formato dos arquivos `.md` está definido em [`FORMATO_BASE_MD.md`](FORMATO_BASE_MD.md).
+- ~~Interface da carga~~: decidida na etapa A4 e revista em 22/10/2026. A carga é pela tela Base de conhecimento ("Subir documentos"), e o comando `npm run carregar-base -- <pasta> [--enviado-por <nome>]` continua como alternativa. O formato dos arquivos `.md` está em `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`.
 - A segunda chamada de IA (conflito) existe porque a API não combina citações com saída estruturada na mesma chamada; o teste prático da primeira etapa pode eliminá-la.
