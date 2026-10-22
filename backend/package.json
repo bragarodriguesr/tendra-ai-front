@@ -9,11 +9,13 @@
   "scripts": {
     "verificar-config": "node --env-file-if-exists=.env src/cli/verificarConfig.ts",
     "carregar-base": "node --env-file-if-exists=.env src/cli/carregarBase.ts",
+    "gerar-amostra": "node --env-file-if-exists=.env src/cli/gerarAmostra.ts",
     "servidor": "node --env-file-if-exists=.env src/cli/servidor.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "0.132.0",
     "@electric-sql/pglite": "0.5.8",
     "exceljs": "4.4.0",
     "fastify": "5.12.5",

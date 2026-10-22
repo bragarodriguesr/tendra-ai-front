@@ -34,9 +34,10 @@ Cada etapa abaixo é uma mudança pequena, com objetivo claro, testes próprios 
 | P3 | Método de medir a fidelidade (limite de 90% já decidido) | Etapa A10 | Revisão humana de todas as respostas do gabarito (cerca de 30), com lista de conferência. |
 | P4 | Motor do banco local | Etapa A4 | **Decidido na A4:** PGlite 0.5.8 (Postgres embutido), porque a fase D usa o Postgres do Supabase. |
 | P5 | Interface da carga (nome e opções) | Etapa A4 | **Decidido na A4 (revisto em 22/10/2026):** a carga principal é pela tela Base de conhecimento, com "Subir documentos" abrindo o seletor de arquivos `.md` do computador. O comando `npm run carregar-base -- <pasta> [--enviado-por <nome>]` continua, com a mesma carga, e termina com código 1 quando algum arquivo é recusado. A identidade do documento passou a ser o nome do arquivo. |
-| P6 | Formato das citações enviado ao Claude: blocos ou texto corrido | Etapa A5 | Blocos, que devolvem o índice do bloco já ligado a `seção · linha`. Validar com uma execução real. |
+| P6 | Formato das citações enviado ao Claude: blocos ou texto corrido | Etapa A5 | **Implementado na A5 com blocos** (documentos com conteúdo em blocos, citações `content_block_location`). Falta validar com uma execução real (`npm run gerar-amostra`), que depende da A1. |
 | P7 | Fluxo de revisão de código e proteção da `main` exigindo a integração contínua | Primeiro commit de código | Branch + pull request revisado por outra pessoa, com CI obrigatória. |
-| P8 | Modelo da geração e tamanho do lote | Fim da fase A | Decididos pela etapa A10, com dados. |
+| P8 | Modelo da geração e tamanho do lote | Fim da fase A | Decididos pela etapa A10, com dados. Até lá, valores iniciais configuráveis: Opus 5.5 com esforço `medium`, lote de 10 (`TENDRA_MODELO`, `TENDRA_ESFORCO`, `TENDRA_TAMANHO_LOTE`). |
+| P12 | Valor sugerido nas RFPs com valores permitidos (cenários 50 a 56 do SPEC, acrescentados depois deste plano) | Etapa A6 ou etapa própria | A A5 já gera em português (cenário 50). O valor sugerido (cenários 53 e 54) precisa de uma decisão de formato: o modelo não combina citações com saída estruturada. Sugestão: uma linha `Valor: <valor>` depois do marcador, conferida contra a lista. |
 | P9 | Método de cálculo da porcentagem de texto alterado | Etapa B5 | Diferença por palavras entre `orig` e o texto aprovado. |
 | P10 | Simplificação da definição de pronto e dos tipos de teste (ver as seções correspondentes) | Primeiro pull request | Aprovar a versão deste plano ou manter a constitution como está. |
 | P11 | Hospedagem do front (Vercel em avaliação) | Fase D | Decidir antes da fase D. |
@@ -50,7 +51,7 @@ Cada etapa abaixo é uma mudança pequena, com objetivo claro, testes próprios 
 | Entrada da RFP | Só `.xlsx`: assinatura do arquivo conferida (não só a extensão), até 10 MB, nome gerado pelo backend |
 | Planilhas | `exceljs` para ler e escrever |
 | Base | Envio de `.md` pela tela (rota `POST /api/base/documentos`) e comando `carregar-base`, com a mesma carga: cabeçalho YAML validado, texto dividido em blocos com `seção` e `linha`, gravados em `documentos` e `blocos`; identidade pelo nome do arquivo (`docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`). Os arquivos chegam em JSON com o conteúdo em base64, sem dependência de multipart. O banco aceita um processo por vez, com trava: o comando não roda com o servidor aberto. |
-| Integração com LLM | SDK oficial da Anthropic, isolado num módulo cliente com erros tipados, novas tentativas em falhas temporárias e registro de cada requisição. Sem agente nem framework intermediário. |
+| Integração com LLM | SDK oficial da Anthropic (`@anthropic-ai/sdk` 0.132.0), isolado num módulo cliente com erros tipados, novas tentativas em falhas temporárias (3, feitas pelo SDK) e registro de cada requisição. Geração por streaming, com o fallback do servidor para recusas indevidas (`fallbacks: "default"`). Sem agente nem framework intermediário. |
 | Identificação de perguntas com IA | Só quando a regra da coluna "Pergunta" falha: modelo pequeno (candidato: Haiku 5.5) com saída estruturada `{linha, texto}`, seguido de validação literal |
 | Geração | Documentos da base como documentos de conteúdo em blocos, com citações ativadas e cache; perguntas em lotes |
 | Separar as respostas de um lote | Marcador fixo no início de cada resposta (por exemplo `[P12]`). A API não combina citações com saída estruturada na mesma chamada. **Risco a validar na etapa A5**; se falhar, uma pergunta por chamada, mantendo o cache da base. |
@@ -167,6 +168,11 @@ Ver etapa A1.
 - Geração com documentos em blocos (P6), citações e cache; perguntas em lotes, separadas por marcadores.
 - Gravar respostas reais da API como arquivos de teste.
 - **Verificação:** testes passando; uma execução real com 3 a 5 perguntas sintéticas confirma que a citação devolve o bloco certo e que o formato com marcadores funciona. Se algum dos dois falhar, adotar a alternativa (texto corrido com posição de caracteres; uma pergunta por chamada).
+- **Situação (22/10/2026): implementada com a API simulada, por decisão do grupo, porque a chave ainda não está disponível.**
+  - Feito: `recuperacao/buscarFontes.ts` (cenários 10, 11, 35 e 40), `ia/cliente.ts` (cenários 17 e 29), instruções `geracao-v1` e `identificacao-v1` em `ia/instrucoes/`, `geracao/gerarRespostas.ts` e `geracao/separarRespostas.ts` (lotes, marcadores, citações por bloco, cache no último documento), e o identificador de perguntas com Haiku 5.5 do cenário 3.
+  - Testes com a API simulada; as novas tentativas e a recusa da chave foram testadas com o SDK real contra um servidor local; o caminho completo, com streaming e citações, foi conferido contra uma API falsa local.
+  - A resposta gravada em `test/fixtures/ia/geracao-lote-pulse.simulada.json` foi montada à mão no formato da API.
+  - **Pendente, depois da A1:** rodar `npm run gerar-amostra -- ../base-sintetica/rfps/RFP-01-Rede-Varejo-Alfa.xlsx --limite 5`, conferir citações e marcadores e trocar a fixture simulada pela resposta real gravada em `dados/amostras/`. Até isso acontecer, a A5 não está concluída pela definição de pronto.
 
 ### A6. Rastreabilidade, estados e saída
 - Conferir cada trecho citado contra o bloco, traduzir a localização (`seção · linha`), preservar a relação parágrafo-fonte, remover texto sem citação válida e marcar `lowconf` e `nocontext` (cenários 12 a 14, 18, 19 e 34).

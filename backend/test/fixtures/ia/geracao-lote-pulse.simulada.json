@@ -1,0 +1,68 @@
+{
+  "_comentario": "SIMULADA. Resposta montada à mão no formato da API (Messages, documentos em blocos com citações), para os testes da A5 sem chave. Trocar por uma resposta real gravada quando a A1 for feita (PLAN.md, A5). Contexto: base/ da Pulse Benefícios carregada inteira, documentos na ordem de carga.",
+  "id": "msg_simulada_a5_lote_pulse",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-opus-5-5",
+  "content": [
+    {
+      "type": "thinking",
+      "thinking": "",
+      "signature": "simulada"
+    },
+    {
+      "type": "text",
+      "text": "[P1]\n",
+      "citations": null
+    },
+    {
+      "type": "text",
+      "text": "Os registros de acesso e de auditoria são mantidos por 12 meses em armazenamento imutável e depois eliminados de forma segura.",
+      "citations": [
+        {
+          "type": "content_block_location",
+          "cited_text": "Os registros de acesso e de auditoria são mantidos por 12 meses em armazenamento imutável. Após esse prazo, são eliminados de forma segura, salvo obrigação legal de guarda.",
+          "document_index": 12,
+          "document_title": "Norma de Registro e Monitoramento de Eventos",
+          "start_block_index": 2,
+          "end_block_index": 3,
+          "file_id": null
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "text": "\n\n[P2]\nSEM_RESPOSTA\n\n[P3]\n",
+      "citations": null
+    },
+    {
+      "type": "text",
+      "text": "Sim. A Pulse Benefícios tem certificação ISO/IEC 27001:2022 vigente até 9 de dezembro de 2028.",
+      "citations": [
+        {
+          "type": "content_block_location",
+          "cited_text": "| Campo | Valor |\n|---|---|\n| Norma | ISO/IEC 27001:2022 |\n| Certificado | PB-SGSI-0457/2025 |\n| Organismo certificador | Certificadora Meridiano (fictícia) |\n| Emissão | 10 de dezembro de 2025 |\n| Validade | 9 de dezembro de 2028 |",
+          "document_index": 2,
+          "document_title": "Prova de Certificação ISO/IEC 27001 (certificado vigente)",
+          "start_block_index": 1,
+          "end_block_index": 2,
+          "file_id": null
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "text": "\n\nA certificação é mantida com auditorias anuais.",
+      "citations": null
+    }
+  ],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "stop_details": null,
+  "usage": {
+    "input_tokens": 1240,
+    "output_tokens": 310,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 58210
+  }
+}

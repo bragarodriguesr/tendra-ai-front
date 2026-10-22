@@ -3,8 +3,23 @@ import path from "node:path";
 export const NIVEIS_DE_LOG = ["error", "warn", "info", "debug"] as const;
 export type NivelDeLog = (typeof NIVEIS_DE_LOG)[number];
 
+export const NIVEIS_DE_ESFORCO = ["low", "medium", "high", "xhigh", "max"] as const;
+export type NivelDeEsforco = (typeof NIVEIS_DE_ESFORCO)[number];
+
+/** Comportamento da IA, registrado em cada tarefa (cenário 38). Decidido na etapa A10 (P8). */
+export interface ConfiguracaoDaIa {
+  /** Modelo da geração das respostas. */
+  modelo: string;
+  /** Modelo pequeno da identificação de perguntas, quando a regra da coluna falha. */
+  modeloDeIdentificacao: string;
+  esforco: NivelDeEsforco;
+  /** Perguntas por requisição de geração. */
+  tamanhoDoLote: number;
+}
+
 export interface Configuracao {
   chaveApi: string;
+  ia: ConfiguracaoDaIa;
   pastaDados: string;
   nivelDeLog: NivelDeLog;
   /** Porta do servidor local, que só ouve em 127.0.0.1. */
@@ -19,9 +34,34 @@ export class ErroDeConfiguracao extends Error {
 const PASTA_DADOS_PADRAO = "../dados";
 const NIVEL_DE_LOG_PADRAO: NivelDeLog = "info";
 const PORTA_PADRAO = 3000;
+const MODELO_PADRAO = "claude-opus-5-5";
+const MODELO_DE_IDENTIFICACAO_PADRAO = "claude-haiku-5-5";
+const ESFORCO_PADRAO: NivelDeEsforco = "medium";
+const TAMANHO_DO_LOTE_PADRAO = 10;
+const TAMANHO_MAXIMO_DO_LOTE = 50;
 
 /** Configuração dos comandos que não chamam a IA, como a carga da base e o servidor. */
-export type ConfiguracaoSemChave = Omit<Configuracao, "chaveApi">;
+export type ConfiguracaoSemChave = Omit<Configuracao, "chaveApi" | "ia">;
+
+/** Lê as variáveis da IA e acumula os problemas encontrados. */
+function lerVariaveisDaIa(ambiente: NodeJS.ProcessEnv, problemas: string[]): ConfiguracaoDaIa {
+  const esforcoInformado = ambiente.TENDRA_ESFORCO?.trim() || ESFORCO_PADRAO;
+  const esforco = NIVEIS_DE_ESFORCO.find((nivel) => nivel === esforcoInformado);
+  if (esforco === undefined) problemas.push(`TENDRA_ESFORCO inválida. Use ${NIVEIS_DE_ESFORCO.join(", ")}.`);
+
+  const loteInformado = ambiente.TENDRA_TAMANHO_LOTE?.trim() || String(TAMANHO_DO_LOTE_PADRAO);
+  const tamanhoDoLote = Number(loteInformado);
+  if (!/^\d+$/.test(loteInformado) || tamanhoDoLote < 1 || tamanhoDoLote > TAMANHO_MAXIMO_DO_LOTE) {
+    problemas.push(`TENDRA_TAMANHO_LOTE inválida. Use um número de 1 a ${TAMANHO_MAXIMO_DO_LOTE}.`);
+  }
+
+  return {
+    modelo: ambiente.TENDRA_MODELO?.trim() || MODELO_PADRAO,
+    modeloDeIdentificacao: ambiente.TENDRA_MODELO_IDENTIFICACAO?.trim() || MODELO_DE_IDENTIFICACAO_PADRAO,
+    esforco: esforco ?? ESFORCO_PADRAO,
+    tamanhoDoLote,
+  };
+}
 
 /** Lê as variáveis comuns a todos os comandos e acumula os problemas encontrados. */
 function lerVariaveisComuns(
@@ -62,11 +102,12 @@ export function carregarConfiguracao(
   }
 
   const { pastaDados, nivelDeLog, porta } = lerVariaveisComuns(ambiente, pastaBase, problemas);
+  const ia = lerVariaveisDaIa(ambiente, problemas);
   if (problemas.length > 0 || nivelDeLog === undefined) {
     throw new ErroDeConfiguracao(problemas.join("\n"));
   }
 
-  return { chaveApi, pastaDados, nivelDeLog, porta };
+  return { chaveApi, ia, pastaDados, nivelDeLog, porta };
 }
 
 /**
