@@ -401,8 +401,9 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
       /** Lê os itens de uma tarefa pronta e guarda em `store`. Devolve false se não conseguiu. */
       async loadItems(id) {
         try {
-          const t = api.serverTask(id), { itens } = await listarItensDaTarefa(id);
-          const items = itens.map((i) => paraItemDaTela(i, t ? t.total : itens.length));
+          // O total vem da própria lista: a tarefa guardada na tela pode ainda ser a recém-criada, com total 0.
+          const { itens } = await listarItensDaTarefa(id);
+          const items = itens.map((i) => paraItemDaTela(i, itens.length));
           setState((s) => (s.itemsTask === id ? { items } : { store: { ...s.store, [id]: items } }));
           api.loadFeedback(id);
           return true;
