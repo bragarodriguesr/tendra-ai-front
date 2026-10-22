@@ -231,7 +231,7 @@ Sem eles o fluxo não pode ser testado nem avaliado.
 | 2 | Método de medir a fidelidade | Revisão humana de todas as respostas do gabarito (cerca de 30), com uma lista de conferência; avaliador automático só se o volume crescer |
 | 3 | Motor do banco local | **Decidido na A4:** PGlite (Postgres embutido), porque a fase D usa o Postgres do Supabase |
 | 4 | Interface da carga | **Decidido na A4 (revisto em 22/10/2026):** pela tela, "Subir documentos" na Base de conhecimento, com o servidor `npm run servidor`; pelo terminal, `npm run carregar-base -- <pasta> [--enviado-por <nome>]` |
-| 5 | Formato da citação enviada ao Claude (blocos ou texto corrido) | Validar na etapa A5 |
+| 5 | Formato da citação enviada ao Claude (blocos ou texto corrido) | Implementado com blocos na A5 (API simulada); validar com a execução real `npm run gerar-amostra` depois da A1 |
 | 6 | Simplificação da definição de pronto e dos tipos de teste | Ver o `PLAN.md`; precisa de aprovação, porque a constitution não está versionada no repositório |
 | 7 | Hospedagem do front (Vercel em avaliação) | Decidir antes da fase D |
 | 8 | Fluxo de revisão de código e proteção da `main` exigindo a integração contínua | Branch + pull request com CI obrigatória |

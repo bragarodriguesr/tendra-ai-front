@@ -55,6 +55,37 @@ describe("Cenário 27 · configuração do backend", () => {
   });
 });
 
+describe("Cenário 38 · configuração da IA", () => {
+  it("usa os padrões: Opus 5.5 na geração, Haiku 5.5 na identificação, esforço medium e lote de 10", () => {
+    expect(carregarConfiguracao({ ANTHROPIC_API_KEY: CHAVE_FALSA }, PASTA_BASE).ia).toEqual({
+      modelo: "claude-opus-5-5",
+      modeloDeIdentificacao: "claude-haiku-5-5",
+      esforco: "medium",
+      tamanhoDoLote: 10,
+    });
+  });
+
+  it("lê modelo, esforço e lote das variáveis de ambiente", () => {
+    const { ia } = carregarConfiguracao(
+      {
+        ANTHROPIC_API_KEY: CHAVE_FALSA,
+        TENDRA_MODELO: "claude-sonnet-5-5",
+        TENDRA_MODELO_IDENTIFICACAO: "claude-haiku-5-5",
+        TENDRA_ESFORCO: "high",
+        TENDRA_TAMANHO_LOTE: "5",
+      },
+      PASTA_BASE,
+    );
+    expect(ia).toEqual({ modelo: "claude-sonnet-5-5", modeloDeIdentificacao: "claude-haiku-5-5", esforco: "high", tamanhoDoLote: 5 });
+  });
+
+  it("recusa esforço e tamanho de lote inválidos", () => {
+    expect(() => carregarConfiguracao({ ANTHROPIC_API_KEY: CHAVE_FALSA, TENDRA_ESFORCO: "alto" }, PASTA_BASE)).toThrow(/TENDRA_ESFORCO/);
+    expect(() => carregarConfiguracao({ ANTHROPIC_API_KEY: CHAVE_FALSA, TENDRA_TAMANHO_LOTE: "0" }, PASTA_BASE)).toThrow(/TENDRA_TAMANHO_LOTE/);
+    expect(() => carregarConfiguracao({ ANTHROPIC_API_KEY: CHAVE_FALSA, TENDRA_TAMANHO_LOTE: "51" }, PASTA_BASE)).toThrow(/TENDRA_TAMANHO_LOTE/);
+  });
+});
+
 describe("Configuração dos comandos que não chamam a IA", () => {
   it("não exige ANTHROPIC_API_KEY e aplica os mesmos padrões", () => {
     const configuracao = carregarConfiguracaoSemChave({}, PASTA_BASE);
