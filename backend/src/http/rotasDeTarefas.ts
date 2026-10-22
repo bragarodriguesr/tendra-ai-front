@@ -1,5 +1,6 @@
 import path from "node:path";
 import type { FastifyInstance } from "fastify";
+import type { Pessoa } from "../config/pessoas.ts";
 import { ErroDePlanilha, lerPlanilha, validarArquivoDePlanilha } from "../documentos/planilha.ts";
 import { criarTarefaComPlanilha, executarTarefa, type AmbienteDaTarefa } from "../fluxo/executarTarefa.ts";
 import { ErroDaRota } from "./erros.ts";
@@ -37,6 +38,8 @@ interface CorpoDaTarefa {
 }
 
 export interface OpcoesDasTarefas extends AmbienteDaTarefa {
+  /** Pessoas que podem agir na revisão (config/pessoas.json, exceção E1). */
+  pessoas: Pessoa[];
   /** Chamado quando o processamento de fundo termina (usado nos testes). */
   aoTerminarTarefa?: (id: string) => void;
 }

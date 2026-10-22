@@ -2,6 +2,7 @@ import path from "node:path";
 import { criarArmazenamento } from "../armazenamento/armazenamento.ts";
 import { carregarCabecalhos } from "../config/cabecalhos.ts";
 import { carregarConfiguracaoDoServidor, ErroDeConfiguracao } from "../config/config.ts";
+import { carregarPessoas } from "../config/pessoas.ts";
 import { carregarTermosCriticos } from "../config/termosCriticos.ts";
 import { criarServidor } from "../http/servidor.ts";
 import { AVISO_DA_API_SIMULADA, criarApiSimulada } from "../ia/apiSimulada.ts";
@@ -37,6 +38,7 @@ async function executar(): Promise<void> {
       nomesDeCabecalho: await carregarCabecalhos(),
       termosCriticos: await carregarTermosCriticos(),
       precos: await carregarPrecos(),
+      pessoas: await carregarPessoas(),
       hoje: () => new Date().toISOString().slice(0, 10),
       aoFalharInesperadamente: (erro) => log.error({ erro: erro instanceof Error ? erro.name : "desconhecido" }, "Falha inesperada no processamento"),
     },

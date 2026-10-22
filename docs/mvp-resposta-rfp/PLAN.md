@@ -23,6 +23,8 @@ Chegar a um backend que **prove a hipótese central do MVP** (a pessoa aceita as
 
 > **Situação da fase A (22/10/2026):** o código das etapas A2 a A10 está pronto e testado com a API do Claude simulada. Falta a parte que exige a chave: a A1 e, depois dela, as execuções reais da A5 a A10 (`gerar-amostra`, `responder` e `avaliar` com Sonnet 5.5 e Opus 5.5, a lista de fidelidade preenchida por uma pessoa e a escolha do modelo em P8). O portão da fase A só fecha com esse relatório.
 
+> **Situação da fase B (22/10/2026):** B1 a B6 implementadas e testadas com a API do Claude simulada, por decisão do grupo enquanto a A1 está pendente. O servidor sobe com a chave ou com `TENDRA_API_SIMULADA=1` (respostas marcadas como simuladas). **Depois da A1, todo o fluxo da fase B precisa ser retestado com a API real:** processar uma RFP pela rota, acompanhar o progresso, revisar e conferir o relatório de aceitação. Pelo plano, o portão da fase A (avaliação real) continua valendo antes de a fase C ser dada como aceita.
+
 A fase A concentra o risco técnico. Se a avaliação não atingir os limites do SPEC, o ajuste acontece **antes** de investir em servidor, tela ou hospedagem. A fase D só começa depois de A, B e C aceitas e de haver taxa de aceitação medida.
 
 Cada etapa abaixo é uma mudança pequena, com objetivo claro, testes próprios e um pull request separado.
@@ -40,7 +42,7 @@ Cada etapa abaixo é uma mudança pequena, com objetivo claro, testes próprios 
 | P7 | Fluxo de revisão de código e proteção da `main` exigindo a integração contínua | Primeiro commit de código | Branch + pull request revisado por outra pessoa, com CI obrigatória. |
 | P8 | Modelo da geração e tamanho do lote | Fim da fase A | Decididos pela etapa A10, com dados. Até lá, valores iniciais configuráveis: Opus 5.5 com esforço `medium`, lote de 10 (`TENDRA_MODELO`, `TENDRA_ESFORCO`, `TENDRA_TAMANHO_LOTE`). |
 | P12 | Valor sugerido nas RFPs com valores permitidos (cenários 50 a 56 do SPEC, acrescentados depois deste plano) | Etapa A6 ou etapa própria | A A5 já gera em português (cenário 50). O valor sugerido (cenários 53 e 54) precisa de uma decisão de formato: o modelo não combina citações com saída estruturada. Sugestão: uma linha `Valor: <valor>` depois do marcador, conferida contra a lista. |
-| P9 | Método de cálculo da porcentagem de texto alterado | Etapa B5 | Diferença por palavras entre `orig` e o texto aprovado. |
+| P9 | Método de cálculo da porcentagem de texto alterado | Etapa B5 | **Decidido na B5:** diferença por palavras: palavras retiradas mais palavras acrescentadas, sobre a soma das palavras dos dois textos, pela maior subsequência comum (`revisao/diferenca.ts`). |
 | P10 | Simplificação da definição de pronto e dos tipos de teste (ver as seções correspondentes) | Primeiro pull request | Aprovar a versão deste plano ou manter a constitution como está. |
 | P11 | Hospedagem do front (Vercel em avaliação) | Fase D | Decidir antes da fase D. |
 
@@ -255,7 +257,7 @@ Ver etapa A1.
 
 ### B3. Rotas da base
 - **Antecipadas na A4**, junto com o envio pela tela: `GET /api/base/documentos` (nome do arquivo, título, tipo, versão, data de atualização, ativo, enviado por e data da carga; a idade é calculada na tela), `POST /api/base/documentos` (envio de `.md`) e `PATCH /api/base/documentos/:id` (ativar e desativar, cenário 40).
-- Falta nesta etapa: **Verificação** de que um documento desativado não é citado em nova tarefa, que depende da geração (A5).
+- **Situação (22/10/2026): concluída.** O teste `equivalencia.test.ts` desativa um documento pela rota, processa uma tarefa pela rota e confere três coisas: o documento não vai à IA, não aparece no registro e não é citado. Reativado, ele volta ao contexto. (API simulada até a A1.)
 
 ### B4. Tarefa interrompida
 - Ao iniciar, marcar como falha toda tarefa que estava em `processando` (cenário 32).
@@ -268,10 +270,22 @@ Ver etapa A1.
 - Relatório de aceitação por tarefa, por rota e pelo comando `aceitacao` (cenário 48); método de P9.
 - Persistência após reinício (cenário 47).
 - **Verificação:** testes passando; uma tarefa processada, editada, aprovada e avaliada gera um relatório cujos números conferem com os eventos.
+- **Situação (22/10/2026): concluída (os itens dos testes vêm da API simulada até a A1).**
+  - `revisao/revisao.ts`, `http/rotasDeRevisao.ts` e `config/pessoas.json`.
+  - Rotas, cada ação com `pessoa` (o id da lista):
+    - `PUT /api/tarefas/:id/itens/:numero/texto`, `POST .../restaurar`, `POST .../aprovar` e `PUT .../avaliacao`;
+    - `GET /api/tarefas/:id/eventos`, `/avaliacoes` e `/aceitacao`, mais `GET /api/pessoas`.
+  - Comando `npm run aceitacao -- <id>`.
+  - Regras adotadas:
+    - **Edição:** cada parágrafo editado mantém as fontes do parágrafo na mesma posição. Texto vazio e item sem rascunho são recusados (sem editor nesses itens nesta versão).
+    - **Restauração:** volta aos parágrafos e fontes originais, guardados na migração `003_paras_originais.sql`. Se o texto de um item aprovado muda, a aprovação sai.
+    - **Aprovado sem edição:** o texto aprovado é igual a `orig`, ignorando espaços.
+  - Os eventos só aceitam inclusão, garantido por gatilho do banco, e não guardam texto.
 
 ### B6. Equivalência com o comando
 - Teste que processa a mesma planilha e a mesma base pelo comando `responder` e pelo backend e compara os itens (cenário 25), com a API simulada.
 - **Verificação:** teste passando.
+- **Situação (22/10/2026): concluída, com a API simulada até a A1.** `equivalencia.test.ts` processa a RFP-01 pelo caminho do comando (`processarTarefa`, o mesmo do `responder`) e pela rota `POST /api/tarefas` e compara os itens, que saem iguais, e a posição de cada pergunta. O mesmo arquivo confere o cenário 30: o `npm run servidor` real responde em 127.0.0.1 e recusa conexão pelo endereço da rede.
 
 ## Fase C: front conectado
 

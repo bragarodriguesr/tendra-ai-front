@@ -3,6 +3,8 @@ import { carregarArquivos, type ArquivoParaCarga } from "../base/carga.ts";
 import type { Banco } from "../persistencia/banco.ts";
 import { definirAtivo, listarDocumentos, type DocumentoGravado } from "../persistencia/documentos.ts";
 import { ErroDaRota } from "./erros.ts";
+import { ErroDeRevisao } from "../revisao/revisao.ts";
+import { registrarRotasDeRevisao } from "./rotasDeRevisao.ts";
 import { registrarRotasDeTarefas, type OpcoesDasTarefas } from "./rotasDeTarefas.ts";
 
 /** Soma dos arquivos de um envio pela tela da Base, depois de decodificados. */
@@ -78,7 +80,7 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
   };
 
   servidor.setErrorHandler((erro: FastifyError, pedido, resposta) => {
-    if (erro instanceof ErroDaRota) return resposta.status(erro.statusCode).send({ erro: erro.message });
+    if (erro instanceof ErroDaRota || erro instanceof ErroDeRevisao) return resposta.status(erro.statusCode).send({ erro: erro.message });
     if (erro.validation) return resposta.status(400).send({ erro: "Pedido inválido." });
     if (erro.code === "FST_ERR_CTP_BODY_TOO_LARGE") {
       return resposta.status(413).send({ erro: mensagemDeEnvioGrande() });
@@ -167,7 +169,10 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
     },
   );
 
-  if (opcoes.tarefas !== undefined) registrarRotasDeTarefas(servidor, opcoes.tarefas);
+  if (opcoes.tarefas !== undefined) {
+    registrarRotasDeTarefas(servidor, opcoes.tarefas);
+    registrarRotasDeRevisao(servidor, { banco, pessoas: opcoes.tarefas.pessoas });
+  }
 
   return servidor;
 }
