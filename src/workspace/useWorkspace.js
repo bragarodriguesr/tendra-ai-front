@@ -1,7 +1,7 @@
 import React from "react";
 import { seedItems, seedDocs, genItems, nowStr, ITEM_TASKS, GENERATED, TASKS, TASK_IDS } from "./data.js";
 import {
-  MENSAGEM_FORMATO_DA_RFP, criarTarefa, dataHoraDaTela, definirDocumentoAtivo, enderecoDaPlanilha, enviarDocumentosDaBase, hojeIso, listarDocumentosDaBase, listarItensDaTarefa,
+  MENSAGEM_FORMATO_DA_RFP, aprovarItemNaApi, avaliarItemNaApi, criarTarefa, editarTextoDoItem, listarAvaliacoes, listarPessoas, restaurarItem, dataHoraDaTela, definirDocumentoAtivo, enderecoDaPlanilha, enviarDocumentosDaBase, hojeIso, listarDocumentosDaBase, listarItensDaTarefa,
   listarTarefas, paraDocumentoDaTela, paraItemDaTela
 } from "../api.js";
 
@@ -27,7 +27,7 @@ const initialState = ({ initialScreen, role }) => ({
   // Base: lista de exemplo até o servidor responder; depois, os documentos do banco.
   docs: seedDocs(), baseOrigem: "exemplo", enviando: false, envio: null, sort: "idade", taskId: "t1",
   // Tarefas: as de exemplo (data.js) até o servidor responder; depois, só as do banco.
-  tarefas: [], tarefasOrigem: "exemplo", criando: false,
+  tarefas: [], tarefasOrigem: "exemplo", criando: false, pessoas: [],
   exported: null, exported4: null, exported8: null, expanded: null,
   form: emptyForm(),
   fb: {}, saved: 0, tick: 0, taskRetry: false, alertsRead: {},
@@ -43,6 +43,8 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
   const ref = React.useRef(state);
   ref.current = state;
   const generated = React.useRef({});
+  // Textos editados ainda não gravados, por "tarefa/item": gravados 800 ms depois da última tecla.
+  const pendingSaves = React.useRef({});
   const toastTimer = React.useRef(null);
 
   const ws = React.useMemo(() => {
@@ -54,10 +56,60 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
     const api = {
       setState,
       get s() { return ref.current; },
-      name() { return ref.current.role === "Aprovador" ? "Marcelo Vieira" : "Kadu Mendes"; },
+      /** Pessoa que age (backend/config/pessoas.json): a primeira com o papel escolhido em "Trocar usuário". */
+      person(s = ref.current) {
+        const p = s.pessoas.find((x) => x.papel === s.role);
+        return p || (s.role === "Aprovador" ? { id: "marcelo", nome: "Marcelo Vieira" } : { id: "kadu", nome: "Kadu Mendes" });
+      },
+      name() { return api.person().nome; },
       readAlert(a) { setState((s) => ({ alertsRead: { ...s.alertsRead, [a.key]: true } })); a.go(); },
       readAllAlerts(keys) { setState((s) => ({ alertsRead: { ...s.alertsRead, ...Object.fromEntries(keys.map((k) => [k, true])) } })); },
-      switchRole() { setState((s) => ({ role: s.role === "Aprovador" ? "Revisor" : "Aprovador" })); },
+      switchRole() {
+        api.flushSaves();
+        setState((s) => ({ role: s.role === "Aprovador" ? "Revisor" : "Aprovador" }));
+        // A avaliação mostrada é a da pessoa que age.
+        const tid = ref.current.itemsTask;
+        if (api.serverTask(tid)) setTimeout(() => api.loadFeedback(tid), 0);
+      },
+      /** Item da Revisão gravado no banco: as ações vão para as rotas da B5. */
+      isServerItem: (s = ref.current) => !!api.serverTask(s.itemsTask, s),
+      numberOf: (id) => Number(String(id).slice(1)),
+      /**
+       * Põe na tela o item devolvido pelo backend, mantendo o que só existe na tela: alertas reconhecidos e fonte escolhida.
+       * Com `keepText`, o texto da tela fica (a pessoa pode ter continuado digitando depois da gravação).
+       */
+      applyServerItem(tid, item, { keepText = false } = {}) {
+        setState((s) => {
+          const merge = (list) => list.map((i) => {
+            if (i.id !== item.id) return i;
+            const novo = paraItemDaTela(item, i.tot);
+            return {
+              ...novo,
+              ...(keepText ? { paras: i.paras } : null),
+              alerts: novo.alerts.map((a, k) => (i.alerts[k] && i.alerts[k].t === a.t ? i.alerts[k] : a)),
+              srcs: novo.srcs.map((x, k) => (i.srcs[k] && i.srcs[k].chosen ? { ...x, chosen: true } : x))
+            };
+          });
+          return s.itemsTask === tid ? { items: merge(s.items) } : s.store[tid] ? { store: { ...s.store, [tid]: merge(s.store[tid]) } } : {};
+        });
+      },
+      /** Grava agora o texto pendente de um item (ou de todos). */
+      async flushSaves(key) {
+        const keys = key ? [key] : Object.keys(pendingSaves.current);
+        await Promise.all(keys.map(async (k) => {
+          const p = pendingSaves.current[k];
+          if (!p) return;
+          clearTimeout(p.timer);
+          delete pendingSaves.current[k];
+          try {
+            const { item } = await editarTextoDoItem(p.tid, api.numberOf(p.id), p.pessoa, p.text);
+            api.applyServerItem(p.tid, item, { keepText: true });
+            setState({ saved: Date.now() });
+          } catch (e) {
+            api.toast("Texto não gravado", e.message, "danger");
+          }
+        }));
+      },
       /** Tarefa que veio do servidor (o id é o uuid do banco). */
       serverTask: (id, s = ref.current) => s.tarefas.find((t) => t.id === id),
       taskIds: (s = ref.current) => (s.tarefasOrigem === "servidor" ? s.tarefas.map((t) => t.id) : TASK_IDS),
@@ -78,6 +130,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         return { items: next, store, itemsTask: tid, sel: first ? first.id : null, filter: "todos" };
       },
       go(screen, extra = {}) {
+        api.flushSaves();
         const st = ref.current;
         let tid = extra.taskId;
         // Com o servidor, a Revisão sem tarefa escolhida abre a primeira tarefa pronta.
@@ -114,7 +167,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         if (!v.length) return;
         const idx = v.findIndex((i) => i.id === ref.current.sel);
         const n = v[(idx + d + v.length) % v.length];
-        setState({ sel: n.id, edit: false, showOrig: false });
+        api.select(n.id);
       },
       setFilter(v) { setState({ filter: v }); },
       pendingCount: (i) => i.alerts.filter((a) => !a.ack).length,
@@ -206,7 +259,18 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
           } else if (i.st === "sugerida") i.st = "em-revisao";
           return i;
         });
-        setState({ saved: Date.now() });
+        const s = ref.current;
+        if (!api.isServerItem(s)) { setState({ saved: Date.now() }); return; }
+        // Texto vazio não é gravado: o backend recusa (sem editor para item sem rascunho nesta versão).
+        const key = s.itemsTask + "/" + s.sel, old = pendingSaves.current[key];
+        if (old) clearTimeout(old.timer);
+        if (text.trim() === "") { delete pendingSaves.current[key]; return; }
+        pendingSaves.current[key] = { tid: s.itemsTask, id: s.sel, pessoa: api.person(s).id, text, timer: setTimeout(() => api.flushSaves(key), 800) };
+      },
+      /** Escolhe o item na Revisão, gravando antes o texto pendente. */
+      select(id) {
+        api.flushSaves();
+        setState({ sel: id, edit: false, showOrig: false });
       },
       ack(id, idx) {
         const by = api.name(), at = nowStr();
@@ -223,8 +287,25 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         });
         api.toast("Fonte escolhida", "O alerta de conflito foi reconhecido.");
       },
-      approve() {
-        const s = ref.current, id = s.sel, by = api.name(), at = nowStr();
+      async approve() {
+        const s = ref.current, id = s.sel;
+        if (api.isServerItem(s)) {
+          const tid = s.itemsTask;
+          await api.flushSaves(tid + "/" + id);
+          let item;
+          try {
+            ({ item } = await aprovarItemNaApi(tid, api.numberOf(id), api.person(s).id));
+            api.applyServerItem(tid, item);
+          } catch (e) {
+            api.toast("Item não aprovado", e.message, "danger");
+            return;
+          }
+          const c = ref.current, next = c.items.find((i) => i.id !== id && i.st !== "aprovada");
+          api.toast("Item aprovado", `${item.by} · ${dataHoraDaTela(item.at)}`);
+          if (next && c.sel === id) setState({ sel: next.id, edit: false, showOrig: false });
+          return;
+        }
+        const by = api.name(), at = nowStr();
         api.upd(id, (i) => { i.st = "aprovada"; i.by = by; i.at = at; return i; });
         const next = s.items.find((i) => i.id !== id && i.st !== "aprovada");
         api.toast("Item aprovado", `${by} · ${at}`);
@@ -235,12 +316,27 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         api.upd(id, (i) => { i.st = "revisada"; i.rby = by; i.rat = at; return i; });
         api.toast("Item revisado", "Pronto para aprovação.");
       },
-      restore(id) {
+      async restore(id) {
+        const s = ref.current;
+        if (api.isServerItem(s)) {
+          const tid = s.itemsTask, key = tid + "/" + id;
+          if (pendingSaves.current[key]) { clearTimeout(pendingSaves.current[key].timer); delete pendingSaves.current[key]; }
+          try {
+            const { item } = await restaurarItem(tid, api.numberOf(id), api.person(s).id);
+            api.applyServerItem(tid, item);
+          } catch (e) {
+            api.toast("Sugestão não restaurada", e.message, "danger");
+            return;
+          }
+          api.toast("Sugestão restaurada", "O texto voltou ao rascunho original.", "neutral");
+          return;
+        }
         api.upd(id, (i) => { i.paras = i.orig.split(/\n\n/).map((t, k) => ({ t, s: (i.paras[k] && i.paras[k].s) || [] })); return i; });
         api.toast("Sugestão restaurada", "O texto voltou ao rascunho original.", "neutral");
       },
       confirmEdit(id) {
-        if (id) api.upd(id, (i) => { i.st = "em-revisao"; return i; });
+        // Item do banco: a aprovação só sai quando o texto editado é gravado (cenário 42).
+        if (id && !api.isServerItem()) api.upd(id, (i) => { i.st = "em-revisao"; return i; });
         setState({ dialog: false, edit: true });
         api.toast("Aprovação removida", "O item voltou para Em revisão.", "neutral");
       },
@@ -259,6 +355,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
           return;
         }
         const s = ref.current, antes = new Map(s.tarefas.map((t) => [t.id, t.estado]));
+        if (!s.pessoas.length) listarPessoas().then(({ pessoas }) => setState({ pessoas })).catch(() => {});
         const nome = (t) => (t.dados && t.dados.nome) || t.arquivo;
         for (const t of tarefas) {
           if (antes.get(t.id) !== "processando") continue;
@@ -274,12 +371,40 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         // Atualização por função: fora de um evento, `ref.current` só reflete o setState depois do render.
         setState((d) => (d.screen === "task" && d.taskId !== d.itemsTask && api.hasItems(d.taskId, d) ? api.swapTo(d.taskId, d) : {}));
       },
+      /** "Esta resposta ajudou?": positiva grava na hora; negativa grava quando o motivo é escolhido (cenário 46). */
+      async rate(value, reason) {
+        const s = ref.current, id = s.sel, key = (s.itemsTask || "") + "/" + id;
+        setState((x) => ({ fb: { ...x.fb, [key]: { value, reason: reason || null } } }));
+        if (!api.isServerItem(s) || (value === "down" && !reason)) return;
+        try {
+          await avaliarItemNaApi(s.itemsTask, api.numberOf(id), api.person(s).id, value === "up" ? "positiva" : "negativa", reason);
+          api.toast("Avaliação registrada", value === "up" ? "Resposta marcada como útil." : `Motivo: ${reason}.`, "neutral");
+        } catch (e) {
+          api.toast("Avaliação não registrada", e.message, "danger");
+        }
+      },
+      /** Avaliações gravadas da pessoa que age, para mostrar o polegar marcado. */
+      async loadFeedback(tid) {
+        try {
+          const { avaliacoes } = await listarAvaliacoes(tid);
+          const nome = api.name();
+          const mine = Object.fromEntries(avaliacoes.filter((a) => a.pessoa === nome)
+            .map((a) => [tid + "/" + a.item, { value: a.valor === "positiva" ? "up" : "down", reason: a.motivo }]));
+          setState((s) => {
+            const fb = Object.fromEntries(Object.entries(s.fb).filter(([k]) => !k.startsWith(tid + "/")));
+            return { fb: { ...fb, ...mine } };
+          });
+        } catch {
+          // Sem as avaliações, os polegares só aparecem desmarcados.
+        }
+      },
       /** Lê os itens de uma tarefa pronta e guarda em `store`. Devolve false se não conseguiu. */
       async loadItems(id) {
         try {
           const t = api.serverTask(id), { itens } = await listarItensDaTarefa(id);
           const items = itens.map((i) => paraItemDaTela(i, t ? t.total : itens.length));
           setState((s) => (s.itemsTask === id ? { items } : { store: { ...s.store, [id]: items } }));
+          api.loadFeedback(id);
           return true;
         } catch (e) {
           api.toast("Não foi possível ler os itens", e.message, "danger");
@@ -398,9 +523,9 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
     };
   }, [ws]);
 
-  // Lê a base do servidor ao abrir o Workspace e a cada entrada na tela Base de conhecimento.
+  // Lê a base do servidor ao abrir o Workspace e a cada entrada na Base de conhecimento ou em Primeiros passos.
   React.useEffect(() => { ws.loadBase(); }, [ws]);
-  React.useEffect(() => { if (state.screen === "base") ws.loadBase(); }, [ws, state.screen]);
+  React.useEffect(() => { if (state.screen === "base" || state.screen === "onboarding") ws.loadBase(); }, [ws, state.screen]);
   // Tarefas: lê ao abrir e ao entrar nas telas que as mostram; enquanto alguma processa, consulta o estado a cada 2 segundos.
   React.useEffect(() => { if (["dashboard", "tasks", "task", "export", "review"].includes(state.screen)) ws.loadTasks(); }, [ws, state.screen]);
   const processing = state.tarefas.some((t) => t.estado === "processando");

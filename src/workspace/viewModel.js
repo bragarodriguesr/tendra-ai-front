@@ -103,11 +103,14 @@ export function buildView(s, ws) {
   const sent = new Map(s.docs.map((d, i) => [d.id, i]));
   const onbList = docs.filter((d) => d.origin === "onb").sort((a, b) => sent.get(b.id) - sent.get(a.id));
   const onbSent = onbList.filter((d) => d.st !== "formato");
-  const onb = {
-    list: onbList, sent: onbSent.length,
-    ready: onbSent.filter((d) => d.st === "pronto" && !d.off).length,
-    done: onbSent.filter((d) => ["pronto", "erro", "suporte"].includes(d.st)).length
-  };
+  // Com o servidor, Primeiros passos mostra os mesmos documentos da Base (C4).
+  const onb = s.baseOrigem === "servidor"
+    ? { online: true, list: docs, sent: docs.length, ready: readyDocs, done: docs.length }
+    : {
+      list: onbList, sent: onbSent.length,
+      ready: onbSent.filter((d) => d.st === "pronto" && !d.off).length,
+      done: onbSent.filter((d) => ["pronto", "erro", "suporte"].includes(d.st)).length
+    };
 
   // tarefas
   const tasks = taskIds.map((id) => {
@@ -182,7 +185,7 @@ export function buildView(s, ws) {
     return {
       id: i.id, code: code(i), q: i.q.length > 68 ? i.q.slice(0, 66) + "…" : i.q, st: st.l, icon: st.i, tone: st.tone,
       hasAlert: p > 0, alertText: p + " " + plural(p, "alerta", "alertas"), active: i.id === s.sel,
-      open: () => ws.setState({ sel: i.id, edit: false, showOrig: false }), openFromTask: openItem(i.id)
+      open: () => ws.select(i.id), openFromTask: openItem(i.id)
     };
   });
 
@@ -208,7 +211,7 @@ export function buildView(s, ws) {
     let blockText = "", noRevise = false, noApprove = false;
     const alertWord = p > 1 ? `${p} alertas` : "1 alerta";
     if (it.st === "aprovada") { noApprove = true; noRevise = true; }
-    else if (!hasAnswer) { blockText = "Escreva a resposta antes de revisar ou aprovar."; noRevise = true; noApprove = true; }
+    else if (!hasAnswer) { blockText = ws.isServerItem(s) ? "Sem rascunho: este item fica para preenchimento fora do Tendra.ai nesta versão." : "Escreva a resposta antes de revisar ou aprovar."; noRevise = true; noApprove = true; }
     else if (p > 0) { blockText = `Falta tratar ${alertWord} antes de aprovar.`; noRevise = true; noApprove = true; }
     if (!isA && it.st !== "aprovada") { noApprove = true; blockText = blockText ? blockText + " Somente Aprovadores aprovam." : "Somente Aprovadores aprovam."; }
     if (it.st === "revisada") noRevise = true;
@@ -219,12 +222,15 @@ export function buildView(s, ws) {
     });
     const paras = it.paras.map((pp) => ({ t: pp.t, marks: pp.s.filter((k) => it.srcs[k - 1]).map((k) => ({ k, aria: "Abrir fonte " + k, open: openSrc(k) })) }));
     const text = it.paras.map((x) => x.t).join("\n\n");
+    const fb = s.fb[(s.itemsTask || "") + "/" + it.id] || {}, serverItem = ws.isServerItem(s);
     cur = {
       ...it, ...deckLayers(alerts.length), alerts, alert: alerts[ai] || {}, alertIndex: ai, alertPos: `${ai + 1} de ${alerts.length}`, hasMany: alerts.length > 1,
       code: code(it), st: st.l, icon: st.i, tone: st.tone, srcs, paras, noText: !hasAnswer,
       edited: it.orig !== "" && text !== it.orig, text,
       hasManual: it.alerts.some((a) => a.t === "manual"), isApproved: it.st === "aprovada",
-      blockText, noRevise, noApprove, fbUp: s.fb[it.id] === "up", fbDown: s.fb[it.id] === "down",
+      blockText, noRevise, noApprove, fbUp: fb.value === "up", fbDown: fb.value === "down", fbReason: fb.reason || "",
+      // Itens do banco sem rascunho não têm editor nesta versão (PLAN.md, C5).
+      canEdit: !(serverItem && it.st === "sem-rascunho"),
       isApprovedOrRevised: it.st === "revisada" || it.st === "aprovada",
       stateHint: it.st === "aprovada" ? "Editar remove a aprovação." : "Pronta para aprovação."
     };

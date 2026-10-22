@@ -73,8 +73,8 @@ function Answer({ v, ws, state, cur }) {
               <Button size="sm" variant="ghost" icon="refresh-cw" onClick={() => ws.restore(cur.id)}>Restaurar sugestão</Button>
             </>
           ) : null}
-          {state.edit
-            ? <Button size="sm" variant="secondary" icon="check" onClick={() => ws.setState({ edit: false })}>Concluir edição</Button>
+          {!cur.canEdit ? null : state.edit
+            ? <Button size="sm" variant="secondary" icon="check" onClick={() => { ws.flushSaves(); ws.setState({ edit: false }); }}>Concluir edição</Button>
             : <Button size="sm" variant="secondary" icon="pencil" onClick={startEdit}>Editar resposta</Button>}
         </div>
       </div>
@@ -88,7 +88,7 @@ function Answer({ v, ws, state, cur }) {
         <Textarea rows={8} value={cur.text} placeholder="Escreva a resposta. Separe parágrafos com uma linha em branco." onChange={(e) => ws.onDraft(e.target.value)} aria-label="Resposta" autoFocus />
       ) : (
         <>
-          {cur.noText ? <div style={{ color: "var(--n-400)", lineHeight: 1.6 }}>Nenhum rascunho. Escreva a resposta para poder revisar este item.</div> : null}
+          {cur.noText ? <div style={{ color: "var(--n-400)", lineHeight: 1.6 }}>{cur.canEdit ? "Nenhum rascunho. Escreva a resposta para poder revisar este item." : "Nenhum rascunho. A base não tem informação para esta pergunta; nesta versão a resposta é preenchida fora do Tendra.ai."}</div> : null}
           {cur.paras.map((p, n) => (
             <div key={n} style={{ display: "flex", gap: 12, alignItems: "flex-start", fontSize: 16, lineHeight: 1.65, color: "var(--n-700)" }}>
               <span style={{ flex: 1 }}>{p.t}</span>
@@ -146,7 +146,7 @@ function Sources({ cur }) {
 
 export function Review({ v, ws, state, height, isMobile }) {
   const cur = v.cur;
-  const setFb = (val) => ws.setState((x) => ({ fb: { ...x.fb, [cur.id]: val } }));
+
   // Celular: duas etapas (lista → item). Desktop: lista e item lado a lado.
   const showList = !isMobile || state.reviewPane !== "item";
   const showItem = !isMobile || state.reviewPane === "item";
@@ -189,9 +189,9 @@ export function Review({ v, ws, state, height, isMobile }) {
               {cur.srcs.length > 0 ? <Sources cur={cur} /> : null}
               <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", color: "var(--n-700)" }}>
                 <span style={{ fontSize: 13 }}>Esta resposta ajudou?</span>
-                <button type="button" onClick={() => setFb("up")} aria-label="Positivo" aria-pressed={cur.fbUp} style={fbStyle(cur.fbUp)}><Icon name="thumbs-up" size="md" /></button>
-                <button type="button" onClick={() => setFb("down")} aria-label="Negativo" aria-pressed={cur.fbDown} style={fbStyle(cur.fbDown)}><span style={{ display: "flex", transform: "rotate(180deg)" }}><Icon name="thumbs-up" size="md" /></span></button>
-                {cur.fbDown ? <div style={{ width: 220 }}><Select options={FB_REASONS} placeholder="Motivo" size="sm" aria-label="Motivo" /></div> : null}
+                <button type="button" onClick={() => ws.rate("up")} aria-label="Positivo" aria-pressed={cur.fbUp} style={fbStyle(cur.fbUp)}><Icon name="thumbs-up" size="md" /></button>
+                <button type="button" onClick={() => ws.rate("down")} aria-label="Negativo" aria-pressed={cur.fbDown} style={fbStyle(cur.fbDown)}><span style={{ display: "flex", transform: "rotate(180deg)" }}><Icon name="thumbs-up" size="md" /></span></button>
+                {cur.fbDown ? <div style={{ width: 220 }}><Select options={FB_REASONS} placeholder="Motivo" size="sm" aria-label="Motivo" value={cur.fbReason} onChange={(e) => ws.rate("down", e.target.value)} /></div> : null}
               </div>
             </div>
             <div style={{ borderTop: "1px solid var(--n-200)", background: "var(--n-000)", padding: `${isMobile ? 12 : 16}px ${padX}px`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: isMobile ? 10 : 16, flexWrap: "wrap" }}>

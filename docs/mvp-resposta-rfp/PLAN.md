@@ -310,10 +310,20 @@ Ver etapa A1.
 - **Feita na A4:** a tela Base lê `GET /api/base/documentos`, envia `.md` pelo seletor de arquivos do computador e grava a chave Ativar/Desativar (PRD v3, F-02).
 - Falta: a área de envio de Primeiros passos usa a mesma rota, e "Criar primeira RFP" passa a depender de haver ao menos um documento ativo no banco.
 - **Verificação:** a lista mostra os documentos enviados pela tela e pelo comando, com idade e selo de 120 dias; Primeiros passos mostra os mesmos documentos.
+- **Situação (22/10/2026): concluída.** Com o servidor, "Subir documentos" de Primeiros passos envia os `.md` para `POST /api/base/documentos`, mostra o mesmo "Resultado do envio" da Base e lista os documentos do banco. "Criar primeira RFP" só fica disponível com ao menos um documento ativo. Sem o servidor, a tela segue com a simulação do protótipo.
 
 ### C5. Revisão com ações gravadas
 - Editar, restaurar, aprovar e avaliar chamam as rotas de B5; o reconhecimento de alerta continua só na tela. Sem editor em itens sem rascunho nesta versão. O seletor "Trocar usuário" passa a definir a pessoa que age.
 - **Verificação (portão da fase C):** teste de ponta a ponta da jornada passando, com a API simulada; no navegador, editar e aprovar, recarregar a página e ver as ações mantidas; o relatório de aceitação confere.
+- **Situação (22/10/2026): ações conectadas, com a API simulada até a A1.**
+  - A pessoa que age é a de `config/pessoas.json` com o papel escolhido em "Trocar usuário" (Aprovador: Marcelo Vieira; Revisor: Kadu Mendes).
+  - O texto editado é gravado 800 ms depois da última tecla, ao concluir a edição, ao trocar de item e antes de aprovar: uma edição contínua gera um só evento.
+  - Restaurar e aprovar usam o item devolvido pelo backend (data e hora do servidor).
+  - O polegar positivo grava na hora; o negativo grava quando o motivo é escolhido. Ao abrir a tarefa, a tela mostra a avaliação já gravada da pessoa que age.
+  - Itens sem rascunho não têm editor.
+  - **Ficam só na tela:** reconhecer alerta, escolher a fonte num conflito e "Marcar como revisado", que não têm rota na B5. Depois de recarregar a página, alertas voltam a pendentes e o item revisado volta ao estado gravado.
+  - Com o servidor, o "Painel de demo" (aprovar tudo só na tela) não aparece.
+  - Conferido no navegador: editar e aprovar como Aprovador, avaliar como Aprovador e como Revisor, recarregar e ver o item aprovado, editado e com a avaliação; `GET /api/tarefas/:id/aceitacao` conta 1 aprovado, 7,7% alterado e as duas avaliações.
 
 ## Fase D: publicação compartilhada
 
