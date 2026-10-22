@@ -1,6 +1,6 @@
 # Backend da Tendra.ai
 
-Backend do MVP descrito em [`docs/mvp-resposta-rfp/`](../docs/mvp-resposta-rfp/). Esta versão contém o esqueleto da etapa A2 do plano (configuração, armazenamento de arquivos e logs), a leitura da planilha de RFP da etapa A3, a carga da base de conhecimento da etapa A4 (pela tela Base de conhecimento do front e por comando) o contexto, o cliente do Claude e a geração em lotes da etapa A5 a checagem das fontes e a saída da etapa A6, os alertas da etapa A7 e o conflito entre fontes da etapa A8, testados com a API simulada.
+Backend do MVP descrito em [`docs/mvp-resposta-rfp/`](../docs/mvp-resposta-rfp/). Esta versão contém o esqueleto da etapa A2 do plano (configuração, armazenamento de arquivos e logs), a leitura da planilha de RFP da etapa A3, a carga da base de conhecimento da etapa A4 (pela tela Base de conhecimento do front e por comando) o contexto, o cliente do Claude e a geração em lotes da etapa A5 a checagem das fontes e a saída da etapa A6, os alertas da etapa A7, o conflito entre fontes da etapa A8, as métricas da etapa A9 e a avaliação contra o gabarito da etapa A10, testados com a API simulada.
 
 ## Requisitos
 
@@ -19,6 +19,7 @@ Execute a partir da pasta `backend/`:
 | `npm run carregar-base -- <pasta> [--enviado-por <nome>]` | A mesma carga da tela, a partir de uma pasta (e subpastas): grava os `.md` no banco local, no formato de `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`, e imprime o resumo: carregados, atualizados, sem mudança, recusados com o motivo, avisos, ignorados e órfãos. Termina com código 1 se algum arquivo for recusado. Não roda com o servidor aberto |
 | `npm run gerar-amostra -- <planilha.xlsx> [--limite 5]` | Verificação real da A5: gera respostas para as primeiras perguntas da planilha com a base ativa do banco e mostra cada uma com as fontes (`arquivo · seção · linha`). Grava as respostas brutas da API e o registro em `dados/amostras/`. **Chama a API real**: exige `ANTHROPIC_API_KEY` e tem custo |
 | `npm run responder -- <planilha.xlsx>` | Processa a planilha com a base ativa do banco (cenário 25): grava em `dados/resultados/<id>/` os itens no formato de `src/workspace/data.js` (`itens.json`), a planilha preenchida, os dados da tarefa e o registro de requisições. Em falha, grava só o motivo e o registro. **Chama a API real** |
+| `npm run avaliar -- <resultado> [<resultado>...] [--momento base\|atualizacao] [--fidelidade <lista.xlsx>]` | Avalia um resultado do `responder` contra o gabarito sintético, com os critérios do SPEC, e grava `avaliacao.md` e `avaliacao.json` no resultado. Na primeira vez, gera `fidelidade.xlsx` para uma pessoa marcar se cada resposta diz o mesmo que os trechos citados. Com três resultados da mesma RFP, mede a consistência dos guardrails. Termina com código 1 quando algum critério é reprovado ou fica pendente. Não chama a IA |
 | `npm run typecheck` | Verifica os tipos do TypeScript |
 | `npm test` | Roda os testes automáticos (sem chamadas reais à API da Anthropic) |
 
@@ -29,18 +30,19 @@ Execute a partir da pasta `backend/`:
 | `src/config/` | Leitura e validação das variáveis de ambiente |
 | `src/armazenamento/` | Leitura e gravação de arquivos, sempre com nome gerado pelo backend |
 | `src/documentos/` | Validação, leitura e preenchimento da planilha `.xlsx` de RFP, identificação das perguntas e do modelo de resposta (colunas de resposta e de comentário e lista de valores permitidos) |
-| `config/` | Listas configuráveis: os nomes aceitos para os cabeçalhos das colunas de pergunta, resposta e comentário (`cabecalhos.json`) e os termos críticos (`termos-criticos.json`) |
+| `config/` | Listas configuráveis: os nomes aceitos para os cabeçalhos das colunas de pergunta, resposta e comentário (`cabecalhos.json`) os termos críticos (`termos-criticos.json`) e os preços dos modelos para o custo estimado (`precos.json`) |
 | `src/base/` | Leitura e validação do cabeçalho dos `.md`, divisão em blocos com seção e linha, e a carga da base (usada pela rota de envio e pelo comando) |
 | `src/recuperacao/` | Contexto da geração: só documentos ativos, base vazia sem chamar a IA e teto de 25 MB e 400 mil tokens |
 | `src/ia/` | Cliente da API do Claude (erros tipados, novas tentativas, registro sem conteúdo) e instruções versionadas em `ia/instrucoes/` |
 | `src/geracao/` | Geração em lotes com citações, separação das respostas pelos marcadores `[Pn]`, identificação de perguntas com IA e a chamada que aponta conflitos entre fontes |
 | `src/rastreabilidade/` | Checagem das citações contra os blocos, localização `seção · linha N`, parágrafos ligados às fontes e estados dos itens |
 | `src/regras/` | Alertas determinísticos: fonte com mais de 120 dias (`old`) e termo crítico na pergunta (`critical`) |
+| `src/avaliacao/` | Gabarito, critérios de avaliação, lista de conferência da fidelidade e relatório |
 | `src/fluxo/` | Processamento de uma tarefa, da planilha aos itens e à planilha preenchida |
 | `src/http/` | Servidor HTTP (Fastify) e rotas da base: `GET /api/base/documentos`, `POST /api/base/documentos` (envio de `.md` em JSON, conteúdo em base64, até 10 MB e 100 arquivos) e `PATCH /api/base/documentos/:id` (ativar e desativar) |
 | `src/persistencia/` | Banco PGlite, migrações e acesso aos documentos e blocos |
 | `migracoes/` | Esquema do banco, em arquivos `.sql` aplicados em ordem de nome |
-| `src/observabilidade/` | Logs estruturados, sem a chave da API |
+| `src/observabilidade/` | Logs estruturados, sem a chave da API, e métricas por tarefa (duração, tokens, custo estimado, itens por estado e alerta) |
 | `src/cli/` | Comandos de terminal, incluindo o que sobe o servidor |
 | `test/unitarios/`, `test/integracao/` | Testes; o nome de cada um cita o cenário do SPEC que cobre |
 | `test/fixtures/` | Planilhas sintéticas usadas nos testes e, em `ia/`, respostas da API (as `.simulada.json` foram montadas à mão e serão trocadas por respostas reais) |

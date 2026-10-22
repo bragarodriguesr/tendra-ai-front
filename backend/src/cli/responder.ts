@@ -8,14 +8,16 @@ import { carregarTermosCriticos } from "../config/termosCriticos.ts";
 import { ErroDePlanilha } from "../documentos/planilha.ts";
 import { processarTarefa } from "../fluxo/processarTarefa.ts";
 import { ClienteDaIa, criarApiDoClaude, ErroDaIa, type EntradaDoRegistro } from "../ia/cliente.ts";
+import { calcularMetricas, carregarPrecos } from "../observabilidade/metricas.ts";
 import { abrirBanco, ErroDeBancoEmUso } from "../persistencia/banco.ts";
 import { ErroDeTeto } from "../recuperacao/buscarFontes.ts";
 
 /**
  * Comando `npm run responder -- <planilha.xlsx>` (cenário 25): processa a planilha com a base ativa
  * do banco, sem servidor nem front. Grava em dados/resultados/<id>/ os itens no formato de data.js
- * (itens.json), a planilha preenchida, os dados da tarefa e o registro de requisições. Em falha,
- * grava só a tarefa com o motivo e o registro: nenhum resultado parcial (cenário 17).
+ * (itens.json), a planilha preenchida, os dados da tarefa (cenário 38), as métricas (cenário 37)
+ * e o registro de requisições (cenário 29). Em falha, grava só a tarefa com o motivo e o registro:
+ * nenhum resultado parcial (cenário 17). O resultado pode ser avaliado com `npm run avaliar`.
  * Chama a API real: exige ANTHROPIC_API_KEY e tem custo.
  */
 const USO = "Uso: npm run responder -- <planilha.xlsx>";
@@ -33,6 +35,7 @@ async function executar(): Promise<number> {
   }
 
   const configuracao = carregarConfiguracao();
+  const precos = await carregarPrecos();
   const registro: EntradaDoRegistro[] = [];
   const cliente = new ClienteDaIa(criarApiDoClaude(configuracao.chaveApi), (entrada) => registro.push(entrada));
   const id = `${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}-${randomUUID().slice(0, 8)}`;
@@ -68,18 +71,24 @@ async function executar(): Promise<number> {
           concluidaEm: new Date().toISOString(),
           perguntas: resultado.perguntas.length,
           origemDasPerguntas: resultado.origemDasPerguntas,
-          ...resultado.comportamento,
+          comportamento: resultado.comportamento,
           documentos: resultado.documentos,
-          checagens: resultado.checagens,
+          // Posição de cada item na planilha (item rN ↔ posicoes[N-1]), para a avaliação.
+          posicoes: resultado.perguntas.map(({ aba, linha }) => ({ aba, linha })),
         },
         null,
         2,
       ),
     );
+    const metricas = calcularMetricas({ registro, itens: resultado.itens, checagens: resultado.checagens, etapas: resultado.etapas, precos });
+    await writeFile(path.join(pasta, "metricas.json"), JSON.stringify(metricas, null, 2));
     await gravarRegistro(pasta, registro);
 
     const contar = (st: string) => resultado.itens.filter((item) => item.st === st).length;
     console.log(`\nPronta: ${resultado.itens.length} itens, ${contar("sugerida")} sugeridos e ${contar("sem-rascunho")} sem rascunho.`);
+    console.log(
+      `Custo estimado: ${metricas.custoEstimadoUsd === null ? `sem preço para ${metricas.modelosSemPreco.join(", ")}` : `US$ ${metricas.custoEstimadoUsd.toFixed(4)}`}; ${Math.round(metricas.duracaoTotalMs / 1000)} s.`,
+    );
     console.log(`Resultados em ${pasta}`);
     return 0;
   } catch (erro) {

@@ -11,6 +11,7 @@
     "carregar-base": "node --env-file-if-exists=.env src/cli/carregarBase.ts",
     "gerar-amostra": "node --env-file-if-exists=.env src/cli/gerarAmostra.ts",
     "responder": "node --env-file-if-exists=.env src/cli/responder.ts",
+    "avaliar": "node src/cli/avaliar.ts",
     "servidor": "node --env-file-if-exists=.env src/cli/servidor.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"

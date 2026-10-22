@@ -105,7 +105,17 @@ describe("Processamento da RFP-01 com a base da Pulse", () => {
     expect(resultado.perguntas).toHaveLength(46);
     expect(api.geracoes).toHaveLength(5);
     expect(progresso).toEqual([0, 10, 20, 30, 40, 46]);
-    expect(resultado.comportamento).toEqual({ modelo: "claude-opus-5-5", versaoDasInstrucoes: "geracao-v1", tamanhoDoLote: 10 });
+    // Cenário 38: o que gerou as respostas fica registrado na tarefa.
+    expect(resultado.comportamento).toEqual({
+      modelo: "claude-opus-5-5",
+      versaoDasInstrucoes: "geracao-v1",
+      tamanhoDoLote: 10,
+      esforco: "medium",
+      modeloDeIdentificacao: "claude-haiku-5-5",
+      modeloDeConflito: "claude-haiku-5-5",
+      instrucoes: { geracao: "geracao-v1", identificacao: "identificacao-v1", conflito: "conflito-v1" },
+    });
+    expect(resultado.etapas.map((etapa) => etapa.etapa)).toEqual(["planilha", "identificacao", "contexto", "geracao", "checagem", "conflito", "alertas", "planilhaPreenchida"]);
     expect(resultado.documentos).toHaveLength(16);
 
     const [primeiro, segundo] = resultado.itens;
