@@ -141,7 +141,7 @@ export async function concluirTarefa(
   await banco.transaction(async (transacao) => {
     for (const [posicao, item] of resultado.itens.entries()) {
       await transacao.query(
-        `INSERT INTO itens (tarefa_id, numero, aba, linha, q, paras, srcs, alerts, st, orig) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        `INSERT INTO itens (tarefa_id, numero, aba, linha, q, paras, paras_originais, srcs, alerts, st, orig) VALUES ($1, $2, $3, $4, $5, $6, $6, $7, $8, $9, $10)`,
         [id, posicao + 1, item.aba, item.linha, item.q, JSON.stringify(item.paras), JSON.stringify(item.srcs), JSON.stringify(item.alerts), item.st, item.orig],
       );
     }

@@ -9,6 +9,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { criarArmazenamento } from "../../src/armazenamento/armazenamento.ts";
 import { carregarBase } from "../../src/base/carga.ts";
 import { carregarCabecalhos } from "../../src/config/cabecalhos.ts";
+import { carregarPessoas } from "../../src/config/pessoas.ts";
 import { carregarTermosCriticos } from "../../src/config/termosCriticos.ts";
 import { criarServidor } from "../../src/http/servidor.ts";
 import type { ApiDoClaude, MensagemDaIa, ParametrosDaGeracao } from "../../src/ia/cliente.ts";
@@ -56,6 +57,7 @@ beforeEach(async () => {
       nomesDeCabecalho: await carregarCabecalhos(),
       termosCriticos: await carregarTermosCriticos(),
       precos: await carregarPrecos(),
+      pessoas: await carregarPessoas(),
       hoje: () => "2026-10-21",
       aoTerminarTarefa: (id) => terminadas.get(id)?.(),
     },

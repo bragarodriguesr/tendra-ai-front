@@ -40,7 +40,7 @@ Cada etapa abaixo é uma mudança pequena, com objetivo claro, testes próprios 
 | P7 | Fluxo de revisão de código e proteção da `main` exigindo a integração contínua | Primeiro commit de código | Branch + pull request revisado por outra pessoa, com CI obrigatória. |
 | P8 | Modelo da geração e tamanho do lote | Fim da fase A | Decididos pela etapa A10, com dados. Até lá, valores iniciais configuráveis: Opus 5.5 com esforço `medium`, lote de 10 (`TENDRA_MODELO`, `TENDRA_ESFORCO`, `TENDRA_TAMANHO_LOTE`). |
 | P12 | Valor sugerido nas RFPs com valores permitidos (cenários 50 a 56 do SPEC, acrescentados depois deste plano) | Etapa A6 ou etapa própria | A A5 já gera em português (cenário 50). O valor sugerido (cenários 53 e 54) precisa de uma decisão de formato: o modelo não combina citações com saída estruturada. Sugestão: uma linha `Valor: <valor>` depois do marcador, conferida contra a lista. |
-| P9 | Método de cálculo da porcentagem de texto alterado | Etapa B5 | Diferença por palavras entre `orig` e o texto aprovado. |
+| P9 | Método de cálculo da porcentagem de texto alterado | Etapa B5 | **Decidido na B5:** diferença por palavras: palavras retiradas mais palavras acrescentadas, sobre a soma das palavras dos dois textos, pela maior subsequência comum (`revisao/diferenca.ts`). |
 | P10 | Simplificação da definição de pronto e dos tipos de teste (ver as seções correspondentes) | Primeiro pull request | Aprovar a versão deste plano ou manter a constitution como está. |
 | P11 | Hospedagem do front (Vercel em avaliação) | Fase D | Decidir antes da fase D. |
 
@@ -268,6 +268,17 @@ Ver etapa A1.
 - Relatório de aceitação por tarefa, por rota e pelo comando `aceitacao` (cenário 48); método de P9.
 - Persistência após reinício (cenário 47).
 - **Verificação:** testes passando; uma tarefa processada, editada, aprovada e avaliada gera um relatório cujos números conferem com os eventos.
+- **Situação (22/10/2026): concluída (os itens dos testes vêm da API simulada até a A1).**
+  - `revisao/revisao.ts`, `http/rotasDeRevisao.ts` e `config/pessoas.json`.
+  - Rotas, cada ação com `pessoa` (o id da lista):
+    - `PUT /api/tarefas/:id/itens/:numero/texto`, `POST .../restaurar`, `POST .../aprovar` e `PUT .../avaliacao`;
+    - `GET /api/tarefas/:id/eventos`, `/avaliacoes` e `/aceitacao`, mais `GET /api/pessoas`.
+  - Comando `npm run aceitacao -- <id>`.
+  - Regras adotadas:
+    - **Edição:** cada parágrafo editado mantém as fontes do parágrafo na mesma posição. Texto vazio e item sem rascunho são recusados (sem editor nesses itens nesta versão).
+    - **Restauração:** volta aos parágrafos e fontes originais, guardados na migração `003_paras_originais.sql`. Se o texto de um item aprovado muda, a aprovação sai.
+    - **Aprovado sem edição:** o texto aprovado é igual a `orig`, ignorando espaços.
+  - Os eventos só aceitam inclusão, garantido por gatilho do banco, e não guardam texto.
 
 ### B6. Equivalência com o comando
 - Teste que processa a mesma planilha e a mesma base pelo comando `responder` e pelo backend e compara os itens (cenário 25), com a API simulada.

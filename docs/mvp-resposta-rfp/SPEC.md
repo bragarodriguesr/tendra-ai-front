@@ -407,7 +407,7 @@ Estes cenários vêm de `docs/referencia/mvp-proposta-1/SPEC.md` (30, 36, 38, 39
   - quantos ficaram sem rascunho;
   - a contagem de avaliações positivas e negativas, com os motivos.
 - **And** os números conferem com os dados gravados
-- `[DECISÃO PENDENTE: método de cálculo da porcentagem de texto alterado (sugestão: diferença por palavras). Definir na etapa B5 do PLAN.]`
+- **Método (decidido na B5, P9):** diferença por palavras entre `orig` e o texto aprovado, pela maior subsequência comum; textos iguais dão 0% e textos sem palavra em comum dão 100%. "Aprovado sem edição" é o item aprovado com o texto igual a `orig`.
 
 #### Cenário 49: registro de eventos
 - **Given** ações de edição, restauração, aprovação, remoção de aprovação e avaliação
