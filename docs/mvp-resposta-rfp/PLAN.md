@@ -21,6 +21,8 @@ Chegar a um backend que **prove a hipótese central do MVP** (a pessoa aceita as
 | **C. Front conectado** | Nova RFP com arquivo real, progresso e revisão com ações gravadas (a Base já sai conectada da A4) | 6, 16, 23, 24, 33, 40, 42 a 46 |
 | **D. Publicação compartilhada** | Login, sessão, hospedagem e segurança de exposição (fase 1 de `docs/referencia/mvp-proposta-1/PLAN.md`) | Cenários de `docs/referencia/mvp-proposta-1/SPEC.md`; spec próprio quando a fase começar |
 
+> **Situação da fase A (22/10/2026):** o código das etapas A2 a A10 está pronto e testado com a API do Claude simulada. Falta a parte que exige a chave: a A1 e, depois dela, as execuções reais da A5 a A10 (`gerar-amostra`, `responder` e `avaliar` com Sonnet 5.5 e Opus 5.5, a lista de fidelidade preenchida por uma pessoa e a escolha do modelo em P8). O portão da fase A só fecha com esse relatório.
+
 A fase A concentra o risco técnico. Se a avaliação não atingir os limites do SPEC, o ajuste acontece **antes** de investir em servidor, tela ou hospedagem. A fase D só começa depois de A, B e C aceitas e de haver taxa de aceitação medida.
 
 Cada etapa abaixo é uma mudança pequena, com objetivo claro, testes próprios e um pull request separado.
@@ -31,7 +33,7 @@ Cada etapa abaixo é uma mudança pequena, com objetivo claro, testes próprios 
 |---|---|---|---|
 | P1 | Chave de testes da API definida e testada | Fase A | Variável de ambiente local. O primeiro teste é a etapa A1. |
 | P2 | Base `.md`, planilha de RFP sintética e gabarito | Fase A, etapa A4 em diante | Conforme a seção 5 de `ARQUITETURA_MAPPING.md` e `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`. |
-| P3 | Método de medir a fidelidade (limite de 90% já decidido) | Etapa A10 | Revisão humana de todas as respostas do gabarito (cerca de 30), com lista de conferência. |
+| P3 | Método de medir a fidelidade (limite de 90% já decidido) | Etapa A10 | **Implementado na A10:** revisão humana pela lista `fidelidade.xlsx` que o `avaliar` gera (uma linha por resposta sugerida, com os trechos citados e a coluna "Diz o mesmo que os trechos? (sim/não)"). |
 | P4 | Motor do banco local | Etapa A4 | **Decidido na A4:** PGlite 0.5.8 (Postgres embutido), porque a fase D usa o Postgres do Supabase. |
 | P5 | Interface da carga (nome e opções) | Etapa A4 | **Decidido na A4 (revisto em 22/10/2026):** a carga principal é pela tela Base de conhecimento, com "Subir documentos" abrindo o seletor de arquivos `.md` do computador. O comando `npm run carregar-base -- <pasta> [--enviado-por <nome>]` continua, com a mesma carga, e termina com código 1 quando algum arquivo é recusado. A identidade do documento passou a ser o nome do arquivo. |
 | P6 | Formato das citações enviado ao Claude: blocos ou texto corrido | Etapa A5 | **Implementado na A5 com blocos** (documentos com conteúdo em blocos, citações `content_block_location`). Falta validar com uma execução real (`npm run gerar-amostra`), que depende da A1. |
@@ -200,12 +202,28 @@ Ver etapa A1.
 - Métricas por tarefa: duração por etapa, tokens, custo estimado, ignorados, contagem por estado e alerta (cenário 37).
 - Registro do modelo, versão das instruções e tamanho do lote em cada tarefa (cenário 38).
 - **Verificação:** testes passando; as métricas não contêm conteúdo de documentos nem respostas.
+- **Situação (22/10/2026): concluída.** `observabilidade/metricas.ts` e `config/precos.json` (US$ por milhão de tokens, conferidos em 22/10/2026). O `responder` grava `metricas.json`: duração de cada etapa (planilha, identificação, contexto, geração, checagem, conflito, alertas, planilha preenchida), requisições por etapa e com erro, tokens cobrados (a contagem de tokens da base fica à parte, porque não é cobrada), custo estimado por modelo (nulo, com o nome do modelo, quando falta o preço), itens por estado e por alerta, e o que a checagem ignorou (citações descartadas, trechos sem fonte, perguntas sem marcador). O `tarefa.json` registra modelo, esforço, lote, os modelos de identificação e de conflito e a versão de cada instrução (cenário 38).
 
 ### A10. Avaliação e escolha do modelo
 - Comando `avaliar` com todos os critérios do SPEC, limites de 80% (relevância) e 90% (fidelidade), e código de saída de erro quando algum critério falha (cenários 26 e 36).
 - Fidelidade pelo método de P3: lista de conferência para uma pessoa revisar as respostas do gabarito.
 - Executar a RFP sintética com Sonnet 5.5 e com Opus 5.5 e comparar relatórios e custo. Executar três vezes os casos de instrução maliciosa e de compromisso não sustentado (cenários 15 e 34).
 - **Verificação (portão da fase A):** relatório de cada modelo gerado; o modelo escolhido atinge todos os limites e é registrado como decisão (P8). **Se nenhum atingir, a fase B não começa:** o ajuste de instruções, lote ou contexto acontece primeiro.
+- **Situação (22/10/2026): comando pronto; avaliação real pendente da A1.**
+  - Feito: `npm run avaliar -- <resultado> [<resultado>...] [--momento base|atualizacao] [--fidelidade <lista.xlsx>]` (`src/avaliacao/`), com os dez critérios do SPEC. O relatório (`avaliacao.md` e `avaliacao.json`) traz o valor, o limite e a situação de cada critério, as perguntas divergentes, o modelo, as instruções, o lote e o custo estimado. O comando termina com código 1 quando algum critério é reprovado ou fica pendente.
+  - Como cada critério é medido:
+    - **Validade das fontes:** conferida nos arquivos `.md` em disco, independente do banco. A linha de `loc` precisa ser a primeira linha de `ex`, e todas as linhas de `ex` precisam estar no arquivo.
+    - **Relevância:** pelo nome do arquivo esperado no gabarito.
+    - **Guardrails:** perguntas de injeção e de compromisso sem resposta no gabarito, em 3 execuções. Com menos de 3, o critério fica pendente.
+    - **Fidelidade (P3):** pela lista `fidelidade.xlsx`, gerada no primeiro resultado. Uma pessoa marca "sim" ou "não" em cada resposta sugerida.
+    - **Idioma:** por uma heurística de palavras frequentes.
+    - **Valor sugerido:** "não se aplica" até a P12.
+  - Testes com execuções simuladas que seguem o gabarito (aprovam) e que erram de propósito (reprovam). O `responder` e o `avaliar` foram conferidos juntos contra uma API falsa local.
+  - **Pendente, depois da A1 (portão da fase A):**
+    1. Rodar a RFP sintética com `TENDRA_MODELO=claude-sonnet-5-5` e com `claude-opus-5-5`.
+    2. Rodar 3 vezes a RFP-02 e as variantes de borda, para os guardrails.
+    3. Preencher a lista de fidelidade.
+    4. Registrar o modelo escolhido em P8.
 
 ## Fase B: backend local com revisão
 

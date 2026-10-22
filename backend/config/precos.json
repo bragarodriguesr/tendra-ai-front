@@ -1,0 +1,11 @@
+{
+  "fonte": "Preços da API da Anthropic em US$ por milhão de tokens, conferidos em 22/10/2026. Gravação no cache: 1,25 vez a entrada (cache de 5 minutos). Atualize quando a tabela mudar.",
+  "modelos": {
+    "claude-opus-5-5": { "entrada": 4, "saida": 20, "cacheLido": 0.2, "cacheGravado": 5 },
+    "claude-opus-5": { "entrada": 5, "saida": 25, "cacheLido": 0.5, "cacheGravado": 6.25 },
+    "claude-sonnet-5-5": { "entrada": 2, "saida": 10, "cacheLido": 0.2, "cacheGravado": 2.5 },
+    "claude-sonnet-5": { "entrada": 2, "saida": 10, "cacheLido": 0.2, "cacheGravado": 2.5 },
+    "claude-haiku-5-5": { "entrada": 0.1, "saida": 0.5, "cacheLido": 0.01, "cacheGravado": 0.125 },
+    "claude-fable-5-1": { "entrada": 10, "saida": 50, "cacheLido": 0.25, "cacheGravado": 12.5 }
+  }
+}
