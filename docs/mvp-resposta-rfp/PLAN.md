@@ -230,6 +230,12 @@ Ver etapa A1.
 ### B1. Persistência de tarefas e itens
 - Migrações para tarefas, itens, fontes, alertas, avaliações e eventos. Progresso gravado ao fim de cada lote.
 - **Verificação:** testes de integração; uma tarefa processada continua disponível depois de reiniciar o backend (cenário 47, parte das tarefas).
+- **Situação (22/10/2026): concluída, com a API simulada até a A1.**
+  - Migração `002_tarefas_itens_e_revisao.sql`: tarefas, itens, requisições, eventos e avaliações. Fontes e alertas ficam no item como JSON, no formato de `data.js`. Os eventos só aceitam inclusão, garantido por um gatilho do banco.
+  - `persistencia/tarefas.ts` e `fluxo/executarTarefa.ts`: a planilha é gravada com nome gerado e o progresso é gravado a cada lote, sem nunca diminuir. Os itens, a planilha preenchida, o comportamento e as métricas são gravados numa só transação quando a tarefa fica pronta. Em falha, ficam só o motivo e o registro, sem itens.
+  - O processamento é o mesmo `processarTarefa` do comando `responder`.
+  - Testes: tarefa pronta e em falha, cenário 6 (CNPJ e contatos nunca vão à IA) e persistência depois de fechar e reabrir o banco em disco.
+  - **Reteste depois da A1:** processar uma RFP com a API real e conferir o progresso e os itens gravados.
 
 ### B2. Rotas de tarefas
 - `POST /api/tarefas`: valida a planilha (cenários 4 e 31), recebe opcionalmente nome, empresa, CNPJ e contatos, cria a tarefa e inicia o processamento em segundo plano.
@@ -247,6 +253,7 @@ Ver etapa A1.
 ### B4. Tarefa interrompida
 - Ao iniciar, marcar como falha toda tarefa que estava em `processando` (cenário 32).
 - **Verificação:** teste de integração passando.
+- **Situação (22/10/2026): concluída.** `marcarInterrompidas` roda ao iniciar o `npm run servidor`.
 
 ### B5. Revisão persistida e relatório de aceitação
 - Pessoa que age validada contra `config/pessoas.json` (cenário 41; exceção E1).

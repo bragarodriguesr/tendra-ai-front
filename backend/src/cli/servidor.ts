@@ -3,6 +3,7 @@ import { carregarConfiguracaoSemChave, ErroDeConfiguracao } from "../config/conf
 import { criarServidor } from "../http/servidor.ts";
 import { criarLog } from "../observabilidade/log.ts";
 import { abrirBanco, ErroDeBancoEmUso } from "../persistencia/banco.ts";
+import { marcarInterrompidas } from "../persistencia/tarefas.ts";
 
 /**
  * Comando `npm run servidor`: sobe o servidor da base de conhecimento em 127.0.0.1 (cenário 30),
@@ -13,6 +14,9 @@ async function executar(): Promise<void> {
   const configuracao = carregarConfiguracaoSemChave();
   const log = criarLog(configuracao.nivelDeLog);
   const banco = await abrirBanco(path.join(configuracao.pastaDados, "banco"));
+  // Cenário 32: ao iniciar, nenhuma tarefa está de fato em processamento.
+  const interrompidas = await marcarInterrompidas(banco);
+  if (interrompidas > 0) log.warn({ interrompidas }, "Tarefas interrompidas por reinício marcadas como falha");
   const servidor = criarServidor({ banco, log });
 
   let encerrando = false;
