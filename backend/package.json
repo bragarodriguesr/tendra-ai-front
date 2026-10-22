@@ -8,10 +8,12 @@
   },
   "scripts": {
     "verificar-config": "node --env-file-if-exists=.env src/cli/verificarConfig.ts",
+    "carregar-base": "node --env-file-if-exists=.env src/cli/carregarBase.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
+    "@electric-sql/pglite": "0.5.8",
     "exceljs": "4.4.0",
     "jszip": "3.10.2",
     "pino": "10.4.0"

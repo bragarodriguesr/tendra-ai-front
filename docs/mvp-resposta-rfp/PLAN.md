@@ -32,8 +32,8 @@ Cada etapa abaixo é uma mudança pequena, com objetivo claro, testes próprios 
 | P1 | Chave de testes da API definida e testada | Fase A | Variável de ambiente local. O primeiro teste é a etapa A1. |
 | P2 | Base `.md`, planilha de RFP sintética e gabarito | Fase A, etapa A4 em diante | Conforme a seção 5 de `ARQUITETURA_MAPPING.md` e `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`. |
 | P3 | Método de medir a fidelidade (limite de 90% já decidido) | Etapa A10 | Revisão humana de todas as respostas do gabarito (cerca de 30), com lista de conferência. |
-| P4 | Motor do banco local | Etapa A4 | PGlite (Postgres embutido), porque a fase D usa o Postgres do Supabase. |
-| P5 | Interface do comando de carga (nome e opções) | Etapa A4 | `carregar-base <pasta>` com `--enviado-por`; confirmar na etapa. |
+| P4 | Motor do banco local | Etapa A4 | **Decidido na A4:** PGlite 0.5.8 (Postgres embutido), porque a fase D usa o Postgres do Supabase. |
+| P5 | Interface do comando de carga (nome e opções) | Etapa A4 | **Decidido na A4:** `npm run carregar-base -- <pasta> [--enviado-por <nome>]`. Código de saída 1 quando algum arquivo é recusado. |
 | P6 | Formato das citações enviado ao Claude: blocos ou texto corrido | Etapa A5 | Blocos, que devolvem o índice do bloco já ligado a `seção · linha`. Validar com uma execução real. |
 | P7 | Fluxo de revisão de código e proteção da `main` exigindo a integração contínua | Primeiro commit de código | Branch + pull request revisado por outra pessoa, com CI obrigatória. |
 | P8 | Modelo da geração e tamanho do lote | Fim da fase A | Decididos pela etapa A10, com dados. |
@@ -46,7 +46,7 @@ Cada etapa abaixo é uma mudança pequena, com objetivo claro, testes próprios 
 | Tema | Proposta |
 |---|---|
 | Linguagem e estrutura | Node 24 + TypeScript, pasta `backend/` com `package.json` próprio, Fastify |
-| Banco | PGlite (Postgres embutido) em `dados/`, com query builder tipado e migrações versionadas |
+| Banco | PGlite (Postgres embutido) em `dados/banco`, com SQL parametrizado num módulo de persistência e migrações versionadas em `backend/migracoes/`. O query builder tipado ficou de fora na A4 para não somar uma dependência a mais; pode entrar quando as consultas crescerem. |
 | Entrada da RFP | Só `.xlsx`: assinatura do arquivo conferida (não só a extensão), até 10 MB, nome gerado pelo backend |
 | Planilhas | `exceljs` para ler e escrever |
 | Base | Comando `carregar-base`: cabeçalho YAML validado, texto dividido em blocos com `seção` e `linha`, gravados em `documentos` e `blocos` (`docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`) |
@@ -134,6 +134,7 @@ Ver etapa A1.
 ### A1. Teste da chave
 - Definir a chave de testes em variável de ambiente local e fazer uma requisição mínima à API.
 - **Verificação:** a requisição retorna resposta. Se falhar, a implementação para até o acesso ser resolvido.
+- **Situação (22/10/2026): adiada por decisão do grupo.** A chave ainda não estava disponível no ambiente, e a implementação seguiu para a A4, que não usa a chave. A A1 precisa ser feita antes da A5, a primeira etapa que chama a API.
 
 ### A2. Esqueleto e integração contínua
 - Criar `backend/` com TypeScript, Vitest e os módulos `config`, `armazenamento` e `observabilidade`.
@@ -151,6 +152,7 @@ Ver etapa A1.
 - Migração do esquema do banco para `documentos` e `blocos` (PGlite).
 - Comando `carregar-base`: validação do cabeçalho, divisão em blocos com seção e linha, gravação, recarga com hash, órfãos, resumo e código de saída (cenários 7, 8, 9 e 39, e os 16 cenários de `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`).
 - Ativar e desativar documento no banco (cenário 40, parte do banco).
+- O tamanho em tokens de cada documento é uma estimativa (caracteres divididos por 4). A contagem exata pela API, usada no teto da base, entra na A5.
 - **Verificação:** testes dos cenários 7 a 9, 39 e 40 passando; carregar a base sintética e conferir o resumo, incluindo os arquivos inválidos recusados com o motivo.
 
 ### A5. Contexto, integração com o Claude e geração

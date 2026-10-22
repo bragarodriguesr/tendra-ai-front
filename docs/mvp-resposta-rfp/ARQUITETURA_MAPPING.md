@@ -227,8 +227,8 @@ Sem eles o fluxo não pode ser testado nem avaliado.
 |---|---|---|
 | 1 | Modelo da geração e tamanho do lote | Decidir na fase A, comparando Sonnet 5.5 e Opus 5.5 contra o gabarito; começar com lote de 10 |
 | 2 | Método de medir a fidelidade | Revisão humana de todas as respostas do gabarito (cerca de 30), com uma lista de conferência; avaliador automático só se o volume crescer |
-| 3 | Motor do banco local | PGlite (Postgres embutido): a fase D passa a ser parte do plano, e o Supabase é Postgres |
-| 4 | Interface do comando de carga (nome e opções) | Definir na etapa A4 |
+| 3 | Motor do banco local | **Decidido na A4:** PGlite (Postgres embutido), porque a fase D usa o Postgres do Supabase |
+| 4 | Interface do comando de carga (nome e opções) | **Decidido na A4:** `npm run carregar-base -- <pasta> [--enviado-por <nome>]` |
 | 5 | Formato da citação enviada ao Claude (blocos ou texto corrido) | Validar na etapa A5 |
 | 6 | Simplificação da definição de pronto e dos tipos de teste | Ver o `PLAN.md`; precisa de aprovação, porque a constitution não está versionada no repositório |
 | 7 | Hospedagem do front (Vercel em avaliação) | Decidir antes da fase D |

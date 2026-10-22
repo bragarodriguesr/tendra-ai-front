@@ -109,6 +109,6 @@ O comando termina com código de saída diferente de zero se algum arquivo for r
 
 ## 7. Fora deste documento
 
-- **Interface do comando** (nome, opções como a pasta da base e `--enviado-por`): ainda por definir.
+- **Interface do comando:** definida na etapa A4 como `npm run carregar-base -- <pasta> [--enviado-por <nome>]`, executado na pasta `backend/`. A pasta é lida com as subpastas; arquivos e pastas cujo nome começa com ponto são ignorados. O banco fica em `dados/banco`, fora do controle de versão, e o comando não usa a chave da API.
 - **Tamanho máximo de um bloco** e regras para tabelas longas: a definir junto com a avaliação das citações.
 - **Conversão de outros formatos para `.md`:** fica por conta de quem escreve o arquivo no MVP; conversão automática volta na Fase 2.

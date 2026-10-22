@@ -164,5 +164,5 @@ As métricas do piloto vêm do registro de eventos do quadro 4 e não dependem d
 
 - Método de medir a fidelidade: revisão humana de uma amostra ou avaliador automático com modelo. Proposta: começar pela revisão humana da amostra do gabarito.
 - Modelo da redação (Sonnet 5.5 ou Opus 5.5) e tamanho do lote: decididos pela avaliação contra o gabarito.
-- Interface do comando de carga (nome e opções). O formato dos arquivos `.md` está definido em [`FORMATO_BASE_MD.md`](FORMATO_BASE_MD.md).
+- ~~Interface do comando de carga~~: decidida na etapa A4 como `npm run carregar-base -- <pasta> [--enviado-por <nome>]`. O formato dos arquivos `.md` está em `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`.
 - A segunda chamada de IA (conflito) existe porque a API não combina citações com saída estruturada na mesma chamada; o teste prático da primeira etapa pode eliminá-la.
