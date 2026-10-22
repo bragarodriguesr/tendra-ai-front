@@ -129,3 +129,35 @@ export function carregarConfiguracaoSemChave(
   }
   return { pastaDados, nivelDeLog, porta };
 }
+
+/** Configuração do servidor: com a chave da API ou, enquanto a A1 não é feita, com a API simulada. */
+export type ConfiguracaoDoServidor = ConfiguracaoSemChave & {
+  ia: ConfiguracaoDaIa;
+  api: { tipo: "real"; chaveApi: string } | { tipo: "simulada" };
+};
+
+/**
+ * Lê a configuração do servidor. Sem ANTHROPIC_API_KEY, o servidor não inicia (cenário 27), a não ser
+ * com TENDRA_API_SIMULADA=1, que liga a API simulada para usar a tela sem a chave.
+ */
+export function carregarConfiguracaoDoServidor(
+  ambiente: NodeJS.ProcessEnv = process.env,
+  pastaBase: string = process.cwd(),
+): ConfiguracaoDoServidor {
+  if (ambiente.TENDRA_API_SIMULADA?.trim() === "1") {
+    const problemas: string[] = [];
+    const comuns = carregarConfiguracaoSemChave(ambiente, pastaBase);
+    const ia = lerVariaveisDaIa(ambiente, problemas);
+    if (problemas.length > 0) throw new ErroDeConfiguracao(problemas.join("\n"));
+    return { ...comuns, ia, api: { tipo: "simulada" } };
+  }
+  try {
+    const { chaveApi, ...resto } = carregarConfiguracao(ambiente, pastaBase);
+    return { ...resto, api: { tipo: "real", chaveApi } };
+  } catch (erro) {
+    if (erro instanceof ErroDeConfiguracao && erro.message.includes("ANTHROPIC_API_KEY")) {
+      throw new ErroDeConfiguracao(`${erro.message}\nPara usar o servidor sem a chave, com respostas simuladas, defina TENDRA_API_SIMULADA=1.`);
+    }
+    throw erro;
+  }
+}

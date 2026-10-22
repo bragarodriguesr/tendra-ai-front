@@ -245,6 +245,13 @@ Ver etapa A1.
 - `GET /api/tarefas/:id/registro` e `GET /api/tarefas/:id/metricas` (cenários 29 e 37).
 - Servidor ouvindo só em `127.0.0.1` (cenário 30).
 - **Verificação:** testes de integração das rotas passando.
+- **Situação (22/10/2026): concluída, com a API simulada até a A1.**
+  - `http/rotasDeTarefas.ts`: as rotas `POST /api/tarefas` (planilha em JSON, conteúdo em base64), `GET /api/tarefas` (lista, acrescentada para a tela de tarefas), `GET /api/tarefas/:id`, `/itens`, `/planilha`, `/registro` e `/metricas`.
+  - A planilha é validada e lida no envio: formato, tamanho e arquivo corrompido são recusados com 400, sem criar tarefa. O processamento roda em segundo plano, uma tarefa por vez.
+  - Itens e planilha só saem de tarefas prontas; nos outros estados a resposta é 409, com o motivo da falha.
+  - Campo desconhecido no corpo de qualquer rota passou a ser recusado.
+  - **Chave da API no servidor (cenário 27):** `npm run servidor` não inicia sem `ANTHROPIC_API_KEY`, a não ser com `TENDRA_API_SIMULADA=1`. Essa opção liga a API simulada (`ia/apiSimulada.ts`): cita o bloco da base com mais palavras em comum com a pergunta ou responde sem rascunho. O texto sai marcado como "[Resposta simulada]" e um aviso aparece no log. Serve para usar a tela sem a chave; não mede a IA.
+  - **Reteste depois da A1:** subir o servidor com a chave e processar uma RFP pela rota.
 
 ### B3. Rotas da base
 - **Antecipadas na A4**, junto com o envio pela tela: `GET /api/base/documentos` (nome do arquivo, título, tipo, versão, data de atualização, ativo, enviado por e data da carga; a idade é calculada na tela), `POST /api/base/documentos` (envio de `.md`) e `PATCH /api/base/documentos/:id` (ativar e desativar, cenário 40).

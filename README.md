@@ -15,7 +15,8 @@ A tela **Base de conhecimento** lê e grava a base no backend local. Em outro te
 ```bash
 cd backend
 npm install
-npm run servidor # http://127.0.0.1:3000, só nesta máquina
+npm run servidor # http://127.0.0.1:3000, só nesta máquina; exige ANTHROPIC_API_KEY
+# sem a chave (até a A1): TENDRA_API_SIMULADA=1 npm run servidor, com respostas simuladas
 ```
 
 Com o servidor no ar, "Subir documentos" abre o seletor de arquivos do computador: escolha um ou mais `.md` no formato de [`docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`](docs/mvp-resposta-rfp/FORMATO_BASE_MD.md) (por exemplo, os de `base-sintetica/pulse-beneficios/base/`). A tela mostra o resultado de cada arquivo, inclusive o motivo das recusas. O `npm run dev` repassa `/api` para o servidor (`vite.config.js`). Sem o servidor, a tela avisa e mostra a lista de exemplo.
