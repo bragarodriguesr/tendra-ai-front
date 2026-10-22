@@ -8,6 +8,7 @@
   },
   "scripts": {
     "verificar-config": "node --env-file-if-exists=.env src/cli/verificarConfig.ts",
+    "testar-chave": "node --env-file-if-exists=.env src/cli/testarChaveApi.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
