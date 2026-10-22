@@ -1,7 +1,7 @@
 import React from "react";
 import { Badge, Button, Field, Icon, IconButton, Input, MonoLabel, Select } from "../../ds/index.js";
 import { ClickRow, DISPLAY, Page, card, h1Style, mono } from "../ui.jsx";
-import { OWN, TODAY_ISO } from "../data.js";
+import { OWN } from "../data.js";
 import { newContact } from "../useWorkspace.js";
 
 // máscaras: 00.000.000/0000-00 e (00) 00000-0000
@@ -39,14 +39,17 @@ function ContactCard({ ct, index, total, tried, isMobile, onChange, onRemove }) 
   );
 }
 
-export function NewTask({ v, ws, pad, isMobile }) {
+export function NewTask({ v, ws, state, pad, isMobile }) {
   const f = v.form;
+  const input = React.useRef(null);
   const set = (k) => (e) => ws.setState((x) => ({ form: { ...x.form, [k]: e.target.value } }));
   const setContacts = (fn) => ws.setState((x) => ({ form: { ...x.form, contacts: fn(x.form.contacts) } }));
   const create = () => {
-    const ok = f.file && f.name && f.company && f.due && f.due >= TODAY_ISO && f.owner && !f.hasErrors;
-    ws.setState((x) => ({ form: { ...x.form, tried: true, identified: !!ok } }));
+    const ok = f.file && f.name && f.company && f.due && f.due >= f.today && f.owner && !f.hasErrors;
+    // Sem o servidor, o protótipo simula a identificação das perguntas.
+    ws.setState((x) => ({ form: { ...x.form, tried: true, identified: !!ok && !v.online } }));
     if (!f.file) ws.toast("Nenhum arquivo", "Selecione a lista de perguntas para continuar.", "danger");
+    else if (ok && v.online) ws.createTask();
   };
   return (
     <Page max={760} pad={pad} gap={28}>
@@ -57,13 +60,17 @@ export function NewTask({ v, ws, pad, isMobile }) {
       {f.smallBase ? <div style={card(12, { padding: "12px 16px" })}>Sua base ainda é pequena. Os itens tendem a ficar sem contexto, mas você pode continuar.</div> : null}
       {!f.identified ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          <ClickRow className="" onClick={() => ws.setState((x) => ({ form: { ...x.form, file: true } }))} style={{ border: "1px dashed var(--n-350)", borderRadius: 16, background: "var(--n-000)", padding: 28, display: "flex", alignItems: "center", gap: 16 }}>
-            <Icon name={f.file ? "file-text" : "upload"} size="xl" />
-            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <span style={{ ...mono(14), fontWeight: 600 }}>{f.file ? "Perguntas_Meridian.xlsx" : "Selecionar planilha ou documento de perguntas"}</span>
-              <span style={{ fontSize: 13, color: "var(--n-400)" }}>Planilha, documento, apresentação ou arquivo do Google.</span>
-            </div>
-          </ClickRow>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <input ref={input} type="file" accept=".xlsx" hidden aria-label="Planilha de perguntas" onChange={(e) => { ws.pickRfp((e.target.files || [])[0]); e.target.value = ""; }} />
+            <ClickRow className="" onClick={() => input.current.click()} style={{ border: `1px dashed ${f.errFile ? "var(--danger)" : "var(--n-350)"}`, borderRadius: 16, background: "var(--n-000)", padding: 28, display: "flex", alignItems: "center", gap: 16 }}>
+              <Icon name={f.file ? "file-text" : "upload"} size="xl" />
+              <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+                <span style={{ ...mono(14), fontWeight: 600, overflowWrap: "anywhere" }}>{f.file ? f.file.name : "Selecionar a planilha de perguntas"}</span>
+                <span style={{ fontSize: 13, color: "var(--n-400)" }}>{f.file ? "Clique para trocar o arquivo." : "Planilha .xlsx com uma pergunta por linha, até 10 MB."}</span>
+              </div>
+            </ClickRow>
+            {f.errFile ? <span role="alert" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--danger)" }}><Icon name="circle-alert" size="sm" />{f.errFile}</span> : null}
+          </div>
           <Field label="Nome" required error={f.errName} htmlFor="nt-name"><Input id="nt-name" value={f.name} onChange={set("name")} invalid={!!f.errName} /></Field>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "1fr 1fr", gap: 20, alignItems: "start" }}>
             <Field label="Empresa" required error={f.errCompany} htmlFor="nt-company"><Input id="nt-company" value={f.company} placeholder="Empresa que enviou o edital" onChange={set("company")} invalid={!!f.errCompany} /></Field>
@@ -89,7 +96,7 @@ export function NewTask({ v, ws, pad, isMobile }) {
             <div><Button variant="secondary" icon="plus" onClick={() => setContacts((list) => [...list, newContact()])}>Adicionar contato</Button></div>
           </section>
           <div style={{ display: "flex", gap: 12 }}>
-            <Button onClick={create}>Importar perguntas</Button>
+            <Button onClick={create} loading={state.criando}>Importar perguntas</Button>
             <Button variant="ghost" onClick={() => ws.go("tasks")}>Cancelar</Button>
           </div>
         </div>

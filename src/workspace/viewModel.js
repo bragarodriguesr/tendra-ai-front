@@ -1,4 +1,5 @@
-import { AL, ST, code, plural, TASK_IDS, ITEM_TASKS, TODAY_ISO } from "./data.js";
+import { AL, ST, code, plural, ITEM_TASKS, TODAY_ISO } from "./data.js";
+import { hojeIso } from "../api.js";
 
 const DANGER = "#A8402E";
 
@@ -56,6 +57,9 @@ const FILTERS = [["todos", "Todos"], ["sem-rascunho", "Sem rascunho"], ["sugerid
 /** Deriva tudo o que as telas mostram a partir do estado. */
 export function buildView(s, ws) {
   const isA = s.role === "Aprovador";
+  // Com o servidor, tarefas, exportação, histórico e alertas vêm do banco; sem ele, dos exemplos de data.js.
+  const online = s.tarefasOrigem === "servidor";
+  const taskIds = ws.taskIds(s);
   const c = ws.counts(null, s);
   const openItem = (id, tid) => () => ws.go("review", { taskId: tid || s.itemsTask, sel: id, filter: "todos" });
 
@@ -65,9 +69,9 @@ export function buildView(s, ws) {
   const navGroups = [
     { label: "Início", items: [{ value: "dashboard", label: "Dashboard", icon: "layout-dashboard", onClick: go("dashboard") }] },
     { label: "Trabalho", items: [
-      { value: "tasks", label: "Tarefas", icon: "layout-grid", count: TASK_IDS.length, onClick: go("tasks") },
+      { value: "tasks", label: "Tarefas", icon: "layout-grid", count: taskIds.length, onClick: go("tasks") },
       { value: "review", label: "Revisão", icon: "eye", count: pend, onClick: go("review") },
-      { value: "export", label: "Exportação", icon: "download", onClick: (e) => { e.preventDefault(); ws.go("export", { taskId: "t1" }); } },
+      { value: "export", label: "Exportação", icon: "download", onClick: (e) => { e.preventDefault(); ws.go("export", online ? {} : { taskId: "t1" }); } },
       { value: "history", label: "Histórico", icon: "history", onClick: go("history") }
     ] },
     { label: "Base", items: [
@@ -106,29 +110,38 @@ export function buildView(s, ws) {
   };
 
   // tarefas
-  const tasks = TASK_IDS.map((id) => {
+  const tasks = taskIds.map((id) => {
     const t = ws.taskInfo(id, s);
-    const status = id === "t1" ? (s.exported ? ["Exportada", "approved", "check-check"] : ["Em revisão", "neutral", "eye"])
+    const status = t.isServer
+      ? (t.isFailed ? ["Falha", "danger", "triangle-alert"]
+        : t.isProcessing ? ["Processando", "neutral", "loader-circle"]
+        : t.isReady ? ["Pronta", "approved", "check-check"]
+        : t.dueText === "Vencida" ? ["Vencido", "danger", "clock"]
+        : ["Em revisão", "neutral", "eye"])
+      : id === "t1" ? (s.exported ? ["Exportada", "approved", "check-check"] : ["Em revisão", "neutral", "eye"])
       : t.dueText === "Vencida" ? ["Vencido", "danger", "clock"]
       : t.isReady ? ((id === "t4" ? s.exported4 : s.exported8) ? ["Exportada", "approved", "check-check"] : ["Pronta", "approved", "check-check"])
       : t.isInReview ? ["Em revisão", "neutral", "eye"]
       : t.isProcessing ? ["Processando", "neutral", "loader-circle"]
       : t.isFailed ? ["Falha", "danger", "triangle-alert"]
       : ["Na fila", "neutral", "clock"];
-    const dm = /faltam (\d+)/.exec(t.dueText || "");
-    const urgent = t.dueText === "Vencida" || (dm && +dm[1] < 5);
+    const dm = /faltam? (\d+)/.exec(t.dueText || "");
+    const urgent = t.dueText === "Vencida" || t.dueText === "vence hoje" || (dm && +dm[1] < 5);
+    const serverProgress = t.isProcessing ? (t.items ? `${t.done} de ${t.items} processadas` : "Lendo a planilha") : t.isFailed ? "Falhou" : "Carregando itens";
     return {
       ...t, dueColor: urgent ? DANGER : t.dueColor, dueWeight: urgent ? 600 : 400, title: t.name.split(" — ")[0],
-      pct: t.hasItems || t.isReady ? t.pct : t.isProcessing ? 23 : 0,
-      compText: t.hasItems || t.isReady ? t.shortProg : t.isProcessing ? "42 de 180 processadas" : t.isFailed ? "0 de 0" : "Reprocessando",
+      pct: t.hasItems || t.isReady ? t.pct : t.isProcessing ? (t.isServer ? (t.items ? Math.round((t.done / t.items) * 100) : 0) : 23) : 0,
+      compText: t.hasItems || t.isReady ? t.shortProg : t.isServer ? serverProgress : t.isProcessing ? "42 de 180 processadas" : t.isFailed ? "0 de 0" : "Reprocessando",
       status: status[0], tone: status[1], icon: status[2], open: () => ws.go("task", { taskId: id })
     };
   });
 
   // dashboard
   const dateKey = (x) => { const [d, m, y] = x.split("/"); return +(y + m + d); };
-  const itc = ITEM_TASKS.map((id) => ws.counts(id, s));
-  const openItems = itc.reduce((a, q) => a + q.total - q.approved, 0) + 138;
+  const itc = (online ? taskIds.filter((id) => ws.hasItems(id, s)) : ITEM_TASKS).map((id) => ws.counts(id, s));
+  // Sem o servidor, os números somam o histórico fictício do protótipo.
+  const sample = online ? { open: 0, done: 0, approved: 0 } : { open: 138, done: 18, approved: 1284 };
+  const openItems = itc.reduce((a, q) => a + q.total - q.approved, 0) + sample.open;
   const statusGroups = STATUS_GROUPS
     .map((g) => ({ ...g, n: tasks.filter((t) => g.of.includes(t.status)).length }))
     .filter((g) => g.n > 0)
@@ -136,18 +149,18 @@ export function buildView(s, ws) {
   const months = [["Abr", "abril", 2], ["Mai", "maio", 3], ["Jun", "junho", 3], ["Jul", "julho", 4], ["Ago", "agosto", 3], ["Set", "setembro", 3]];
   const monthMax = Math.max(...months.map((m) => m[2]));
   const dash = {
-    worked: String(tasks.length + 18), workedSub: tasks.length + " em andamento · 18 concluídas",
+    worked: String(tasks.length + sample.done), workedSub: tasks.length + " em andamento · " + sample.done + " concluídas",
     open: String(openItems), openSub: "Em " + tasks.filter((t) => !t.isReady).length + " tarefas ativas, entre revisão e processamento.",
     avg: "2,4 dias",
-    approved: (1284 + itc.reduce((a, q) => a + q.approved, 0)).toLocaleString("pt-BR"),
+    approved: (sample.approved + itc.reduce((a, q) => a + q.approved, 0)).toLocaleString("pt-BR"),
     approvedSub: "Todas com fonte rastreável até o documento de origem.",
     status: statusGroups, total: tasks.length,
     months: months.map(([m, full, n]) => ({ m, full, n, pct: (n / monthMax) * 100 })),
-    deadlines: tasks.filter((t) => { const m = /faltam (\d+)/.exec(t.dueText || ""); return m && +m[1] < 15; }).sort((a, b) => dateKey(a.due) - dateKey(b.due))
+    deadlines: tasks.filter((t) => { const m = /faltam? (\d+)/.exec(t.dueText || ""); return t.dueText === "vence hoje" || (m && +m[1] < 15); }).sort((a, b) => dateKey(a.due) - dateKey(b.due))
   };
 
   // detalhe da tarefa
-  const task0 = ws.taskInfo(s.taskId, s) || ws.taskInfo("t1", s);
+  const task0 = ws.taskInfo(s.taskId, s) || ws.taskInfo(taskIds[0], s) || ws.taskInfo("t1", s);
   const tkr = tasks.find((x) => x.id === task0.id) || {};
   const task = { ...task0, sTxt: tkr.status, sTone: tkr.tone, sIcon: tkr.icon, hasItems: !!task0.hasItems, isReady: !!task0.isReady };
   // Estados dos itens, na ordem do fluxo. Cores de dataviz (tokens/dataviz.css): Em revisão em
@@ -158,7 +171,7 @@ export function buildView(s, ws) {
     { n: c.emr, label: "em revisão", color: "var(--dv-teal-solid)" },
     { n: c.rev, label: "revisada", color: "var(--dv-terra-solid)" },
     { n: c.approved, label: "aprovada", color: "var(--dv-series-6)" }
-  ].map((g) => ({ ...g, width: (g.n / c.total) * 100 + "%" }));
+  ].map((g) => ({ ...g, width: (c.total ? (g.n / c.total) * 100 : 0) + "%" }));
 
   // filtros e lista
   const cnt = (k) => (k === "todos" ? s.items.length : k === "alerta" ? c.alerts : s.items.filter((i) => i.st === k).length);
@@ -240,12 +253,25 @@ export function buildView(s, ws) {
       exported: exp, doExport: onExp, goReview: openItem(t1Pending[0] ? t1Pending[0].id : "r1", "t1")
     };
   };
-  const exportCards = [
+  // Com o servidor: uma linha por tarefa pronta, com a planilha preenchida no processamento (C3).
+  const serverCards = tasks.filter((t) => t.isServer && t.hasItems).map((t) => {
+    const items = ws.itemsOf(t.id, s), pending = items.find((i) => i.st !== "aprovada") || items[0];
+    return {
+      id: t.id, company: t.company, title: t.title, count: t.shortProg, pct: t.pct, blocked: false, filled: true,
+      badge: t.isReady ? "Pronta" : "Em revisão", tone: t.isReady ? "approved" : "neutral", icon: t.isReady ? "circle-check" : "eye",
+      disabled: false, btn: "Baixar planilha preenchida", doExport: () => ws.downloadSheet(t.id),
+      reason: "Traz as sugestões geradas no processamento, com as fontes. As edições e aprovações da revisão ficam no Tendra.ai.",
+      goReview: () => ws.go("review", { taskId: t.id, sel: pending ? pending.id : undefined, filter: "todos" })
+    };
+  });
+  const exportCards = online ? serverCards : [
     mkCard("t1", "Banco Meridian", "Questionário de segurança", t1Items.length, t1Items.length - t1Pending.length, s.exported, () => ws.exportTask("exported")),
     mkCard("t8", "Atlas Saúde", "Questionário de segurança", 32, 32, s.exported8, () => ws.exportTask("exported8")),
     mkCard("t4", "Helios Logística", "Questionário LGPD", 24, 24, s.exported4, () => ws.exportTask("exported4"))
   ];
-  const exportTitle = `${exportCards.filter((x) => !x.blocked).length} de ${exportCards.length} tarefas prontas para exportar`;
+  const exportTitle = online
+    ? `${exportCards.length} ${plural(exportCards.length, "tarefa pronta", "tarefas prontas")} para baixar`
+    : `${exportCards.filter((x) => !x.blocked).length} de ${exportCards.length} tarefas prontas para exportar`;
 
   // histórico
   const MERIDIAN = "Questionário de segurança — Banco Meridian";
@@ -259,7 +285,15 @@ export function buildView(s, ws) {
     { key: "h4", kind: "revisao", q: "Quais são os controles de acesso privilegiado?", task: "RFI Helix Saúde — 2026", full: "Acesso privilegiado exige MFA, aprovação just-in-time e sessão gravada, com revisão trimestral dos acessos.", by: "Kadu Mendes", at: "01/07/2026 09:30", age: 90, srcs: [{ label: "Politica_Acesso.docx · § 4" }] },
     { key: "h5", kind: "revisao", q: "Como é feito o descarte seguro de dados?", task: "RFP Aurora Seguros — 2025", full: "Mídias são sanitizadas conforme NIST 800-88 e o descarte é registrado em certificado de destruição.", by: "Paula Rocha", at: "12/03/2026 15:05", age: 201, srcs: [{ label: "Politica_Retencao.pdf · p. 3" }] }
   ];
-  const allHist = [...live, ...liveRev, ...past];
+  // Com o servidor: aprovações e revisões dos itens das tarefas já lidas.
+  const serverHist = tasks.filter((t) => t.isServer && t.hasItems).flatMap((t) => ws.itemsOf(t.id, s).flatMap((i) => {
+    const base = { q: i.q, task: t.name, full: i.paras.map((p) => p.t).join(" "), age: 0, srcs: i.srcs.map((x) => ({ label: `${x.doc} · ${x.loc}` })) };
+    return [
+      ...(i.st === "aprovada" ? [{ ...base, key: t.id + i.id, kind: "aprovacao", by: i.by, at: i.at }] : []),
+      ...(i.st === "revisada" ? [{ ...base, key: t.id + i.id + "-rev", kind: "revisao", by: i.rby, at: i.rat }] : [])
+    ];
+  }));
+  const allHist = online ? serverHist : [...live, ...liveRev, ...past];
   const kindOf = (k) => (k === "aprovacoes" ? "aprovacao" : "revisao");
   const histCount = (k) => (k === "todos" ? allHist.length : allHist.filter((x) => x.kind === kindOf(k)).length);
   const historyTabs = [["todos", "Todos"], ["aprovacoes", "Aprovações"], ["revisoes", "Revisões"]].map(([value, label]) => ({ value, label, count: histCount(value) }));
@@ -273,11 +307,18 @@ export function buildView(s, ws) {
   // alertas da tela de Tarefas
   const left = (id) => { const q = ws.counts(id, s); return q.total - q.approved; };
   const taskAlerts = [];
+  if (online) {
+    for (const t of tasks) {
+      if (t.isFailed) taskAlerts.push({ key: "falha-" + t.id, at: t.when, icon: "triangle-alert", label: "Falha no carregamento", name: t.company, text: "não pôde ser processada: " + (t.reason || "sem motivo registrado") + ".", action: "Conferir tarefa", go: () => ws.go("task", { taskId: t.id }) });
+      else if (t.hasItems && t.dueText === "Vencida" && !t.isReady) taskAlerts.push({ key: "vencida-" + t.id, at: t.when, icon: "clock", label: "Prazo vencido", name: t.company, text: "está vencida, com " + left(t.id) + " itens sem aprovação.", action: "Abrir tarefa", go: () => ws.go("task", { taskId: t.id }) });
+    }
+  } else {
   taskAlerts.push(s.taskRetry
     ? { key: "orbis-retry", at: "29/09/2026 10:05", icon: "clock", label: "Reprocessamento", name: "Orbis Energia", text: "voltou para a fila de processamento.", action: "Conferir processamento", go: () => ws.go("task", { taskId: "t5" }) }
     : { key: "orbis-falha", at: "29/09/2026 09:40", icon: "triangle-alert", label: "Falha no carregamento", name: "Orbis Energia", text: "não pôde ser carregada. O arquivo está com 0% de conclusão.", action: "Conferir arquivo", go: () => ws.go("task", { taskId: "t5" }) });
   taskAlerts.push({ key: "cordel-vencido", at: "29/09/2026 08:00", icon: "clock", label: "Prazo vencido", name: "Cordel Seguros", text: "está vencida, com " + left("t3") + " itens sem aprovação.", action: "Abrir tarefa", go: () => ws.go("task", { taskId: "t3" }) });
   if (!s.exported) taskAlerts.push({ key: "meridian-prazo", at: "28/09/2026 17:30", icon: "clock", label: "Prazo próximo", name: "Banco Meridian", text: "vence em 4 dias com " + left("t1") + " itens sem aprovação.", action: "Revisar itens", go: () => ws.go("review", { taskId: "t1", sel: "r4", filter: "todos" }) });
+  }
   // os mesmos alertas no sino da barra superior, com o estado de leitura
   taskAlerts.forEach((a) => { a.read = !!s.alertsRead[a.key]; });
   const alertsUnread = taskAlerts.filter((a) => !a.read).length;
@@ -287,8 +328,8 @@ export function buildView(s, ws) {
   const tDeck = { ...deckLayers(pendingAlerts.length), a: pendingAlerts[tAi], pos: `${tAi + 1} de ${pendingAlerts.length}`, hasMany: pendingAlerts.length > 1, index: tAi, count: pendingAlerts.length };
 
   // formulário de nova RFP
-  const f = s.form, tried = f.tried;
-  const dueErr = tried && (!f.due ? "Informe o prazo de submissão." : f.due < TODAY_ISO ? "O prazo não pode estar no passado." : null);
+  const f = s.form, tried = f.tried, today = online ? hojeIso() : TODAY_ISO;
+  const dueErr = tried && (!f.due ? "Informe o prazo de submissão." : f.due < today ? "O prazo não pode estar no passado." : null);
   const cnpjDigits = f.cnpj.replace(/\D/g, "");
   const errCnpj = !f.cnpj ? null : cnpjDigits.length < 14 ? "CNPJ incompleto." : !cnpjValid(cnpjDigits) ? "CNPJ inválido." : null;
   const contacts = f.contacts.map((ct) => ({
@@ -306,11 +347,12 @@ export function buildView(s, ws) {
     errCompany: tried && !f.company ? "Informe a empresa." : null,
     errDue: dueErr || null,
     errOwner: tried && !f.owner ? "Escolha um responsável." : null,
-    smallBase: readyDocs < 3
+    smallBase: readyDocs < 3, today,
+    errFile: f.fileError || (tried && !f.file ? "Selecione a planilha de perguntas (.xlsx)." : null)
   };
 
   return {
-    isA, userName: ws.name(), navGroups, navValue,
+    isA, online, userName: ws.name(), navGroups, navValue,
     docs, readyDocs, onb, tasks, taskAlerts, alertsUnread, tDeck, dash, task, counts: c, segs, filterTabs, rows,
     revTask: (ws.taskInfo(s.itemsTask, s) || {}).name, cur, savedText, drawer, exportCards, exportTitle, history, historyTabs, form
   };
