@@ -38,7 +38,8 @@ function Sidebar({ v, ws, state, isMobile, collapsed }) {
       <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", minHeight: 0 }}>
         <SidebarNav groups={v.navGroups} value={v.navValue} width="100%" collapsed={collapsed} aria-label="Workspace" />
       </div>
-      {collapsed ? (
+      {/* O painel de demo aprova só na tela: com o servidor, as aprovações vão para o banco item a item. */}
+      {state.tarefasOrigem === "servidor" ? null : collapsed ? (
         <div style={{ padding: "12px 0", borderTop: "1px solid var(--n-200)", display: "flex", justifyContent: "center" }}>
           <IconButton icon="check-check" variant="outline" label="Painel de demo: aprovar todos os itens" onClick={ws.demoAll} />
         </div>

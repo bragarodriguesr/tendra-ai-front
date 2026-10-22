@@ -35,7 +35,7 @@ const RESULT_GROUPS = [
 ];
 
 /** Resultado do último envio: cada arquivo com o que aconteceu e, nas recusas, o motivo. */
-function SendResult({ result, onClose }) {
+export function SendResult({ result, onClose }) {
   const groups = RESULT_GROUPS.filter((g) => result[g.key].length);
   return (
     <div role="status" style={card(14, { padding: "16px 20px", display: "flex", flexDirection: "column", gap: 12 })}>

@@ -1,6 +1,7 @@
 import React from "react";
 import { Badge, Button, Card, Divider, Icon, MonoLabel } from "../../ds/index.js";
 import { DISPLAY, Page, mono } from "../ui.jsx";
+import { SendResult } from "./Base.jsx";
 
 const ACCEPTED = ".doc · .docx · .xls · .xlsx · .md · .pdf · .ppt · .pptx · .txt · .csv";
 
@@ -13,10 +14,11 @@ const CONTEXT_TIPS = [
 
 const plural = (n, one, many) => n + " " + (n === 1 ? one : many);
 
-function Uploader({ ws }) {
+function Uploader({ ws, online, sending }) {
   const [over, setOver] = React.useState(false);
   const input = React.useRef(null);
-  const add = (files) => { if (files.length) ws.onboardFiles(files); };
+  // Com o servidor, o envio é o mesmo da Base: arquivos .md para POST /api/base/documentos.
+  const add = (files) => { if (files.length) (online ? ws.sendDocs(files) : ws.onboardFiles(files)); };
   return (
     <div
       className={"tdr-dropzone" + (over ? " is-over" : "")}
@@ -27,12 +29,14 @@ function Uploader({ ws }) {
       <span className="tdr-dropzone-frame"><Icon name="upload" size={24} /></span>
       <div style={{ display: "grid", gap: 8 }}>
         <span style={{ fontWeight: 600, color: "var(--n-900)" }}>Arraste arquivos aqui ou selecione no computador</span>
-        <span style={{ fontSize: 13, lineHeight: 1.55, color: "var(--n-400)" }}>Aceitos: {ACCEPTED} e arquivos do Google baixados (Docs, Planilhas e Apresentações). Vários arquivos por vez.</span>
+        <span style={{ fontSize: 13, lineHeight: 1.55, color: "var(--n-400)" }}>{online
+          ? "Arquivos .md no formato da base, vários por vez, até 10 MB por envio."
+          : <>Aceitos: {ACCEPTED} e arquivos do Google baixados (Docs, Planilhas e Apresentações). Vários arquivos por vez.</>}</span>
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-        <input ref={input} type="file" multiple hidden onChange={(e) => { add(Array.from(e.target.files || [])); e.target.value = ""; }} />
-        <Button icon="upload" onClick={() => input.current.click()}>Subir documentos</Button>
-        <Button variant="secondary" icon="file-text" onClick={ws.onboardSample}>Usar arquivos de exemplo</Button>
+        <input ref={input} type="file" multiple hidden accept={online ? ".md" : undefined} onChange={(e) => { add(Array.from(e.target.files || [])); e.target.value = ""; }} />
+        <Button icon="upload" loading={sending} onClick={() => input.current.click()}>Subir documentos</Button>
+        {online ? null : <Button variant="secondary" icon="file-text" onClick={ws.onboardSample}>Usar arquivos de exemplo</Button>}
       </div>
     </div>
   );
@@ -75,8 +79,8 @@ function Step({ n, title, meta, state }) {
   );
 }
 
-export function Onboarding({ v, ws, pad, isMobile }) {
-  const { list, sent, ready, done } = v.onb;
+export function Onboarding({ v, ws, state, pad, isMobile }) {
+  const { list, sent, ready, done, online } = v.onb;
   return (
     <Page pad={pad} gap={32}>
       <div style={{ display: "grid", gap: 8 }}>
@@ -86,21 +90,22 @@ export function Onboarding({ v, ws, pad, isMobile }) {
       </div>
 
       <div className="tdr-onb-steps">
-        <Step n={1} title="Subir documentos" state={ready ? "done" : "on"} meta={sent ? `${plural(sent, "enviado", "enviados")} · ${done} processados` : "Nenhum documento enviado"} />
+        <Step n={1} title="Subir documentos" state={ready ? "done" : "on"} meta={online ? (sent ? `${plural(sent, "documento", "documentos")} na base · ${ready} ${ready === 1 ? "ativo" : "ativos"}` : "Nenhum documento na base") : sent ? `${plural(sent, "enviado", "enviados")} · ${done} processados` : "Nenhum documento enviado"} />
         <Step n={2} title="Criar a primeira RFP" state={ready ? "on" : null} meta="Importe a lista de perguntas" />
         <Step n={3} title="Revisar e aprovar" meta="Item a item, com a fonte ao lado" />
       </div>
 
       <div className="tdr-onb-two">
         <div style={{ display: "grid", gap: 16, minWidth: 0 }}>
-          <Uploader ws={ws} />
+          <Uploader ws={ws} online={online} sending={state.enviando} />
+          {online && state.envio ? <SendResult result={state.envio} onClose={ws.closeSendResult} /> : null}
           <UploadList list={list} />
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
             <Button iconEnd="arrow-right" disabled={!ready} onClick={() => ws.go("new")}>Criar primeira RFP</Button>
             <Button variant="ghost" onClick={() => ws.go("tasks")}>Fazer depois</Button>
             {ready
-              ? <span style={{ fontSize: 13, color: "var(--n-400)" }}>{plural(ready, "documento pronto", "documentos prontos")}</span>
-              : <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--n-700)" }}><Icon name="info" size={14} />Disponível quando ao menos um documento estiver pronto.</span>}
+              ? <span style={{ fontSize: 13, color: "var(--n-400)" }}>{plural(ready, online ? "documento ativo" : "documento pronto", online ? "documentos ativos" : "documentos prontos")}</span>
+              : <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--n-700)" }}><Icon name="info" size={14} />{online ? "Disponível quando houver ao menos um documento ativo na base." : "Disponível quando ao menos um documento estiver pronto."}</span>}
           </div>
         </div>
 
