@@ -17,7 +17,7 @@ Tudo o que não serve a esses três objetivos fica de fora (seção 6).
 **Decisões do produto que esta arquitetura segue** (PRD v3, seção 20):
 
 - entrada da RFP **somente `.xlsx`**;
-- base de conhecimento carregada pela equipe, **por comando**, a partir de arquivos **`.md`** com cabeçalho (`docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`), direto no banco do produto; sem upload pela interface;
+- base de conhecimento carregada a partir de arquivos **`.md`** com cabeçalho (`docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`), **pela tela Base de conhecimento** (seletor de arquivos do computador) ou pelo comando equivalente, direto no banco do produto *(revisto em 22/10/2026: antes, só por comando)*;
 - limites de qualidade da IA: **80% de relevância e 90% de fidelidade**;
 - fluxo fixo em código, sem agente e sem busca vetorial.
 
@@ -29,11 +29,12 @@ Tudo o que não serve a esses três objetivos fica de fora (seção 6).
 ┌──────────────────────────── máquina local (fases A a C) ───────────────────────────┐
 │                                                                                    │
 │  Front (Vite, localhost:5173)                                                      │
-│    Nova RFP · Base (leitura) · Revisão (editar, aprovar, avaliar)                  │
+│    Nova RFP · Base (lista, envio de .md) · Revisão (editar, aprovar, avaliar)      │
 │        │  /api (proxy do Vite)                                                     │
 │        ▼                                                                           │
 │  Backend (Node + TypeScript, 127.0.0.1:3000)                                       │
-│    comando carregar-base ── arquivos .md ──► banco local (documentos e blocos)     │
+│    0. recebe os .md da tela (ou da pasta, pelo comando carregar-base)              │
+│       ── valida e divide em blocos ──► banco local (documentos e blocos)           │
 │    1. recebe e valida a planilha ─────────► dados/rfps/                            │
 │    2-3. lê a planilha e identifica as perguntas                                    │
 │    4. monta o contexto a partir dos documentos ativos do banco                     │
@@ -64,9 +65,10 @@ Na fase D, o mesmo backend passa a rodar no Render, o banco vira o Postgres do S
 
 | | |
 |---|---|
-| **O que acontece** | A equipe escreve um `.md` por documento, com cabeçalho (`titulo`, `tipo`, `atualizado_em`, `versao` opcional). O comando `carregar-base` valida cada arquivo, divide o texto em blocos (seção, parágrafo, linha) e grava documentos e blocos no banco. Detalhes e regras de validação em `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`. |
+| **O que acontece** | A equipe escreve um `.md` por documento, com cabeçalho (`titulo`, `tipo`, `atualizado_em`, `versao` opcional). Na tela Base de conhecimento, a pessoa clica em "Subir documentos" e escolhe os arquivos no computador; o front envia os arquivos para `POST /api/base/documentos`. O backend valida cada arquivo, divide o texto em blocos (seção, parágrafo, linha), grava documentos e blocos no banco e devolve o resultado de cada arquivo, que a tela mostra. O comando `carregar-base` faz a mesma carga a partir de uma pasta. Detalhes e regras de validação em `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`. |
 | **IA?** | Não. |
-| **Identidade** | O caminho do arquivo. Recarregar o mesmo caminho substitui a versão anterior; hash igual é ignorado; arquivo sem correspondente aparece como órfão, sem ser apagado. |
+| **Identidade** | O nome do arquivo (o navegador não informa a pasta). Enviar de novo o mesmo nome substitui a versão anterior; hash igual é ignorado; dois arquivos com o mesmo nome na mesma carga são recusados. No comando, documento sem arquivo de mesmo nome na pasta aparece como órfão, sem ser apagado. |
+| **Um processo por vez** | O PGlite não aceita dois processos no mesmo banco. O servidor e o comando usam uma trava; com o servidor aberto, a carga é pela tela. |
 | **Ativar ou desativar** | Estado só no banco. Um documento inativo não entra em novas tarefas; respostas já geradas não mudam. |
 
 ### Etapa 1: incluir a planilha de RFP
@@ -144,8 +146,8 @@ A checagem é **determinística** e acontece em dois momentos.
 | Backend | Node 24 + TypeScript, Fastify, ouvindo só em `127.0.0.1` nas fases A a C | Mesmo ecossistema do front e SDK oficial da Anthropic |
 | Processamento documental | `exceljs` para planilhas; analisador de Markdown e de cabeçalho YAML para a base | Leitura exata, sem custo de IA |
 | Integração com LLM | SDK da Anthropic isolado num módulo próprio, chamado direto pelo backend | Fluxo fixo: não precisa de agente, LangChain nem MCP |
-| Banco | Postgres embutido (PGlite) em `dados/`, acessado por um query builder tipado | Sem instalar nada; o mesmo dialeto do Supabase da fase D |
-| Base de conhecimento | Tabelas `documentos` e `blocos`, alimentadas pelo comando `carregar-base` | Sem tela de upload e sem conversão de formatos |
+| Banco | Postgres embutido (PGlite) em `dados/banco`, com SQL parametrizado num módulo de persistência | Sem instalar nada; o mesmo dialeto do Supabase da fase D |
+| Base de conhecimento | Tabelas `documentos` e `blocos`, alimentadas pelo envio da tela Base (`POST /api/base/documentos`) e pelo comando `carregar-base`, com a mesma carga | Arquivos em JSON com conteúdo em base64, até 10 MB por envio; sem conversão de formatos |
 | Arquivos da RFP | Pasta `dados/rfps/`, acessada por um módulo único de armazenamento | Disco local |
 | Processamento | Tarefa em segundo plano no processo do backend, com progresso gravado por lote | Sem fila nem Redis. Tarefa interrompida por reinício é marcada como falha. |
 | Rastreabilidade | Módulo próprio que confere citações e traduz localizações | Separado da geração e dos alertas |
@@ -164,9 +166,9 @@ A organização das pastas está no `PLAN.md`.
 | Fase | Entrega | Como validar |
 |---|---|---|
 | **0. Pré-requisitos** | Chave de testes da API definida e testada; base `.md`, planilha de RFP e gabarito sintéticos | Requisição de teste bem-sucedida; material revisado |
-| **A. Prova da IA (linha de comando)** | Comandos `carregar-base`, `responder` e `avaliar`: da planilha e da base aos itens (JSON) e à planilha preenchida, mais o relatório contra o gabarito. Sem servidor e sem front. | Testes automáticos e avaliação com a RFP sintética contra os limites do SPEC |
+| **A. Prova da IA (linha de comando)** | Carga da base pela tela Base de conhecimento, com um servidor local mínimo só para as rotas da base, e pelo comando `carregar-base`; comandos `responder` e `avaliar`: da planilha e da base aos itens (JSON) e à planilha preenchida, mais o relatório contra o gabarito. A geração não depende de servidor nem de front. | Testes automáticos e avaliação com a RFP sintética contra os limites do SPEC |
 | **B. Backend local com revisão** | As mesmas etapas atrás de rotas HTTP, com tarefas, estados e progresso gravados; edição, aprovação e avaliação persistidas; relatório de aceitação | Testes de integração e uma tarefa acompanhada até o fim, com revisão e relatório |
-| **C. Front conectado** | Seletor de arquivo real na Nova RFP, progresso, Base em leitura, revisão com ações gravadas | Jornada ponta a ponta, da planilha à taxa de aceitação |
+| **C. Front conectado** | Seletor de arquivo real na Nova RFP, progresso, revisão com ações gravadas (a Base já sai conectada da fase A) | Jornada ponta a ponta, da planilha à taxa de aceitação |
 | **D. Publicação compartilhada** | Login real, sessão, hospedagem (Render e Supabase) e segurança de exposição, conforme a fase 1 de `docs/referencia/mvp-proposta-1/PLAN.md` | Demonstração no ambiente compartilhado; checklist daquela fase |
 
 A fase A sozinha mostra se a ideia funciona. Se a qualidade das respostas não atingir os critérios, o ajuste acontece antes de investir em servidor, tela ou hospedagem. A fase D só começa depois de A, B e C aceitas.
@@ -195,7 +197,7 @@ Sem eles o fluxo não pode ser testado nem avaliado.
 
 | Item | Quando entra |
 |---|---|
-| Upload da base pela interface, formatos além de `.md` na base e entrada de RFP além de `.xlsx` | Fase 2 do PRD v3, depois da validação |
+| Formatos além de `.md` na base (com conversão automática), exclusão de documentos e entrada de RFP além de `.xlsx` | Fase 2 do PRD v3, depois da validação |
 | Reconhecimento de alerta persistido e bloqueio de aprovação por papel | Depois da versão 1 (cenários 33, 34, 37 de `docs/referencia/mvp-proposta-1/SPEC.md`), junto com o login |
 | Exportação final aprovada, histórico e auditoria | Depois da versão 1 |
 | Tela da taxa de aceitação | Depois da versão 1; no MVP, por rota e por comando |
@@ -213,8 +215,8 @@ Sem eles o fluxo não pode ser testado nem avaliado.
 | Decisão | Registro |
 |---|---|
 | Entrada da RFP só `.xlsx` | PRD v3, F-09 |
-| Base em `.md` carregada por comando, sem upload pela interface | PRD v3, F-02; `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md` |
-| Cabeçalho do `.md`: `titulo`, `tipo`, `atualizado_em`, `versao`; identidade pelo caminho; data obrigatória | `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md` |
+| Base em `.md`, carregada pela tela Base de conhecimento (seletor de arquivos) ou pelo comando, com a mesma carga | PRD v3, F-02; `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`; decisão de 22/10/2026 |
+| Cabeçalho do `.md`: `titulo`, `tipo`, `atualizado_em`, `versao`; identidade pelo nome do arquivo; data obrigatória | `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md` |
 | Limites de qualidade: relevância 80%, fidelidade 90% | PRD v3, seção 20 |
 | Fluxo fixo, sem agente e sem busca vetorial | Esta arquitetura |
 | Login com Supabase Auth e sessão própria do backend, na fase D | `docs/referencia/mvp-proposta-1/PLAN.md` |
@@ -228,7 +230,7 @@ Sem eles o fluxo não pode ser testado nem avaliado.
 | 1 | Modelo da geração e tamanho do lote | Decidir na fase A, comparando Sonnet 5.5 e Opus 5.5 contra o gabarito; começar com lote de 10 |
 | 2 | Método de medir a fidelidade | Revisão humana de todas as respostas do gabarito (cerca de 30), com uma lista de conferência; avaliador automático só se o volume crescer |
 | 3 | Motor do banco local | **Decidido na A4:** PGlite (Postgres embutido), porque a fase D usa o Postgres do Supabase |
-| 4 | Interface do comando de carga (nome e opções) | **Decidido na A4:** `npm run carregar-base -- <pasta> [--enviado-por <nome>]` |
+| 4 | Interface da carga | **Decidido na A4 (revisto em 22/10/2026):** pela tela, "Subir documentos" na Base de conhecimento, com o servidor `npm run servidor`; pelo terminal, `npm run carregar-base -- <pasta> [--enviado-por <nome>]` |
 | 5 | Formato da citação enviada ao Claude (blocos ou texto corrido) | Validar na etapa A5 |
 | 6 | Simplificação da definição de pronto e dos tipos de teste | Ver o `PLAN.md`; precisa de aprovação, porque a constitution não está versionada no repositório |
 | 7 | Hospedagem do front (Vercel em avaliação) | Decidir antes da fase D |
@@ -299,4 +301,4 @@ A exceção E5 da versão anterior deste documento (edição e aprovação não 
 | Postgres desde o início e módulo único de armazenamento | `mvp-resposta-rfp`, seção 8, agora obrigatórios |
 | Login, hospedagem e segurança de exposição | `mvp-proposta-1`, fase 1 |
 | Verificação conferível sem ler código, por etapa | `mvp-proposta-1` |
-| Base `.md` por comando e cabeçalho | Decisões de 21/10/2026 |
+| Base `.md` com cabeçalho; carga pela tela e por comando | Decisões de 21/10/2026 e 22/10/2026 |

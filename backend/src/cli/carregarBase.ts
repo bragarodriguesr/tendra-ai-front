@@ -3,12 +3,14 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 import { carregarBase, type ResumoDaCarga } from "../base/carga.ts";
 import { carregarConfiguracaoSemChave, ErroDeConfiguracao } from "../config/config.ts";
-import { abrirBanco } from "../persistencia/banco.ts";
+import { abrirBanco, ErroDeBancoEmUso } from "../persistencia/banco.ts";
 
 /**
  * Comando `npm run carregar-base -- <pasta> [--enviado-por <nome>]`.
  * Carrega os `.md` da pasta no banco local e imprime o resumo (FORMATO_BASE_MD.md, seção 5).
- * Termina com código de saída 1 se algum arquivo for recusado. Não usa a chave da API.
+ * É a mesma carga do botão "Subir documentos" da tela Base de conhecimento, para quem prefere
+ * carregar uma pasta inteira. Termina com código de saída 1 se algum arquivo for recusado.
+ * Não usa a chave da API e não roda com o servidor aberto sobre o mesmo banco.
  */
 const USO = "Uso: npm run carregar-base -- <pasta> [--enviado-por <nome>]";
 
@@ -17,9 +19,9 @@ function imprimir(resumo: ResumoDaCarga): void {
     ["Carregados", resumo.carregados],
     ["Atualizados", resumo.atualizados],
     ["Sem mudança", resumo.semMudanca],
-    ["Recusados", resumo.recusados.map(({ caminho, motivo }) => `${caminho}: ${motivo}`)],
-    ["Avisos", resumo.avisos.map(({ caminho, mensagem }) => `${caminho}: ${mensagem}`)],
-    ["Ignorados", resumo.ignorados.map(({ caminho, motivo }) => `${caminho}: ${motivo}`)],
+    ["Recusados", resumo.recusados.map(({ nome, motivo }) => `${nome}: ${motivo}`)],
+    ["Avisos", resumo.avisos.map(({ nome, mensagem }) => `${nome}: ${mensagem}`)],
+    ["Ignorados", resumo.ignorados.map(({ nome, motivo }) => `${nome}: ${motivo}`)],
     ["Órfãos (no banco, sem arquivo na pasta; nada foi apagado)", resumo.orfaos],
   ];
   for (const [titulo, itens] of secoes) {
@@ -65,7 +67,7 @@ async function executar(): Promise<number> {
 try {
   process.exitCode = await executar();
 } catch (erro) {
-  if (!(erro instanceof ErroDeConfiguracao)) throw erro;
+  if (!(erro instanceof ErroDeConfiguracao || erro instanceof ErroDeBancoEmUso)) throw erro;
   console.error(erro.message);
   process.exitCode = 1;
 }

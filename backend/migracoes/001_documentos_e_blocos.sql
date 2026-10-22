@@ -1,10 +1,10 @@
--- Base de conhecimento carregada pelo comando carregar-base (etapa A4).
+-- Base de conhecimento, carregada pela tela Base de conhecimento ou pelo comando carregar-base (etapa A4).
 -- Formato dos arquivos de origem: docs/mvp-resposta-rfp/FORMATO_BASE_MD.md.
 
 CREATE TABLE documentos (
   id               serial PRIMARY KEY,
-  -- Identidade do documento: caminho relativo à pasta carregada, com "/" como separador.
-  caminho          text NOT NULL UNIQUE,
+  -- Identidade do documento: o nome do arquivo (sem pastas). Enviar de novo o mesmo nome substitui a versão.
+  nome             text NOT NULL UNIQUE,
   titulo           text NOT NULL,
   tipo             text NOT NULL CHECK (tipo IN ('documento', 'rfp-passada')),
   atualizado_em    date NOT NULL,

@@ -1,6 +1,6 @@
 # Dados sintéticos para teste e avaliação
 
-Material da **fase 0.2** do `docs/mvp-resposta-rfp/PLAN.md`. Tudo aqui é fictício: a empresa **Pulse Benefícios LTDA** (benefícios corporativos: vale-alimentação e vale-refeição) não existe, e nenhum documento ou cliente é real. É a base para testar e avaliar o pipeline (comandos `carregar-base`, `responder` e `avaliar`).
+Material da **fase 0.2** do `docs/mvp-resposta-rfp/PLAN.md`. Tudo aqui é fictício: a empresa **Pulse Benefícios LTDA** (benefícios corporativos: vale-alimentação e vale-refeição) não existe, e nenhum documento ou cliente é real. É a base para testar e avaliar o pipeline: a carga da base (pela tela Base de conhecimento ou pelo comando `carregar-base`) e os comandos `responder` e `avaliar`.
 
 **Data de referência para os testes: 2026-10-21.** Os alertas de fonte antiga (mais de 120 dias) foram calculados para essa data, então os testes devem fixar o relógio nela.
 
@@ -8,11 +8,11 @@ Material da **fase 0.2** do `docs/mvp-resposta-rfp/PLAN.md`. Tudo aqui é fictí
 
 | Caminho | O que é |
 |---|---|
-| `pulse-beneficios/base/` | 16 documentos `.md` com o cabeçalho de `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`. É a pasta que o comando `carregar-base` lê. |
-| `pulse-beneficios/atualizacao/` | 2 documentos com o mesmo caminho de documentos da base e versão mais nova (cenário 39). |
+| `pulse-beneficios/base/` | 16 documentos `.md` com o cabeçalho de `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`. São os arquivos a subir pela tela Base de conhecimento (pode escolher todos de uma vez) ou a pasta que o comando `carregar-base` lê. |
+| `pulse-beneficios/atualizacao/` | 2 documentos com o mesmo nome de arquivo de documentos da base e versão mais nova (cenário 39). |
 | `pulse-beneficios/fora-da-base/` | 1 documento válido que nunca pode ser fonte (cenário 35). Não é carregado. |
-| `pulse-beneficios/injecao-em-documento/` | 1 documento com instrução maliciosa, no mesmo caminho de um da base (cenário 15). |
-| `pulse-beneficios/casos-de-carga/` | 13 arquivos para a validação da carga (cenário 9 e `FORMATO_BASE_MD.md`). |
+| `pulse-beneficios/injecao-em-documento/` | 1 documento com instrução maliciosa, com o mesmo nome de arquivo de um da base (cenário 15). |
+| `pulse-beneficios/casos-de-carga/` | 13 arquivos para a validação da carga (cenário 9 e `FORMATO_BASE_MD.md`). Subidos pela tela, mostram 2 carregados, 10 recusados com o motivo, 1 aviso e 1 ignorado. |
 | `pulse-beneficios/GUIA-casos-de-teste.md` | Lista dos documentos com idade, versões, conflitos e perguntas de exemplo. |
 | `rfps/` | 3 planilhas de RFP (46, 84 e 61 perguntas), o gabarito e o guia. |
 | `rfps/variantes/` | Casos de borda e arquivos inválidos para a entrada da RFP. |
@@ -20,7 +20,7 @@ Material da **fase 0.2** do `docs/mvp-resposta-rfp/PLAN.md`. Tudo aqui é fictí
 | `rfps/GUIA-rfps-pulse.md` | O mesmo gabarito em tabelas legíveis. |
 | `pessoas.json` | As duas pessoas sintéticas (Kadu Mendes, Revisor; Marcelo Vieira, Aprovador). |
 
-As pastas `base/` e `atualizacao/` são as únicas que representam o estado da base. O `GUIA-casos-de-teste.md` e os demais arquivos de `pulse-beneficios/` ficam fora delas de propósito, para o comando de carga não os ler.
+As pastas `base/` e `atualizacao/` são as únicas que representam o estado da base. O `GUIA-casos-de-teste.md` e os demais arquivos de `pulse-beneficios/` ficam fora delas de propósito, para o comando de carga não os ler. Pela tela, suba só os arquivos dessas pastas. A identidade de um documento é o nome do arquivo, sem a pasta.
 
 ## Fase 0.2: lista da seção 5 de `ARQUITETURA_MAPPING.md`
 

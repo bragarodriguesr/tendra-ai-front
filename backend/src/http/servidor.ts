@@ -1,0 +1,177 @@
+import Fastify, { type FastifyBaseLogger, type FastifyError, type FastifyInstance } from "fastify";
+import { carregarArquivos, type ArquivoParaCarga } from "../base/carga.ts";
+import type { Banco } from "../persistencia/banco.ts";
+import { definirAtivo, listarDocumentos, type DocumentoGravado } from "../persistencia/documentos.ts";
+
+/** Soma dos arquivos de um envio pela tela da Base, depois de decodificados. */
+export const LIMITE_DO_ENVIO_EM_BYTES = 10 * 1024 * 1024;
+export const LIMITE_DE_ARQUIVOS_POR_ENVIO = 100;
+const TAMANHO_MAXIMO_DE_QUEM_ENVIA = 80;
+// Os arquivos chegam em base64 (4 bytes para cada 3), mais o JSON em volta.
+const LIMITE_DO_CORPO_EM_BYTES = Math.ceil((LIMITE_DO_ENVIO_EM_BYTES * 4) / 3) + 1024 * 1024;
+const BASE64 = /^[A-Za-z0-9+/]*={0,2}$/;
+
+export interface OpcoesDoServidor {
+  banco: Banco;
+  /** Data de hoje (AAAA-MM-DD). Nos testes, uma data fixa. */
+  hoje?: () => string;
+  /** Log das requisições (sem corpo). Sem ele, o servidor não registra nada. */
+  log?: FastifyBaseLogger;
+}
+
+/** Documento como a tela da Base o recebe. */
+export interface DocumentoDaBase {
+  id: number;
+  nome: string;
+  titulo: string;
+  tipo: DocumentoGravado["tipo"];
+  atualizadoEm: string;
+  versao: string | null;
+  ativo: boolean;
+  enviadoPor: string | null;
+  carregadoEm: string;
+}
+
+interface CorpoDoEnvio {
+  enviadoPor?: string;
+  arquivos: { nome: string; conteudoBase64: string }[];
+}
+
+class ErroDoPedido extends Error {
+  readonly statusCode: number;
+
+  constructor(statusCode: number, mensagem: string) {
+    super(mensagem);
+    this.statusCode = statusCode;
+  }
+}
+
+const paraTela = (documento: DocumentoGravado): DocumentoDaBase => ({
+  id: documento.id,
+  nome: documento.nome,
+  titulo: documento.titulo,
+  tipo: documento.tipo,
+  atualizadoEm: documento.atualizadoEm,
+  versao: documento.versao,
+  ativo: documento.ativo,
+  enviadoPor: documento.enviadoPor,
+  carregadoEm: documento.carregadoEm,
+});
+
+/**
+ * Servidor HTTP da base de conhecimento, usado pela tela Base de conhecimento:
+ * listar, enviar `.md` (mesma carga do comando carregar-base) e ativar ou desativar.
+ * Deve ouvir só em 127.0.0.1 (cenário 30); quem decide o endereço é o comando `servidor`.
+ */
+export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
+  const { banco } = opcoes;
+  const hoje = opcoes.hoje ?? (() => new Date().toISOString().slice(0, 10));
+  const servidor = Fastify({
+    bodyLimit: LIMITE_DO_CORPO_EM_BYTES,
+    ...(opcoes.log === undefined ? { logger: false } : { loggerInstance: opcoes.log }),
+  });
+
+  // Uma carga por vez: duas cargas simultâneas do mesmo nome disputariam a mesma linha do banco.
+  let fila: Promise<unknown> = Promise.resolve();
+  const emFila = <T>(tarefa: () => Promise<T>): Promise<T> => {
+    const resultado = fila.then(tarefa, tarefa);
+    fila = resultado.catch(() => undefined);
+    return resultado;
+  };
+
+  servidor.setErrorHandler((erro: FastifyError, pedido, resposta) => {
+    if (erro instanceof ErroDoPedido) return resposta.status(erro.statusCode).send({ erro: erro.message });
+    if (erro.validation) return resposta.status(400).send({ erro: "Pedido inválido." });
+    if (erro.code === "FST_ERR_CTP_BODY_TOO_LARGE") {
+      return resposta.status(413).send({ erro: mensagemDeEnvioGrande() });
+    }
+    if (erro.statusCode !== undefined && erro.statusCode < 500) {
+      return resposta.status(erro.statusCode).send({ erro: "Pedido inválido." });
+    }
+    pedido.log.error({ erro: erro.name }, "Falha ao atender o pedido");
+    return resposta.status(500).send({ erro: "Erro interno do servidor. Tente novamente." });
+  });
+
+  servidor.get("/api/base/documentos", async () => ({
+    documentos: (await listarDocumentos(banco)).map(paraTela),
+  }));
+
+  servidor.post<{ Body: CorpoDoEnvio }>(
+    "/api/base/documentos",
+    {
+      schema: {
+        body: {
+          type: "object",
+          required: ["arquivos"],
+          additionalProperties: false,
+          properties: {
+            enviadoPor: { type: "string" },
+            arquivos: {
+              type: "array",
+              minItems: 1,
+              maxItems: LIMITE_DE_ARQUIVOS_POR_ENVIO,
+              items: {
+                type: "object",
+                required: ["nome", "conteudoBase64"],
+                additionalProperties: false,
+                properties: { nome: { type: "string" }, conteudoBase64: { type: "string" } },
+              },
+            },
+          },
+        },
+      },
+    },
+    async (pedido) => {
+      const { arquivos: recebidos, enviadoPor } = pedido.body;
+      let total = 0;
+      const arquivos: ArquivoParaCarga[] = recebidos.map(({ nome, conteudoBase64 }) => {
+        if (!BASE64.test(conteudoBase64)) throw new ErroDoPedido(400, "Pedido inválido: conteúdo de arquivo mal codificado.");
+        const conteudo = new Uint8Array(Buffer.from(conteudoBase64, "base64"));
+        total += conteudo.byteLength;
+        return { nome, conteudo };
+      });
+      if (total > LIMITE_DO_ENVIO_EM_BYTES) throw new ErroDoPedido(413, mensagemDeEnvioGrande());
+
+      const quem = enviadoPor?.trim().slice(0, TAMANHO_MAXIMO_DE_QUEM_ENVIA) || null;
+      const resumo = await emFila(() => carregarArquivos({ banco, arquivos, hoje: hoje(), enviadoPor: quem }));
+      pedido.log.info(
+        {
+          arquivos: arquivos.length,
+          carregados: resumo.carregados.length,
+          atualizados: resumo.atualizados.length,
+          semMudanca: resumo.semMudanca.length,
+          recusados: resumo.recusados.length,
+          ignorados: resumo.ignorados.length,
+        },
+        "Envio para a base",
+      );
+      return { resumo, documentos: (await listarDocumentos(banco)).map(paraTela) };
+    },
+  );
+
+  servidor.patch<{ Params: { id: string }; Body: { ativo: boolean } }>(
+    "/api/base/documentos/:id",
+    {
+      schema: {
+        params: { type: "object", properties: { id: { type: "string", pattern: "^[1-9][0-9]{0,8}$" } } },
+        body: {
+          type: "object",
+          required: ["ativo"],
+          additionalProperties: false,
+          properties: { ativo: { type: "boolean" } },
+        },
+      },
+    },
+    async (pedido) => {
+      const documento = await definirAtivo(banco, Number(pedido.params.id), pedido.body.ativo);
+      if (documento === null) throw new ErroDoPedido(404, "Documento não encontrado na base.");
+      return { documento: paraTela(documento) };
+    },
+  );
+
+  return servidor;
+}
+
+function mensagemDeEnvioGrande(): string {
+  return `Envio acima de ${LIMITE_DO_ENVIO_EM_BYTES / (1024 * 1024)} MB. Envie os arquivos em partes menores.`;
+}

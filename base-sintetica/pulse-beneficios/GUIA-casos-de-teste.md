@@ -1,6 +1,6 @@
 # Dados sintéticos da Pulse Benefícios LTDA: guia de casos de teste
 
-> Este arquivo é só um guia e **não deve ser carregado na base**. Ele fica fora das pastas `base/` e `atualizacao/`, que são as pastas que o comando de carga lê.
+> Este arquivo é só um guia e **não deve ser carregado na base**. Ele fica fora das pastas `base/` e `atualizacao/`, que são as pastas cujos arquivos se sobem pela tela Base de conhecimento (ou que o comando de carga lê).
 
 Empresa fictícia **Pulse Benefícios LTDA** (benefícios corporativos: vale-alimentação e vale-refeição), usuária do Tendra.ai. Todos os arquivos seguem o formato de `FORMATO_BASE_MD.md` (campos `titulo`, `tipo`, `atualizado_em` e `versao`). Nenhum dado é real.
 
@@ -9,10 +9,10 @@ Empresa fictícia **Pulse Benefícios LTDA** (benefícios corporativos: vale-ali
 ## Estrutura
 
 - `base/`: estado inicial da base, 16 documentos.
-- `atualizacao/`: 2 documentos com o **mesmo caminho** de documentos da base e versão mais nova. Carregar essa pasta depois de `base/` testa a substituição de versão (cenário 39 do SPEC).
+- `atualizacao/`: 2 documentos com o **mesmo nome de arquivo** de documentos da base e versão mais nova. Carregar essa pasta depois de `base/` testa a substituição de versão (cenário 39 do SPEC).
 - `fora-da-base/`: 1 documento válido que **nunca** pode ser usado como fonte (cenário 35). Não é carregado.
 - `casos-de-carga/`: 13 arquivos para testar a validação da carga (cenário 9 do SPEC e os 16 cenários de `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`).
-- `injecao-em-documento/`: 1 documento com **instrução maliciosa**, no mesmo caminho de `base/produto/app-mobile-funcionalidades.md` (versão 9.2). Carregue por cima da base para o teste do cenário 15.
+- `injecao-em-documento/`: 1 documento com **instrução maliciosa**, com o mesmo nome de `base/produto/app-mobile-funcionalidades.md` (versão 9.2). Carregue por cima da base (pela tela, basta subir esse arquivo) para o teste do cenário 15.
 
 ## Documentos
 
@@ -65,7 +65,7 @@ Caso de fronteira: o `contrato-prestacao-servicos.md` tem **131 dias**. Passa do
 |---|---|---|---|
 | Política de Segurança da Informação | v3.0, 2025-03-12 (antiga) | v4.0, 2026-08-20 | MFA para todos os colaboradores (antes só administradores e acessos remotos), senha de 14 caracteres (antes 12), logs por 24 meses (antes 6), varredura mensal (antes trimestral), críticas em 5 dias (antes 15), pentest semestral (antes anual), TLS 1.3 (antes 1.2 ou superior), incidentes em 48 horas (antes 72) |
 | Anexo de SLA, SLO e RTO | v1.0, 2026-01-15 (antigo) | v2.0, 2026-09-01 | Disponibilidade 99,9% (antes 99,5%), autorização 99,95% (antes 99,7%), RPO 15 minutos (antes 1 hora), RTO 4 horas (antes 8), severidade 1 com resposta em 30 minutos (antes 1 hora) |
-Ordem do teste: carregar `base/`, gerar respostas, carregar `atualizacao/` e gerar de novo. Os dois arquivos aparecem em "Atualizados" no resumo da carga. Como `atualizacao/` tem só dois arquivos, os outros 14 documentos aparecem como "Órfãos" no resumo (nada é apagado). Para um resumo limpo (14 "Sem mudança" e 2 "Atualizados"), copie os dois arquivos por cima de uma cópia de `base/` e carregue essa pasta. Depois da atualização, os alertas `old` desses dois documentos desaparecem.
+Ordem do teste: carregar `base/`, gerar respostas, carregar `atualizacao/` e gerar de novo. Os dois arquivos aparecem em "Atualizados" no resultado da carga. Pela tela, basta subir os dois arquivos de `atualizacao/`. Pelo comando, como `atualizacao/` tem só dois arquivos, os outros 14 documentos aparecem como "Órfãos" no resumo (nada é apagado); para um resumo limpo (14 "Sem mudança" e 2 "Atualizados"), copie os dois arquivos por cima de uma cópia de `base/` e carregue essa pasta. Depois da atualização, os alertas `old` desses dois documentos desaparecem.
 
 ### 3. Fontes conflitantes
 

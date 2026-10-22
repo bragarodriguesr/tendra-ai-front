@@ -1,5 +1,6 @@
 import React from "react";
 import { seedItems, seedDocs, genItems, nowStr, ITEM_TASKS, GENERATED, TASKS } from "./data.js";
+import { definirDocumentoAtivo, enviarDocumentosDaBase, listarDocumentosDaBase, paraDocumentoDaTela } from "../api.js";
 
 let contactSeq = 0;
 export const newContact = () => ({ id: "c" + ++contactSeq, name: "", role: "", phone: "", email: "" });
@@ -9,7 +10,8 @@ const initialState = ({ initialScreen, role }) => ({
   screen: initialScreen, role,
   items: seedItems(), itemsTask: "t1", store: {}, sel: "r4", filter: "todos",
   edit: false, showOrig: false, drawer: null, dialog: false, toast: null, reviewPane: "list",
-  docs: seedDocs(), sort: "idade", taskId: "t1",
+  // Base: lista de exemplo até o servidor responder; depois, os documentos do banco.
+  docs: seedDocs(), baseOrigem: "exemplo", enviando: false, envio: null, sort: "idade", taskId: "t1",
   exported: null, exported4: null, exported8: null, expanded: null,
   form: { name: "Perguntas_Meridian.xlsx", company: "", cnpj: "", type: "RFP", due: "", owner: "", contacts: [newContact()], file: false, identified: false, tried: false },
   fb: {}, saved: 0, tick: 0, taskRetry: false, alertsRead: {},
@@ -101,20 +103,50 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
           { name: "FAQ_Produto.md", st: "processando", fate: "erro" }
         ].map((d) => ({ type: "Documento", origin: "onb", ...d })));
       },
-      uploadDocs() {
-        api.addDocs([
-          { name: "Proposta_Helios_2026.pptx", type: "Documento", st: "processando" },
-          { name: "Inventario_Ativos.exe", type: "Documento", st: "formato" },
-          { name: "Contrato_scan_2023.pdf", type: "Documento", st: "suporte" }
-        ]);
+      /** Lê a base do servidor. Sem servidor, a tela segue com a lista de exemplo. */
+      async loadBase() {
+        try {
+          const { documentos } = await listarDocumentosDaBase();
+          setState({ docs: documentos.map((d) => paraDocumentoDaTela(d)), baseOrigem: "servidor" });
+        } catch {
+          setState({ baseOrigem: "exemplo" });
+        }
       },
-      uploadRfp() { api.addDocs([{ name: "RFP_Vetta_2026.xlsx", type: "RFP passada", st: "processando" }]); },
+      /** "Subir documentos": envia os .md escolhidos no computador para a mesma carga do comando carregar-base. */
+      async sendDocs(files) {
+        if (!files.length || ref.current.enviando) return;
+        setState({ enviando: true });
+        try {
+          const { resumo, documentos } = await enviarDocumentosDaBase(files, api.name());
+          setState({ docs: documentos.map((d) => paraDocumentoDaTela(d)), baseOrigem: "servidor", envio: resumo, enviando: false });
+          const ok = resumo.carregados.length + resumo.atualizados.length + resumo.semMudanca.length;
+          const falhas = resumo.recusados.length + resumo.ignorados.length;
+          api.toast(falhas ? "Envio concluído com recusas" : "Envio concluído",
+            `${ok} de ${files.length} arquivo${files.length > 1 ? "s" : ""} na base.${falhas ? " Veja os motivos na tela." : ""}`,
+            falhas ? "warning" : "success");
+        } catch (e) {
+          setState({ enviando: false });
+          api.toast("Envio não concluído", e.message, "danger");
+        }
+      },
+      closeSendResult() { setState({ envio: null }); },
       retryDoc(id) {
         setState((s) => ({ docs: s.docs.map((x) => (x.id === id ? { ...x, st: "processando", fate: null, ms: 1800 } : x)) }));
         setTimeout(() => setState((s) => ({ docs: s.docs.map((x) => (x.id === id ? { ...x, st: "pronto" } : x)) })), 1800);
       },
-      toggleDoc(d) {
-        setState((s) => ({ docs: s.docs.map((q) => (q.id === d.id ? { ...q, off: !q.off } : q)) }));
+      async toggleDoc(d) {
+        if (d.apiId !== undefined) {
+          try {
+            const { documento } = await definirDocumentoAtivo(d.apiId, d.off);
+            const novo = paraDocumentoDaTela(documento);
+            setState((s) => ({ docs: s.docs.map((q) => (q.id === novo.id ? novo : q)) }));
+          } catch (e) {
+            api.toast("Não foi possível alterar o documento", e.message, "danger");
+            return;
+          }
+        } else {
+          setState((s) => ({ docs: s.docs.map((q) => (q.id === d.id ? { ...q, off: !q.off } : q)) }));
+        }
         api.toast(d.off ? "Documento ativado" : "Documento inativo",
           d.off ? d.name + " voltou a ser usado nas respostas." : d.name + " não será usado em novas respostas.", "neutral");
       },
@@ -234,5 +266,9 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
     };
   }, [ws]);
 
-  return { state, ws };
+  // Lê a base do servidor ao abrir o Workspace e a cada entrada na tela Base de conhecimento.
+  React.useEffect(() => { ws.loadBase(); }, [ws]);
+  React.useEffect(() => { if (state.screen === "base") ws.loadBase(); }, [ws, state.screen]);
+
+    return { state, ws };
 }

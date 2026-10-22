@@ -58,11 +58,19 @@ describe("Cenário 27 · configuração do backend", () => {
 describe("Configuração dos comandos que não chamam a IA", () => {
   it("não exige ANTHROPIC_API_KEY e aplica os mesmos padrões", () => {
     const configuracao = carregarConfiguracaoSemChave({}, PASTA_BASE);
-    expect(configuracao).toEqual({ pastaDados: path.resolve(PASTA_BASE, "../dados"), nivelDeLog: "info" });
+    expect(configuracao).toEqual({ pastaDados: path.resolve(PASTA_BASE, "../dados"), nivelDeLog: "info", porta: 3000 });
     expect(configuracao).not.toHaveProperty("chaveApi");
   });
 
   it("continua recusando nível de log inválido", () => {
     expect(() => carregarConfiguracaoSemChave({ TENDRA_NIVEL_LOG: "verboso" }, PASTA_BASE)).toThrow(/TENDRA_NIVEL_LOG/);
+  });
+
+  it("lê a porta do servidor de TENDRA_PORTA", () => {
+    expect(carregarConfiguracaoSemChave({ TENDRA_PORTA: "4010" }, PASTA_BASE).porta).toBe(4010);
+  });
+
+  it.each(["0", "70000", "abc", "30.5"])("recusa TENDRA_PORTA inválida (%s)", (porta) => {
+    expect(() => carregarConfiguracaoSemChave({ TENDRA_PORTA: porta }, PASTA_BASE)).toThrow(/TENDRA_PORTA/);
   });
 });
