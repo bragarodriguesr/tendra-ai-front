@@ -180,6 +180,11 @@ Ver etapa A1.
 - Falha em qualquer etapa leva a tarefa a `falha`, sem resultado parcial apresentado (cenário 17).
 - Gerar o JSON no formato de `data.js` e a planilha preenchida identificada como não revisada (cenários 24 e 25).
 - **Verificação:** testes passando; primeira execução completa do comando `responder` com a RFP sintética.
+- **Situação (22/10/2026): implementada com a API simulada.**
+  - Feito: `rastreabilidade/montarItem.ts` (citação conferida contra os blocos, `loc` como `seção · linha N`, `ex` com o texto literal do documento, texto sem citação válida retirado com `lowconf`, `sem-rascunho` com `nocontext`), `documentos/planilhaPreenchida.ts` (cenário 24), `fluxo/processarTarefa.ts` e o comando `npm run responder -- <planilha.xlsx>`, que grava `itens.json`, a planilha preenchida, `tarefa.json` e o registro em `dados/resultados/<id>/`.
+  - Regras de checagem adotadas: um trecho sem letras nem números (pontuação entre trechos citados) não conta como texto sem fonte; o texto de um parágrafo tem os espaços normalizados; `ex` de uma citação de vários blocos é o texto dos blocos unidos por quebra de linha; o título das colunas novas fica na linha acima da primeira pergunta da aba.
+  - Testes do processamento completo da RFP-01 com a API simulada (46 itens, células originais intactas, base vazia, falha no meio). O `responder` foi conferido contra uma API falsa local com a RFP-03.
+  - **Pendente, depois da A1:** a primeira execução real do `responder` com a RFP sintética.
 
 ### A7. Alertas determinísticos
 - Fonte desatualizada a partir de `atualizado_em` (cenário 20) e termo crítico a partir de `config/termos-criticos.json` (cenário 21).
