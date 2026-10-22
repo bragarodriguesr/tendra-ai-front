@@ -3,17 +3,19 @@ import type { NomesDeCabecalho } from "../config/cabecalhos.ts";
 import { identificarPerguntas, lerPlanilha, validarArquivoDePlanilha, type ModeloDeResposta, type Pergunta } from "../documentos/planilha.ts";
 import { gerarPlanilhaPreenchida } from "../documentos/planilhaPreenchida.ts";
 import { gerarRespostas } from "../geracao/gerarRespostas.ts";
+import { marcarConflitos } from "../geracao/conflitos.ts";
 import { criarIdentificadorComIA } from "../geracao/identificarComIA.ts";
 import type { ClienteDaIa } from "../ia/cliente.ts";
 import { VERSOES_DAS_INSTRUCOES } from "../ia/instrucoes.ts";
 import type { Banco } from "../persistencia/banco.ts";
 import { montarItem, type ChecagemDoItem, type ItemDaRevisao } from "../rastreabilidade/montarItem.ts";
 import { buscarFontes } from "../recuperacao/buscarFontes.ts";
+import { aplicarAlertasDeterministicos } from "../regras/alertas.ts";
 
 /**
  * Processamento de uma tarefa (fluxo fixo, sem agente): valida e lê a planilha, identifica as
- * perguntas, monta o contexto da base, gera em lotes, checa as fontes e produz os itens e a
- * planilha preenchida. Qualquer falha interrompe tudo: o chamador marca a tarefa como `falha`
+ * perguntas, monta o contexto da base, gera em lotes, checa as fontes, aponta conflitos, aplica
+ * os alertas determinísticos e produz os itens e a planilha preenchida. Qualquer falha interrompe tudo: o chamador marca a tarefa como `falha`
  * e nada parcial é apresentado (cenário 17).
  */
 
@@ -40,6 +42,8 @@ export interface OpcoesDaTarefa {
   cliente: ClienteDaIa;
   ia: ConfiguracaoDaIa;
   nomesDeCabecalho: NomesDeCabecalho;
+  /** Lista de termos críticos da configuração (cenário 21). */
+  termosCriticos: string[];
   /** Data do backend (AAAA-MM-DD), usada na idade das fontes. */
   hoje: string;
   nomeDoArquivo: string;
@@ -81,7 +85,9 @@ export async function processarTarefa(opcoes: OpcoesDaTarefa): Promise<Resultado
     );
   }
 
-  const itens = checados.map(({ item }) => item);
+  let itens = checados.map(({ item }) => item);
+  if (fontes.tipo === "base") itens = await marcarConflitos({ cliente: opcoes.cliente, modelo: opcoes.ia.modeloDeConflito, itens });
+  itens = itens.map((item) => aplicarAlertasDeterministicos(item, opcoes.termosCriticos));
   return {
     perguntas: identificacao.perguntas,
     origemDasPerguntas: identificacao.origem,

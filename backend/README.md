@@ -1,6 +1,6 @@
 # Backend da Tendra.ai
 
-Backend do MVP descrito em [`docs/mvp-resposta-rfp/`](../docs/mvp-resposta-rfp/). Esta versão contém o esqueleto da etapa A2 do plano (configuração, armazenamento de arquivos e logs), a leitura da planilha de RFP da etapa A3, a carga da base de conhecimento da etapa A4 (pela tela Base de conhecimento do front e por comando) o contexto, o cliente do Claude e a geração em lotes da etapa A5 e a checagem das fontes e a saída da etapa A6, testados com a API simulada.
+Backend do MVP descrito em [`docs/mvp-resposta-rfp/`](../docs/mvp-resposta-rfp/). Esta versão contém o esqueleto da etapa A2 do plano (configuração, armazenamento de arquivos e logs), a leitura da planilha de RFP da etapa A3, a carga da base de conhecimento da etapa A4 (pela tela Base de conhecimento do front e por comando) o contexto, o cliente do Claude e a geração em lotes da etapa A5 a checagem das fontes e a saída da etapa A6, os alertas da etapa A7 e o conflito entre fontes da etapa A8, testados com a API simulada.
 
 ## Requisitos
 
@@ -29,12 +29,13 @@ Execute a partir da pasta `backend/`:
 | `src/config/` | Leitura e validação das variáveis de ambiente |
 | `src/armazenamento/` | Leitura e gravação de arquivos, sempre com nome gerado pelo backend |
 | `src/documentos/` | Validação, leitura e preenchimento da planilha `.xlsx` de RFP, identificação das perguntas e do modelo de resposta (colunas de resposta e de comentário e lista de valores permitidos) |
-| `config/` | Listas configuráveis, como os nomes aceitos para os cabeçalhos das colunas de pergunta, resposta e comentário (`cabecalhos.json`) |
+| `config/` | Listas configuráveis: os nomes aceitos para os cabeçalhos das colunas de pergunta, resposta e comentário (`cabecalhos.json`) e os termos críticos (`termos-criticos.json`) |
 | `src/base/` | Leitura e validação do cabeçalho dos `.md`, divisão em blocos com seção e linha, e a carga da base (usada pela rota de envio e pelo comando) |
 | `src/recuperacao/` | Contexto da geração: só documentos ativos, base vazia sem chamar a IA e teto de 25 MB e 400 mil tokens |
 | `src/ia/` | Cliente da API do Claude (erros tipados, novas tentativas, registro sem conteúdo) e instruções versionadas em `ia/instrucoes/` |
-| `src/geracao/` | Geração em lotes com citações, separação das respostas pelos marcadores `[Pn]` e identificação de perguntas com IA |
+| `src/geracao/` | Geração em lotes com citações, separação das respostas pelos marcadores `[Pn]`, identificação de perguntas com IA e a chamada que aponta conflitos entre fontes |
 | `src/rastreabilidade/` | Checagem das citações contra os blocos, localização `seção · linha N`, parágrafos ligados às fontes e estados dos itens |
+| `src/regras/` | Alertas determinísticos: fonte com mais de 120 dias (`old`) e termo crítico na pergunta (`critical`) |
 | `src/fluxo/` | Processamento de uma tarefa, da planilha aos itens e à planilha preenchida |
 | `src/http/` | Servidor HTTP (Fastify) e rotas da base: `GET /api/base/documentos`, `POST /api/base/documentos` (envio de `.md` em JSON, conteúdo em base64, até 10 MB e 100 arquivos) e `PATCH /api/base/documentos/:id` (ativar e desativar) |
 | `src/persistencia/` | Banco PGlite, migrações e acesso aos documentos e blocos |

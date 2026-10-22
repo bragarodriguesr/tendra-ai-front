@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 export const VERSOES_DAS_INSTRUCOES = {
   geracao: "geracao-v1",
   identificacao: "identificacao-v1",
+  conflito: "conflito-v1",
 } as const;
 
 export type NomeDasInstrucoes = keyof typeof VERSOES_DAS_INSTRUCOES;
