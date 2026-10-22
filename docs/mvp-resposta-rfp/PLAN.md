@@ -23,6 +23,8 @@ Chegar a um backend que **prove a hipótese central do MVP** (a pessoa aceita as
 
 > **Situação da fase A (22/10/2026):** o código das etapas A2 a A10 está pronto e testado com a API do Claude simulada. Falta a parte que exige a chave: a A1 e, depois dela, as execuções reais da A5 a A10 (`gerar-amostra`, `responder` e `avaliar` com Sonnet 5.5 e Opus 5.5, a lista de fidelidade preenchida por uma pessoa e a escolha do modelo em P8). O portão da fase A só fecha com esse relatório.
 
+> **Situação da fase B (22/10/2026):** B1 a B6 implementadas e testadas com a API do Claude simulada, por decisão do grupo enquanto a A1 está pendente. O servidor sobe com a chave ou com `TENDRA_API_SIMULADA=1` (respostas marcadas como simuladas). **Depois da A1, todo o fluxo da fase B precisa ser retestado com a API real:** processar uma RFP pela rota, acompanhar o progresso, revisar e conferir o relatório de aceitação. Pelo plano, o portão da fase A (avaliação real) continua valendo antes de a fase C ser dada como aceita.
+
 A fase A concentra o risco técnico. Se a avaliação não atingir os limites do SPEC, o ajuste acontece **antes** de investir em servidor, tela ou hospedagem. A fase D só começa depois de A, B e C aceitas e de haver taxa de aceitação medida.
 
 Cada etapa abaixo é uma mudança pequena, com objetivo claro, testes próprios e um pull request separado.
@@ -255,7 +257,7 @@ Ver etapa A1.
 
 ### B3. Rotas da base
 - **Antecipadas na A4**, junto com o envio pela tela: `GET /api/base/documentos` (nome do arquivo, título, tipo, versão, data de atualização, ativo, enviado por e data da carga; a idade é calculada na tela), `POST /api/base/documentos` (envio de `.md`) e `PATCH /api/base/documentos/:id` (ativar e desativar, cenário 40).
-- Falta nesta etapa: **Verificação** de que um documento desativado não é citado em nova tarefa, que depende da geração (A5).
+- **Situação (22/10/2026): concluída.** O teste `equivalencia.test.ts` desativa um documento pela rota, processa uma tarefa pela rota e confere três coisas: o documento não vai à IA, não aparece no registro e não é citado. Reativado, ele volta ao contexto. (API simulada até a A1.)
 
 ### B4. Tarefa interrompida
 - Ao iniciar, marcar como falha toda tarefa que estava em `processando` (cenário 32).
@@ -283,6 +285,7 @@ Ver etapa A1.
 ### B6. Equivalência com o comando
 - Teste que processa a mesma planilha e a mesma base pelo comando `responder` e pelo backend e compara os itens (cenário 25), com a API simulada.
 - **Verificação:** teste passando.
+- **Situação (22/10/2026): concluída, com a API simulada até a A1.** `equivalencia.test.ts` processa a RFP-01 pelo caminho do comando (`processarTarefa`, o mesmo do `responder`) e pela rota `POST /api/tarefas` e compara os itens, que saem iguais, e a posição de cada pergunta. O mesmo arquivo confere o cenário 30: o `npm run servidor` real responde em 127.0.0.1 e recusa conexão pelo endereço da rede.
 
 ## Fase C: front conectado
 
