@@ -15,7 +15,7 @@ Execute a partir da pasta `backend/`:
 |---|---|
 | `npm install` | Instala as dependências |
 | `npm run verificar-config` | Confere a configuração. Sem uma variável obrigatória, termina com erro e mostra o nome dela |
-| `npm run servidor` | Sobe o servidor da base em `http://127.0.0.1:3000` (porta em `TENDRA_PORTA`), só acessível nesta máquina. É ele que a tela Base de conhecimento usa para listar, receber os `.md` de "Subir documentos" e ativar ou desativar documentos. Encerre com Ctrl+C |
+| `npm run servidor` | Sobe o backend em `http://127.0.0.1:3000` (porta em `TENDRA_PORTA`), só acessível nesta máquina, com as rotas da base de conhecimento e das tarefas usadas pelo front. Exige `ANTHROPIC_API_KEY`; sem a chave, use `TENDRA_API_SIMULADA=1 npm run servidor` para respostas **simuladas** (até a A1). Ao iniciar, marca como falha as tarefas interrompidas. Encerre com Ctrl+C |
 | `npm run carregar-base -- <pasta> [--enviado-por <nome>]` | A mesma carga da tela, a partir de uma pasta (e subpastas): grava os `.md` no banco local, no formato de `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`, e imprime o resumo: carregados, atualizados, sem mudança, recusados com o motivo, avisos, ignorados e órfãos. Termina com código 1 se algum arquivo for recusado. Não roda com o servidor aberto |
 | `npm run gerar-amostra -- <planilha.xlsx> [--limite 5]` | Verificação real da A5: gera respostas para as primeiras perguntas da planilha com a base ativa do banco e mostra cada uma com as fontes (`arquivo · seção · linha`). Grava as respostas brutas da API e o registro em `dados/amostras/`. **Chama a API real**: exige `ANTHROPIC_API_KEY` e tem custo |
 | `npm run responder -- <planilha.xlsx>` | Processa a planilha com a base ativa do banco (cenário 25): grava em `dados/resultados/<id>/` os itens no formato de `src/workspace/data.js` (`itens.json`), a planilha preenchida, os dados da tarefa e o registro de requisições. Em falha, grava só o motivo e o registro. **Chama a API real** |
@@ -33,14 +33,14 @@ Execute a partir da pasta `backend/`:
 | `config/` | Listas configuráveis: os nomes aceitos para os cabeçalhos das colunas de pergunta, resposta e comentário (`cabecalhos.json`) os termos críticos (`termos-criticos.json`) e os preços dos modelos para o custo estimado (`precos.json`) |
 | `src/base/` | Leitura e validação do cabeçalho dos `.md`, divisão em blocos com seção e linha, e a carga da base (usada pela rota de envio e pelo comando) |
 | `src/recuperacao/` | Contexto da geração: só documentos ativos, base vazia sem chamar a IA e teto de 25 MB e 400 mil tokens |
-| `src/ia/` | Cliente da API do Claude (erros tipados, novas tentativas, registro sem conteúdo) e instruções versionadas em `ia/instrucoes/` |
+| `src/ia/` | Cliente da API do Claude (erros tipados, novas tentativas, registro sem conteúdo), instruções versionadas em `ia/instrucoes/` e a API simulada (`TENDRA_API_SIMULADA=1`) |
 | `src/geracao/` | Geração em lotes com citações, separação das respostas pelos marcadores `[Pn]`, identificação de perguntas com IA e a chamada que aponta conflitos entre fontes |
 | `src/rastreabilidade/` | Checagem das citações contra os blocos, localização `seção · linha N`, parágrafos ligados às fontes e estados dos itens |
 | `src/regras/` | Alertas determinísticos: fonte com mais de 120 dias (`old`) e termo crítico na pergunta (`critical`) |
 | `src/avaliacao/` | Gabarito, critérios de avaliação, lista de conferência da fidelidade e relatório |
-| `src/fluxo/` | Processamento de uma tarefa, da planilha aos itens e à planilha preenchida |
-| `src/http/` | Servidor HTTP (Fastify) e rotas da base: `GET /api/base/documentos`, `POST /api/base/documentos` (envio de `.md` em JSON, conteúdo em base64, até 10 MB e 100 arquivos) e `PATCH /api/base/documentos/:id` (ativar e desativar) |
-| `src/persistencia/` | Banco PGlite, migrações e acesso aos documentos e blocos |
+| `src/fluxo/` | Processamento de uma tarefa, da planilha aos itens e à planilha preenchida, e a tarefa persistida no banco |
+| `src/http/` | Servidor HTTP (Fastify), rotas de tarefas (`POST /api/tarefas`, `GET /api/tarefas`, `GET /api/tarefas/:id` e, abaixo dele, `/itens`, `/planilha`, `/registro` e `/metricas`) e rotas da base: `GET /api/base/documentos`, `POST /api/base/documentos` (envio de `.md` em JSON, conteúdo em base64, até 10 MB e 100 arquivos) e `PATCH /api/base/documentos/:id` (ativar e desativar) |
+| `src/persistencia/` | Banco PGlite, migrações e acesso aos documentos, blocos, tarefas, itens e registro |
 | `migracoes/` | Esquema do banco, em arquivos `.sql` aplicados em ordem de nome |
 | `src/observabilidade/` | Logs estruturados, sem a chave da API, e métricas por tarefa (duração, tokens, custo estimado, itens por estado e alerta) |
 | `src/cli/` | Comandos de terminal, incluindo o que sobe o servidor |

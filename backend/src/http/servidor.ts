@@ -2,6 +2,8 @@ import Fastify, { type FastifyBaseLogger, type FastifyError, type FastifyInstanc
 import { carregarArquivos, type ArquivoParaCarga } from "../base/carga.ts";
 import type { Banco } from "../persistencia/banco.ts";
 import { definirAtivo, listarDocumentos, type DocumentoGravado } from "../persistencia/documentos.ts";
+import { ErroDaRota } from "./erros.ts";
+import { registrarRotasDeTarefas, type OpcoesDasTarefas } from "./rotasDeTarefas.ts";
 
 /** Soma dos arquivos de um envio pela tela da Base, depois de decodificados. */
 export const LIMITE_DO_ENVIO_EM_BYTES = 10 * 1024 * 1024;
@@ -15,6 +17,8 @@ export interface OpcoesDoServidor {
   banco: Banco;
   /** Data de hoje (AAAA-MM-DD). Nos testes, uma data fixa. */
   hoje?: () => string;
+  /** Ambiente das tarefas (IA, armazenamento, configuração). Sem ele, só as rotas da base existem. */
+  tarefas?: OpcoesDasTarefas;
   /** Log das requisições (sem corpo). Sem ele, o servidor não registra nada. */
   log?: FastifyBaseLogger;
 }
@@ -37,14 +41,6 @@ interface CorpoDoEnvio {
   arquivos: { nome: string; conteudoBase64: string }[];
 }
 
-class ErroDoPedido extends Error {
-  readonly statusCode: number;
-
-  constructor(statusCode: number, mensagem: string) {
-    super(mensagem);
-    this.statusCode = statusCode;
-  }
-}
 
 const paraTela = (documento: DocumentoGravado): DocumentoDaBase => ({
   id: documento.id,
@@ -59,8 +55,8 @@ const paraTela = (documento: DocumentoGravado): DocumentoDaBase => ({
 });
 
 /**
- * Servidor HTTP da base de conhecimento, usado pela tela Base de conhecimento:
- * listar, enviar `.md` (mesma carga do comando carregar-base) e ativar ou desativar.
+ * Servidor HTTP local do backend. Rotas da base de conhecimento (listar, enviar `.md` com a mesma
+ * carga do comando carregar-base, ativar ou desativar) e, com `tarefas`, as rotas de tarefas (B2).
  * Deve ouvir só em 127.0.0.1 (cenário 30); quem decide o endereço é o comando `servidor`.
  */
 export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
@@ -68,6 +64,8 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
   const hoje = opcoes.hoje ?? (() => new Date().toISOString().slice(0, 10));
   const servidor = Fastify({
     bodyLimit: LIMITE_DO_CORPO_EM_BYTES,
+    // Campo desconhecido no corpo é recusado, em vez de removido em silêncio.
+    ajv: { customOptions: { removeAdditional: false } },
     ...(opcoes.log === undefined ? { logger: false } : { loggerInstance: opcoes.log }),
   });
 
@@ -80,7 +78,7 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
   };
 
   servidor.setErrorHandler((erro: FastifyError, pedido, resposta) => {
-    if (erro instanceof ErroDoPedido) return resposta.status(erro.statusCode).send({ erro: erro.message });
+    if (erro instanceof ErroDaRota) return resposta.status(erro.statusCode).send({ erro: erro.message });
     if (erro.validation) return resposta.status(400).send({ erro: "Pedido inválido." });
     if (erro.code === "FST_ERR_CTP_BODY_TOO_LARGE") {
       return resposta.status(413).send({ erro: mensagemDeEnvioGrande() });
@@ -125,12 +123,12 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
       const { arquivos: recebidos, enviadoPor } = pedido.body;
       let total = 0;
       const arquivos: ArquivoParaCarga[] = recebidos.map(({ nome, conteudoBase64 }) => {
-        if (!BASE64.test(conteudoBase64)) throw new ErroDoPedido(400, "Pedido inválido: conteúdo de arquivo mal codificado.");
+        if (!BASE64.test(conteudoBase64)) throw new ErroDaRota(400, "Pedido inválido: conteúdo de arquivo mal codificado.");
         const conteudo = new Uint8Array(Buffer.from(conteudoBase64, "base64"));
         total += conteudo.byteLength;
         return { nome, conteudo };
       });
-      if (total > LIMITE_DO_ENVIO_EM_BYTES) throw new ErroDoPedido(413, mensagemDeEnvioGrande());
+      if (total > LIMITE_DO_ENVIO_EM_BYTES) throw new ErroDaRota(413, mensagemDeEnvioGrande());
 
       const quem = enviadoPor?.trim().slice(0, TAMANHO_MAXIMO_DE_QUEM_ENVIA) || null;
       const resumo = await emFila(() => carregarArquivos({ banco, arquivos, hoje: hoje(), enviadoPor: quem }));
@@ -164,10 +162,12 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
     },
     async (pedido) => {
       const documento = await definirAtivo(banco, Number(pedido.params.id), pedido.body.ativo);
-      if (documento === null) throw new ErroDoPedido(404, "Documento não encontrado na base.");
+      if (documento === null) throw new ErroDaRota(404, "Documento não encontrado na base.");
       return { documento: paraTela(documento) };
     },
   );
+
+  if (opcoes.tarefas !== undefined) registrarRotasDeTarefas(servidor, opcoes.tarefas);
 
   return servidor;
 }
