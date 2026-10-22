@@ -12,6 +12,7 @@ import { processarTarefa } from "../../src/fluxo/processarTarefa.ts";
 import { ClienteDaIa, ErroDaIa, type MensagemDaIa, type ParametrosDaGeracao } from "../../src/ia/cliente.ts";
 import { abrirBanco, type Banco } from "../../src/persistencia/banco.ts";
 import { ApiSimulada, mensagem, texto } from "../apoio/apiSimulada.ts";
+import { respondeImparesCitando } from "../apoio/respostasSimuladas.ts";
 
 /** Processamento completo com a API simulada: da planilha aos itens e à planilha preenchida (A6). */
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../base-sintetica");
@@ -33,29 +34,6 @@ beforeEach(async () => {
   await banco.exec("TRUNCATE documentos RESTART IDENTITY CASCADE");
   api = new ApiSimulada();
 });
-
-/** Perguntas ímpares: resposta citando o 2º bloco do 1º documento. Pares: SEM_RESPOSTA. */
-function respondeImparesCitando(parametros: ParametrosDaGeracao): MensagemDaIa {
-  const conteudo = parametros.messages[0]?.content;
-  if (!Array.isArray(conteudo)) throw new Error("conteúdo inesperado");
-  const perguntas = conteudo.at(-1);
-  const numeros = perguntas?.type === "text" ? [...perguntas.text.matchAll(/^\[P(\d+)\]/gm)].map((m) => Number(m[1])) : [];
-  const documento = conteudo[0];
-  const blocos = documento?.type === "document" && documento.source.type === "content" && Array.isArray(documento.source.content) ? documento.source.content : [];
-  const segundo = blocos[1];
-  const citado = segundo?.type === "text" ? segundo.text : "";
-  return mensagem(
-    numeros.flatMap((numero) =>
-      numero % 2 === 0
-        ? [texto(`[P${numero}]\nSEM_RESPOSTA\n\n`)]
-        : [
-            texto(`[P${numero}]\n`),
-            texto(`Resposta ${numero}.`, [{ type: "content_block_location", cited_text: citado, document_index: 0, document_title: null, start_block_index: 1, end_block_index: 2, file_id: null }]),
-            texto("\n\n"),
-          ],
-    ),
-  );
-}
 
 async function processar() {
   return processarTarefa({

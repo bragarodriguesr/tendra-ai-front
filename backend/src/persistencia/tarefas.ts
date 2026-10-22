@@ -1,0 +1,208 @@
+import type { EntradaDoRegistro } from "../ia/cliente.ts";
+import type { ComportamentoDaTarefa } from "../fluxo/processarTarefa.ts";
+import type { MetricasDaTarefa } from "../observabilidade/metricas.ts";
+import type { ItemDaRevisao } from "../rastreabilidade/montarItem.ts";
+import type { Banco } from "./banco.ts";
+
+/**
+ * Persistência das tarefas e dos itens (etapa B1). O progresso é gravado ao fim de cada lote
+ * (cenário 16). Os itens só são gravados, todos juntos, quando a tarefa termina bem: uma tarefa
+ * em falha nunca tem itens a apresentar (cenário 17).
+ */
+
+export type EstadoDaTarefa = "processando" | "pronta" | "falha";
+
+export const MOTIVO_DE_INTERRUPCAO = "Processamento interrompido; envie a planilha novamente";
+
+/** Campos da tela Nova RFP. Ficam só no banco: nunca vão à IA (cenário 6). */
+export interface DadosDaTarefa {
+  nome?: string;
+  empresa?: string;
+  cnpj?: string;
+  tipo?: string;
+  prazo?: string;
+  responsavel?: string;
+  contatos?: { nome?: string; cargo?: string; telefone?: string; email?: string }[];
+}
+
+export interface Tarefa {
+  id: string;
+  estado: EstadoDaTarefa;
+  motivo: string | null;
+  arquivo: string;
+  caminhoDaPlanilha: string;
+  dados: DadosDaTarefa;
+  total: number;
+  processadas: number;
+  comportamento: ComportamentoDaTarefa | null;
+  metricas: MetricasDaTarefa | null;
+  caminhoDaPlanilhaPreenchida: string | null;
+  criadaEm: string;
+  concluidaEm: string | null;
+}
+
+export type EstadoDoItem = "sugerida" | "em-revisao" | "revisada" | "aprovada" | "sem-rascunho";
+
+/** Item com a posição na planilha e os campos de aprovação do formato de data.js (`by`, `at`). */
+export interface ItemGravado extends Omit<ItemDaRevisao, "st"> {
+  st: EstadoDoItem;
+  numero: number;
+  aba: string;
+  linha: number;
+  by?: string;
+  at?: string;
+}
+
+interface LinhaDeTarefa {
+  id: string;
+  estado: EstadoDaTarefa;
+  motivo: string | null;
+  arquivo: string;
+  caminho_da_planilha: string;
+  dados: DadosDaTarefa;
+  total: number;
+  processadas: number;
+  comportamento: ComportamentoDaTarefa | null;
+  metricas: MetricasDaTarefa | null;
+  caminho_da_planilha_preenchida: string | null;
+  criada_em: Date;
+  concluida_em: Date | null;
+}
+
+const paraTarefa = (linha: LinhaDeTarefa): Tarefa => ({
+  id: linha.id,
+  estado: linha.estado,
+  motivo: linha.motivo,
+  arquivo: linha.arquivo,
+  caminhoDaPlanilha: linha.caminho_da_planilha,
+  dados: linha.dados,
+  total: linha.total,
+  processadas: linha.processadas,
+  comportamento: linha.comportamento,
+  metricas: linha.metricas,
+  caminhoDaPlanilhaPreenchida: linha.caminho_da_planilha_preenchida,
+  criadaEm: linha.criada_em.toISOString(),
+  concluidaEm: linha.concluida_em?.toISOString() ?? null,
+});
+
+export async function criarTarefa(
+  banco: Banco,
+  tarefa: { id: string; arquivo: string; caminhoDaPlanilha: string; dados: DadosDaTarefa },
+): Promise<Tarefa> {
+  const { rows } = await banco.query<LinhaDeTarefa>(
+    `INSERT INTO tarefas (id, estado, arquivo, caminho_da_planilha, dados) VALUES ($1, 'processando', $2, $3, $4) RETURNING *`,
+    [tarefa.id, tarefa.arquivo, tarefa.caminhoDaPlanilha, JSON.stringify(tarefa.dados)],
+  );
+  const linha = rows[0];
+  if (linha === undefined) throw new Error("Falha ao criar a tarefa.");
+  return paraTarefa(linha);
+}
+
+export async function obterTarefa(banco: Banco, id: string): Promise<Tarefa | null> {
+  const { rows } = await banco.query<LinhaDeTarefa>("SELECT * FROM tarefas WHERE id = $1", [id]);
+  const linha = rows[0];
+  return linha === undefined ? null : paraTarefa(linha);
+}
+
+/** Tarefas da mais nova para a mais antiga. */
+export async function listarTarefas(banco: Banco): Promise<Tarefa[]> {
+  const { rows } = await banco.query<LinhaDeTarefa>("SELECT * FROM tarefas ORDER BY criada_em DESC, id");
+  return rows.map(paraTarefa);
+}
+
+/** Progresso ao fim de cada lote. O número de processadas nunca diminui (cenário 16). */
+export async function atualizarProgresso(banco: Banco, id: string, processadas: number, total: number): Promise<void> {
+  await banco.query(
+    `UPDATE tarefas SET total = $3::integer, processadas = GREATEST(processadas, LEAST($2::integer, $3::integer)) WHERE id = $1 AND estado = 'processando'`,
+    [id, processadas, total],
+  );
+}
+
+export async function registrarRequisicao(banco: Banco, id: string, entrada: EntradaDoRegistro): Promise<void> {
+  await banco.query("INSERT INTO requisicoes (tarefa_id, dados) VALUES ($1, $2)", [id, JSON.stringify(entrada)]);
+}
+
+export async function listarRequisicoes(banco: Banco, id: string): Promise<EntradaDoRegistro[]> {
+  const { rows } = await banco.query<{ dados: EntradaDoRegistro }>("SELECT dados FROM requisicoes WHERE tarefa_id = $1 ORDER BY id", [id]);
+  return rows.map((linha) => linha.dados);
+}
+
+/** Conclui a tarefa e grava os itens numa só transação: ou tudo, ou nada. */
+export async function concluirTarefa(
+  banco: Banco,
+  id: string,
+  resultado: {
+    itens: (ItemDaRevisao & { aba: string; linha: number })[];
+    comportamento: ComportamentoDaTarefa;
+    metricas: MetricasDaTarefa;
+    caminhoDaPlanilhaPreenchida: string;
+  },
+): Promise<void> {
+  await banco.transaction(async (transacao) => {
+    for (const [posicao, item] of resultado.itens.entries()) {
+      await transacao.query(
+        `INSERT INTO itens (tarefa_id, numero, aba, linha, q, paras, srcs, alerts, st, orig) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        [id, posicao + 1, item.aba, item.linha, item.q, JSON.stringify(item.paras), JSON.stringify(item.srcs), JSON.stringify(item.alerts), item.st, item.orig],
+      );
+    }
+    await transacao.query(
+      `UPDATE tarefas SET estado = 'pronta', processadas = total, comportamento = $2, metricas = $3,
+         caminho_da_planilha_preenchida = $4, concluida_em = now() WHERE id = $1`,
+      [id, JSON.stringify(resultado.comportamento), JSON.stringify(resultado.metricas), resultado.caminhoDaPlanilhaPreenchida],
+    );
+  });
+}
+
+export async function falharTarefa(banco: Banco, id: string, motivo: string, metricas: MetricasDaTarefa | null = null): Promise<void> {
+  await banco.query(
+    `UPDATE tarefas SET estado = 'falha', motivo = $2, metricas = COALESCE($3, metricas), concluida_em = now() WHERE id = $1 AND estado = 'processando'`,
+    [id, motivo, metricas === null ? null : JSON.stringify(metricas)],
+  );
+}
+
+/**
+ * Ao iniciar o backend, nenhuma tarefa está de fato em processamento: as que ficaram como
+ * `processando` foram interrompidas por um reinício (cenário 32). Devolve quantas foram marcadas.
+ */
+export async function marcarInterrompidas(banco: Banco): Promise<number> {
+  const resultado = await banco.query(
+    `UPDATE tarefas SET estado = 'falha', motivo = $1, concluida_em = now() WHERE estado = 'processando'`,
+    [MOTIVO_DE_INTERRUPCAO],
+  );
+  return resultado.affectedRows ?? 0;
+}
+
+interface LinhaDeItem {
+  numero: number;
+  aba: string;
+  linha: number;
+  q: string;
+  paras: ItemDaRevisao["paras"];
+  srcs: ItemDaRevisao["srcs"];
+  alerts: ItemDaRevisao["alerts"];
+  st: string;
+  orig: string;
+  aprovado_por: string | null;
+  aprovado_em: Date | null;
+}
+
+export const paraItem = (linha: LinhaDeItem): ItemGravado => ({
+  id: `r${linha.numero}`,
+  numero: linha.numero,
+  aba: linha.aba,
+  linha: linha.linha,
+  q: linha.q,
+  paras: linha.paras,
+  srcs: linha.srcs,
+  alerts: linha.alerts,
+  st: linha.st as EstadoDoItem,
+  orig: linha.orig,
+  ...(linha.aprovado_por === null ? {} : { by: linha.aprovado_por }),
+  ...(linha.aprovado_em === null ? {} : { at: linha.aprovado_em.toISOString() }),
+});
+
+/** Itens da tarefa, na ordem da planilha. Só existem para tarefas prontas. */
+export async function listarItens(banco: Banco, id: string): Promise<ItemGravado[]> {
+  const { rows } = await banco.query<LinhaDeItem>("SELECT * FROM itens WHERE tarefa_id = $1 ORDER BY numero", [id]);
+  return rows.map(paraItem);
+}
