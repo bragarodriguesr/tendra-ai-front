@@ -293,15 +293,18 @@ Ver etapa A1.
 - Proxy do Vite para `/api`; `src/api.js` como camada única de chamadas, com tratamento explícito de erro e enviando a pessoa que age.
 - **Parte feita na A4:** o proxy e `src/api.js` já existem para a tela da Base; esta etapa estende a camada para as tarefas e a revisão.
 - **Verificação:** o front em `npm run dev` consulta o backend.
+- **Situação (22/10/2026): concluída, com a API simulada até a A1.** `src/api.js` cobre a base, as tarefas (`listarTarefas`, `criarTarefa`, `listarItensDaTarefa`, `enderecoDaPlanilha`) e a revisão (`editarTextoDoItem`, `restaurarItem`, `aprovarItemNaApi`, `avaliarItemNaApi`, `listarPessoas`, `relatorioDeAceitacao`); as ações da revisão enviam `pessoa`. Erros chegam como `ErroDaApi` com a mensagem do backend; sem o servidor, a mensagem diz como iniciá-lo. Com o servidor, tarefas, exportação, histórico e alertas do sino vêm do banco; sem ele, o protótipo segue com os exemplos de `data.js`, como a tela Base.
 
 ### C2. Nova RFP
 - Seletor de arquivo real para a planilha `.xlsx`, enviando para `POST /api/tarefas` com os campos existentes do formulário; recusa de outros formatos e mensagens dos cenários 4 e 31.
 - **Verificação:** enviar a planilha sintética pela tela cria a tarefa.
+- **Situação (22/10/2026): concluída, com a API simulada até a A1.** O quadro de arquivo abre o seletor do computador só para `.xlsx`; o nome da tarefa vem do arquivo quando o campo está vazio. Outro formato mostra "Envie a RFP em formato .xlsx" na hora (cenário 4); planilha corrompida mostra "Arquivo .xlsx inválido", devolvido pelo backend (cenário 31). Os campos do formulário (nome, empresa, CNPJ, tipo, prazo, responsável e contatos) vão em `dados`. Conferido no navegador com a RFP-01 e a RFP-02.
 
 ### C3. Progresso e itens
 - Acompanhar o progresso consultando o estado a cada poucos segundos, no lugar da simulação de `useWorkspace.js`; mostrar o motivo quando a tarefa falha.
 - Ao terminar, carregar os itens reais na tela de revisão, todos como sugestões pendentes (cenário 33); botão para baixar a planilha preenchida.
 - **Verificação:** a jornada da planilha às respostas com fonte funciona na tela.
+- **Situação (22/10/2026): concluída, com a API simulada até a A1.** Enquanto alguma tarefa processa, o front consulta `GET /api/tarefas` a cada 2 segundos e mostra "Processando: N de M perguntas"; ao terminar, avisa e lê os itens, que entram na Revisão como chegam do banco (sugeridas ou sem rascunho, cenário 33). Tarefa com falha mostra o motivo gravado e não oferece "Tentar de novo", que não existe no backend. O detalhe da tarefa e a tela Exportação têm "Baixar planilha preenchida" (`GET /api/tarefas/:id/planilha`). Essa planilha é a gerada no processamento: as edições e aprovações da revisão não entram nela nesta fase.
 
 ### C4. Base conectada
 - **Feita na A4:** a tela Base lê `GET /api/base/documentos`, envia `.md` pelo seletor de arquivos do computador e grava a chave Ativar/Desativar (PRD v3, F-02).

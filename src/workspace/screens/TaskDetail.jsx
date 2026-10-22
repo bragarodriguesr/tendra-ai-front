@@ -18,13 +18,15 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
         </span>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 24, flexWrap: "wrap" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {task.hasItems ? <div><Badge tone={task.sTone} icon={task.sIcon}>{task.sTxt}</Badge></div> : null}
+            {task.hasItems || task.isServer ? <div><Badge tone={task.sTone} icon={task.sIcon}>{task.sTxt}</Badge></div> : null}
             <h1 style={h1Style}>{task.name}</h1>
             <span style={{ color: "var(--n-400)" }}>{task.company} · {task.type} · prazo {task.due} ({task.dueText}) · responsável {task.owner}</span>
           </div>
           {task.hasItems ? (
-            <div style={{ display: "flex", gap: 12 }}>
-              <Button variant="secondary" icon="download" onClick={() => ws.go("export", { taskId: "t1" })}>Exportação</Button>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+              {task.isServer
+                ? <Button variant="secondary" icon="download" onClick={() => ws.downloadSheet(task.id)}>Baixar planilha preenchida</Button>
+                : <Button variant="secondary" icon="download" onClick={() => ws.go("export", { taskId: "t1" })}>Exportação</Button>}
               <Button icon="eye" onClick={() => ws.go("review")}>Abrir revisão</Button>
             </div>
           ) : null}
@@ -34,8 +36,18 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
       {task.isProcessing ? (
         <div style={statusCard(false, isMobile)}>
           <div><Badge tone="neutral" icon="loader-circle">Processando</Badge></div>
-          <div style={cardTitle}>Processando: 42 de 180 perguntas.</div>
-          <ProgressBar value={23} />
+          {task.isServer ? (
+            <>
+              <div style={cardTitle}>{task.items ? `Processando: ${task.done} de ${task.items} perguntas.` : "Lendo a planilha."}</div>
+              <ProgressBar value={task.items ? Math.round((task.done / task.items) * 100) : 0} />
+              <div style={{ ...mono(12, "var(--n-500)"), overflowWrap: "anywhere" }}>{task.file}</div>
+            </>
+          ) : (
+            <>
+              <div style={cardTitle}>Processando: 42 de 180 perguntas.</div>
+              <ProgressBar value={23} />
+            </>
+          )}
           <div style={{ color: "var(--n-400)" }}>Você pode sair desta tela. Avisaremos aqui quando terminar.</div>
           <div><Button variant="secondary" onClick={() => ws.go("tasks")}>Sair e voltar depois</Button></div>
         </div>
@@ -45,9 +57,9 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
         <div style={statusCard(true, isMobile)}>
           <div><Badge tone="danger" icon="triangle-alert">Falha no carregamento</Badge></div>
           <div style={cardTitle}>Não foi possível carregar este arquivo. Tente de novo ou fale com o suporte.</div>
-          <div style={{ color: "var(--n-900)", lineHeight: 1.6 }}><b>Causa:</b> arquivo ilegível ou protegido por senha.</div>
+          <div style={{ color: "var(--n-900)", lineHeight: 1.6 }}><b>Causa:</b> {task.isServer ? task.reason || "sem motivo registrado." : "arquivo ilegível ou protegido por senha."}</div>
           <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-            <Button icon="refresh-cw" onClick={ws.retryTask}>Tentar de novo</Button>
+            {task.isServer ? null : <Button icon="refresh-cw" onClick={ws.retryTask}>Tentar de novo</Button>}
             <Button variant="secondary" icon="upload" onClick={() => ws.go("new")}>Importar novo arquivo</Button>
           </div>
         </div>
@@ -59,7 +71,7 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
           <div style={cardTitle}>{task.progText}</div>
           <ProgressBar value={100} />
           <div style={{ color: "var(--n-400)", lineHeight: 1.6 }}>Nenhum alerta pendente. Um Aprovador pode exportar a planilha com respostas e fontes.</div>
-          <div><Button icon="download" onClick={() => ws.go("export", { taskId: task.id })}>Ir para exportação</Button></div>
+          <div><Button icon="download" onClick={() => ws.go("export", task.isServer ? {} : { taskId: task.id })}>Ir para exportação</Button></div>
         </div>
       ) : null}
 

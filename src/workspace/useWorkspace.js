@@ -1,9 +1,23 @@
 import React from "react";
-import { seedItems, seedDocs, genItems, nowStr, ITEM_TASKS, GENERATED, TASKS } from "./data.js";
-import { definirDocumentoAtivo, enviarDocumentosDaBase, listarDocumentosDaBase, paraDocumentoDaTela } from "../api.js";
+import { seedItems, seedDocs, genItems, nowStr, ITEM_TASKS, GENERATED, TASKS, TASK_IDS } from "./data.js";
+import {
+  MENSAGEM_FORMATO_DA_RFP, criarTarefa, dataHoraDaTela, definirDocumentoAtivo, enderecoDaPlanilha, enviarDocumentosDaBase, hojeIso, listarDocumentosDaBase, listarItensDaTarefa,
+  listarTarefas, paraDocumentoDaTela, paraItemDaTela
+} from "../api.js";
 
 let contactSeq = 0;
 export const newContact = () => ({ id: "c" + ++contactSeq, name: "", role: "", phone: "", email: "" });
+const emptyForm = () => ({ name: "", company: "", cnpj: "", type: "RFP", due: "", owner: "", contacts: [newContact()], file: null, fileError: null, identified: false, tried: false });
+
+const DIA = 24 * 60 * 60 * 1000;
+/** Prazo AAAA-MM-DD da tarefa em dd/mm/aaaa e o texto relativo a hoje. */
+function prazoDaTela(prazo) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(prazo || "");
+  if (!m) return { due: "—", dueText: "sem prazo" };
+  const [ano, mes, dia] = hojeIso().split("-").map(Number);
+  const dias = Math.round((Date.UTC(+m[1], +m[2] - 1, +m[3]) - Date.UTC(ano, mes - 1, dia)) / DIA);
+  return { due: `${m[3]}/${m[2]}/${m[1]}`, dueText: dias < 0 ? "Vencida" : dias === 0 ? "vence hoje" : dias === 1 ? "falta 1 dia" : `faltam ${dias} dias` };
+}
 
 const initialState = ({ initialScreen, role }) => ({
   view: "site", tAi: 0, hfilter: "todos", alertAt: { id: null, i: 0 },
@@ -12,8 +26,10 @@ const initialState = ({ initialScreen, role }) => ({
   edit: false, showOrig: false, drawer: null, dialog: false, toast: null, reviewPane: "list",
   // Base: lista de exemplo até o servidor responder; depois, os documentos do banco.
   docs: seedDocs(), baseOrigem: "exemplo", enviando: false, envio: null, sort: "idade", taskId: "t1",
+  // Tarefas: as de exemplo (data.js) até o servidor responder; depois, só as do banco.
+  tarefas: [], tarefasOrigem: "exemplo", criando: false,
   exported: null, exported4: null, exported8: null, expanded: null,
-  form: { name: "Perguntas_Meridian.xlsx", company: "", cnpj: "", type: "RFP", due: "", owner: "", contacts: [newContact()], file: false, identified: false, tried: false },
+  form: emptyForm(),
   fb: {}, saved: 0, tick: 0, taskRetry: false, alertsRead: {},
   vw: typeof window !== "undefined" ? window.innerWidth : 1440, navOpen: false, sideCollapsed: false
 });
@@ -42,19 +58,42 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
       readAlert(a) { setState((s) => ({ alertsRead: { ...s.alertsRead, [a.key]: true } })); a.go(); },
       readAllAlerts(keys) { setState((s) => ({ alertsRead: { ...s.alertsRead, ...Object.fromEntries(keys.map((k) => [k, true])) } })); },
       switchRole() { setState((s) => ({ role: s.role === "Aprovador" ? "Revisor" : "Aprovador" })); },
-      hasItems: (id) => ITEM_TASKS.includes(id),
+      /** Tarefa que veio do servidor (o id é o uuid do banco). */
+      serverTask: (id, s = ref.current) => s.tarefas.find((t) => t.id === id),
+      taskIds: (s = ref.current) => (s.tarefasOrigem === "servidor" ? s.tarefas.map((t) => t.id) : TASK_IDS),
+      hasItems(id, s = ref.current) {
+        const t = api.serverTask(id, s);
+        return t ? t.estado === "pronta" && (id === s.itemsTask || !!s.store[id]) : ITEM_TASKS.includes(id);
+      },
       genFor(id) {
         const g = generated.current;
         if (!g[id]) g[id] = id === "t1" ? seedItems() : (GENERATED[id] ? genItems(...GENERATED[id]) : []);
         return g[id];
       },
-      itemsOf(id, s = ref.current) { return id === s.itemsTask ? s.items : (s.store[id] || api.genFor(id)); },
+      itemsOf(id, s = ref.current) { return id === s.itemsTask ? s.items : (s.store[id] || (api.serverTask(id, s) ? [] : api.genFor(id))); },
+      /** Troca os itens da Revisão para os da tarefa `tid`, guardando os da tarefa anterior. */
+      swapTo(tid, s = ref.current) {
+        const next = api.itemsOf(tid, s), first = next.find((i) => i.st !== "aprovada") || next[0];
+        const store = s.itemsTask ? { ...s.store, [s.itemsTask]: s.items } : s.store;
+        return { items: next, store, itemsTask: tid, sel: first ? first.id : null, filter: "todos" };
+      },
       go(screen, extra = {}) {
-        const st = ref.current, tid = extra.taskId;
+        const st = ref.current;
+        let tid = extra.taskId;
+        // Com o servidor, a Revisão sem tarefa escolhida abre a primeira tarefa pronta.
+        if (screen === "review" && !tid && !st.itemsTask) {
+          const pronta = st.tarefas.find((t) => t.estado === "pronta");
+          if (pronta) { tid = pronta.id; extra = { ...extra, taskId: tid }; }
+        }
         let sw = {};
-        if ((screen === "task" || screen === "review") && tid && tid !== st.itemsTask && api.hasItems(tid)) {
-          const next = api.itemsOf(tid), first = next.find((i) => i.st !== "aprovada") || next[0];
-          sw = { items: next, store: { ...st.store, [st.itemsTask]: st.items }, itemsTask: tid, sel: first.id, filter: "todos" };
+        if ((screen === "task" || screen === "review") && tid && tid !== st.itemsTask) {
+          if (api.hasItems(tid)) sw = api.swapTo(tid);
+          else if (api.serverTask(tid) && api.serverTask(tid).estado === "pronta") {
+            // Itens ainda não lidos: troca quando chegarem, se a pessoa ainda estiver nesta tarefa.
+            api.loadItems(tid).then((ok) => {
+              if (ok) setState((c) => (c.taskId === tid && c.itemsTask !== tid ? { ...api.swapTo(tid, c), ...(extra.sel ? { sel: extra.sel } : null) } : {}));
+            });
+          }
         }
         // No celular a Revisão tem duas etapas: abre na lista, ou direto no item quando ele vem escolhido.
         const reviewPane = screen === "review" && extra.sel ? "item" : "list";
@@ -210,6 +249,77 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         setState((s) => ({ items: s.items.map((i) => ({ ...i, st: "aprovada", by: i.by || by, at: i.at || at, alerts: i.alerts.map((a) => (a.ack ? a : { ...a, ack: { by, at } })) })) }));
         api.toast("Demo", "Todos os itens aprovados e sem alerta pendente.", "neutral");
       },
+      /** Lê as tarefas do servidor. Sem servidor (e sem nunca ter falado com ele), seguem as de exemplo. */
+      async loadTasks() {
+        let tarefas;
+        try {
+          ({ tarefas } = await listarTarefas());
+        } catch {
+          if (ref.current.tarefasOrigem !== "servidor") setState({ tarefasOrigem: "exemplo" });
+          return;
+        }
+        const s = ref.current, antes = new Map(s.tarefas.map((t) => [t.id, t.estado]));
+        const nome = (t) => (t.dados && t.dados.nome) || t.arquivo;
+        for (const t of tarefas) {
+          if (antes.get(t.id) !== "processando") continue;
+          if (t.estado === "pronta") api.toast("Tarefa pronta", `${nome(t)}: ${t.total} itens para revisar.`);
+          if (t.estado === "falha") api.toast("A tarefa falhou", `${nome(t)}: ${t.motivo || "sem motivo registrado"}`, "danger");
+        }
+        // Ao conectar, os itens de exemplo saem da Revisão (uma vez só, mesmo com duas leituras ao mesmo tempo).
+        setState((x) => ({ tarefas, tarefasOrigem: "servidor", ...(x.tarefasOrigem !== "servidor" ? { items: [], itemsTask: null, store: {}, sel: null } : null) }));
+        // Itens das tarefas prontas ainda não lidos: os contadores e o histórico dependem deles.
+        const c = ref.current;
+        for (const t of tarefas) if (t.estado === "pronta" && t.id !== c.itemsTask && !c.store[t.id]) await api.loadItems(t.id);
+        // A tarefa aberta terminou de processar: o detalhe passa a mostrar os itens dela.
+        // Atualização por função: fora de um evento, `ref.current` só reflete o setState depois do render.
+        setState((d) => (d.screen === "task" && d.taskId !== d.itemsTask && api.hasItems(d.taskId, d) ? api.swapTo(d.taskId, d) : {}));
+      },
+      /** Lê os itens de uma tarefa pronta e guarda em `store`. Devolve false se não conseguiu. */
+      async loadItems(id) {
+        try {
+          const t = api.serverTask(id), { itens } = await listarItensDaTarefa(id);
+          const items = itens.map((i) => paraItemDaTela(i, t ? t.total : itens.length));
+          setState((s) => (s.itemsTask === id ? { items } : { store: { ...s.store, [id]: items } }));
+          return true;
+        } catch (e) {
+          api.toast("Não foi possível ler os itens", e.message, "danger");
+          return false;
+        }
+      },
+      /** Baixa a planilha preenchida no processamento (GET /api/tarefas/:id/planilha). */
+      downloadSheet(id) {
+        const link = document.createElement("a");
+        link.href = enderecoDaPlanilha(id);
+        link.download = "";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      },
+      /** Arquivo escolhido em Nova RFP. Só .xlsx (cenário 4); o nome da tarefa vem do arquivo, se estiver vazio. */
+      pickRfp(file) {
+        if (!file) return;
+        const ok = /\.xlsx$/i.test(file.name);
+        setState((s) => ({ form: { ...s.form, file: ok ? file : null, fileError: ok ? null : MENSAGEM_FORMATO_DA_RFP, name: ok && !s.form.name ? file.name.replace(/\.xlsx$/i, "") : s.form.name } }));
+      },
+      /** Envia a planilha e os campos para POST /api/tarefas e abre a tarefa, que processa em segundo plano. */
+      async createTask() {
+        const s = ref.current, f = s.form;
+        if (s.criando || !f.file) return;
+        setState({ criando: true });
+        const contatos = f.contacts
+          .filter((c) => c.name || c.role || c.phone || c.email)
+          .map((c) => ({ nome: c.name, cargo: c.role, telefone: c.phone, email: c.email }));
+        const dados = { nome: f.name, empresa: f.company, tipo: f.type, prazo: f.due, responsavel: f.owner, contatos, ...(f.cnpj ? { cnpj: f.cnpj } : null) };
+        try {
+          const { tarefa } = await criarTarefa(f.file, dados);
+          setState((x) => ({ criando: false, form: emptyForm(), tarefas: [tarefa, ...x.tarefas.filter((t) => t.id !== tarefa.id)], tarefasOrigem: "servidor" }));
+          api.go("task", { taskId: tarefa.id });
+          api.toast("Tarefa criada", "A planilha está em processamento. Você pode sair desta tela.");
+        } catch (e) {
+          setState((x) => ({ criando: false, form: { ...x.form, fileError: e.message } }));
+          api.toast("Tarefa não criada", e.message, "danger");
+        }
+      },
       retryTask() {
         setState({ taskRetry: true });
         api.toast("Nova tentativa", "O arquivo voltou para a fila de processamento.", "neutral");
@@ -229,16 +339,38 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         };
       },
       taskInfo(id, s = ref.current) {
+        const t = api.serverTask(id, s);
+        if (t) return api.serverTaskInfo(t, s);
         if (!TASKS[id]) return undefined;
         const x = { ...TASKS[id] };
         if (id === "t5") x.isFailed = !s.taskRetry;
-        if (api.hasItems(id)) { const cc = api.counts(id, s); x.items = cc.total; x.approvedN = cc.approved; x.hasItems = true; }
+        if (api.hasItems(id, s)) { const cc = api.counts(id, s); x.items = cc.total; x.approvedN = cc.approved; x.hasItems = true; }
         if (x.approvedN != null) {
           const left = x.items - x.approvedN;
           x.pct = Math.round((x.approvedN / x.items) * 100);
           x.progText = x.approvedN + " de " + x.items + " itens aprovados.";
           x.shortProg = x.approvedN + " de " + x.items + " aprovados";
           x.reviewNote = (x.dueText === "Vencida" ? "Prazo vencido em " + x.due + ". " : "Dentro do prazo. ") + "Faltam " + left + " itens para a exportação ser liberada.";
+        }
+        return x;
+      },
+      /** Resumo de uma tarefa do servidor no mesmo formato de TASKS (data.js). */
+      serverTaskInfo(t, s = ref.current) {
+        const d = t.dados || {};
+        const x = {
+          id: t.id, name: d.nome || t.arquivo, company: d.empresa || "Empresa não informada", type: d.tipo || "RFP", items: t.total,
+          ...prazoDaTela(d.prazo), dueColor: "#12140F", owner: d.responsavel || "—", isServer: true, file: t.arquivo,
+          isProcessing: t.estado === "processando", isFailed: t.estado === "falha", reason: t.motivo, done: t.processadas,
+          when: dataHoraDaTela(t.concluidaEm || t.criadaEm)
+        };
+        if (api.hasItems(t.id, s)) {
+          const cc = api.counts(t.id, s);
+          Object.assign(x, { items: cc.total, approvedN: cc.approved, hasItems: true, isReady: cc.total > 0 && cc.approved === cc.total && cc.alerts === 0 });
+          const left = cc.total - cc.approved;
+          x.pct = cc.total ? Math.round((cc.approved / cc.total) * 100) : 0;
+          x.progText = cc.approved + " de " + cc.total + " itens aprovados.";
+          x.shortProg = cc.approved + " de " + cc.total + " aprovados";
+          x.reviewNote = (x.dueText === "Vencida" ? "Prazo vencido em " + x.due + ". " : "") + "Faltam " + left + " itens para aprovar.";
         }
         return x;
       }
@@ -269,6 +401,14 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
   // Lê a base do servidor ao abrir o Workspace e a cada entrada na tela Base de conhecimento.
   React.useEffect(() => { ws.loadBase(); }, [ws]);
   React.useEffect(() => { if (state.screen === "base") ws.loadBase(); }, [ws, state.screen]);
+  // Tarefas: lê ao abrir e ao entrar nas telas que as mostram; enquanto alguma processa, consulta o estado a cada 2 segundos.
+  React.useEffect(() => { if (["dashboard", "tasks", "task", "export", "review"].includes(state.screen)) ws.loadTasks(); }, [ws, state.screen]);
+  const processing = state.tarefas.some((t) => t.estado === "processando");
+  React.useEffect(() => {
+    if (!processing) return undefined;
+    const timer = setInterval(() => ws.loadTasks(), 2000);
+    return () => clearInterval(timer);
+  }, [ws, processing]);
 
-    return { state, ws };
+  return { state, ws };
 }

@@ -1,11 +1,13 @@
 /**
- * Camada única de chamadas do front ao backend (PLAN.md, C1). Hoje cobre a tela Base de
- * conhecimento: listar, enviar `.md` e ativar ou desativar documentos. Nenhuma regra de
- * negócio fica aqui: a validação dos arquivos é do backend, que devolve o motivo de cada recusa.
+ * Camada única de chamadas do front ao backend (PLAN.md, C1): base de conhecimento, tarefas e
+ * revisão. Nenhuma regra de negócio fica aqui: a validação dos arquivos e das ações é do
+ * backend, que devolve o motivo de cada recusa. Toda ação da revisão envia a pessoa que age.
  */
 
 export const LIMITE_DO_ENVIO_EM_BYTES = 10 * 1024 * 1024;
+export const LIMITE_DA_PLANILHA_EM_BYTES = 10 * 1024 * 1024;
 export const MENSAGEM_SEM_SERVIDOR = "Não foi possível falar com o servidor da base. Inicie-o com npm run servidor, na pasta backend.";
+export const MENSAGEM_FORMATO_DA_RFP = "Envie a RFP em formato .xlsx";
 
 export class ErroDaApi extends Error {
   constructor(message, { semServidor = false } = {}) {
@@ -52,7 +54,49 @@ export async function enviarDocumentosDaBase(files, enviadoPor) {
 
 export const definirDocumentoAtivo = (id, ativo) => pedir(`/base/documentos/${id}`, { method: "PATCH", corpo: { ativo } });
 
+// Tarefas (B2): a planilha vai em base64 com os campos do formulário; o processamento roda em segundo plano.
+export const listarTarefas = () => pedir("/tarefas");
+export const obterTarefa = (id) => pedir(`/tarefas/${id}`);
+export const listarItensDaTarefa = (id) => pedir(`/tarefas/${id}/itens`);
+export const enderecoDaPlanilha = (id) => `/api/tarefas/${id}/planilha`;
+
+/** Cria a tarefa. Recusa na hora o que não for .xlsx ou passar de 10 MB, com as mesmas mensagens do backend. */
+export async function criarTarefa(file, dados) {
+  if (!/\.xlsx$/i.test(file.name)) throw new ErroDaApi(MENSAGEM_FORMATO_DA_RFP);
+  if (file.size > LIMITE_DA_PLANILHA_EM_BYTES) throw new ErroDaApi("A planilha passa do limite de 10 MB");
+  const arquivo = { nome: file.name, conteudoBase64: emBase64(await file.arrayBuffer()) };
+  return pedir("/tarefas", { method: "POST", corpo: { arquivo, dados } });
+}
+
+// Revisão (B5): `pessoa` é o id em backend/config/pessoas.json.
+export const listarPessoas = () => pedir("/pessoas");
+export const listarAvaliacoes = (id) => pedir(`/tarefas/${id}/avaliacoes`);
+export const relatorioDeAceitacao = (id) => pedir(`/tarefas/${id}/aceitacao`);
+const doItem = (id, numero, acao) => `/tarefas/${id}/itens/${numero}/${acao}`;
+export const editarTextoDoItem = (id, numero, pessoa, texto) => pedir(doItem(id, numero, "texto"), { method: "PUT", corpo: { pessoa, texto } });
+export const restaurarItem = (id, numero, pessoa) => pedir(doItem(id, numero, "restaurar"), { method: "POST", corpo: { pessoa } });
+export const aprovarItemNaApi = (id, numero, pessoa) => pedir(doItem(id, numero, "aprovar"), { method: "POST", corpo: { pessoa } });
+export const avaliarItemNaApi = (id, numero, pessoa, valor, motivo) =>
+  pedir(doItem(id, numero, "avaliacao"), { method: "PUT", corpo: motivo ? { pessoa, valor, motivo } : { pessoa, valor } });
+
 const DIA = 24 * 60 * 60 * 1000;
+const p2 = (n) => String(n).padStart(2, "0");
+
+/** Data e hora do backend (ISO) no formato da tela: dd/mm/aaaa hh:mm, no fuso do navegador. */
+export function dataHoraDaTela(iso) {
+  const d = new Date(iso);
+  return `${p2(d.getDate())}/${p2(d.getMonth() + 1)}/${d.getFullYear()} ${p2(d.getHours())}:${p2(d.getMinutes())}`;
+}
+
+/** Hoje no formato AAAA-MM-DD, no fuso do navegador. */
+export function hojeIso(hoje = new Date()) {
+  return `${hoje.getFullYear()}-${p2(hoje.getMonth() + 1)}-${p2(hoje.getDate())}`;
+}
+
+/** Converte o item do backend para o formato da tela (o mesmo de `seedItems` em data.js). */
+export function paraItemDaTela(item, total) {
+  return { ...item, tot: total, ...(item.at ? { at: dataHoraDaTela(item.at) } : null) };
+}
 
 /** Converte o documento do backend para o formato da tela (o mesmo de `seedDocs` em data.js). */
 export function paraDocumentoDaTela(d, hoje = new Date()) {
