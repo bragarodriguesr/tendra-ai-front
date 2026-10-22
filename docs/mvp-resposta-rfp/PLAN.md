@@ -324,6 +324,16 @@ Ver etapa A1.
   - **Ficam só na tela:** reconhecer alerta, escolher a fonte num conflito e "Marcar como revisado", que não têm rota na B5. Depois de recarregar a página, alertas voltam a pendentes e o item revisado volta ao estado gravado.
   - Com o servidor, o "Painel de demo" (aprovar tudo só na tela) não aparece.
   - Conferido no navegador: editar e aprovar como Aprovador, avaliar como Aprovador e como Revisor, recarregar e ver o item aprovado, editado e com a avaliação; `GET /api/tarefas/:id/aceitacao` conta 1 aprovado, 7,7% alterado e as duas avaliações.
+- **Portão (22/10/2026): passando, com a API simulada.** `e2e/jornada.spec.js` (`npm run e2e`, Playwright) sobe o backend com a API simulada num banco novo e o front. Ele percorre a jornada:
+  1. envia os `.md` da base sintética pela tela Base;
+  2. confere a recusa de um arquivo que não é `.xlsx`;
+  3. cria a tarefa com a RFP-01 e espera o processamento;
+  4. baixa a planilha preenchida e confere que todos os itens chegam como sugestões pendentes;
+  5. como Aprovador, edita, aprova e avalia um item;
+  6. recarrega a página e vê as ações mantidas;
+  7. compara `/aceitacao` e `/eventos` com o que foi feito na tela.
+  
+  O job "Build e jornada de ponta a ponta" (`.github/workflows/front.yml`) roda o teste em todo PR. Para que ele bloqueie o merge pelo GitHub, marque-o como verificação obrigatória na proteção da branch `main`. **Pendente, depois da A1:** refazer a jornada com a API real.
 
 ## Fase D: publicação compartilhada
 

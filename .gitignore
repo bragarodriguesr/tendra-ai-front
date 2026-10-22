@@ -5,3 +5,7 @@ dist
 # Backend: segredos e dados locais (cenários 27 e 28 de docs/mvp-resposta-rfp/SPEC.md)
 .env
 dados/
+
+# Teste de ponta a ponta (npm run e2e)
+test-results/
+playwright-report/
