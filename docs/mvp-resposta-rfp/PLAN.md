@@ -189,10 +189,12 @@ Ver etapa A1.
 ### A7. Alertas determinísticos
 - Fonte desatualizada a partir de `atualizado_em` (cenário 20) e termo crítico a partir de `config/termos-criticos.json` (cenário 21).
 - **Verificação:** testes unitários dos cenários 20 e 21 passando.
+- **Situação (22/10/2026): concluída.** `regras/alertas.ts` e `config/termos-criticos.json` (lista do SPEC). O termo é procurado como palavra inteira, sem diferenciar maiúsculas, minúsculas nem acentos, aceitando o plural ("multas", "indenizações"): "seguro" não marca "segurança". A regra confere com o gabarito das três RFPs sintéticas (as 19 perguntas críticas e nenhuma outra). O alerta `critical` vale também para itens sem rascunho; `old` vale para fonte com mais de 120 dias.
 
 ### A8. Conflito entre fontes
 - Segunda chamada leve, com saída estruturada, recebendo só os trechos citados de cada item; o código decide o alerta (cenário 22).
 - **Verificação:** teste com a API simulada passando; o caso de conflito embutido na base sintética é marcado.
+- **Situação (22/10/2026): implementada com a API simulada.** `geracao/conflitos.ts` e instruções `conflito-v1`. Só vão à chamada os itens com rascunho e fontes de dois ou mais documentos, até 20 por chamada, com saída estruturada `{id, conflito, fontes}`. O código só marca o alerta quando as fontes apontadas existem no item e vêm de documentos diferentes. Modelo padrão Haiku 5.5 (`TENDRA_MODELO_CONFLITO`), a confirmar na A10. **Pendente, depois da A1:** conferir que os conflitos C1 a C4 da base sintética são marcados numa execução real.
 
 ### A9. Métricas e versão do comportamento
 - Métricas por tarefa: duração por etapa, tokens, custo estimado, ignorados, contagem por estado e alerta (cenário 37).

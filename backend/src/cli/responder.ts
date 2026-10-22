@@ -4,6 +4,7 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 import { carregarCabecalhos } from "../config/cabecalhos.ts";
 import { carregarConfiguracao, ErroDeConfiguracao } from "../config/config.ts";
+import { carregarTermosCriticos } from "../config/termosCriticos.ts";
 import { ErroDePlanilha } from "../documentos/planilha.ts";
 import { processarTarefa } from "../fluxo/processarTarefa.ts";
 import { ClienteDaIa, criarApiDoClaude, ErroDaIa, type EntradaDoRegistro } from "../ia/cliente.ts";
@@ -46,6 +47,7 @@ async function executar(): Promise<number> {
       cliente,
       ia: configuracao.ia,
       nomesDeCabecalho: await carregarCabecalhos(),
+      termosCriticos: await carregarTermosCriticos(),
       hoje: inicio.toISOString().slice(0, 10),
       nomeDoArquivo: path.basename(arquivo),
       planilha: new Uint8Array(await readFile(arquivo)),

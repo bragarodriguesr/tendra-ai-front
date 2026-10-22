@@ -6,6 +6,7 @@ import ExcelJS from "exceljs";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { carregarBase } from "../../src/base/carga.ts";
 import { carregarCabecalhos } from "../../src/config/cabecalhos.ts";
+import { carregarTermosCriticos } from "../../src/config/termosCriticos.ts";
 import { SEM_FONTE, TITULO_DA_FONTE, TITULO_DA_RESPOSTA } from "../../src/documentos/planilhaPreenchida.ts";
 import { processarTarefa } from "../../src/fluxo/processarTarefa.ts";
 import { ClienteDaIa, ErroDaIa, type MensagemDaIa, type ParametrosDaGeracao } from "../../src/ia/cliente.ts";
@@ -15,7 +16,7 @@ import { ApiSimulada, mensagem, texto } from "../apoio/apiSimulada.ts";
 /** Processamento completo com a API simulada: da planilha aos itens e à planilha preenchida (A6). */
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../base-sintetica");
 const RFP = path.join(RAIZ, "rfps/RFP-01-Rede-Varejo-Alfa.xlsx");
-const IA = { modelo: "claude-opus-5-5", modeloDeIdentificacao: "claude-haiku-5-5", esforco: "medium" as const, tamanhoDoLote: 10 };
+const IA = { modelo: "claude-opus-5-5", modeloDeIdentificacao: "claude-haiku-5-5", modeloDeConflito: "claude-haiku-5-5", esforco: "medium" as const, tamanhoDoLote: 10 };
 
 let banco: Banco;
 let api: ApiSimulada;
@@ -62,6 +63,7 @@ async function processar() {
     cliente: new ClienteDaIa(api, () => {}),
     ia: IA,
     nomesDeCabecalho: await carregarCabecalhos(),
+    termosCriticos: await carregarTermosCriticos(),
     hoje: "2026-10-21",
     nomeDoArquivo: "RFP-01-Rede-Varejo-Alfa.xlsx",
     planilha: new Uint8Array(await readFile(RFP)),
@@ -93,6 +95,7 @@ describe("Processamento da RFP-01 com a base da Pulse", () => {
       cliente: new ClienteDaIa(api, () => {}),
       ia: IA,
       nomesDeCabecalho: await carregarCabecalhos(),
+      termosCriticos: await carregarTermosCriticos(),
       hoje: "2026-10-21",
       nomeDoArquivo: "RFP-01-Rede-Varejo-Alfa.xlsx",
       planilha: new Uint8Array(await readFile(RFP)),
@@ -130,9 +133,38 @@ describe("Processamento da RFP-01 com a base da Pulse", () => {
     expect(preenchida.get(`${aba}!${linhaDaSegunda}:${colunaDaFonte}`)).toBe(SEM_FONTE);
   });
 
+  it("Cenário 22 · item com fontes de dois documentos passa pela chamada de conflito", async () => {
+    await carregarBase({ pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
+    // Pergunta 1 cita o 2º bloco dos documentos 0 e 1; a chamada de conflito aponta as duas fontes.
+    api.respostas = [
+      (parametros) => {
+        if (parametros.output_config?.format) return mensagem([texto(JSON.stringify({ itens: [{ id: "r1", conflito: true, fontes: [1, 2] }] }))]);
+        const conteudo = parametros.messages[0]?.content;
+        if (!Array.isArray(conteudo)) throw new Error("conteúdo inesperado");
+        const citar = (indice: number) => {
+          const documento = conteudo[indice];
+          const bloco = documento?.type === "document" && documento.source.type === "content" && Array.isArray(documento.source.content) ? documento.source.content[1] : undefined;
+          return { type: "content_block_location", cited_text: bloco?.type === "text" ? bloco.text : "", document_index: indice, document_title: null, start_block_index: 1, end_block_index: 2, file_id: null };
+        };
+        const primeiro = conteudo.at(-1)?.type === "text" && /\[P1\]/.test((conteudo.at(-1) as { text: string }).text);
+        return mensagem(primeiro ? [texto("[P1]\n"), texto("Uma fonte diz isto", [citar(0)]), texto(" e outra diz aquilo.", [citar(1)])] : [texto("[P11]\nSEM_RESPOSTA")]);
+      },
+    ];
+
+    const resultado = await processar();
+
+    const [primeiro] = resultado.itens;
+    expect(primeiro?.alerts.map((alerta) => alerta.t)).toContain("conflict");
+    expect(primeiro?.srcs.map((src) => src.conflict)).toEqual([true, true]);
+    expect(api.geracoes.filter((parametros) => parametros.output_config?.format)).toHaveLength(1);
+    expect(resultado.itens.filter((item) => item.alerts.some((alerta) => alerta.t === "conflict"))).toHaveLength(1);
+  });
+
   it("Cenário 10 · base vazia: todos sem rascunho e nenhuma chamada à IA", async () => {
     const resultado = await processar();
-    expect(resultado.itens.every((item) => item.st === "sem-rascunho" && item.alerts[0]?.t === "nocontext")).toBe(true);
+    expect(resultado.itens.every((item) => item.st === "sem-rascunho" && item.alerts.some((alerta) => alerta.t === "nocontext"))).toBe(true);
+    // Cenário 21 vale também sem rascunho: as perguntas 1.06 a 1.10 da RFP-01 têm termos críticos.
+    expect(resultado.itens.filter((item) => item.alerts.some((alerta) => alerta.t === "critical")).map((item) => item.id)).toEqual(["r6", "r7", "r8", "r9", "r10"]);
     expect(api.geracoes).toHaveLength(0);
     expect(api.contagens).toHaveLength(0);
     expect(resultado.documentos).toEqual([]);
