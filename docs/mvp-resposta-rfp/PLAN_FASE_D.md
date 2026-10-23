@@ -46,10 +46,12 @@ O front só conversa com o backend. As credenciais do Supabase e da Anthropic fi
 | PD2 | Método de cadastro das contas de pessoas | D4 | Criar cada conta no painel do Supabase (Authentication → Add user, já confirmada) e preencher o perfil com um comando `npm run cadastrar-perfil -- <e-mail> <nome> <papel>`. Sem tela de cadastro. |
 | PD3 | E-mails das contas | D4 | Sintéticos (por exemplo `marcelo.aprovador@tendra.test`), para não haver dado pessoal no banco; uma conta Aprovador e uma Revisor de teste, mais uma por membro do grupo. |
 | PD4 | Duração da sessão sem uso | D4 | 8 horas (`TENDRA_SESSAO_HORAS`). |
-| PD5 | Números do limite de login | D5 | 5 falhas em 15 minutos, por e-mail ou por IP. |
+| PD5 | Números do limite de login | D5 | **Decidido em 23/10/2026:** 3 falhas seguidas em 15 minutos, por e-mail ou por IP. |
 | PD6 | Envio de planilha até 10 MB pelo rewrite da Vercel | D0 | Conferir no spike. O envio hoje é JSON com o arquivo em base64 (cerca de 13,4 MB para 10 MB). Se o rewrite não aceitar, o envio vai direto ao Supabase Storage por URL assinada gerada pelo backend. |
 | PD7 | Plano gratuito da Vercel (Hobby) é para uso não comercial | D10 | Confirmar que o MVP com dados sintéticos se enquadra; se não, front como site estático no Render. |
 | PD8 | Região dos serviços | D0 | Com dados sintéticos, qualquer região; registrar que o produto vai exigir região Brasil. |
+
+Em 23/10/2026, o grupo decidiu seguir com o backend sem esperar as demais pendências (PD4 e PD6 a PD8 ficam com as sugestões acima até nova decisão). Conta de teste criada no Supabase Auth pelo grupo e ligada ao perfil pelo conector: User Teste 1 (Revisor).
 
 ## Etapas
 
@@ -106,11 +108,13 @@ Cada etapa é um pull request separado, com testes próprios e uma verificação
 - Antes de conferir a senha, contar as falhas recentes do e-mail e do IP; acima do limite (PD5), 429 com mensagem para aguardar, mesmo com a senha certa (D7).
 - IP lido do `X-Forwarded-For` (Fastify com `trustProxy` só no modo compartilhado).
 - **Verificação:** teste de D7 passando.
+- **Situação (23/10/2026): implementada.** `autenticacao/tentativas.ts`: antes de conferir a senha, conta as falhas do e-mail e do IP nos últimos 15 minutos, depois do último login certo de cada um; com 3 ou mais, responde 429 "Muitas tentativas de login. Aguarde 15 minutos e tente novamente.", sem consultar o Supabase Auth, sem criar sessão e sem registrar a tentativa bloqueada. Cada tentativa conferida é registrada com e-mail, IP e resultado. Testes em `autenticacao.test.ts` (por e-mail, por IP, zerar com login certo, janela de 15 minutos) e em `transporte.test.ts` (IP lido do `X-Forwarded-For`). Conferido com o servidor real no modo compartilhado contra o Supabase Auth: a 4ª tentativa errada seguida recebe 429.
 
 ### D6. Transporte seguro e origem
 - No modo compartilhado: ouvir em `0.0.0.0` na porta `PORT` do Render; recusar requisição com `X-Forwarded-Proto` diferente de `https`; cookie `HttpOnly`, `Secure`, `SameSite=Lax`; recusar com 403 métodos que alteram dados com `Origin` diferente de `TENDRA_ORIGEM_DO_FRONT` (D10).
 - No modo local, o cenário 30 continua: só `127.0.0.1`.
 - **Verificação:** teste de D10 passando; no navegador, o cookie aparece com os três atributos.
+- **Situação (23/10/2026): implementada; a conferência no navegador fica para a D10.** Com `transporte`, o servidor confia no proxy (`trustProxy`) e, antes de olhar sessão ou dados, recusa com 403 pedido sem `X-Forwarded-Proto: https` (menos `GET /api/saude`, para a verificação de saúde do Render) e pedido `POST`, `PUT`, `PATCH` ou `DELETE` com `Origin` diferente de `TENDRA_ORIGEM_DO_FRONT`. No modo compartilhado, `npm run servidor` ouve em `0.0.0.0` na porta `PORT` do Render (ou `TENDRA_PORTA`); no modo local, continua só em `127.0.0.1`. A trava que recusava o modo compartilhado saiu. Testes em `transporte.test.ts`; teste de fumaça do servidor real no modo compartilhado com o Postgres local e o Supabase Auth real.
 
 ### D7. Papéis
 - Revisor recebe 403 ao aprovar (D8) e ao pedir a planilha preenchida (D9), só no modo compartilhado.

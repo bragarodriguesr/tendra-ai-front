@@ -142,7 +142,7 @@ export function carregarConfiguracaoSemChave(
  */
 export type ModoDoServidor =
   | { tipo: "local" }
-  | { tipo: "compartilhado"; supabaseUrl: string; chaveDeServico: string; origemDoFront: string; horasDeSessao: number };
+  | { tipo: "compartilhado"; supabaseUrl: string; chaveDeServico: string; origemDoFront: string; horasDeSessao: number; porta: number | null };
 
 /** Configuração do servidor: com a chave da API ou, no modo local, com a API simulada. */
 export type ConfiguracaoDoServidor = ConfiguracaoSemChave & {
@@ -188,12 +188,16 @@ function lerModo(ambiente: NodeJS.ProcessEnv, problemas: string[]): ModoDoServid
   const horasInformadas = valor("TENDRA_SESSAO_HORAS") || String(HORAS_DE_SESSAO_PADRAO);
   const horasDeSessao = Number(horasInformadas);
   if (!/^\d+$/.test(horasInformadas) || horasDeSessao < 1 || horasDeSessao > 720) problemas.push("TENDRA_SESSAO_HORAS inválida. Use um número inteiro de 1 a 720.");
+  // O Render define a porta em PORT; sem ela, vale TENDRA_PORTA.
+  const portaDoRender = valor("PORT");
+  if (portaDoRender !== "" && (!/^\d+$/.test(portaDoRender) || Number(portaDoRender) < 1 || Number(portaDoRender) > 65535)) problemas.push("PORT inválida. Use um número de 1 a 65535.");
   return {
     tipo: "compartilhado",
     supabaseUrl: valor("SUPABASE_URL").replace(/\/$/, ""),
     chaveDeServico: valor("SUPABASE_SERVICE_ROLE_KEY"),
     origemDoFront: valor("TENDRA_ORIGEM_DO_FRONT").replace(/\/$/, ""),
     horasDeSessao,
+    porta: portaDoRender === "" ? null : Number(portaDoRender),
   };
 }
 

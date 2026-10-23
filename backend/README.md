@@ -60,6 +60,10 @@ O banco local aceita um processo por vez. O servidor e o comando abrem o banco c
 
 Criar o banco do zero leva alguns segundos (o PGlite inicializa o Postgres). Por isso os testes de integração reaproveitam um banco por arquivo.
 
+### Modo compartilhado (fase D)
+
+Com `TENDRA_MODO=compartilhado`, `npm run servidor` usa o Postgres (`DATABASE_URL`) e o Storage do Supabase, exige login (senha conferida no Supabase Auth, sessão própria do backend, 3 falhas seguidas em 15 minutos bloqueiam por e-mail e por IP), recusa pedidos sem HTTPS e alterações de outra origem que não `TENDRA_ORIGEM_DO_FRONT`, e ouve em `0.0.0.0` na porta `PORT`. As variáveis obrigatórias estão em `.env.example`; o plano está em `docs/mvp-resposta-rfp/PLAN_FASE_D.md`.
+
 ### Postgres (etapa D1 da fase D)
 
 Com `DATABASE_URL` (por exemplo, a conexão do Supabase), os comandos e o servidor usam esse Postgres no lugar do PGlite em `dados/banco`, com as mesmas migrações e sem a trava de um processo por vez. Para rodar a suíte contra um Postgres, defina `TENDRA_TESTE_DATABASE_URL`: cada arquivo de teste de integração cria um esquema próprio e o apaga ao terminar. O CI roda a suíte nos dois bancos.

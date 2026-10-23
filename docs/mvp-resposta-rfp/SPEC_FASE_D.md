@@ -71,7 +71,7 @@ O modo é escolhido por variável de ambiente (`TENDRA_MODO=local|compartilhado`
 - **Then** a resposta é 401, a sessão é apagada, e o front volta para a tela de login
 
 #### Cenário D7: limite de tentativas de login
-- **Given** 5 tentativas malsucedidas para o mesmo e-mail, ou a partir do mesmo IP, nos últimos 15 minutos
+- **Given** 3 tentativas malsucedidas seguidas para o mesmo e-mail, ou a partir do mesmo IP, nos últimos 15 minutos (limite decidido pelo grupo em 23/10/2026; um login certo zera a contagem)
 - **When** uma nova tentativa é feita nesse período, mesmo com a senha correta
 - **Then** a resposta é 429, nenhuma sessão é criada, e a mensagem diz que é preciso aguardar
 - **And** o IP considerado é o da pessoa, lido do cabeçalho enviado pelo Render, e não o do próprio Render
@@ -94,7 +94,7 @@ O modo é escolhido por variável de ambiente (`TENDRA_MODO=local|compartilhado`
 #### Cenário D10: conexão segura, cookie e origem
 - **Given** o backend no modo compartilhado
 - **When** uma requisição chega sem HTTPS (cabeçalho `X-Forwarded-Proto` diferente de `https`)
-- **Then** ela é recusada sem processar dados
+- **Then** ela é recusada com 403 sem processar dados; só `GET /api/saude`, usada pela verificação de saúde do Render, responde sem HTTPS
 - **And** o cookie de sessão tem os atributos `HttpOnly`, `Secure` e `SameSite=Lax`, sem domínio explícito
 - **And** requisições que alteram dados (`POST`, `PUT`, `PATCH`, `DELETE`) com cabeçalho `Origin` diferente da origem do front configurada (`TENDRA_ORIGEM_DO_FRONT`) são recusadas com 403
 
