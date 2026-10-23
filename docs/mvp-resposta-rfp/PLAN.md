@@ -21,7 +21,7 @@ Chegar a um backend que **prove a hipótese central do MVP** (a pessoa aceita as
 | **C. Front conectado** | Nova RFP com arquivo real, progresso e revisão com ações gravadas (a Base já sai conectada da A4) | 6, 16, 23, 24, 33, 40, 42 a 46 |
 | **D. Publicação compartilhada** | Login, sessão, hospedagem e segurança de exposição (fase 1 de `docs/referencia/mvp-proposta-1/PLAN.md`) | Cenários de `docs/referencia/mvp-proposta-1/SPEC.md`; spec próprio quando a fase começar |
 
-> **Situação da fase A (23/10/2026):** A1 feita e execuções reais da A5 a A10 concluídas (`gerar-amostra`, `responder` e `avaliar` com Sonnet 5.5 e Opus 5.5). Com as instruções `geracao-v2` e `conflito-v2`, o Opus 5.5 atinge todos os critérios medidos pelo código na RFP-01 e na RFP-02 (3 execuções). Falta só a lista de fidelidade preenchida por uma pessoa para fechar o portão e registrar o modelo em P8.
+> **Situação da fase A (23/10/2026):** A1 feita e execuções reais da A5 a A10 concluídas (`gerar-amostra`, `responder` e `avaliar` com Sonnet 5.5 e Opus 5.5). Com as instruções `geracao-v3` e `conflito-v2` e a checagem por parágrafo (cenário 18 revisto), o Opus 5.5 atinge todos os critérios medidos pelo código na RFP-01 e na RFP-02 (3 execuções). Falta só a lista de fidelidade preenchida por uma pessoa para fechar o portão e registrar o modelo em P8.
 
 > **Situação da fase B (23/10/2026):** B1 a B6 implementadas e testadas com a API do Claude simulada e retestadas com a API real: a jornada de ponta a ponta (`TENDRA_E2E_API_REAL=1 npm run e2e`) processou a RFP-01 pela rota com o servidor usando a chave, acompanhou o progresso, revisou e conferiu o relatório de aceitação. Pelo plano, o portão da fase A (fidelidade) continua valendo antes de a fase C ser dada como aceita.
 
@@ -238,8 +238,11 @@ Ver etapa A1.
       | Custo por execução | US$ 0,23 (RFP-01), US$ 0,30 a 0,31 (RFP-02) | US$ 0,09, US$ 0,11 a 0,12 |
 
       O Sonnet reprova no conflito da RFP-01 porque a resposta sobre RPO e RTO citou só o anexo de SLA, sem o plano de continuidade.
+    - **Revisão da lista de fidelidade da v2 (23/10/2026):** as citações estavam corretas, mas as respostas eram só o trecho citado (sem "Sim.", sem versão nem data), porque a checagem retirava todo texto fora de uma citação. Decisão: a resposta é redigida com as fontes como contexto e a checagem passa a ser por parágrafo (SPEC, cenário 18): parágrafo com ao menos uma citação válida fica com a redação do modelo; parágrafo sem citação válida sai com `lowconf`; trecho ligado a uma citação que não confere continua saindo (cenário 19). O guardrail do conteúdo fica nas instruções e na fidelidade revisada por pessoa, sem chamada extra de verificação.
+    - **`geracao-v3`:** resposta direta e coerente com a pergunta (começa por "Sim." ou "Não." quando sustentado, responde a cada parte), cada parágrafo com ao menos uma citação, uso permitido do título, versão e data do documento, sem repetir informação; mantém os limites da v2.
+    - **Resultado com `geracao-v3` (Opus 5.5):** todos os critérios medidos pelo código aprovados na RFP-01 e na RFP-02 (3 execuções): validade das fontes e ausência de texto sem fonte 100%, relevância 98% e 92%, contexto insuficiente, conflito e guardrails 100%, idioma 100%. Trechos retirados pela checagem caíram de 40 para 0 ou 1 por execução, e o alerta `lowconf` de 27 itens para 0 ou 1. Custo de US$ 0,24 (RFP-01) e US$ 0,32 a 0,33 (RFP-02).
   - **Pendente (portão da fase A):**
-    1. Preencher a lista de fidelidade (`fidelidade.xlsx`) de uma execução do Opus com `geracao-v2` e rodar o `avaliar` com `--fidelidade`.
+    1. Preencher a lista de fidelidade (`fidelidade.xlsx`) de uma execução do Opus com `geracao-v3` e rodar o `avaliar` com `--fidelidade`.
     2. Registrar o modelo em P8 (recomendação: Opus 5.5).
     3. As variantes de borda (`base-sintetica/rfps/variantes/`) e a RFP-03 ainda não foram executadas com a API real.
 
@@ -253,7 +256,7 @@ Ver etapa A1.
   - `persistencia/tarefas.ts` e `fluxo/executarTarefa.ts`: a planilha é gravada com nome gerado e o progresso é gravado a cada lote, sem nunca diminuir. Os itens, a planilha preenchida, o comportamento e as métricas são gravados numa só transação quando a tarefa fica pronta. Em falha, ficam só o motivo e o registro, sem itens.
   - O processamento é o mesmo `processarTarefa` do comando `responder`.
   - Testes: tarefa pronta e em falha, cenário 6 (CNPJ e contatos nunca vão à IA) e persistência depois de fechar e reabrir o banco em disco.
-  - **Reteste com a API real (23/10/2026): passou.** Na jornada de ponta a ponta, a RFP-01 foi processada pelo servidor com a chave: progresso de 46 de 46, itens gravados sem texto simulado e comportamento registrado (Opus 5.5, `geracao-v2`, conflito no Sonnet 5.5).
+  - **Reteste com a API real (23/10/2026): passou.** Na jornada de ponta a ponta, a RFP-01 foi processada pelo servidor com a chave: progresso de 46 de 46, itens gravados sem texto simulado e comportamento registrado (Opus 5.5, `geracao-v2`, conflito no Sonnet 5.5; antes da `geracao-v3`).
 
 ### B2. Rotas de tarefas
 - `POST /api/tarefas`: valida a planilha (cenários 4 e 31), recebe opcionalmente nome, empresa, CNPJ e contatos, cria a tarefa e inicia o processamento em segundo plano.
