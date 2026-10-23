@@ -138,10 +138,10 @@ describe("Cenário 26 · relatório contra o gabarito", () => {
       "Idioma da resposta": "aprovado",
     });
     expect(relatorio.aprovado).toBe(false);
-    expect(relatorio.comportamento).toMatchObject({ modelo: "claude-opus-5-5", versaoDasInstrucoes: "geracao-v1", tamanhoDoLote: 10 });
+    expect(relatorio.comportamento).toMatchObject({ modelo: "claude-opus-5-5", versaoDasInstrucoes: "geracao-v2", tamanhoDoLote: 10 });
     const markdown = relatorioEmMarkdown(relatorio, [0.41]);
     expect(markdown).toContain("| Relevância da recuperação | Perguntas com resposta no gabarito cuja fonte inclui o documento esperado | 80% |");
-    expect(markdown).toContain("claude-opus-5-5 (esforço medium), instruções geracao-v1, lote de 10");
+    expect(markdown).toContain("claude-opus-5-5 (esforço medium), instruções geracao-v2, lote de 10");
   });
 
   it("com a lista de fidelidade preenchida, aprova todos os critérios", async () => {

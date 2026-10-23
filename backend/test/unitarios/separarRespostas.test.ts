@@ -7,14 +7,9 @@ import { separarRespostas } from "../../src/geracao/separarRespostas.ts";
 import type { MensagemDaIa } from "../../src/ia/cliente.ts";
 import { mensagem, texto } from "../apoio/apiSimulada.ts";
 
-/** Separação das respostas de um lote pelos marcadores [Pn] (PLAN.md, A5; risco a validar com a API real). */
-const FIXTURE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../fixtures/ia/geracao-lote-pulse.simulada.json");
-const loteDaPulse = JSON.parse(readFileSync(FIXTURE, "utf8")) as MensagemDaIa;
-
-// Ordem dos documentos no contexto da fixture: a base da Pulse carregada inteira.
-const DOCUMENTOS = Array.from({ length: 16 }, (_, posicao) => `documento-${posicao}.md`);
-DOCUMENTOS[2] = "certificado-iso27001.md";
-DOCUMENTOS[12] = "norma-registro-e-monitoramento.md";
+/** Separação das respostas de um lote pelos marcadores [Pn] (PLAN.md, A5), conferida com uma resposta real da API. */
+const FIXTURE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../fixtures/ia/geracao-lote-pulse.real.json");
+const { _documentos: DOCUMENTOS, ...loteDaPulse } = JSON.parse(readFileSync(FIXTURE, "utf8")) as MensagemDaIa & { _documentos: string[] };
 
 const citacao = (documentIndex: number, inicio: number, cited = "trecho") => ({
   type: "content_block_location",
@@ -27,29 +22,36 @@ const citacao = (documentIndex: number, inicio: number, cited = "trecho") => ({
 });
 
 describe("Separar as respostas do lote", () => {
-  it("separa resposta com citação, SEM_RESPOSTA e resposta com trecho sem citação (fixture simulada)", () => {
-    const [p1, p2, p3] = separarRespostas(loteDaPulse, [1, 2, 3], DOCUMENTOS);
+  it("separa respostas com citação, SEM_RESPOSTA e trechos sem citação (resposta real gravada)", () => {
+    const [p1, p2, p3, p4, p5] = separarRespostas(loteDaPulse, [1, 2, 3, 4, 5], DOCUMENTOS);
 
-    expect(p1).toMatchObject({ numero: 1, situacao: "respondida", citacoesDescartadas: 0 });
-    expect(p1?.trechos).toEqual([
+    expect([p1, p2, p3, p4, p5].map((resposta) => [resposta?.situacao, resposta?.citacoesDescartadas])).toEqual([
+      ["respondida", 0],
+      ["respondida", 0],
+      ["respondida", 0],
+      ["sem_resposta", 0],
+      ["respondida", 0],
+    ]);
+    expect(p2?.trechos).toEqual([
       {
-        texto: "Os registros de acesso e de auditoria são mantidos por 12 meses em armazenamento imutável e depois eliminados de forma segura.",
+        texto: "A contratante paga taxa de administração de 1,5% a 3,0% sobre o valor dos créditos, conforme o plano e o volume.",
         citacoes: [
           {
-            documento: "norma-registro-e-monitoramento.md",
-            blocoInicial: 2,
-            blocoFinal: 3,
-            textoCitado: expect.stringContaining("mantidos por 12 meses") as string,
+            documento: "contrato-prestacao-servicos.md",
+            blocoInicial: 3,
+            blocoFinal: 4,
+            textoCitado: expect.stringContaining("taxa de administração de 1,5% a 3,0%") as string,
           },
         ],
       },
     ]);
-    expect(p2).toEqual({ numero: 2, situacao: "sem_resposta", trechos: [], citacoesDescartadas: 0 });
-    expect(p3?.situacao).toBe("respondida");
-    expect(p3?.trechos.map((trecho) => [trecho.texto.trim(), trecho.citacoes.map((c) => c.documento)])).toEqual([
-      ["Sim. A Pulse Benefícios tem certificação ISO/IEC 27001:2022 vigente até 9 de dezembro de 2028.", ["certificado-iso27001.md"]],
-      ["A certificação é mantida com auditorias anuais.", []],
+    expect(p1?.trechos.map((trecho) => [trecho.texto.trim(), trecho.citacoes.map((c) => c.documento)])).toEqual([
+      ["Oferecemos", []],
+      ["os planos Essencial, Plus e Enterprise. As funcionalidades de cada plano constam na proposta comercial anexa.", ["contrato-prestacao-servicos.md"]],
+      ["Como exemplo de diferença entre os planos,", []],
+      ["o logon único (SSO) por SAML 2.0 está disponível no plano Enterprise.", ["portal-empresa-rh-funcionalidades.md"]],
     ]);
+    expect(p4).toEqual({ numero: 4, situacao: "sem_resposta", trechos: [], citacoesDescartadas: 0 });
   });
 
   it("marca a pergunta sem marcador e ignora texto antes do primeiro marcador e marcadores fora do lote", () => {

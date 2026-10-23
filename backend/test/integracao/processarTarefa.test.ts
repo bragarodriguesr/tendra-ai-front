@@ -86,12 +86,12 @@ describe("Processamento da RFP-01 com a base da Pulse", () => {
     // Cenário 38: o que gerou as respostas fica registrado na tarefa.
     expect(resultado.comportamento).toEqual({
       modelo: "claude-opus-5-5",
-      versaoDasInstrucoes: "geracao-v1",
+      versaoDasInstrucoes: "geracao-v2",
       tamanhoDoLote: 10,
       esforco: "medium",
       modeloDeIdentificacao: "claude-haiku-5-5",
       modeloDeConflito: "claude-haiku-5-5",
-      instrucoes: { geracao: "geracao-v1", identificacao: "identificacao-v1", conflito: "conflito-v1" },
+      instrucoes: { geracao: "geracao-v2", identificacao: "identificacao-v1", conflito: "conflito-v2" },
     });
     expect(resultado.etapas.map((etapa) => etapa.etapa)).toEqual(["planilha", "identificacao", "contexto", "geracao", "checagem", "conflito", "alertas", "planilhaPreenchida"]);
     expect(resultado.documentos).toHaveLength(16);

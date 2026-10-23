@@ -139,7 +139,7 @@ describe("Geração em lotes com citações e cache", () => {
       [10, 12],
       [12, 12],
     ]);
-    expect(resultado).toMatchObject({ versaoDasInstrucoes: "geracao-v1", modelo: "claude-opus-5-5", tamanhoDoLote: 5 });
+    expect(resultado).toMatchObject({ versaoDasInstrucoes: "geracao-v2", modelo: "claude-opus-5-5", tamanhoDoLote: 5 });
     expect(resultado.respostas.map((resposta) => [resposta.numero, resposta.situacao])).toEqual(
       Array.from({ length: 12 }, (_, posicao) => [posicao + 1, "respondida"]),
     );
