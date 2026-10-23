@@ -250,16 +250,18 @@ O formato do arquivo e as regras de validação do cabeçalho estão em `docs/mv
 
 ### Checagem de contexto e fonte
 
-#### Cenário 18: texto sem citação
-- **Given** uma resposta do modelo em que parte do texto não tem citação
+#### Cenário 18: parágrafo sem citação
+- **Given** uma resposta do modelo redigida com as fontes como contexto, em que um parágrafo tem ao menos uma citação válida e outro não tem nenhuma
 - **When** o resultado é checado
-- **Then** o texto sem citação não aparece em `paras`, e o item recebe o alerta `lowconf`
-- **And** se nenhum trecho com citação sobrar, o item fica como no cenário 14
+- **Then** o parágrafo com citação aparece em `paras` com a redação do modelo inteira, inclusive o texto fora da citação (por exemplo, "Sim." no início)
+- **And** o parágrafo sem citação válida não aparece em `paras`, e o item recebe o alerta `lowconf`
+- **And** se nenhum parágrafo com citação sobrar, o item fica como no cenário 14
+- **And** a redação é livre, mas as instruções proíbem acrescentar o que os documentos não sustentam; a conferência do conteúdo é a fidelidade, revisada por pessoa (decisão de 23/10/2026)
 
 #### Cenário 19: citação que não confere com o documento
 - **Given** uma citação cujo trecho não aparece literalmente no documento indicado
 - **When** o resultado é checado
-- **Then** essa fonte é descartada, o texto que dependia só dela sai de `paras`, e o item recebe o alerta `lowconf`
+- **Then** essa fonte é descartada, o trecho ligado só a ela sai de `paras` (mesmo dentro de um parágrafo com outra fonte válida), e o item recebe o alerta `lowconf`
 
 #### Cenário 20: fonte desatualizada
 - **Given** um item com uma fonte cujo `atualizado_em` tem mais de 120 dias em relação à data do backend

@@ -110,7 +110,7 @@ A checagem é **determinística** e acontece em dois momentos.
 
 **Depois de gerar:**
 - Cada trecho citado precisa existir literalmente no documento indicado; citação que não confere é descartada.
-- Texto sem citação válida é removido, e o item ganha o alerta de **baixa confiança**. Item sem nenhuma citação válida fica **sem rascunho**, com o alerta de **informação insuficiente**.
+- O modelo redige a resposta com as fontes como contexto; cada parágrafo precisa de ao menos uma citação válida. Parágrafo sem citação válida é removido, e o item ganha o alerta de **baixa confiança**. Item sem nenhuma citação válida fica **sem rascunho**, com o alerta de **informação insuficiente**.
 - Fonte com mais de 120 dias gera o alerta de **base desatualizada**. Pergunta com termo crítico gera o alerta de **revisão jurídica**.
 - **Conflito entre fontes** é obrigatório (constitution IV e VIII): uma segunda chamada leve de IA, com saída estruturada, recebe só os trechos citados e indica se eles se contradizem. A decisão de marcar o alerta é do código.
 

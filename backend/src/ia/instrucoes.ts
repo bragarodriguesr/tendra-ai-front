@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
  * cada tarefa (cenário 38): mudar o texto exige um arquivo novo e a avaliação da A10 (cenário 36).
  */
 export const VERSOES_DAS_INSTRUCOES = {
-  geracao: "geracao-v2",
+  geracao: "geracao-v3",
   identificacao: "identificacao-v1",
   conflito: "conflito-v2",
 } as const;

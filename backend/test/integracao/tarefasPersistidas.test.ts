@@ -79,7 +79,7 @@ describe("B1 · tarefa processada e gravada", () => {
 
     const pronta = await obterTarefa(banco, tarefa.id);
     expect(pronta).toMatchObject({ estado: "pronta", total: 46, processadas: 46, motivo: null });
-    expect(pronta?.comportamento).toMatchObject({ modelo: "claude-opus-5-5", versaoDasInstrucoes: "geracao-v2", tamanhoDoLote: 10 });
+    expect(pronta?.comportamento).toMatchObject({ modelo: "claude-opus-5-5", versaoDasInstrucoes: "geracao-v3", tamanhoDoLote: 10 });
     expect(pronta?.metricas).toMatchObject({ itens: 46, itensPorEstado: { sugerida: 23, "sem-rascunho": 23 } });
 
     const itens = await listarItens(banco, tarefa.id);

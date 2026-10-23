@@ -3,8 +3,10 @@ import type { ContextoDaBase, DocumentoDoContexto } from "../recuperacao/buscarF
 
 /**
  * Rastreabilidade (etapa A6): confere cada citação contra os blocos do documento, traduz a
- * localização para `seção · linha N`, preserva a relação entre parágrafo e fontes e remove o
- * texto sem citação válida. O resultado segue o contrato de `src/workspace/data.js`.
+ * localização para `seção · linha N`, preserva a relação entre parágrafo e fontes e remove os
+ * parágrafos sem citação válida. Num parágrafo com fonte, a redação do modelo fica inteira
+ * (cenário 18); só sai o trecho ligado a uma citação que não confere (cenário 19). O resultado
+ * segue o contrato de `src/workspace/data.js`.
  * Regras determinísticas: a IA não decide nada aqui (constitution II).
  */
 
@@ -46,7 +48,7 @@ export interface ChecagemDoItem {
   citacoesValidas: number;
   /** Citações que não conferem com o documento (cenário 19) ou que a separação já descartou. */
   citacoesDescartadas: number;
-  /** Trechos com texto e sem citação válida, retirados dos parágrafos (cenário 18). */
+  /** Trechos com texto retirados: os de parágrafos sem citação válida (cenário 18) e os ligados só a citações que não conferem (cenário 19). */
   trechosSemFonte: number;
   /** A resposta do lote não trouxe o marcador desta pergunta. */
   semMarcador: boolean;
@@ -122,7 +124,7 @@ export function montarItem(entrada: {
   const porNome = new Map(contexto.documentos.map((documento) => [documento.nome, documento]));
   const srcs: FonteDoItem[] = [];
   const indiceDaFonte = new Map<string, number>();
-  type Parte = { texto: string; fontes: number[] };
+  type Parte = { texto: string; fontes: number[]; citacaoInvalida: boolean };
   const paragrafos: Parte[][] = [[]];
 
   for (const trecho of resposta.trechos) {
@@ -145,14 +147,15 @@ export function montarItem(entrada: {
     }
     trecho.texto.split(QUEBRA_DE_PARAGRAFO).forEach((pedaco, posicao) => {
       if (posicao > 0) paragrafos.push([]);
-      paragrafos.at(-1)?.push({ texto: pedaco, fontes });
+      paragrafos.at(-1)?.push({ texto: pedaco, fontes, citacaoInvalida: trecho.citacoes.length > 0 && fontes.length === 0 });
     });
   }
 
   const paras: ParagrafoDoItem[] = [];
   for (const partes of paragrafos) {
+    const temFonte = partes.some((parte) => parte.fontes.length > 0);
     const mantidas = partes.filter((parte) => {
-      if (parte.fontes.length > 0 || SO_CONECTOR.test(parte.texto)) return true;
+      if (SO_CONECTOR.test(parte.texto) || (temFonte && !parte.citacaoInvalida)) return true;
       checagem.trechosSemFonte++;
       return false;
     });

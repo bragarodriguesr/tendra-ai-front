@@ -108,21 +108,53 @@ describe("Cenários 12 e 13 · resposta com fonte rastreável", () => {
   });
 });
 
-describe("Cenários 18 e 19 · texto sem citação e citação que não confere", () => {
-  it("retira o texto sem citação e marca lowconf", () => {
+describe("Cenários 18 e 19 · parágrafo sem citação e citação que não confere", () => {
+  it("mantém a redação do modelo num parágrafo com fonte, sem marcar lowconf", () => {
     const { item, checagem } = montarItem({
       pergunta,
       contexto,
       hoje: HOJE,
       resposta: respondida([
-        { texto: "Sim, e também temos certificação SOC 2. ", citacoes: [] },
+        { texto: "Sim. A Pulse guarda os registros de acesso: ", citacoes: [] },
+        { texto: "os registros ficam por 12 meses", citacoes: [citacao("norma-registro.md", 1, RETENCAO)] },
+        { texto: ", em armazenamento imutável.", citacoes: [] },
+      ]),
+    });
+    expect(item.paras).toEqual([{ t: "Sim. A Pulse guarda os registros de acesso: os registros ficam por 12 meses, em armazenamento imutável.", s: [1] }]);
+    expect(item.alerts).toEqual([]);
+    expect(checagem.trechosSemFonte).toBe(0);
+  });
+
+  it("retira o parágrafo sem citação e marca lowconf", () => {
+    const { item, checagem } = montarItem({
+      pergunta,
+      contexto,
+      hoje: HOJE,
+      resposta: respondida([
+        { texto: "Sim. ", citacoes: [] },
         { texto: "Os registros ficam por 12 meses.", citacoes: [citacao("norma-registro.md", 1, RETENCAO)] },
         { texto: "\n\nAlém disso, somos líderes de mercado.", citacoes: [] },
       ]),
     });
-    expect(item.paras).toEqual([{ t: "Os registros ficam por 12 meses.", s: [1] }]);
+    expect(item.paras).toEqual([{ t: "Sim. Os registros ficam por 12 meses.", s: [1] }]);
     expect(item.alerts).toEqual([{ t: "lowconf" }]);
-    expect(checagem.trechosSemFonte).toBe(2);
+    expect(checagem.trechosSemFonte).toBe(1);
+  });
+
+  it("num parágrafo com fonte, retira o trecho ligado só a uma citação que não confere", () => {
+    const { item, checagem } = montarItem({
+      pergunta,
+      contexto,
+      hoje: HOJE,
+      resposta: respondida([
+        { texto: "Os registros ficam por 12 meses", citacoes: [citacao("norma-registro.md", 1, RETENCAO)] },
+        { texto: " e ", citacoes: [] },
+        { texto: "são guardados por 5 anos depois.", citacoes: [citacao("norma-registro.md", 1, "Guardados por 5 anos.")] },
+      ]),
+    });
+    expect(item.paras).toEqual([{ t: "Os registros ficam por 12 meses e", s: [1] }]);
+    expect(item.alerts).toEqual([{ t: "lowconf" }]);
+    expect(checagem).toMatchObject({ citacoesValidas: 1, citacoesDescartadas: 1, trechosSemFonte: 1 });
   });
 
   it.each([
