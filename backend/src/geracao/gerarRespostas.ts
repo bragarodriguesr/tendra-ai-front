@@ -31,6 +31,10 @@ export interface OpcoesDaGeracao {
   ia: Pick<ConfiguracaoDaIa, "modelo" | "esforco" | "tamanhoDoLote">;
   /** Chamado ao fim de cada lote, para gravar o progresso (cenário 16). */
   aoConcluirLote?: (processadas: number, total: number) => void | Promise<void>;
+  /** Respostas já geradas antes de um reinício, por número da pergunta (retomada, etapa D8). */
+  jaGeradas?: ReadonlyMap<number, RespostaGerada>;
+  /** Chamado com as respostas de cada lote gerado, antes do progresso, para gravá-las. */
+  aoGerarLote?: (respostas: RespostaGerada[]) => void | Promise<void>;
 }
 
 /** Espaço de saída de um lote: respostas curtas, mais o raciocínio do modelo. A resposta vem por streaming. */
@@ -49,6 +53,13 @@ export async function gerarRespostas(opcoes: OpcoesDaGeracao): Promise<Resultado
   for (let inicio = 0; inicio < opcoes.perguntas.length; inicio += tamanhoDoLote) {
     const lote = opcoes.perguntas.slice(inicio, inicio + tamanhoDoLote);
     const numeros = lote.map((pergunta) => pergunta.numero);
+    // Lote inteiro já gerado antes do reinício: nenhuma chamada à API (cenário D15).
+    const gravadas = numeros.map((numero) => opcoes.jaGeradas?.get(numero));
+    if (gravadas.every((resposta) => resposta !== undefined)) {
+      respostas.push(...(gravadas as RespostaGerada[]));
+      await opcoes.aoConcluirLote?.(respostas.length, opcoes.perguntas.length);
+      continue;
+    }
     const parametros: ParametrosDaGeracao = {
       model: modelo,
       max_tokens: MAXIMO_DE_TOKENS_POR_LOTE,
@@ -58,7 +69,9 @@ export async function gerarRespostas(opcoes: OpcoesDaGeracao): Promise<Resultado
       messages: [{ role: "user", content: [...documentos, { type: "text", text: formatarPerguntas(lote) }] }],
     };
     const mensagem = await opcoes.cliente.gerar({ etapa: "geracao", documentos: nomes, perguntas: numeros, parametros });
-    respostas.push(...separarRespostas(mensagem, numeros, nomes));
+    const doLote = separarRespostas(mensagem, numeros, nomes);
+    await opcoes.aoGerarLote?.(doLote);
+    respostas.push(...doLote);
     await opcoes.aoConcluirLote?.(respostas.length, opcoes.perguntas.length);
   }
 

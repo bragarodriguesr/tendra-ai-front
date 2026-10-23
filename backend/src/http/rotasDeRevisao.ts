@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import type { Pessoa } from "../config/pessoas.ts";
 import type { Banco } from "../persistencia/banco.ts";
+import { exigirAprovador } from "./rotasDeAutenticacao.ts";
 import {
   aprovarItem,
   avaliarItem,
@@ -62,7 +63,10 @@ export function registrarRotasDeRevisao(servidor: FastifyInstance, opcoes: { ban
   servidor.post<{ Params: Parametros; Body: ComPessoa }>(
     "/api/tarefas/:id/itens/:numero/aprovar",
     { schema: { params: PARAMETROS, body: COM_PESSOA } },
-    async (pedido) => ({ item: await aprovarItem(banco, alvo(pedido)) }),
+    async (pedido) => {
+      exigirAprovador(pedido, "Só o Aprovador pode aprovar respostas.");
+      return { item: await aprovarItem(banco, alvo(pedido)) };
+    },
   );
 
   servidor.put<{ Params: Parametros; Body: ComPessoa & { valor: "positiva" | "negativa"; motivo?: string } }>(
