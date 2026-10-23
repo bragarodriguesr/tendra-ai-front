@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
 
 // Jornada da fase C (PLAN.md, portão): base pela tela, RFP pela tela, progresso, revisão gravada,
-// recarga da página e relatório de aceitação. API simulada: refazer com a API real depois da A1.
+// recarga da página e relatório de aceitação. API simulada; com TENDRA_E2E_API_REAL=1, a API real (custo).
 
 const RAIZ = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PULSE = path.join(RAIZ, "base-sintetica", "pulse-beneficios");

@@ -21,9 +21,9 @@ Chegar a um backend que **prove a hipótese central do MVP** (a pessoa aceita as
 | **C. Front conectado** | Nova RFP com arquivo real, progresso e revisão com ações gravadas (a Base já sai conectada da A4) | 6, 16, 23, 24, 33, 40, 42 a 46 |
 | **D. Publicação compartilhada** | Login, sessão, hospedagem e segurança de exposição (fase 1 de `docs/referencia/mvp-proposta-1/PLAN.md`) | Cenários de `docs/referencia/mvp-proposta-1/SPEC.md`; spec próprio quando a fase começar |
 
-> **Situação da fase A (22/10/2026):** o código das etapas A2 a A10 está pronto e testado com a API do Claude simulada. Falta a parte que exige a chave: a A1 e, depois dela, as execuções reais da A5 a A10 (`gerar-amostra`, `responder` e `avaliar` com Sonnet 5.5 e Opus 5.5, a lista de fidelidade preenchida por uma pessoa e a escolha do modelo em P8). O portão da fase A só fecha com esse relatório.
+> **Situação da fase A (23/10/2026):** A1 feita e execuções reais da A5 a A10 concluídas (`gerar-amostra`, `responder` e `avaliar` com Sonnet 5.5 e Opus 5.5). Com as instruções `geracao-v2` e `conflito-v2`, o Opus 5.5 atinge todos os critérios medidos pelo código na RFP-01 e na RFP-02 (3 execuções). Falta só a lista de fidelidade preenchida por uma pessoa para fechar o portão e registrar o modelo em P8.
 
-> **Situação da fase B (22/10/2026):** B1 a B6 implementadas e testadas com a API do Claude simulada, por decisão do grupo enquanto a A1 está pendente. O servidor sobe com a chave ou com `TENDRA_API_SIMULADA=1` (respostas marcadas como simuladas). **Depois da A1, todo o fluxo da fase B precisa ser retestado com a API real:** processar uma RFP pela rota, acompanhar o progresso, revisar e conferir o relatório de aceitação. Pelo plano, o portão da fase A (avaliação real) continua valendo antes de a fase C ser dada como aceita.
+> **Situação da fase B (23/10/2026):** B1 a B6 implementadas e testadas com a API do Claude simulada e retestadas com a API real: a jornada de ponta a ponta (`TENDRA_E2E_API_REAL=1 npm run e2e`) processou a RFP-01 pela rota com o servidor usando a chave, acompanhou o progresso, revisou e conferiu o relatório de aceitação. Pelo plano, o portão da fase A (fidelidade) continua valendo antes de a fase C ser dada como aceita.
 
 A fase A concentra o risco técnico. Se a avaliação não atingir os limites do SPEC, o ajuste acontece **antes** de investir em servidor, tela ou hospedagem. A fase D só começa depois de A, B e C aceitas e de haver taxa de aceitação medida.
 
@@ -33,14 +33,14 @@ Cada etapa abaixo é uma mudança pequena, com objetivo claro, testes próprios 
 
 | # | Pendência | Bloqueia | Sugestão |
 |---|---|---|---|
-| P1 | Chave de testes da API definida e testada | Fase A | Variável de ambiente local. O primeiro teste é a etapa A1. |
+| P1 | Chave de testes da API definida e testada | Fase A | **Resolvida em 23/10/2026 (A1):** chave em `backend/.env`, fora do controle de versão. |
 | P2 | Base `.md`, planilha de RFP sintética e gabarito | Fase A, etapa A4 em diante | Conforme a seção 5 de `ARQUITETURA_MAPPING.md` e `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`. |
 | P3 | Método de medir a fidelidade (limite de 90% já decidido) | Etapa A10 | **Implementado na A10:** revisão humana pela lista `fidelidade.xlsx` que o `avaliar` gera (uma linha por resposta sugerida, com os trechos citados e a coluna "Diz o mesmo que os trechos? (sim/não)"). |
 | P4 | Motor do banco local | Etapa A4 | **Decidido na A4:** PGlite 0.5.8 (Postgres embutido), porque a fase D usa o Postgres do Supabase. |
 | P5 | Interface da carga (nome e opções) | Etapa A4 | **Decidido na A4 (revisto em 22/10/2026):** a carga principal é pela tela Base de conhecimento, com "Subir documentos" abrindo o seletor de arquivos `.md` do computador. O comando `npm run carregar-base -- <pasta> [--enviado-por <nome>]` continua, com a mesma carga, e termina com código 1 quando algum arquivo é recusado. A identidade do documento passou a ser o nome do arquivo. |
-| P6 | Formato das citações enviado ao Claude: blocos ou texto corrido | Etapa A5 | **Implementado na A5 com blocos** (documentos com conteúdo em blocos, citações `content_block_location`). Falta validar com uma execução real (`npm run gerar-amostra`), que depende da A1. |
+| P6 | Formato das citações enviado ao Claude: blocos ou texto corrido | Etapa A5 | **Implementado na A5 com blocos** (documentos com conteúdo em blocos, citações `content_block_location`). **Validado com a API real em 23/10/2026:** as citações devolvem o bloco certo e os marcadores separam as respostas do lote. |
 | P7 | Fluxo de revisão de código e proteção da `main` exigindo a integração contínua | Primeiro commit de código | Branch + pull request revisado por outra pessoa, com CI obrigatória. |
-| P8 | Modelo da geração e tamanho do lote | Fim da fase A | Decididos pela etapa A10, com dados. Até lá, valores iniciais configuráveis: Opus 5.5 com esforço `medium`, lote de 10 (`TENDRA_MODELO`, `TENDRA_ESFORCO`, `TENDRA_TAMANHO_LOTE`). |
+| P8 | Modelo da geração e tamanho do lote | Fim da fase A | Decididos pela etapa A10, com dados. Valores configuráveis: `TENDRA_MODELO`, `TENDRA_ESFORCO`, `TENDRA_TAMANHO_LOTE`. **Recomendação da A10 (23/10/2026):** Opus 5.5 com esforço `medium` e lote de 10, o único que atingiu todos os critérios medidos pelo código; registrar como decisão depois da fidelidade. |
 | P12 | Valor sugerido nas RFPs com valores permitidos (cenários 50 a 56 do SPEC, acrescentados depois deste plano) | Etapa A6 ou etapa própria | A A5 já gera em português (cenário 50). O valor sugerido (cenários 53 e 54) precisa de uma decisão de formato: o modelo não combina citações com saída estruturada. Sugestão: uma linha `Valor: <valor>` depois do marcador, conferida contra a lista. |
 | P9 | Método de cálculo da porcentagem de texto alterado | Etapa B5 | **Decidido na B5:** diferença por palavras: palavras retiradas mais palavras acrescentadas, sobre a soma das palavras dos dois textos, pela maior subsequência comum (`revisao/diferenca.ts`). |
 | P10 | Simplificação da definição de pronto e dos tipos de teste (ver as seções correspondentes) | Primeiro pull request | Aprovar a versão deste plano ou manter a constitution como está. |
@@ -139,7 +139,7 @@ Ver etapa A1.
 ### A1. Teste da chave
 - Definir a chave de testes em variável de ambiente local e fazer uma requisição mínima à API.
 - **Verificação:** a requisição retorna resposta. Se falhar, a implementação para até o acesso ser resolvido.
-- **Situação (22/10/2026): adiada por decisão do grupo.** A chave ainda não estava disponível no ambiente, e a implementação seguiu para a A4, que não usa a chave. A A1 precisa ser feita antes da A5, a primeira etapa que chama a API.
+- **Situação (23/10/2026): concluída.** Adiada em 22/10 por decisão do grupo, enquanto a chave não estava disponível. Com a chave em `backend/.env`, `npm run verificar-config` aceita a configuração e uma requisição mínima ao Haiku 5.5 retorna resposta (HTTP 200).
 
 ### A2. Esqueleto e integração contínua
 - Criar `backend/` com TypeScript, Vitest e os módulos `config`, `armazenamento` e `observabilidade`.
@@ -175,8 +175,7 @@ Ver etapa A1.
 - **Situação (22/10/2026): implementada com a API simulada, por decisão do grupo, porque a chave ainda não está disponível.**
   - Feito: `recuperacao/buscarFontes.ts` (cenários 10, 11, 35 e 40), `ia/cliente.ts` (cenários 17 e 29), instruções `geracao-v1` e `identificacao-v1` em `ia/instrucoes/`, `geracao/gerarRespostas.ts` e `geracao/separarRespostas.ts` (lotes, marcadores, citações por bloco, cache no último documento), e o identificador de perguntas com Haiku 5.5 do cenário 3.
   - Testes com a API simulada; as novas tentativas e a recusa da chave foram testadas com o SDK real contra um servidor local; o caminho completo, com streaming e citações, foi conferido contra uma API falsa local.
-  - A resposta gravada em `test/fixtures/ia/geracao-lote-pulse.simulada.json` foi montada à mão no formato da API.
-  - **Pendente, depois da A1:** rodar `npm run gerar-amostra -- ../base-sintetica/rfps/RFP-01-Rede-Varejo-Alfa.xlsx --limite 5`, conferir citações e marcadores e trocar a fixture simulada pela resposta real gravada em `dados/amostras/`. Até isso acontecer, a A5 não está concluída pela definição de pronto.
+  - **Execução real (23/10/2026): concluída.** `npm run gerar-amostra -- ../base-sintetica/rfps/RFP-01-Rede-Varejo-Alfa.xlsx --limite 5` com Opus 5.5: as citações apontam o bloco certo de cada documento, os marcadores `[P1]` a `[P5]` separam as respostas e a pergunta sem base sai como `SEM_RESPOSTA`. A alternativa (texto corrido; uma pergunta por chamada) não é necessária. A fixture simulada foi trocada pela resposta real, em `test/fixtures/ia/geracao-lote-pulse.real.json`.
 
 ### A6. Rastreabilidade, estados e saída
 - Conferir cada trecho citado contra o bloco, traduzir a localização (`seção · linha`), preservar a relação parágrafo-fonte, remover texto sem citação válida e marcar `lowconf` e `nocontext` (cenários 12 a 14, 18, 19 e 34).
@@ -188,7 +187,7 @@ Ver etapa A1.
   - Feito: `rastreabilidade/montarItem.ts` (citação conferida contra os blocos, `loc` como `seção · linha N`, `ex` com o texto literal do documento, texto sem citação válida retirado com `lowconf`, `sem-rascunho` com `nocontext`), `documentos/planilhaPreenchida.ts` (cenário 24), `fluxo/processarTarefa.ts` e o comando `npm run responder -- <planilha.xlsx>`, que grava `itens.json`, a planilha preenchida, `tarefa.json` e o registro em `dados/resultados/<id>/`.
   - Regras de checagem adotadas: um trecho sem letras nem números (pontuação entre trechos citados) não conta como texto sem fonte; o texto de um parágrafo tem os espaços normalizados; `ex` de uma citação de vários blocos é o texto dos blocos unidos por quebra de linha; o título das colunas novas fica na linha acima da primeira pergunta da aba.
   - Testes do processamento completo da RFP-01 com a API simulada (46 itens, células originais intactas, base vazia, falha no meio). O `responder` foi conferido contra uma API falsa local com a RFP-03.
-  - **Pendente, depois da A1:** a primeira execução real do `responder` com a RFP sintética.
+  - **Execução real (23/10/2026): concluída.** `responder` com a RFP-01 (46 itens) e a RFP-02 (84 itens), com Sonnet 5.5 e Opus 5.5. Validade das fontes e ausência de texto sem fonte em 100% em todas as execuções. Uma execução falhou por falha de comunicação no último lote, depois das novas tentativas, e ficou como `falha` sem resultado parcial (cenário 17); repetida, passou.
 
 ### A7. Alertas determinísticos
 - Fonte desatualizada a partir de `atualizado_em` (cenário 20) e termo crítico a partir de `config/termos-criticos.json` (cenário 21).
@@ -198,7 +197,7 @@ Ver etapa A1.
 ### A8. Conflito entre fontes
 - Segunda chamada leve, com saída estruturada, recebendo só os trechos citados de cada item; o código decide o alerta (cenário 22).
 - **Verificação:** teste com a API simulada passando; o caso de conflito embutido na base sintética é marcado.
-- **Situação (22/10/2026): implementada com a API simulada.** `geracao/conflitos.ts` e instruções `conflito-v1`. Só vão à chamada os itens com rascunho e fontes de dois ou mais documentos, até 20 por chamada, com saída estruturada `{id, conflito, fontes}`. O código só marca o alerta quando as fontes apontadas existem no item e vêm de documentos diferentes. Modelo padrão Haiku 5.5 (`TENDRA_MODELO_CONFLITO`), a confirmar na A10. **Pendente, depois da A1:** conferir que os conflitos C1 a C4 da base sintética são marcados numa execução real.
+- **Situação (22/10/2026): implementada com a API simulada.** `geracao/conflitos.ts` e instruções `conflito-v1`. Só vão à chamada os itens com rascunho e fontes de dois ou mais documentos, até 20 por chamada, com saída estruturada `{id, conflito, fontes}`. O código só marca o alerta quando as fontes apontadas existem no item e vêm de documentos diferentes. **Execução real (23/10/2026):** com `conflito-v1` e Haiku 5.5, o conflito do RTO (2 h no plano de continuidade, 8 h no anexo de SLA) deixou de ser marcado em duas execuções, porque um dos trechos detalha o escopo. As instruções `conflito-v2` dizem que valores diferentes para o indicador perguntado são conflito mesmo com detalhes de escopo, e que não há conflito quando o próprio trecho explica a diferença (por exemplo, um novo ciclo de certificação). O modelo padrão (`TENDRA_MODELO_CONFLITO`) passou a ser o Sonnet 5.5, que marcou o RTO nos casos em que o Haiku falhou, repetindo a chamada sobre os mesmos itens. Com a v2, os conflitos C1 a C3 das RFP-01 e RFP-02 são marcados em todas as execuções do Opus.
 
 ### A9. Métricas e versão do comportamento
 - Métricas por tarefa: duração por etapa, tokens, custo estimado, ignorados, contagem por estado e alerta (cenário 37).
@@ -221,11 +220,28 @@ Ver etapa A1.
     - **Idioma:** por uma heurística de palavras frequentes.
     - **Valor sugerido:** "não se aplica" até a P12.
   - Testes com execuções simuladas que seguem o gabarito (aprovam) e que erram de propósito (reprovam). O `responder` e o `avaliar` foram conferidos juntos contra uma API falsa local.
-  - **Pendente, depois da A1 (portão da fase A):**
-    1. Rodar a RFP sintética com `TENDRA_MODELO=claude-sonnet-5-5` e com `claude-opus-5-5`.
-    2. Rodar 3 vezes a RFP-02 e as variantes de borda, para os guardrails.
-    3. Preencher a lista de fidelidade.
-    4. Registrar o modelo escolhido em P8.
+  - **Avaliação real (23/10/2026):** RFP-01 uma vez e RFP-02 três vezes, com cada modelo.
+    - **Com `geracao-v1`:** os dois modelos reprovaram. O Opus deduziu respostas de fatos vizinhos (transferência internacional a partir da região de hospedagem; responsabilidade ilimitada a partir da cláusula de limitação, em 2 de 3 execuções) e respondeu com conteúdo tangencial a pergunta com instrução maliciosa (6.11). O Sonnet deixou RPO e RTO sem resposta numa execução e deixou de marcar conflitos.
+    - **`geracao-v2`:** responder só o que os documentos afirmam diretamente, sem deduzir de fatos vizinhos; a pergunta com pedido malicioso segue as mesmas regras; o compromisso só é respondido com o mesmo alcance da pergunta; indicadores técnicos documentados (SLA, RPO, RTO, retenção) não são compromisso novo.
+    - **Resultado com `geracao-v2` e `conflito-v2`:**
+
+      | Critério (limite) | Opus 5.5 | Sonnet 5.5 |
+      |---|---|---|
+      | Validade das fontes (100%) | 100% | 100% |
+      | Ausência de texto sem fonte (100%) | 100% | 100% |
+      | Relevância (80%) | 98% (RFP-01), 93% (RFP-02) | 98%, 92% |
+      | Contexto insuficiente (100%) | 100%, 100% | 100%, 100% |
+      | Fontes conflitantes (100%) | 100%, 100% | **50%**, 100% |
+      | Isolamento da base | 0 | 0 |
+      | Guardrails (3 de 3) | 3 de 3 | 3 de 3 |
+      | Idioma (100%) | 100% | 100% |
+      | Custo por execução | US$ 0,23 (RFP-01), US$ 0,30 a 0,31 (RFP-02) | US$ 0,09, US$ 0,11 a 0,12 |
+
+      O Sonnet reprova no conflito da RFP-01 porque a resposta sobre RPO e RTO citou só o anexo de SLA, sem o plano de continuidade.
+  - **Pendente (portão da fase A):**
+    1. Preencher a lista de fidelidade (`fidelidade.xlsx`) de uma execução do Opus com `geracao-v2` e rodar o `avaliar` com `--fidelidade`.
+    2. Registrar o modelo em P8 (recomendação: Opus 5.5).
+    3. As variantes de borda (`base-sintetica/rfps/variantes/`) e a RFP-03 ainda não foram executadas com a API real.
 
 ## Fase B: backend local com revisão
 
@@ -237,7 +253,7 @@ Ver etapa A1.
   - `persistencia/tarefas.ts` e `fluxo/executarTarefa.ts`: a planilha é gravada com nome gerado e o progresso é gravado a cada lote, sem nunca diminuir. Os itens, a planilha preenchida, o comportamento e as métricas são gravados numa só transação quando a tarefa fica pronta. Em falha, ficam só o motivo e o registro, sem itens.
   - O processamento é o mesmo `processarTarefa` do comando `responder`.
   - Testes: tarefa pronta e em falha, cenário 6 (CNPJ e contatos nunca vão à IA) e persistência depois de fechar e reabrir o banco em disco.
-  - **Reteste depois da A1:** processar uma RFP com a API real e conferir o progresso e os itens gravados.
+  - **Reteste com a API real (23/10/2026): passou.** Na jornada de ponta a ponta, a RFP-01 foi processada pelo servidor com a chave: progresso de 46 de 46, itens gravados sem texto simulado e comportamento registrado (Opus 5.5, `geracao-v2`, conflito no Sonnet 5.5).
 
 ### B2. Rotas de tarefas
 - `POST /api/tarefas`: valida a planilha (cenários 4 e 31), recebe opcionalmente nome, empresa, CNPJ e contatos, cria a tarefa e inicia o processamento em segundo plano.
@@ -253,7 +269,7 @@ Ver etapa A1.
   - Itens e planilha só saem de tarefas prontas; nos outros estados a resposta é 409, com o motivo da falha.
   - Campo desconhecido no corpo de qualquer rota passou a ser recusado.
   - **Chave da API no servidor (cenário 27):** `npm run servidor` não inicia sem `ANTHROPIC_API_KEY`, a não ser com `TENDRA_API_SIMULADA=1`. Essa opção liga a API simulada (`ia/apiSimulada.ts`): cita o bloco da base com mais palavras em comum com a pergunta ou responde sem rascunho. O texto sai marcado como "[Resposta simulada]" e um aviso aparece no log. Serve para usar a tela sem a chave; não mede a IA.
-  - **Reteste depois da A1:** subir o servidor com a chave e processar uma RFP pela rota.
+  - **Reteste com a API real (23/10/2026): passou.** O servidor subiu com a chave e processou a RFP-01 por `POST /api/tarefas`, com 7 requisições à API e nenhuma com erro.
 
 ### B3. Rotas da base
 - **Antecipadas na A4**, junto com o envio pela tela: `GET /api/base/documentos` (nome do arquivo, título, tipo, versão, data de atualização, ativo, enviado por e data da carga; a idade é calculada na tela), `POST /api/base/documentos` (envio de `.md`) e `PATCH /api/base/documentos/:id` (ativar e desativar, cenário 40).
@@ -285,7 +301,7 @@ Ver etapa A1.
 ### B6. Equivalência com o comando
 - Teste que processa a mesma planilha e a mesma base pelo comando `responder` e pelo backend e compara os itens (cenário 25), com a API simulada.
 - **Verificação:** teste passando.
-- **Situação (22/10/2026): concluída, com a API simulada até a A1.** `equivalencia.test.ts` processa a RFP-01 pelo caminho do comando (`processarTarefa`, o mesmo do `responder`) e pela rota `POST /api/tarefas` e compara os itens, que saem iguais, e a posição de cada pergunta. O mesmo arquivo confere o cenário 30: o `npm run servidor` real responde em 127.0.0.1 e recusa conexão pelo endereço da rede.
+- **Situação (22/10/2026): concluída, com a API simulada até a A1.** `equivalencia.test.ts` processa a RFP-01 pelo caminho do comando (`processarTarefa`, o mesmo do `responder`) e pela rota `POST /api/tarefas` e compara os itens, que saem iguais, e a posição de cada pergunta. O mesmo arquivo confere o cenário 30: o `npm run servidor` real responde em 127.0.0.1 e recusa conexão pelo endereço da rede. Com a API real, a equivalência não se compara item a item, porque duas execuções do modelo não geram o mesmo texto; o comando e a rota usam o mesmo `processarTarefa`, e os dois caminhos foram exercidos com a API real (A6 e o reteste da B2).
 
 ## Fase C: front conectado
 
@@ -333,7 +349,8 @@ Ver etapa A1.
   6. recarrega a página e vê as ações mantidas;
   7. compara `/aceitacao` e `/eventos` com o que foi feito na tela.
   
-  O job "Build e jornada de ponta a ponta" (`.github/workflows/front.yml`) roda o teste em todo PR. Para que ele bloqueie o merge pelo GitHub, marque-o como verificação obrigatória na proteção da branch `main`. **Pendente, depois da A1:** refazer a jornada com a API real.
+  O job "Build e jornada de ponta a ponta" (`.github/workflows/front.yml`) roda o teste em todo PR. Para que ele bloqueie o merge pelo GitHub, marque-o como verificação obrigatória na proteção da branch `main`.
+- **Reteste com a API real (23/10/2026): passou.** `TENDRA_E2E_API_REAL=1 npm run e2e` sobe o backend com a chave de `backend/.env`, sem a API simulada, e percorre a mesma jornada em 1,5 minuto. Tem custo (cerca de US$ 0,25 por execução) e não roda no CI; sem a variável, o teste continua com a API simulada e não lê a chave.
 
 ## Fase D: publicação compartilhada
 
