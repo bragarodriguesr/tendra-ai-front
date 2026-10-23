@@ -38,6 +38,8 @@ O teste percorre toda a jornada:
 5. recarrega a página e confere que as ações continuam lá;
 6. compara com o relatório de aceitação.
 
+Para refazer a jornada com a API real, rode `TENDRA_E2E_API_REAL=1 npm run e2e`: o backend lê a chave de `backend/.env` e não usa a API simulada. Tem custo (cerca de US$ 0,25 por execução) e não roda no CI.
+
 Na primeira vez, rode `npm ci` também em `backend/` e `npx playwright install chromium`. No CI, o job "Build e jornada de ponta a ponta" (`.github/workflows/front.yml`) roda o mesmo teste em todo PR. **Depois da A1, refazer a jornada com a API real.**
 
 ## Estrutura

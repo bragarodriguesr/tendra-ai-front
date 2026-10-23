@@ -47,7 +47,7 @@ Execute a partir da pasta `backend/`:
 | `src/observabilidade/` | Logs estruturados, sem a chave da API, e métricas por tarefa (duração, tokens, custo estimado, itens por estado e alerta) |
 | `src/cli/` | Comandos de terminal, incluindo o que sobe o servidor |
 | `test/unitarios/`, `test/integracao/` | Testes; o nome de cada um cita o cenário do SPEC que cobre |
-| `test/fixtures/` | Planilhas sintéticas usadas nos testes e, em `ia/`, respostas da API (as `.simulada.json` foram montadas à mão e serão trocadas por respostas reais) |
+| `test/fixtures/` | Planilhas sintéticas usadas nos testes e, em `ia/`, respostas reais da API gravadas pelo `gerar-amostra` |
 | `test/apoio/` | API do Claude simulada para os testes |
 
 Os dados locais (banco em `dados/banco`, planilhas, resultados, registros) ficam em `dados/`, na raiz do repositório, fora do controle de versão. Para experimentar a carga sem misturar com a base de trabalho, use outra pasta de dados, por exemplo `TENDRA_PASTA_DADOS=/tmp/tendra npm run carregar-base -- ../base-sintetica/pulse-beneficios/base`.
