@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyReply } from "fastify";
 import { apagarSessao, criarSessao, perfilAtivo, pessoaDaSessao } from "../autenticacao/sessoes.ts";
+import { JANELA_EM_MINUTOS, registrarTentativa, tentativasEsgotadas } from "../autenticacao/tentativas.ts";
 import { ErroDoProvedorDeLogin, type VerificadorDeSenha } from "../autenticacao/verificadorSupabase.ts";
 import type { Pessoa } from "../config/pessoas.ts";
 import type { Banco } from "../persistencia/banco.ts";
@@ -26,6 +27,7 @@ declare module "fastify" {
 
 export const COOKIE_DA_SESSAO = "tendra_sessao";
 export const MENSAGEM_DE_LOGIN_RECUSADO = "E-mail ou senha incorretos.";
+export const MENSAGEM_DE_TENTATIVAS_ESGOTADAS = `Muitas tentativas de login. Aguarde ${JANELA_EM_MINUTOS} minutos e tente novamente.`;
 const MENSAGEM_DE_SESSAO_INVALIDA = "Sessão inválida ou expirada. Entre novamente.";
 const ROTAS_SEM_SESSAO = new Set(["/api/auth/login", "/api/saude"]);
 const IDENTIFICADOR = /^[A-Za-z0-9_-]{43}$/;
@@ -70,6 +72,8 @@ export function registrarAutenticacao(servidor: FastifyInstance, opcoes: { banco
     },
     async (pedido, resposta) => {
       const email = pedido.body.email.trim().toLowerCase();
+      // Cenário D7: o limite vale antes de conferir a senha; a tentativa bloqueada não é registrada.
+      if (await tentativasEsgotadas(banco, email, pedido.ip)) return resposta.status(429).send({ erro: MENSAGEM_DE_TENTATIVAS_ESGOTADAS });
       let id: string | null;
       try {
         id = email === "" || pedido.body.senha === "" ? null : await autenticacao.verificador.conferir(email, pedido.body.senha);
@@ -79,6 +83,7 @@ export function registrarAutenticacao(servidor: FastifyInstance, opcoes: { banco
         return resposta.status(503).send({ erro: "Serviço de login indisponível. Tente novamente em instantes." });
       }
       const perfil = id === null ? null : await perfilAtivo(banco, id);
+      await registrarTentativa(banco, { email, ip: pedido.ip, sucesso: perfil !== null });
       if (perfil === null) return resposta.status(401).send({ erro: MENSAGEM_DE_LOGIN_RECUSADO });
 
       const identificador = await criarSessao(banco, perfil.id);
