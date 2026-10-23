@@ -84,6 +84,7 @@ Cada etapa é um pull request separado, com testes próprios e uma verificação
 ### D3. Arquivos no Supabase Storage
 - Segunda implementação de `Armazenamento` (`salvar` e `ler`) sobre o bucket privado, com a chave de serviço; nome gerado pelo backend, como hoje (cenário 31).
 - **Verificação:** teste contra um servidor falso do Storage; no spike, enviar uma planilha e baixar a preenchida.
+- **Situação (23/10/2026): implementada; o envio real fica para a publicação (D10).** `armazenamento/armazenamentoSupabase.ts` grava em `<subpasta>/<uuid>.<extensão>` no bucket `rfps` com `x-upsert: false` e lê só caminhos gerados pelo backend; a chave nova (`sb_secret_...`) vai em `apikey` e a antiga (JWT) também no `Authorization`. Recusa e falha de rede viram erro de armazenamento sem a chave na mensagem. O servidor usa esse armazenamento no modo compartilhado. Bucket `rfps` criado no Supabase pelo conector (privado, só `.xlsx`, até 20 MB por arquivo); conferido que, com a chave publicável, a gravação é recusada pelo RLS, a URL pública não abre e a listagem vem vazia. Este container não tem a chave de serviço, então o envio e a leitura reais com ela são conferidos na D10.
 
 ### D4. Login, sessão, logout e pessoa da sessão
 - `POST /api/auth/login`: confere a senha no Supabase Auth, confere o perfil ativo, cria a sessão e grava o cookie; erro 401 genérico (D1, D2).
@@ -92,6 +93,14 @@ Cada etapa é um pull request separado, com testes próprios e uma verificação
 - A pessoa que age vem da sessão: o campo `pessoa` do corpo das ações de revisão e o `enviadoPor` do envio de documentos são ignorados no modo compartilhado (D4). No modo local, continuam como no cenário 41.
 - Comando `cadastrar-perfil` (PD2).
 - **Verificação:** testes de D1 a D6 passando, com o Supabase Auth simulado por um servidor falso local.
+- **Situação (23/10/2026): implementada.**
+  - `autenticacao/verificadorSupabase.ts` confere e-mail e senha em `POST /auth/v1/token?grant_type=password`; 400 é "não confere" (conferido contra o Supabase Auth real: `invalid_credentials`), outra falha vira 503 "Serviço de login indisponível".
+  - `autenticacao/sessoes.ts`: identificador aleatório de 32 bytes só no cookie, hash SHA-256 no banco; a sessão expira após `TENDRA_SESSAO_HORAS` (padrão 8) sem uso e é apagada; perfil desativado perde as sessões.
+  - `http/rotasDeAutenticacao.ts`: `POST /api/auth/login` (e-mail normalizado, 401 com a mesma mensagem para e-mail inexistente, senha errada, conta sem perfil ou desativada), `GET /api/auth/me`, `POST /api/auth/logout`; cookie `tendra_sessao` com `HttpOnly`, `SameSite=Lax` e `Secure`, sem domínio. Com a autenticação ligada, toda rota `/api/` exige sessão, menos o login e `GET /api/saude`.
+  - A pessoa que age vem da sessão: o campo `pessoa` das ações de revisão e o `enviadoPor` do envio de documentos são ignorados; `/api/pessoas` devolve só a pessoa da sessão. No modo local, nada muda.
+  - `npm run cadastrar-perfil -- <e-mail> <nome> <papel>` (PD2) acha a conta pelo e-mail na API de administração do Supabase Auth e grava ou reativa o perfil.
+  - Testes: `autenticacao.test.ts` (D1 a D6, 19 casos) e `perfis.test.ts`, no PGlite e no Postgres.
+  - O servidor continua recusando o modo compartilhado até a D5 e a D6.
 
 ### D5. Limite de tentativas
 - Antes de conferir a senha, contar as falhas recentes do e-mail e do IP; acima do limite (PD5), 429 com mensagem para aguardar, mesmo com a senha certa (D7).

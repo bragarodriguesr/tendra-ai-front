@@ -3,6 +3,7 @@ import { carregarArquivos, type ArquivoParaCarga } from "../base/carga.ts";
 import type { Banco } from "../persistencia/banco.ts";
 import { definirAtivo, listarDocumentos, type DocumentoGravado } from "../persistencia/documentos.ts";
 import { ErroDaRota } from "./erros.ts";
+import { registrarAutenticacao, type OpcoesDaAutenticacao } from "./rotasDeAutenticacao.ts";
 import { ErroDeRevisao } from "../revisao/revisao.ts";
 import { registrarRotasDeRevisao } from "./rotasDeRevisao.ts";
 import { registrarRotasDeTarefas, type OpcoesDasTarefas } from "./rotasDeTarefas.ts";
@@ -23,6 +24,8 @@ export interface OpcoesDoServidor {
   tarefas?: OpcoesDasTarefas;
   /** Log das requisições (sem corpo). Sem ele, o servidor não registra nada. */
   log?: FastifyBaseLogger;
+  /** Login e sessão do modo compartilhado (etapa D4). Sem ela, o modo local: sem login, pessoa no corpo. */
+  autenticacao?: OpcoesDaAutenticacao;
 }
 
 /** Documento como a tela da Base o recebe. */
@@ -92,6 +95,10 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
     return resposta.status(500).send({ erro: "Erro interno do servidor. Tente novamente." });
   });
 
+  servidor.decorateRequest("pessoaDaSessao", null);
+  if (opcoes.autenticacao !== undefined) registrarAutenticacao(servidor, { banco, autenticacao: opcoes.autenticacao });
+  servidor.get("/api/saude", async () => ({ ok: true }));
+
   servidor.get("/api/base/documentos", async () => ({
     documentos: (await listarDocumentos(banco)).map(paraTela),
   }));
@@ -132,7 +139,8 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
       });
       if (total > LIMITE_DO_ENVIO_EM_BYTES) throw new ErroDaRota(413, mensagemDeEnvioGrande());
 
-      const quem = enviadoPor?.trim().slice(0, TAMANHO_MAXIMO_DE_QUEM_ENVIA) || null;
+      // Com login, quem envia é a pessoa da sessão, nunca o valor do corpo (cenário D4).
+      const quem = pedido.pessoaDaSessao?.nome ?? (enviadoPor?.trim().slice(0, TAMANHO_MAXIMO_DE_QUEM_ENVIA) || null);
       const resumo = await emFila(() => carregarArquivos({ banco, arquivos, hoje: hoje(), enviadoPor: quem }));
       pedido.log.info(
         {

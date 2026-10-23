@@ -142,7 +142,7 @@ export function carregarConfiguracaoSemChave(
  */
 export type ModoDoServidor =
   | { tipo: "local" }
-  | { tipo: "compartilhado"; supabaseUrl: string; chaveDeServico: string; origemDoFront: string };
+  | { tipo: "compartilhado"; supabaseUrl: string; chaveDeServico: string; origemDoFront: string; horasDeSessao: number };
 
 /** Configuração do servidor: com a chave da API ou, no modo local, com a API simulada. */
 export type ConfiguracaoDoServidor = ConfiguracaoSemChave & {
@@ -152,6 +152,8 @@ export type ConfiguracaoDoServidor = ConfiguracaoSemChave & {
 };
 
 const MODOS = ["local", "compartilhado"] as const;
+/** Horas sem uso até a sessão expirar (cenário D6, PD4). */
+const HORAS_DE_SESSAO_PADRAO = 8;
 /** Variáveis obrigatórias do modo compartilhado (cenário D11), além de ANTHROPIC_API_KEY. */
 const VARIAVEIS_DO_MODO_COMPARTILHADO = ["DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "TENDRA_ORIGEM_DO_FRONT"] as const;
 
@@ -183,11 +185,15 @@ function lerModo(ambiente: NodeJS.ProcessEnv, problemas: string[]): ModoDoServid
     problemas.push("TENDRA_ORIGEM_DO_FRONT inválida. Use o endereço https:// do front, sem caminho.");
   }
   if (ambiente.TENDRA_API_SIMULADA?.trim() === "1") problemas.push("TENDRA_API_SIMULADA não é aceita no modo compartilhado.");
+  const horasInformadas = valor("TENDRA_SESSAO_HORAS") || String(HORAS_DE_SESSAO_PADRAO);
+  const horasDeSessao = Number(horasInformadas);
+  if (!/^\d+$/.test(horasInformadas) || horasDeSessao < 1 || horasDeSessao > 720) problemas.push("TENDRA_SESSAO_HORAS inválida. Use um número inteiro de 1 a 720.");
   return {
     tipo: "compartilhado",
     supabaseUrl: valor("SUPABASE_URL").replace(/\/$/, ""),
     chaveDeServico: valor("SUPABASE_SERVICE_ROLE_KEY"),
     origemDoFront: valor("TENDRA_ORIGEM_DO_FRONT").replace(/\/$/, ""),
+    horasDeSessao,
   };
 }
 

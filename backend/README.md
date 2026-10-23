@@ -21,6 +21,7 @@ Execute a partir da pasta `backend/`:
 | `npm run responder -- <planilha.xlsx>` | Processa a planilha com a base ativa do banco (cenário 25): grava em `dados/resultados/<id>/` os itens no formato de `src/workspace/data.js` (`itens.json`), a planilha preenchida, os dados da tarefa e o registro de requisições. Em falha, grava só o motivo e o registro. **Chama a API real** |
 | `npm run avaliar -- <resultado> [<resultado>...] [--momento base\|atualizacao] [--fidelidade <lista.xlsx>]` | Avalia um resultado do `responder` contra o gabarito sintético, com os critérios do SPEC, e grava `avaliacao.md` e `avaliacao.json` no resultado. Na primeira vez, gera `fidelidade.xlsx` para uma pessoa marcar se cada resposta diz o mesmo que os trechos citados. Com três resultados da mesma RFP, mede a consistência dos guardrails. Termina com código 1 quando algum critério é reprovado ou fica pendente. Não chama a IA |
 | `npm run aceitacao -- <id-da-tarefa>` | Relatório de aceitação da tarefa (cenário 48): itens com e sem rascunho, aprovados, aprovados sem edição, porcentagem média de texto alterado e avaliações. Não roda com o servidor aberto |
+| `npm run cadastrar-perfil -- <e-mail> <nome> <Revisor\|Aprovador>` | Fase D: liga uma conta já criada no Supabase Auth (painel → Authentication → Add user, já confirmada) ao nome e ao papel usados no Workspace. Exige `DATABASE_URL`, `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY`; rodar de novo atualiza e reativa o perfil |
 | `npm run typecheck` | Verifica os tipos do TypeScript |
 | `npm test` | Roda os testes automáticos (sem chamadas reais à API da Anthropic) |
 
@@ -29,7 +30,8 @@ Execute a partir da pasta `backend/`:
 | Pasta | Responsabilidade |
 |---|---|
 | `src/config/` | Leitura e validação das variáveis de ambiente |
-| `src/armazenamento/` | Leitura e gravação de arquivos, sempre com nome gerado pelo backend |
+| `src/armazenamento/` | Leitura e gravação de arquivos, sempre com nome gerado pelo backend: no disco local ou, no modo compartilhado, no bucket privado `rfps` do Supabase Storage |
+| `src/autenticacao/` | Fase D: conferência de senha no Supabase Auth, sessões do backend (só o hash do identificador no banco) e cadastro de perfis |
 | `src/documentos/` | Validação, leitura e preenchimento da planilha `.xlsx` de RFP, identificação das perguntas e do modelo de resposta (colunas de resposta e de comentário e lista de valores permitidos) |
 | `config/` | Listas configuráveis: os nomes aceitos para os cabeçalhos das colunas de pergunta, resposta e comentário (`cabecalhos.json`) os termos críticos (`termos-criticos.json`) os preços dos modelos para o custo estimado (`precos.json`) e as pessoas que podem agir na revisão (`pessoas.json`, exceção E1) |
 | `src/base/` | Leitura e validação do cabeçalho dos `.md`, divisão em blocos com seção e linha, e a carga da base (usada pela rota de envio e pelo comando) |

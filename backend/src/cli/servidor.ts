@@ -1,6 +1,8 @@
 import { criarArmazenamento } from "../armazenamento/armazenamento.ts";
+import { criarArmazenamentoSupabase } from "../armazenamento/armazenamentoSupabase.ts";
+import { criarVerificadorSupabase } from "../autenticacao/verificadorSupabase.ts";
 import { carregarCabecalhos } from "../config/cabecalhos.ts";
-import { carregarConfiguracaoDoServidor, ErroDeConfiguracao } from "../config/config.ts";
+import { carregarConfiguracaoDoServidor, ErroDeConfiguracao, type ModoDoServidor } from "../config/config.ts";
 import { carregarPessoas } from "../config/pessoas.ts";
 import { carregarTermosCriticos } from "../config/termosCriticos.ts";
 import { criarServidor } from "../http/servidor.ts";
@@ -18,10 +20,8 @@ import { marcarInterrompidas } from "../persistencia/tarefas.ts";
  */
 async function executar(): Promise<void> {
   const configuracao = carregarConfiguracaoDoServidor();
-  if (configuracao.modo.tipo === "compartilhado") {
-    // Sem login (D4), limite de tentativas (D5) e transporte seguro (D6), o servidor não se expõe.
-    throw new ErroDeConfiguracao("O modo compartilhado ainda não está disponível: faltam o login e o transporte seguro (etapas D4 a D6 de PLAN_FASE_D.md).");
-  }
+  exigirModoDisponivel(configuracao.modo);
+  const { modo } = configuracao;
   const log = criarLog(configuracao.nivelDeLog);
   if (configuracao.api.tipo === "simulada") log.warn(AVISO_DA_API_SIMULADA);
 
@@ -33,9 +33,12 @@ async function executar(): Promise<void> {
   const servidor = criarServidor({
     banco,
     log,
+    ...(modo.tipo === "compartilhado"
+      ? { autenticacao: { verificador: criarVerificadorSupabase(modo), horasSemUso: modo.horasDeSessao, cookieSeguro: true } }
+      : {}),
     tarefas: {
       banco,
-      armazenamento: criarArmazenamento(configuracao.pastaDados),
+      armazenamento: modo.tipo === "compartilhado" ? criarArmazenamentoSupabase(modo) : criarArmazenamento(configuracao.pastaDados),
       api: configuracao.api.tipo === "real" ? criarApiDoClaude(configuracao.api.chaveApi) : criarApiSimulada(),
       ia: configuracao.ia,
       nomesDeCabecalho: await carregarCabecalhos(),
@@ -64,6 +67,13 @@ async function executar(): Promise<void> {
     throw erro;
   }
   console.log(`Servidor em http://127.0.0.1:${configuracao.porta}${configuracao.api.tipo === "simulada" ? " (API do Claude SIMULADA)" : ""}. Encerre com Ctrl+C.`);
+}
+
+/** Sem limite de tentativas (D5) e transporte seguro (D6), o servidor não se expõe no modo compartilhado. */
+function exigirModoDisponivel(modo: ModoDoServidor): void {
+  if (modo.tipo === "compartilhado") {
+    throw new ErroDeConfiguracao("O modo compartilhado ainda não está disponível: faltam o limite de tentativas de login e o transporte seguro (etapas D5 e D6 de PLAN_FASE_D.md).");
+  }
 }
 
 try {

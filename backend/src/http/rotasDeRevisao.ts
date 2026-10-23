@@ -1,4 +1,4 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyRequest } from "fastify";
 import type { Pessoa } from "../config/pessoas.ts";
 import type { Banco } from "../persistencia/banco.ts";
 import {
@@ -14,8 +14,9 @@ import {
 } from "../revisao/revisao.ts";
 
 /**
- * Rotas da revisão (etapa B5). Toda ação recebe `pessoa` (o id na lista de configuração, exceção
- * E1) e usa a data e hora do backend. O reconhecimento de alerta continua só na tela.
+ * Rotas da revisão (etapa B5). No modo local, toda ação recebe `pessoa` (o id na lista de
+ * configuração, exceção E1); com login, a pessoa é a da sessão e o campo é ignorado (cenário D4).
+ * Usam a data e hora do backend. O reconhecimento de alerta continua só na tela.
  */
 
 const PARAMETROS = {
@@ -33,13 +34,13 @@ type ComPessoa = { pessoa?: string };
 
 export function registrarRotasDeRevisao(servidor: FastifyInstance, opcoes: { banco: Banco; pessoas: Pessoa[] }): void {
   const { banco, pessoas } = opcoes;
-  const alvo = (parametros: Parametros, pessoa: string | undefined) => ({
-    tarefaId: parametros.id,
-    numero: Number(parametros.numero),
-    pessoa: reconhecerPessoa(pessoas, pessoa),
+  const alvo = (pedido: FastifyRequest<{ Params: Parametros; Body: ComPessoa }>) => ({
+    tarefaId: pedido.params.id,
+    numero: Number(pedido.params.numero),
+    pessoa: pedido.pessoaDaSessao ?? reconhecerPessoa(pessoas, pedido.body.pessoa),
   });
 
-  servidor.get("/api/pessoas", async () => ({ pessoas }));
+  servidor.get("/api/pessoas", async (pedido) => ({ pessoas: pedido.pessoaDaSessao === null ? pessoas : [pedido.pessoaDaSessao] }));
 
   servidor.put<{ Params: Parametros; Body: ComPessoa & { texto: string } }>(
     "/api/tarefas/:id/itens/:numero/texto",
@@ -49,19 +50,19 @@ export function registrarRotasDeRevisao(servidor: FastifyInstance, opcoes: { ban
         body: { type: "object", required: ["texto"], additionalProperties: false, properties: { pessoa: { type: "string" }, texto: { type: "string", maxLength: 20_000 } } },
       },
     },
-    async (pedido) => ({ item: await editarTexto(banco, { ...alvo(pedido.params, pedido.body.pessoa), texto: pedido.body.texto }) }),
+    async (pedido) => ({ item: await editarTexto(banco, { ...alvo(pedido), texto: pedido.body.texto }) }),
   );
 
   servidor.post<{ Params: Parametros; Body: ComPessoa }>(
     "/api/tarefas/:id/itens/:numero/restaurar",
     { schema: { params: PARAMETROS, body: COM_PESSOA } },
-    async (pedido) => ({ item: await restaurarSugestao(banco, alvo(pedido.params, pedido.body.pessoa)) }),
+    async (pedido) => ({ item: await restaurarSugestao(banco, alvo(pedido)) }),
   );
 
   servidor.post<{ Params: Parametros; Body: ComPessoa }>(
     "/api/tarefas/:id/itens/:numero/aprovar",
     { schema: { params: PARAMETROS, body: COM_PESSOA } },
-    async (pedido) => ({ item: await aprovarItem(banco, alvo(pedido.params, pedido.body.pessoa)) }),
+    async (pedido) => ({ item: await aprovarItem(banco, alvo(pedido)) }),
   );
 
   servidor.put<{ Params: Parametros; Body: ComPessoa & { valor: "positiva" | "negativa"; motivo?: string } }>(
@@ -82,7 +83,7 @@ export function registrarRotasDeRevisao(servidor: FastifyInstance, opcoes: { ban
       },
     },
     async (pedido) => ({
-      avaliacao: await avaliarItem(banco, { ...alvo(pedido.params, pedido.body.pessoa), valor: pedido.body.valor, ...(pedido.body.motivo === undefined ? {} : { motivo: pedido.body.motivo }) }),
+      avaliacao: await avaliarItem(banco, { ...alvo(pedido), valor: pedido.body.valor, ...(pedido.body.motivo === undefined ? {} : { motivo: pedido.body.motivo }) }),
     }),
   );
 
