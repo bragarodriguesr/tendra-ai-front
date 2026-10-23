@@ -73,6 +73,11 @@ Cada etapa é um pull request separado, com testes próprios e uma verificação
 - No Supabase, Row Level Security ligado em todas as tabelas, sem regras de acesso público: só o backend acessa, com a conexão direta.
 - `TENDRA_MODO=compartilhado` exige `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `TENDRA_ORIGEM_DO_FRONT` e `ANTHROPIC_API_KEY`; falta de qualquer uma impede o início e mostra os nomes (D11).
 - **Verificação:** as tabelas aparecem no painel; uma consulta pela API pública do Supabase não devolve linhas; iniciar sem uma variável mostra o nome dela.
+- **Situação (23/10/2026): código pronto; aplicação no Supabase pendente.**
+  - Migração `004_contas_e_sessoes.sql`: `perfis` (id do Supabase Auth, e-mail em minúsculas e único, nome, papel `Revisor` ou `Aprovador`, ativo), `sessoes` (hash do identificador, perfil com exclusão em cascata, criada em, último uso) e `tentativas_login` (e-mail, IP, resultado, quando, com índices por e-mail e por IP). Liga Row Level Security em todas as 11 tabelas, sem regras de acesso, e fixa o `search_path` da função do gatilho de eventos.
+  - `TENDRA_MODO=local|compartilhado` (padrão `local`). No modo compartilhado, o servidor exige `ANTHROPIC_API_KEY`, `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` e `TENDRA_ORIGEM_DO_FRONT`, lista o nome de cada uma que falta sem mostrar valores, exige `https://` sem caminho nos endereços e recusa a API simulada. Até as etapas D4 a D6 existirem, o servidor se recusa a subir no modo compartilhado.
+  - Testes: `contasESessoes.test.ts` (papéis, e-mail, cascata, tentativas e RLS ligado nas 11 tabelas) e `modoCompartilhado.test.ts` (cenário D11), no PGlite e no Postgres.
+  - Supabase: o projeto `Tendra.ai` (us-east-1, Postgres 17) está acessível pelo conector e ainda sem tabelas; o cadastro público foi desligado pelo grupo em 23/10/2026. Este container não alcança o Postgres do Supabase pela porta 5432 (só sai por HTTPS), então as migrações são aplicadas pelo conector ou pelo próprio backend ao subir no Render.
 
 ### D3. Arquivos no Supabase Storage
 - Segunda implementação de `Armazenamento` (`salvar` e `ler`) sobre o bucket privado, com a chave de serviço; nome gerado pelo backend, como hoje (cenário 31).

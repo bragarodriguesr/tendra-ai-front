@@ -136,11 +136,60 @@ export function carregarConfiguracaoSemChave(
   return { pastaDados, nivelDeLog, porta, bancoUrl };
 }
 
-/** Configuração do servidor: com a chave da API ou, enquanto a A1 não é feita, com a API simulada. */
+/**
+ * Modo de execução (fase D). `local`: fases A a C, só em 127.0.0.1, sem login. `compartilhado`: o
+ * ambiente publicado, com Postgres e Storage do Supabase, login e origem do front restrita.
+ */
+export type ModoDoServidor =
+  | { tipo: "local" }
+  | { tipo: "compartilhado"; supabaseUrl: string; chaveDeServico: string; origemDoFront: string };
+
+/** Configuração do servidor: com a chave da API ou, no modo local, com a API simulada. */
 export type ConfiguracaoDoServidor = ConfiguracaoSemChave & {
   ia: ConfiguracaoDaIa;
   api: { tipo: "real"; chaveApi: string } | { tipo: "simulada" };
+  modo: ModoDoServidor;
 };
+
+const MODOS = ["local", "compartilhado"] as const;
+/** Variáveis obrigatórias do modo compartilhado (cenário D11), além de ANTHROPIC_API_KEY. */
+const VARIAVEIS_DO_MODO_COMPARTILHADO = ["DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "TENDRA_ORIGEM_DO_FRONT"] as const;
+
+/** Endereço HTTPS sem caminho, como a origem do front ou o projeto do Supabase. */
+function origemHttps(valor: string): boolean {
+  try {
+    const url = new URL(valor);
+    return url.protocol === "https:" && url.origin === valor.replace(/\/$/, "");
+  } catch {
+    return false;
+  }
+}
+
+/** Lê TENDRA_MODO e, no modo compartilhado, as variáveis obrigatórias dele. Acumula os problemas. */
+function lerModo(ambiente: NodeJS.ProcessEnv, problemas: string[]): ModoDoServidor {
+  const informado = ambiente.TENDRA_MODO?.trim() || "local";
+  if (!MODOS.some((modo) => modo === informado)) {
+    problemas.push(`TENDRA_MODO inválida. Use ${MODOS.join(" ou ")}.`);
+    return { tipo: "local" };
+  }
+  if (informado === "local") return { tipo: "local" };
+
+  const valor = (nome: string) => ambiente[nome]?.trim() ?? "";
+  for (const nome of VARIAVEIS_DO_MODO_COMPARTILHADO) {
+    if (valor(nome) === "") problemas.push(`Variável de ambiente obrigatória no modo compartilhado ausente: ${nome}`);
+  }
+  if (valor("SUPABASE_URL") !== "" && !origemHttps(valor("SUPABASE_URL"))) problemas.push("SUPABASE_URL inválida. Use o endereço https:// do projeto, sem caminho.");
+  if (valor("TENDRA_ORIGEM_DO_FRONT") !== "" && !origemHttps(valor("TENDRA_ORIGEM_DO_FRONT"))) {
+    problemas.push("TENDRA_ORIGEM_DO_FRONT inválida. Use o endereço https:// do front, sem caminho.");
+  }
+  if (ambiente.TENDRA_API_SIMULADA?.trim() === "1") problemas.push("TENDRA_API_SIMULADA não é aceita no modo compartilhado.");
+  return {
+    tipo: "compartilhado",
+    supabaseUrl: valor("SUPABASE_URL").replace(/\/$/, ""),
+    chaveDeServico: valor("SUPABASE_SERVICE_ROLE_KEY"),
+    origemDoFront: valor("TENDRA_ORIGEM_DO_FRONT").replace(/\/$/, ""),
+  };
+}
 
 /**
  * Lê a configuração do servidor. Sem ANTHROPIC_API_KEY, o servidor não inicia (cenário 27), a não ser
@@ -150,16 +199,28 @@ export function carregarConfiguracaoDoServidor(
   ambiente: NodeJS.ProcessEnv = process.env,
   pastaBase: string = process.cwd(),
 ): ConfiguracaoDoServidor {
+  const problemasDoModo: string[] = [];
+  const modo = lerModo(ambiente, problemasDoModo);
+  if (modo.tipo === "compartilhado") {
+    const problemas = [...problemasDoModo];
+    if ((ambiente.ANTHROPIC_API_KEY?.trim() ?? "") === "") problemas.push("Variável de ambiente obrigatória ausente: ANTHROPIC_API_KEY");
+    const comuns = lerVariaveisComuns(ambiente, pastaBase, problemas);
+    const ia = lerVariaveisDaIa(ambiente, problemas);
+    if (problemas.length > 0 || comuns.nivelDeLog === undefined) throw new ErroDeConfiguracao(problemas.join("\n"));
+    return { ...comuns, nivelDeLog: comuns.nivelDeLog, ia, api: { tipo: "real", chaveApi: (ambiente.ANTHROPIC_API_KEY ?? "").trim() }, modo };
+  }
+  if (problemasDoModo.length > 0) throw new ErroDeConfiguracao(problemasDoModo.join("\n"));
+
   if (ambiente.TENDRA_API_SIMULADA?.trim() === "1") {
     const problemas: string[] = [];
     const comuns = carregarConfiguracaoSemChave(ambiente, pastaBase);
     const ia = lerVariaveisDaIa(ambiente, problemas);
     if (problemas.length > 0) throw new ErroDeConfiguracao(problemas.join("\n"));
-    return { ...comuns, ia, api: { tipo: "simulada" } };
+    return { ...comuns, ia, api: { tipo: "simulada" }, modo };
   }
   try {
     const { chaveApi, ...resto } = carregarConfiguracao(ambiente, pastaBase);
-    return { ...resto, api: { tipo: "real", chaveApi } };
+    return { ...resto, api: { tipo: "real", chaveApi }, modo };
   } catch (erro) {
     if (erro instanceof ErroDeConfiguracao && erro.message.includes("ANTHROPIC_API_KEY")) {
       throw new ErroDeConfiguracao(`${erro.message}\nPara usar o servidor sem a chave, com respostas simuladas, defina TENDRA_API_SIMULADA=1.`);
