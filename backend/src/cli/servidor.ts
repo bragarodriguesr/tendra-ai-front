@@ -18,6 +18,10 @@ import { marcarInterrompidas } from "../persistencia/tarefas.ts";
  */
 async function executar(): Promise<void> {
   const configuracao = carregarConfiguracaoDoServidor();
+  if (configuracao.modo.tipo === "compartilhado") {
+    // Sem login (D4), limite de tentativas (D5) e transporte seguro (D6), o servidor não se expõe.
+    throw new ErroDeConfiguracao("O modo compartilhado ainda não está disponível: faltam o login e o transporte seguro (etapas D4 a D6 de PLAN_FASE_D.md).");
+  }
   const log = criarLog(configuracao.nivelDeLog);
   if (configuracao.api.tipo === "simulada") log.warn(AVISO_DA_API_SIMULADA);
 
