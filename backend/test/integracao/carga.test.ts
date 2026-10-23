@@ -4,7 +4,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { carregarArquivos, carregarBase, MOTIVO_FORMATO_NAO_ACEITO } from "../../src/base/carga.ts";
-import { abrirBanco, aplicarMigracoes, type Banco } from "../../src/persistencia/banco.ts";
+import { abrirBancoDeTeste } from "../apoio/banco.ts";
+import { aplicarMigracoes, type Banco } from "../../src/persistencia/banco.ts";
 import {
   definirAtivo,
   listarBlocos,
@@ -22,7 +23,7 @@ let temporarias: string[] = [];
 
 // Criar um banco PGlite leva alguns segundos; o arquivo usa um só e o esvazia antes de cada teste.
 beforeAll(async () => {
-  banco = await abrirBanco();
+  banco = await abrirBancoDeTeste();
 }, 60_000);
 
 afterAll(async () => {

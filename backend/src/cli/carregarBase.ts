@@ -3,7 +3,7 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 import { carregarBase, type ResumoDaCarga } from "../base/carga.ts";
 import { carregarConfiguracaoSemChave, ErroDeConfiguracao } from "../config/config.ts";
-import { abrirBanco, ErroDeBancoEmUso } from "../persistencia/banco.ts";
+import { abrirBancoConfigurado, ErroDeBancoEmUso } from "../persistencia/banco.ts";
 
 /**
  * Comando `npm run carregar-base -- <pasta> [--enviado-por <nome>]`.
@@ -48,7 +48,7 @@ async function executar(): Promise<number> {
   }
 
   const configuracao = carregarConfiguracaoSemChave();
-  const banco = await abrirBanco(path.join(configuracao.pastaDados, "banco"));
+  const banco = await abrirBancoConfigurado(configuracao);
   try {
     const resumo = await carregarBase({
       pasta,

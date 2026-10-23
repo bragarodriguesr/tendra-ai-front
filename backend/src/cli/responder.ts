@@ -9,7 +9,7 @@ import { ErroDePlanilha } from "../documentos/planilha.ts";
 import { processarTarefa } from "../fluxo/processarTarefa.ts";
 import { ClienteDaIa, criarApiDoClaude, ErroDaIa, type EntradaDoRegistro } from "../ia/cliente.ts";
 import { calcularMetricas, carregarPrecos } from "../observabilidade/metricas.ts";
-import { abrirBanco, ErroDeBancoEmUso } from "../persistencia/banco.ts";
+import { abrirBancoConfigurado, ErroDeBancoEmUso } from "../persistencia/banco.ts";
 import { ErroDeTeto } from "../recuperacao/buscarFontes.ts";
 
 /**
@@ -43,7 +43,7 @@ async function executar(): Promise<number> {
   const inicio = new Date();
   const tarefa = { id, arquivo: path.basename(arquivo), iniciadaEm: inicio.toISOString() };
 
-  const banco = await abrirBanco(path.join(configuracao.pastaDados, "banco"));
+  const banco = await abrirBancoConfigurado(configuracao);
   try {
     const resultado = await processarTarefa({
       banco,

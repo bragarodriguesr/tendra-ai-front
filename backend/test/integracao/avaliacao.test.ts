@@ -12,7 +12,8 @@ import { carregarCabecalhos } from "../../src/config/cabecalhos.ts";
 import { carregarTermosCriticos } from "../../src/config/termosCriticos.ts";
 import { processarTarefa } from "../../src/fluxo/processarTarefa.ts";
 import { ClienteDaIa, type MensagemDaIa, type ParametrosDaGeracao } from "../../src/ia/cliente.ts";
-import { abrirBanco, type Banco } from "../../src/persistencia/banco.ts";
+import { abrirBancoDeTeste } from "../apoio/banco.ts";
+import type { Banco } from "../../src/persistencia/banco.ts";
 import { ApiSimulada, mensagem, texto } from "../apoio/apiSimulada.ts";
 
 /** Comando avaliar (etapa A10, cenários 26 e 36) sobre execuções com a API simulada. */
@@ -29,7 +30,7 @@ let rfp02: GabaritoDaRfp;
 let base: Map<string, string[]>;
 
 beforeAll(async () => {
-  banco = await abrirBanco();
+  banco = await abrirBancoDeTeste();
   await carregarBase({ pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
   gabarito = await carregarGabarito(path.join(RAIZ, "rfps/gabarito-rfps-pulse.json"), "base");
   const encontrada = rfpDoGabarito(gabarito, RFP_01);

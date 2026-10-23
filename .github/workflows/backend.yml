@@ -26,6 +26,37 @@ jobs:
       - run: npm run typecheck
       - run: npm test
 
+  testes-postgres:
+    name: Testes do backend no Postgres
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      # Mesma suíte, com cada teste de integração num esquema próprio do Postgres (etapa D1).
+      - run: npm test
+        env:
+          TENDRA_TESTE_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/postgres
+
   segredos:
     name: Varredura de segredos
     runs-on: ubuntu-latest

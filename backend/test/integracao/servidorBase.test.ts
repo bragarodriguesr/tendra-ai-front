@@ -4,7 +4,8 @@ import { fileURLToPath } from "node:url";
 import type { FastifyInstance } from "fastify";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { LIMITE_DO_ENVIO_EM_BYTES, criarServidor } from "../../src/http/servidor.ts";
-import { abrirBanco, type Banco } from "../../src/persistencia/banco.ts";
+import { abrirBancoDeTeste } from "../apoio/banco.ts";
+import type { Banco } from "../../src/persistencia/banco.ts";
 
 /** Rotas da tela Base de conhecimento: listar, enviar `.md` e ativar ou desativar (cenários 7 a 9, 39 e 40). */
 const PULSE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../base-sintetica/pulse-beneficios");
@@ -14,7 +15,7 @@ let banco: Banco;
 let servidor: FastifyInstance;
 
 beforeAll(async () => {
-  banco = await abrirBanco();
+  banco = await abrirBancoDeTeste();
   servidor = criarServidor({ banco, hoje: () => HOJE });
   await servidor.ready();
 }, 60_000);

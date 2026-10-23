@@ -42,13 +42,13 @@ Execute a partir da pasta `backend/`:
 | `src/revisao/` | Revisão persistida (editar, restaurar, aprovar, avaliar), eventos só de inclusão e relatório de aceitação |
 | `src/fluxo/` | Processamento de uma tarefa, da planilha aos itens e à planilha preenchida, e a tarefa persistida no banco |
 | `src/http/` | Servidor HTTP (Fastify), rotas de tarefas (`POST /api/tarefas`, `GET /api/tarefas`, `GET /api/tarefas/:id` e, abaixo dele, `/itens`, `/planilha`, `/registro` e `/metricas`), rotas da revisão (texto, restaurar, aprovar e avaliação de cada item; eventos, avaliações e aceitação da tarefa; `GET /api/pessoas`) e rotas da base: `GET /api/base/documentos`, `POST /api/base/documentos` (envio de `.md` em JSON, conteúdo em base64, até 10 MB e 100 arquivos) e `PATCH /api/base/documentos/:id` (ativar e desativar) |
-| `src/persistencia/` | Banco PGlite, migrações e acesso aos documentos, blocos, tarefas, itens e registro |
+| `src/persistencia/` | Banco (PGlite no modo local ou Postgres com `DATABASE_URL`, atrás da mesma interface), migrações e acesso aos documentos, blocos, tarefas, itens e registro |
 | `migracoes/` | Esquema do banco, em arquivos `.sql` aplicados em ordem de nome |
 | `src/observabilidade/` | Logs estruturados, sem a chave da API, e métricas por tarefa (duração, tokens, custo estimado, itens por estado e alerta) |
 | `src/cli/` | Comandos de terminal, incluindo o que sobe o servidor |
 | `test/unitarios/`, `test/integracao/` | Testes; o nome de cada um cita o cenário do SPEC que cobre |
 | `test/fixtures/` | Planilhas sintéticas usadas nos testes e, em `ia/`, respostas reais da API gravadas pelo `gerar-amostra` |
-| `test/apoio/` | API do Claude simulada para os testes |
+| `test/apoio/` | API do Claude simulada e banco de teste (PGlite em memória ou, com `TENDRA_TESTE_DATABASE_URL`, um esquema próprio no Postgres) |
 
 Os dados locais (banco em `dados/banco`, planilhas, resultados, registros) ficam em `dados/`, na raiz do repositório, fora do controle de versão. Para experimentar a carga sem misturar com a base de trabalho, use outra pasta de dados, por exemplo `TENDRA_PASTA_DADOS=/tmp/tendra npm run carregar-base -- ../base-sintetica/pulse-beneficios/base`.
 
@@ -57,3 +57,7 @@ A identidade de um documento é o nome do arquivo, sem a pasta: enviar de novo `
 O banco local aceita um processo por vez. O servidor e o comando abrem o banco com uma trava (`dados/banco.em-uso`); com o servidor aberto, o comando recusa a carga e pede para encerrá-lo. A trava de um processo que já terminou é descartada sozinha.
 
 Criar o banco do zero leva alguns segundos (o PGlite inicializa o Postgres). Por isso os testes de integração reaproveitam um banco por arquivo.
+
+### Postgres (etapa D1 da fase D)
+
+Com `DATABASE_URL` (por exemplo, a conexão do Supabase), os comandos e o servidor usam esse Postgres no lugar do PGlite em `dados/banco`, com as mesmas migrações e sem a trava de um processo por vez. Para rodar a suíte contra um Postgres, defina `TENDRA_TESTE_DATABASE_URL`: cada arquivo de teste de integração cria um esquema próprio e o apaga ao terminar. O CI roda a suíte nos dois bancos.
