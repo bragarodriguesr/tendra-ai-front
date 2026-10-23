@@ -44,7 +44,7 @@ Cada etapa abaixo é uma mudança pequena, com objetivo claro, testes próprios 
 | P12 | Valor sugerido nas RFPs com valores permitidos (cenários 50 a 56 do SPEC, acrescentados depois deste plano) | Etapa A6 ou etapa própria | A A5 já gera em português (cenário 50). O valor sugerido (cenários 53 e 54) precisa de uma decisão de formato: o modelo não combina citações com saída estruturada. Sugestão: uma linha `Valor: <valor>` depois do marcador, conferida contra a lista. |
 | P9 | Método de cálculo da porcentagem de texto alterado | Etapa B5 | **Decidido na B5:** diferença por palavras: palavras retiradas mais palavras acrescentadas, sobre a soma das palavras dos dois textos, pela maior subsequência comum (`revisao/diferenca.ts`). |
 | P10 | Simplificação da definição de pronto e dos tipos de teste (ver as seções correspondentes) | Primeiro pull request | Aprovar a versão deste plano ou manter a constitution como está. |
-| P11 | Hospedagem do front (Vercel em avaliação) | Fase D | Decidir antes da fase D. |
+| P11 | Hospedagem do front (Vercel em avaliação) | Fase D | **Decidido em 23/10/2026:** front na Vercel, backend no Render, banco, arquivos e contas no Supabase (`PLAN_FASE_D.md`). |
 
 ## Decisões técnicas propostas
 
@@ -371,6 +371,8 @@ Só começa com A, B e C aceitas e uma taxa de aceitação medida. Nesse momento
 | Base | A carga continua pela tela e pelo comando, agora no banco compartilhado; a pessoa que envia passa a vir da sessão. A trava de um processo por vez some com o Postgres do Supabase. |
 
 O spec curto e o plano detalhado da fase D são escritos quando ela for começar.
+
+**Situação (23/10/2026): iniciada com exceção, por decisão do grupo.** A fase D começou com a lista de fidelidade da fase A em revisão e a taxa de aceitação ainda não medida; as duas pendências continuam valendo. Hospedagem decidida (P11): front na Vercel, backend no Render, banco, arquivos e contas no Supabase. Spec curto em `docs/mvp-resposta-rfp/SPEC_FASE_D.md` e plano detalhado em `docs/mvp-resposta-rfp/PLAN_FASE_D.md`, escritos com consulta à referência por pedido expresso.
 
 ## Definição de pronto (proposta, P10)
 
