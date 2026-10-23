@@ -8,7 +8,7 @@ constitution: 1.0.0
 
 ## Contexto
 
-- **Papel deste documento:** descreve o comportamento do backend nas fases A a C do plano (`docs/mvp-resposta-rfp/PLAN.md`), com tudo rodando numa máquina local e com documentos sintéticos. A fase D (login e hospedagem compartilhada) usa os cenários de `docs/referencia/mvp-proposta-1/SPEC.md` e ganha spec próprio quando começar.
+- **Papel deste documento:** descreve o comportamento do backend nas fases A a C do plano (`docs/mvp-resposta-rfp/PLAN.md`), com tudo rodando numa máquina local e com documentos sintéticos. A fase D (login e hospedagem compartilhada) tem spec próprio em `docs/mvp-resposta-rfp/SPEC_FASE_D.md`, que adapta os cenários de `docs/referencia/mvp-proposta-1/SPEC.md`.
 - **Fluxo/local afetado:** o fluxo principal da Tendra.ai, de ponta a ponta:
   1. carga da base de conhecimento a partir de arquivos `.md`, pela tela Base de conhecimento (ou pelo comando equivalente);
   2. inclusão da planilha `.xlsx` de RFP;
