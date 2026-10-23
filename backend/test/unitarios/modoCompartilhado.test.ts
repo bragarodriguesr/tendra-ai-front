@@ -43,7 +43,9 @@ describe("Cenário D11 · modo compartilhado", () => {
       chaveDeServico: CHAVE_DE_SERVICO,
       origemDoFront: "https://tendra.vercel.app",
       horasDeSessao: 8,
+      porta: null,
     });
+    expect(carregarConfiguracaoDoServidor({ ...COMPLETO, PORT: "10000" }, PASTA_BASE).modo).toMatchObject({ porta: 10000 });
     expect(configuracao.api).toEqual({ tipo: "real", chaveApi: "chave-da-api-falsa" });
     expect(configuracao.bancoUrl).toBe(COMPLETO.DATABASE_URL);
   });
@@ -54,6 +56,7 @@ describe("Cenário D11 · modo compartilhado", () => {
     ["API simulada", { TENDRA_API_SIMULADA: "1" }, /TENDRA_API_SIMULADA não é aceita/],
     ["modo desconhecido", { TENDRA_MODO: "publico" }, /TENDRA_MODO inválida/],
     ["sessão com horas fracionadas", { TENDRA_SESSAO_HORAS: "1.5" }, /TENDRA_SESSAO_HORAS inválida/],
+    ["porta do Render inválida", { PORT: "porta" }, /PORT inválida/],
   ])("recusa %s", (_caso, alteracao, motivo) => {
     expect(mensagemDoErro({ ...COMPLETO, ...alteracao })).toMatch(motivo);
   });

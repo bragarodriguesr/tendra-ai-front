@@ -26,7 +26,14 @@ export interface OpcoesDoServidor {
   log?: FastifyBaseLogger;
   /** Login e sessão do modo compartilhado (etapa D4). Sem ela, o modo local: sem login, pessoa no corpo. */
   autenticacao?: OpcoesDaAutenticacao;
+  /**
+   * Transporte do modo compartilhado (etapa D6, cenário D10): atrás do proxy HTTPS do Render, exige
+   * HTTPS e só aceita alterações vindas da origem do front. Sem ele, o modo local (127.0.0.1).
+   */
+  transporte?: { origemDoFront: string };
 }
+
+const METODOS_QUE_ALTERAM = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 /** Documento como a tela da Base o recebe. */
 export interface DocumentoDaBase {
@@ -71,6 +78,8 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
     bodyLimit: LIMITE_DO_CORPO_EM_BYTES,
     // Campo desconhecido no corpo é recusado, em vez de removido em silêncio.
     ajv: { customOptions: { removeAdditional: false } },
+    // Atrás do proxy do Render, o IP da pessoa vem do X-Forwarded-For (limite de login, cenário D7).
+    trustProxy: opcoes.transporte !== undefined,
     ...(opcoes.log === undefined ? { logger: false } : { loggerInstance: opcoes.log }),
   });
 
@@ -96,6 +105,20 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
   });
 
   servidor.decorateRequest("pessoaDaSessao", null);
+  if (opcoes.transporte !== undefined) {
+    const { origemDoFront } = opcoes.transporte;
+    // Antes da sessão: um pedido recusado aqui não toca em nenhum dado.
+    servidor.addHook("onRequest", async (pedido, resposta) => {
+      // A verificação de saúde do Render chega direto ao serviço, sem passar pelo HTTPS do proxy.
+      if (pedido.method === "GET" && pedido.url === "/api/saude") return;
+      const protocolo = String(pedido.headers["x-forwarded-proto"] ?? "").split(",")[0]?.trim();
+      if (protocolo !== "https") return resposta.status(403).send({ erro: "Conexão sem HTTPS recusada." });
+      const origem = pedido.headers.origin;
+      if (METODOS_QUE_ALTERAM.has(pedido.method) && origem !== undefined && origem !== origemDoFront) {
+        return resposta.status(403).send({ erro: "Origem não autorizada." });
+      }
+    });
+  }
   if (opcoes.autenticacao !== undefined) registrarAutenticacao(servidor, { banco, autenticacao: opcoes.autenticacao });
   servidor.get("/api/saude", async () => ({ ok: true }));
 

@@ -2,7 +2,7 @@ import { criarArmazenamento } from "../armazenamento/armazenamento.ts";
 import { criarArmazenamentoSupabase } from "../armazenamento/armazenamentoSupabase.ts";
 import { criarVerificadorSupabase } from "../autenticacao/verificadorSupabase.ts";
 import { carregarCabecalhos } from "../config/cabecalhos.ts";
-import { carregarConfiguracaoDoServidor, ErroDeConfiguracao, type ModoDoServidor } from "../config/config.ts";
+import { carregarConfiguracaoDoServidor, ErroDeConfiguracao } from "../config/config.ts";
 import { carregarPessoas } from "../config/pessoas.ts";
 import { carregarTermosCriticos } from "../config/termosCriticos.ts";
 import { criarServidor } from "../http/servidor.ts";
@@ -14,13 +14,14 @@ import { abrirBancoConfigurado, ErroDeBancoEmUso } from "../persistencia/banco.t
 import { marcarInterrompidas } from "../persistencia/tarefas.ts";
 
 /**
- * Comando `npm run servidor`: sobe o backend local em 127.0.0.1 (cenário 30), com as rotas da base
- * e das tarefas usadas pelo front. Exige ANTHROPIC_API_KEY (cenário 27); com TENDRA_API_SIMULADA=1,
- * usa a API simulada até a A1. Enquanto ele roda, o comando carregar-base não abre o mesmo banco.
+ * Comando `npm run servidor`: sobe o backend com as rotas da base e das tarefas usadas pelo front.
+ * Modo local: em 127.0.0.1 (cenário 30), sem login; exige ANTHROPIC_API_KEY (cenário 27) ou, com
+ * TENDRA_API_SIMULADA=1, usa a API simulada; com o PGlite, o comando carregar-base não abre o mesmo
+ * banco enquanto ele roda. Modo compartilhado (fase D): Postgres e Storage do Supabase, login,
+ * limite de tentativas, HTTPS e origem do front exigidos, ouvindo em todas as interfaces do Render.
  */
 async function executar(): Promise<void> {
   const configuracao = carregarConfiguracaoDoServidor();
-  exigirModoDisponivel(configuracao.modo);
   const { modo } = configuracao;
   const log = criarLog(configuracao.nivelDeLog);
   if (configuracao.api.tipo === "simulada") log.warn(AVISO_DA_API_SIMULADA);
@@ -34,7 +35,10 @@ async function executar(): Promise<void> {
     banco,
     log,
     ...(modo.tipo === "compartilhado"
-      ? { autenticacao: { verificador: criarVerificadorSupabase(modo), horasSemUso: modo.horasDeSessao, cookieSeguro: true } }
+      ? {
+          autenticacao: { verificador: criarVerificadorSupabase(modo), horasSemUso: modo.horasDeSessao, cookieSeguro: true },
+          transporte: { origemDoFront: modo.origemDoFront },
+        }
       : {}),
     tarefas: {
       banco,
@@ -50,6 +54,10 @@ async function executar(): Promise<void> {
     },
   });
 
+  // Modo local: só esta máquina (cenário 30). Compartilhado: todas as interfaces do Render (cenário D10).
+  const host = modo.tipo === "compartilhado" ? "0.0.0.0" : "127.0.0.1";
+  const porta = modo.tipo === "compartilhado" ? (modo.porta ?? configuracao.porta) : configuracao.porta;
+
   let encerrando = false;
   const encerrar = async () => {
     if (encerrando) return;
@@ -61,19 +69,12 @@ async function executar(): Promise<void> {
   process.once("SIGTERM", () => void encerrar());
 
   try {
-    await servidor.listen({ host: "127.0.0.1", port: configuracao.porta });
+    await servidor.listen({ host, port: porta });
   } catch (erro) {
     await encerrar();
     throw erro;
   }
-  console.log(`Servidor em http://127.0.0.1:${configuracao.porta}${configuracao.api.tipo === "simulada" ? " (API do Claude SIMULADA)" : ""}. Encerre com Ctrl+C.`);
-}
-
-/** Sem limite de tentativas (D5) e transporte seguro (D6), o servidor não se expõe no modo compartilhado. */
-function exigirModoDisponivel(modo: ModoDoServidor): void {
-  if (modo.tipo === "compartilhado") {
-    throw new ErroDeConfiguracao("O modo compartilhado ainda não está disponível: faltam o limite de tentativas de login e o transporte seguro (etapas D5 e D6 de PLAN_FASE_D.md).");
-  }
+  console.log(`Servidor em http://${host}:${porta}${modo.tipo === "compartilhado" ? " (modo compartilhado, atrás do HTTPS do Render)" : ""}${configuracao.api.tipo === "simulada" ? " (API do Claude SIMULADA)" : ""}. Encerre com Ctrl+C.`);
 }
 
 try {

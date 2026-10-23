@@ -11,7 +11,7 @@ import { carregarCabecalhos } from "../../src/config/cabecalhos.ts";
 import { carregarPessoas } from "../../src/config/pessoas.ts";
 import { carregarTermosCriticos } from "../../src/config/termosCriticos.ts";
 import { criarTarefaComPlanilha, executarTarefa } from "../../src/fluxo/executarTarefa.ts";
-import { MENSAGEM_DE_LOGIN_RECUSADO } from "../../src/http/rotasDeAutenticacao.ts";
+import { MENSAGEM_DE_LOGIN_RECUSADO, MENSAGEM_DE_TENTATIVAS_ESGOTADAS } from "../../src/http/rotasDeAutenticacao.ts";
 import { criarServidor } from "../../src/http/servidor.ts";
 import { carregarPrecos } from "../../src/observabilidade/metricas.ts";
 import type { Banco } from "../../src/persistencia/banco.ts";
@@ -83,10 +83,12 @@ afterAll(async () => {
 beforeEach(async () => {
   provedorFora = false;
   await banco.exec("DELETE FROM sessoes");
+  await banco.exec("DELETE FROM tentativas_login");
   await banco.exec("UPDATE perfis SET ativo = true");
 });
 
-const entrar = (email: string, senha: string) => servidor.inject({ method: "POST", url: "/api/auth/login", payload: { email, senha } });
+const entrar = (email: string, senha: string, ip = "127.0.0.1") =>
+  servidor.inject({ method: "POST", url: "/api/auth/login", payload: { email, senha }, remoteAddress: ip });
 
 async function cookieDe(email: string, senha: string): Promise<string> {
   const resposta = await entrar(email, senha);
@@ -209,5 +211,38 @@ describe("Cenários D5 e D6 · sair e expirar", () => {
     await banco.exec("UPDATE sessoes SET ultimo_uso = now() - interval '8 hours 1 minute'");
     expect((await pedir("/api/auth/me", cookie)).statusCode).toBe(401);
     expect((await banco.query("SELECT * FROM sessoes")).rows).toEqual([]);
+  });
+});
+
+describe("Cenário D7 · limite de tentativas de login (3 falhas em 15 minutos)", () => {
+  it("3 falhas do mesmo e-mail bloqueiam, mesmo com a senha certa e de outro IP, sem criar sessão nem consultar a senha", async () => {
+    for (let i = 0; i < 3; i++) expect((await entrar(APROVADOR.email, "errada", `198.51.100.${i}`)).statusCode).toBe(401);
+    conferidos.length = 0;
+    const bloqueado = await entrar(APROVADOR.email, "senha-do-aprovador", "198.51.100.99");
+    expect(bloqueado.statusCode).toBe(429);
+    expect(bloqueado.json()).toEqual({ erro: MENSAGEM_DE_TENTATIVAS_ESGOTADAS });
+    expect(conferidos).toEqual([]);
+    expect((await banco.query("SELECT * FROM sessoes")).rows).toEqual([]);
+    expect((await entrar(REVISOR.email, "senha-do-revisor", "198.51.100.98")).statusCode).toBe(200);
+  });
+
+  it("3 falhas do mesmo IP, com e-mails diferentes, bloqueiam aquele IP", async () => {
+    for (const email of ["a@tendra.test", "b@tendra.test", "c@tendra.test"]) await entrar(email, "x", "203.0.113.5");
+    expect((await entrar(REVISOR.email, "senha-do-revisor", "203.0.113.5")).statusCode).toBe(429);
+    expect((await entrar(REVISOR.email, "senha-do-revisor", "203.0.113.6")).statusCode).toBe(200);
+  });
+
+  it("um login certo zera a contagem; falhas com mais de 15 minutos não contam", async () => {
+    await entrar(APROVADOR.email, "errada");
+    await entrar(APROVADOR.email, "errada");
+    expect((await entrar(APROVADOR.email, "senha-do-aprovador")).statusCode).toBe(200);
+    await entrar(APROVADOR.email, "errada");
+    await entrar(APROVADOR.email, "errada");
+    expect((await entrar(APROVADOR.email, "senha-do-aprovador")).statusCode).toBe(200);
+
+    await banco.exec("DELETE FROM tentativas_login");
+    for (let i = 0; i < 3; i++) await entrar(APROVADOR.email, "errada");
+    await banco.exec("UPDATE tentativas_login SET em = now() - interval '16 minutes'");
+    expect((await entrar(APROVADOR.email, "senha-do-aprovador")).statusCode).toBe(200);
   });
 });
