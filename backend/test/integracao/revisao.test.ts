@@ -12,6 +12,7 @@ import { carregarTermosCriticos } from "../../src/config/termosCriticos.ts";
 import { criarTarefaComPlanilha, executarTarefa } from "../../src/fluxo/executarTarefa.ts";
 import { criarServidor } from "../../src/http/servidor.ts";
 import { carregarPrecos } from "../../src/observabilidade/metricas.ts";
+import { abrirBancoDeTeste } from "../apoio/banco.ts";
 import { abrirBanco, type Banco } from "../../src/persistencia/banco.ts";
 import { listarItens, obterTarefa } from "../../src/persistencia/tarefas.ts";
 import { aprovarItem, avaliarItem, editarTexto, listarEventos, relatorioDeAceitacao } from "../../src/revisao/revisao.ts";
@@ -52,7 +53,7 @@ async function tarefaPronta(comBanco: Banco): Promise<string> {
 }
 
 beforeAll(async () => {
-  banco = await abrirBanco();
+  banco = await abrirBancoDeTeste();
   await carregarBase({ pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
 }, 60_000);
 

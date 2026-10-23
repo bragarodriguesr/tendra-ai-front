@@ -9,7 +9,8 @@ import { carregarTermosCriticos } from "../../src/config/termosCriticos.ts";
 import { processarTarefa } from "../../src/fluxo/processarTarefa.ts";
 import { criarApiSimulada } from "../../src/ia/apiSimulada.ts";
 import { ClienteDaIa } from "../../src/ia/cliente.ts";
-import { abrirBanco, type Banco } from "../../src/persistencia/banco.ts";
+import { abrirBancoDeTeste } from "../apoio/banco.ts";
+import type { Banco } from "../../src/persistencia/banco.ts";
 
 /**
  * API simulada do servidor (TENDRA_API_SIMULADA=1), usada até a A1. Não mede a IA: só garante
@@ -20,7 +21,7 @@ const IA = { modelo: "claude-opus-5-5", modeloDeIdentificacao: "claude-haiku-5-5
 
 let banco: Banco;
 beforeAll(async () => {
-  banco = await abrirBanco();
+  banco = await abrirBancoDeTeste();
   await carregarBase({ pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
 }, 60_000);
 afterAll(async () => {

@@ -11,6 +11,7 @@ import { carregarCabecalhos } from "../../src/config/cabecalhos.ts";
 import { carregarTermosCriticos } from "../../src/config/termosCriticos.ts";
 import { criarTarefaComPlanilha, executarTarefa, type AmbienteDaTarefa } from "../../src/fluxo/executarTarefa.ts";
 import { carregarPrecos } from "../../src/observabilidade/metricas.ts";
+import { abrirBancoDeTeste } from "../apoio/banco.ts";
 import { abrirBanco, type Banco } from "../../src/persistencia/banco.ts";
 import { listarItens, listarRequisicoes, marcarInterrompidas, MOTIVO_DE_INTERRUPCAO, obterTarefa } from "../../src/persistencia/tarefas.ts";
 import { ApiSimulada } from "../apoio/apiSimulada.ts";
@@ -50,7 +51,7 @@ async function novaTarefa(arquivo = RFP) {
 }
 
 beforeAll(async () => {
-  banco = await abrirBanco();
+  banco = await abrirBancoDeTeste();
   await carregarBase({ pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
 }, 60_000);
 

@@ -26,6 +26,8 @@ export interface Configuracao {
   nivelDeLog: NivelDeLog;
   /** Porta do servidor local, que só ouve em 127.0.0.1. */
   porta: number;
+  /** Conexão ao Postgres (DATABASE_URL, etapa D1). Sem ela, o banco é o PGlite em `<pastaDados>/banco`. */
+  bancoUrl: string | null;
 }
 
 /** Erro de configuração. A mensagem cita nomes de variáveis, nunca os valores. */
@@ -72,7 +74,7 @@ function lerVariaveisComuns(
   ambiente: NodeJS.ProcessEnv,
   pastaBase: string,
   problemas: string[],
-): { pastaDados: string; nivelDeLog: NivelDeLog | undefined; porta: number } {
+): { pastaDados: string; nivelDeLog: NivelDeLog | undefined; porta: number; bancoUrl: string | null } {
   const nivelInformado = ambiente.TENDRA_NIVEL_LOG?.trim() || NIVEL_DE_LOG_PADRAO;
   const nivelDeLog = NIVEIS_DE_LOG.find((nivel) => nivel === nivelInformado);
   if (nivelDeLog === undefined) {
@@ -87,7 +89,11 @@ function lerVariaveisComuns(
   if (!/^\d+$/.test(portaInformada) || porta < 1 || porta > 65535) {
     problemas.push("TENDRA_PORTA inválida. Use um número de 1 a 65535.");
   }
-  return { pastaDados, nivelDeLog, porta };
+  const bancoUrl = ambiente.DATABASE_URL?.trim() || null;
+  if (bancoUrl !== null && !/^postgres(ql)?:\/\//.test(bancoUrl)) {
+    problemas.push("DATABASE_URL inválida. Use uma conexão postgres://.");
+  }
+  return { pastaDados, nivelDeLog, porta, bancoUrl };
 }
 
 /**
@@ -105,13 +111,13 @@ export function carregarConfiguracao(
     problemas.push("Variável de ambiente obrigatória ausente: ANTHROPIC_API_KEY");
   }
 
-  const { pastaDados, nivelDeLog, porta } = lerVariaveisComuns(ambiente, pastaBase, problemas);
+  const { pastaDados, nivelDeLog, porta, bancoUrl } = lerVariaveisComuns(ambiente, pastaBase, problemas);
   const ia = lerVariaveisDaIa(ambiente, problemas);
   if (problemas.length > 0 || nivelDeLog === undefined) {
     throw new ErroDeConfiguracao(problemas.join("\n"));
   }
 
-  return { chaveApi, ia, pastaDados, nivelDeLog, porta };
+  return { chaveApi, ia, pastaDados, nivelDeLog, porta, bancoUrl };
 }
 
 /**
@@ -123,11 +129,11 @@ export function carregarConfiguracaoSemChave(
   pastaBase: string = process.cwd(),
 ): ConfiguracaoSemChave {
   const problemas: string[] = [];
-  const { pastaDados, nivelDeLog, porta } = lerVariaveisComuns(ambiente, pastaBase, problemas);
+  const { pastaDados, nivelDeLog, porta, bancoUrl } = lerVariaveisComuns(ambiente, pastaBase, problemas);
   if (problemas.length > 0 || nivelDeLog === undefined) {
     throw new ErroDeConfiguracao(problemas.join("\n"));
   }
-  return { pastaDados, nivelDeLog, porta };
+  return { pastaDados, nivelDeLog, porta, bancoUrl };
 }
 
 /** Configuração do servidor: com a chave da API ou, enquanto a A1 não é feita, com a API simulada. */

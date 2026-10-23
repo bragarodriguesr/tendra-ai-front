@@ -1,4 +1,3 @@
-import path from "node:path";
 import { criarArmazenamento } from "../armazenamento/armazenamento.ts";
 import { carregarCabecalhos } from "../config/cabecalhos.ts";
 import { carregarConfiguracaoDoServidor, ErroDeConfiguracao } from "../config/config.ts";
@@ -9,7 +8,7 @@ import { AVISO_DA_API_SIMULADA, criarApiSimulada } from "../ia/apiSimulada.ts";
 import { criarApiDoClaude } from "../ia/cliente.ts";
 import { criarLog } from "../observabilidade/log.ts";
 import { carregarPrecos } from "../observabilidade/metricas.ts";
-import { abrirBanco, ErroDeBancoEmUso } from "../persistencia/banco.ts";
+import { abrirBancoConfigurado, ErroDeBancoEmUso } from "../persistencia/banco.ts";
 import { marcarInterrompidas } from "../persistencia/tarefas.ts";
 
 /**
@@ -22,7 +21,7 @@ async function executar(): Promise<void> {
   const log = criarLog(configuracao.nivelDeLog);
   if (configuracao.api.tipo === "simulada") log.warn(AVISO_DA_API_SIMULADA);
 
-  const banco = await abrirBanco(path.join(configuracao.pastaDados, "banco"));
+  const banco = await abrirBancoConfigurado(configuracao);
   // Cenário 32: ao iniciar, nenhuma tarefa está de fato em processamento.
   const interrompidas = await marcarInterrompidas(banco);
   if (interrompidas > 0) log.warn({ interrompidas }, "Tarefas interrompidas por reinício marcadas como falha");

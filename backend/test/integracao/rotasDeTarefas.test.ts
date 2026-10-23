@@ -14,7 +14,8 @@ import { carregarTermosCriticos } from "../../src/config/termosCriticos.ts";
 import { criarServidor } from "../../src/http/servidor.ts";
 import type { ApiDoClaude, MensagemDaIa, ParametrosDaGeracao } from "../../src/ia/cliente.ts";
 import { carregarPrecos } from "../../src/observabilidade/metricas.ts";
-import { abrirBanco, type Banco } from "../../src/persistencia/banco.ts";
+import { abrirBancoDeTeste } from "../apoio/banco.ts";
+import type { Banco } from "../../src/persistencia/banco.ts";
 import { ApiSimulada } from "../apoio/apiSimulada.ts";
 import { respondeImparesCitando } from "../apoio/respostasSimuladas.ts";
 
@@ -30,7 +31,7 @@ let terminadas: Map<string, () => void>;
 let aguardando: Map<string, Promise<void>>;
 
 beforeAll(async () => {
-  banco = await abrirBanco();
+  banco = await abrirBancoDeTeste();
   await carregarBase({ pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
 }, 60_000);
 

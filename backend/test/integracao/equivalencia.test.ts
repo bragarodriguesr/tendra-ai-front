@@ -15,7 +15,8 @@ import { processarTarefa } from "../../src/fluxo/processarTarefa.ts";
 import { criarServidor } from "../../src/http/servidor.ts";
 import { ClienteDaIa } from "../../src/ia/cliente.ts";
 import { carregarPrecos } from "../../src/observabilidade/metricas.ts";
-import { abrirBanco, type Banco } from "../../src/persistencia/banco.ts";
+import { abrirBancoDeTeste } from "../apoio/banco.ts";
+import type { Banco } from "../../src/persistencia/banco.ts";
 import { definirAtivo, listarDocumentos } from "../../src/persistencia/documentos.ts";
 import { ApiSimulada } from "../apoio/apiSimulada.ts";
 import { respondeImparesCitando } from "../apoio/respostasSimuladas.ts";
@@ -38,7 +39,7 @@ let terminou: Promise<void>;
 let avisarFim: () => void;
 
 beforeAll(async () => {
-  banco = await abrirBanco();
+  banco = await abrirBancoDeTeste();
   await carregarBase({ pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
 }, 60_000);
 

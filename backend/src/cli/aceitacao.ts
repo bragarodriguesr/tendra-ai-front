@@ -1,7 +1,6 @@
-import path from "node:path";
 import { parseArgs } from "node:util";
 import { carregarConfiguracaoSemChave, ErroDeConfiguracao } from "../config/config.ts";
-import { abrirBanco, ErroDeBancoEmUso } from "../persistencia/banco.ts";
+import { abrirBancoConfigurado, ErroDeBancoEmUso } from "../persistencia/banco.ts";
 import { ErroDeRevisao, relatorioDeAceitacao } from "../revisao/revisao.ts";
 
 /**
@@ -17,7 +16,7 @@ async function executar(): Promise<number> {
     return 1;
   }
   const configuracao = carregarConfiguracaoSemChave();
-  const banco = await abrirBanco(path.join(configuracao.pastaDados, "banco"));
+  const banco = await abrirBancoConfigurado(configuracao);
   try {
     const relatorio = await relatorioDeAceitacao(banco, id);
     console.log(`Itens: ${relatorio.itens} (${relatorio.comRascunho} com rascunho, ${relatorio.semRascunho} sem rascunho)`);

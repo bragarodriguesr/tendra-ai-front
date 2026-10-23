@@ -7,7 +7,7 @@ import { ErroDePlanilha, identificarPerguntas, lerPlanilha, validarArquivoDePlan
 import { gerarRespostas } from "../geracao/gerarRespostas.ts";
 import { criarIdentificadorComIA } from "../geracao/identificarComIA.ts";
 import { ClienteDaIa, criarApiDoClaude, ErroDaIa, type ApiDoClaude, type EntradaDoRegistro, type MensagemDaIa } from "../ia/cliente.ts";
-import { abrirBanco, ErroDeBancoEmUso } from "../persistencia/banco.ts";
+import { abrirBancoConfigurado, ErroDeBancoEmUso } from "../persistencia/banco.ts";
 import { buscarFontes, ErroDeTeto, type DocumentoDoContexto } from "../recuperacao/buscarFontes.ts";
 
 /**
@@ -49,7 +49,7 @@ async function executar(): Promise<number> {
 
   const conteudo = new Uint8Array(await readFile(arquivo));
   validarArquivoDePlanilha(path.basename(arquivo), conteudo);
-  const banco = await abrirBanco(path.join(configuracao.pastaDados, "banco"));
+  const banco = await abrirBancoConfigurado(configuracao);
   try {
     const identificacao = await identificarPerguntas(await lerPlanilha(conteudo), {
       nomes: await carregarCabecalhos(),

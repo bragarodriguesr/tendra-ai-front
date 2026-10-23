@@ -10,7 +10,8 @@ import { carregarTermosCriticos } from "../../src/config/termosCriticos.ts";
 import { SEM_FONTE, TITULO_DA_FONTE, TITULO_DA_RESPOSTA } from "../../src/documentos/planilhaPreenchida.ts";
 import { processarTarefa } from "../../src/fluxo/processarTarefa.ts";
 import { ClienteDaIa, ErroDaIa, type MensagemDaIa, type ParametrosDaGeracao } from "../../src/ia/cliente.ts";
-import { abrirBanco, type Banco } from "../../src/persistencia/banco.ts";
+import { abrirBancoDeTeste } from "../apoio/banco.ts";
+import type { Banco } from "../../src/persistencia/banco.ts";
 import { ApiSimulada, mensagem, texto } from "../apoio/apiSimulada.ts";
 import { respondeImparesCitando } from "../apoio/respostasSimuladas.ts";
 
@@ -23,7 +24,7 @@ let banco: Banco;
 let api: ApiSimulada;
 
 beforeAll(async () => {
-  banco = await abrirBanco();
+  banco = await abrirBancoDeTeste();
 }, 60_000);
 
 afterAll(async () => {

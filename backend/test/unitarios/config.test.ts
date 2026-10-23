@@ -97,7 +97,7 @@ describe("Cenário 38 · configuração da IA", () => {
 describe("Configuração dos comandos que não chamam a IA", () => {
   it("não exige ANTHROPIC_API_KEY e aplica os mesmos padrões", () => {
     const configuracao = carregarConfiguracaoSemChave({}, PASTA_BASE);
-    expect(configuracao).toEqual({ pastaDados: path.resolve(PASTA_BASE, "../dados"), nivelDeLog: "info", porta: 3000 });
+    expect(configuracao).toEqual({ pastaDados: path.resolve(PASTA_BASE, "../dados"), nivelDeLog: "info", porta: 3000, bancoUrl: null });
     expect(configuracao).not.toHaveProperty("chaveApi");
   });
 
@@ -111,5 +111,10 @@ describe("Configuração dos comandos que não chamam a IA", () => {
 
   it.each(["0", "70000", "abc", "30.5"])("recusa TENDRA_PORTA inválida (%s)", (porta) => {
     expect(() => carregarConfiguracaoSemChave({ TENDRA_PORTA: porta }, PASTA_BASE)).toThrow(/TENDRA_PORTA/);
+  });
+
+  it("lê a conexão do Postgres de DATABASE_URL e recusa outro formato, sem mostrar o valor (etapa D1)", () => {
+    expect(carregarConfiguracaoSemChave({ DATABASE_URL: " postgres://u@h:5432/b " }, PASTA_BASE).bancoUrl).toBe("postgres://u@h:5432/b");
+    expect(() => carregarConfiguracaoSemChave({ DATABASE_URL: "mysql://u:segredo@h/b" }, PASTA_BASE)).toThrow(/^DATABASE_URL inválida\. Use uma conexão postgres:\/\/\.$/);
   });
 });

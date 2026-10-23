@@ -5,7 +5,8 @@ import { carregarBase } from "../../src/base/carga.ts";
 import { gerarRespostas, type PerguntaParaGerar } from "../../src/geracao/gerarRespostas.ts";
 import { ClienteDaIa, ErroDaIa, type EntradaDoRegistro, type MensagemDaIa, type ParametrosDaGeracao } from "../../src/ia/cliente.ts";
 import { lerInstrucoes } from "../../src/ia/instrucoes.ts";
-import { abrirBanco, type Banco } from "../../src/persistencia/banco.ts";
+import { abrirBancoDeTeste } from "../apoio/banco.ts";
+import type { Banco } from "../../src/persistencia/banco.ts";
 import { definirAtivo, listarDocumentos } from "../../src/persistencia/documentos.ts";
 import { buscarFontes, ErroDeTeto, type ContextoDaBase } from "../../src/recuperacao/buscarFontes.ts";
 import Anthropic from "@anthropic-ai/sdk";
@@ -21,7 +22,7 @@ let registro: EntradaDoRegistro[];
 let cliente: ClienteDaIa;
 
 beforeAll(async () => {
-  banco = await abrirBanco();
+  banco = await abrirBancoDeTeste();
 }, 60_000);
 
 afterAll(async () => {
