@@ -40,3 +40,13 @@ describe(`D1 · banco atrás de uma interface (${URL_DO_POSTGRES_DE_TESTE === un
     expect(rows[0]?.arquivo).toBe("b.xlsx");
   });
 });
+
+describe("D10 · TLS da conexão com o Postgres", () => {
+  it("sem TLS no servidor local; cifrado no remoto, conferindo o certificado só com a autoridade informada", async () => {
+    const { tlsDoBanco } = await import("../../src/persistencia/banco.ts");
+    expect(tlsDoBanco("postgres://u@127.0.0.1:5432/b")).toBe(false);
+    expect(tlsDoBanco("postgres://u@localhost/b")).toBe(false);
+    expect(tlsDoBanco("postgres://u:s@aws-0-us-east-1.pooler.supabase.com:5432/postgres")).toEqual({ rejectUnauthorized: false });
+    expect(tlsDoBanco("postgres://u:s@db.projeto.supabase.co:5432/postgres", "PEM")).toEqual({ ca: "PEM", rejectUnauthorized: true });
+  });
+});

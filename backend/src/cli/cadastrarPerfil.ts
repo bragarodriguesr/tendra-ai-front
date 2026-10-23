@@ -24,7 +24,7 @@ async function executar(): Promise<void> {
 
   const email = emailInformado.trim().toLowerCase();
   const id = await idDaContaNoSupabase({ supabaseUrl, chaveDeServico, email });
-  const banco = await abrirBancoPostgres(configuracao.bancoUrl);
+  const banco = await abrirBancoPostgres(configuracao.bancoUrl, configuracao.bancoCa === null ? {} : { ca: configuracao.bancoCa });
   try {
     await gravarPerfil(banco, { id, email, nome, papel });
   } finally {

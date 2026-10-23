@@ -26,6 +26,9 @@ async function executar(): Promise<void> {
   const log = criarLog(configuracao.nivelDeLog);
   if (configuracao.api.tipo === "simulada") log.warn(AVISO_DA_API_SIMULADA);
 
+  if (configuracao.bancoUrl !== null && configuracao.bancoCa === null) {
+    log.warn("Conexão com o Postgres cifrada sem conferir o certificado: defina TENDRA_BANCO_CA para conferir");
+  }
   const banco = await abrirBancoConfigurado(configuracao);
   // Cenário 32: no modo local, ao iniciar, nenhuma tarefa está de fato em processamento. No modo
   // compartilhado, o serviço "dorme" e é reimplantado: as interrompidas são retomadas (cenário D15).

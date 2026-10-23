@@ -28,6 +28,8 @@ export interface Configuracao {
   porta: number;
   /** Conexão ao Postgres (DATABASE_URL, etapa D1). Sem ela, o banco é o PGlite em `<pastaDados>/banco`. */
   bancoUrl: string | null;
+  /** Certificado (PEM) da autoridade do Postgres remoto, para conferir o TLS (TENDRA_BANCO_CA, etapa D10). */
+  bancoCa: string | null;
 }
 
 /** Erro de configuração. A mensagem cita nomes de variáveis, nunca os valores. */
@@ -74,7 +76,7 @@ function lerVariaveisComuns(
   ambiente: NodeJS.ProcessEnv,
   pastaBase: string,
   problemas: string[],
-): { pastaDados: string; nivelDeLog: NivelDeLog | undefined; porta: number; bancoUrl: string | null } {
+): { pastaDados: string; nivelDeLog: NivelDeLog | undefined; porta: number; bancoUrl: string | null; bancoCa: string | null } {
   const nivelInformado = ambiente.TENDRA_NIVEL_LOG?.trim() || NIVEL_DE_LOG_PADRAO;
   const nivelDeLog = NIVEIS_DE_LOG.find((nivel) => nivel === nivelInformado);
   if (nivelDeLog === undefined) {
@@ -93,7 +95,9 @@ function lerVariaveisComuns(
   if (bancoUrl !== null && !/^postgres(ql)?:\/\//.test(bancoUrl)) {
     problemas.push("DATABASE_URL inválida. Use uma conexão postgres://.");
   }
-  return { pastaDados, nivelDeLog, porta, bancoUrl };
+  const bancoCa = ambiente.TENDRA_BANCO_CA?.trim() || null;
+  if (bancoCa !== null && !bancoCa.includes("-----BEGIN CERTIFICATE-----")) problemas.push("TENDRA_BANCO_CA inválida. Use o certificado em PEM.");
+  return { pastaDados, nivelDeLog, porta, bancoUrl, bancoCa };
 }
 
 /**
@@ -111,13 +115,13 @@ export function carregarConfiguracao(
     problemas.push("Variável de ambiente obrigatória ausente: ANTHROPIC_API_KEY");
   }
 
-  const { pastaDados, nivelDeLog, porta, bancoUrl } = lerVariaveisComuns(ambiente, pastaBase, problemas);
+  const { pastaDados, nivelDeLog, porta, bancoUrl, bancoCa } = lerVariaveisComuns(ambiente, pastaBase, problemas);
   const ia = lerVariaveisDaIa(ambiente, problemas);
   if (problemas.length > 0 || nivelDeLog === undefined) {
     throw new ErroDeConfiguracao(problemas.join("\n"));
   }
 
-  return { chaveApi, ia, pastaDados, nivelDeLog, porta, bancoUrl };
+  return { chaveApi, ia, pastaDados, nivelDeLog, porta, bancoUrl, bancoCa };
 }
 
 /**
@@ -129,11 +133,11 @@ export function carregarConfiguracaoSemChave(
   pastaBase: string = process.cwd(),
 ): ConfiguracaoSemChave {
   const problemas: string[] = [];
-  const { pastaDados, nivelDeLog, porta, bancoUrl } = lerVariaveisComuns(ambiente, pastaBase, problemas);
+  const { pastaDados, nivelDeLog, porta, bancoUrl, bancoCa } = lerVariaveisComuns(ambiente, pastaBase, problemas);
   if (problemas.length > 0 || nivelDeLog === undefined) {
     throw new ErroDeConfiguracao(problemas.join("\n"));
   }
-  return { pastaDados, nivelDeLog, porta, bancoUrl };
+  return { pastaDados, nivelDeLog, porta, bancoUrl, bancoCa };
 }
 
 /**
