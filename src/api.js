@@ -1,7 +1,8 @@
 /**
  * Camada única de chamadas do front ao backend (PLAN.md, C1): base de conhecimento, tarefas e
  * revisão. Nenhuma regra de negócio fica aqui: a validação dos arquivos e das ações é do
- * backend, que devolve o motivo de cada recusa. Toda ação da revisão envia a pessoa que age.
+ * backend, que devolve o motivo de cada recusa. Toda ação da revisão envia a pessoa que age;
+ * no modo compartilhado (fase D), o backend a ignora e usa a da sessão de login.
  */
 
 export const LIMITE_DO_ENVIO_EM_BYTES = 10 * 1024 * 1024;
@@ -17,6 +18,13 @@ export class ErroDaApi extends Error {
   }
 }
 
+export const MENSAGEM_DADOS_SINTETICOS = "Ambiente de testes: envie só documentos e RFPs sintéticos, nunca dados reais de clientes.";
+
+// Fase D: sessão que acaba (expirou, saiu em outra aba) leva de volta ao login.
+let aoPerderASessao = () => {};
+export function quandoPerderASessao(funcao) { aoPerderASessao = funcao; }
+const ROTAS_DE_LOGIN = new Set(["/auth/login", "/auth/me"]);
+
 async function pedir(caminho, { method = "GET", corpo } = {}) {
   let resposta;
   try {
@@ -31,9 +39,30 @@ async function pedir(caminho, { method = "GET", corpo } = {}) {
   // Sem o servidor, o proxy do Vite responde com erro e o site publicado devolve HTML: nenhum dos dois é JSON.
   const json = (resposta.headers.get("content-type") || "").includes("application/json") ? await resposta.json().catch(() => null) : null;
   if (json === null) throw new ErroDaApi(MENSAGEM_SEM_SERVIDOR, { semServidor: true });
+  if (resposta.status === 401 && !ROTAS_DE_LOGIN.has(caminho)) aoPerderASessao();
   if (!resposta.ok) throw new ErroDaApi(json.erro || "O servidor recusou o pedido.");
   return json;
 }
+
+/**
+ * Modo do backend (fase D, D9): `GET /api/auth/me` só existe no modo compartilhado. 200 traz a
+ * pessoa da sessão; 401, sem sessão; sem a rota ou sem o servidor, é o modo local (sem login).
+ */
+export async function obterSessao() {
+  try {
+    const resposta = await fetch("/api/auth/me");
+    if (resposta.status === 401) return { modo: "compartilhado", pessoa: null };
+    if (!resposta.ok) return { modo: "local", pessoa: null };
+    const json = await resposta.json();
+    return { modo: "compartilhado", pessoa: json.pessoa };
+  } catch {
+    return { modo: "local", pessoa: null };
+  }
+}
+
+/** Login do modo compartilhado. Devolve `{ pessoa: { nome, papel } }`; recusa com a mensagem do backend (401, 429, 503). */
+export const entrar = (email, senha) => pedir("/auth/login", { method: "POST", corpo: { email, senha } });
+export const sair = () => pedir("/auth/logout", { method: "POST" });
 
 function emBase64(buffer) {
   const bytes = new Uint8Array(buffer);

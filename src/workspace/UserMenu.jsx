@@ -2,7 +2,10 @@ import React from "react";
 import { Button, MonoLabel } from "../ds/index.js";
 import { usePopover } from "./usePopover.js";
 
-/** Nome do usuário na barra superior; abre um menu com o perfil e a troca de usuário da demo. */
+/**
+ * Nome do usuário na barra superior; abre um menu com o perfil e a troca de usuário da demo. Com
+ * login (fase D), o papel vem da sessão e não há troca de usuário (`onSwitch` nulo).
+ */
 export function UserMenu({ name, role, onSwitch, onLogout }) {
   const { open, setOpen, root, focusTrigger } = usePopover();
   const menuId = "tdr-user-menu";
@@ -28,9 +31,11 @@ export function UserMenu({ name, role, onSwitch, onLogout }) {
             <MonoLabel>Perfil</MonoLabel>
             <span style={{ fontWeight: 600, color: "var(--n-900)" }}>{role}</span>
           </div>
-          <Button size="sm" variant="secondary" icon="users" fullWidth onClick={() => { onSwitch(); setOpen(false); focusTrigger(); }}>
-            Trocar usuário
-          </Button>
+          {onSwitch ? (
+            <Button size="sm" variant="secondary" icon="users" fullWidth onClick={() => { onSwitch(); setOpen(false); focusTrigger(); }}>
+              Trocar usuário
+            </Button>
+          ) : null}
           {/* No celular o "Sair" sai da barra e fica aqui, para a barra caber ao lado do logo. */}
           <span className="tdr-menu-logout">
             <Button size="sm" variant="ghost" icon="log-out" fullWidth onClick={onLogout}>Sair</Button>
