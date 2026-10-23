@@ -4,7 +4,8 @@ import type { Pessoa } from "../config/pessoas.ts";
 import { ErroDePlanilha, lerPlanilha, validarArquivoDePlanilha } from "../documentos/planilha.ts";
 import { criarTarefaComPlanilha, executarTarefa, type AmbienteDaTarefa } from "../fluxo/executarTarefa.ts";
 import { ErroDaRota } from "./erros.ts";
-import { listarItens, listarRequisicoes, listarTarefas, obterTarefa, type DadosDaTarefa, type Tarefa } from "../persistencia/tarefas.ts";
+import { exigirAprovador } from "./rotasDeAutenticacao.ts";
+import { listarItens, listarRequisicoes, listarTarefas, listarTarefasEmProcessamento, obterTarefa, type DadosDaTarefa, type Tarefa } from "../persistencia/tarefas.ts";
 
 /**
  * Rotas de tarefas (etapa B2). A planilha é validada na hora (cenários 4 e 31); o processamento
@@ -42,12 +43,31 @@ export interface OpcoesDasTarefas extends AmbienteDaTarefa {
   pessoas: Pessoa[];
   /** Chamado quando o processamento de fundo termina (usado nos testes). */
   aoTerminarTarefa?: (id: string) => void;
+  /**
+   * Modo compartilhado (etapa D8, cenário D15): ao ficar pronto, o servidor retoma, na fila, as
+   * tarefas que ficaram em `processando` por um reinício. No modo local elas viram `falha` (cenário 32).
+   */
+  retomarInterrompidas?: boolean;
 }
 
 export function registrarRotasDeTarefas(servidor: FastifyInstance, opcoes: OpcoesDasTarefas): void {
   const { banco } = opcoes;
   // Uma tarefa por vez: o processamento disputa a API e o banco local.
   let fila: Promise<unknown> = Promise.resolve();
+  const enfileirar = (tarefa: Tarefa) => {
+    fila = fila
+      .then(() => executarTarefa(opcoes, tarefa))
+      .catch((erro: unknown) => opcoes.aoFalharInesperadamente?.(erro))
+      .finally(() => opcoes.aoTerminarTarefa?.(tarefa.id));
+  };
+
+  if (opcoes.retomarInterrompidas === true) {
+    servidor.addHook("onReady", async () => {
+      const interrompidas = await listarTarefasEmProcessamento(banco);
+      for (const tarefa of interrompidas) enfileirar(tarefa);
+      if (interrompidas.length > 0) servidor.log.warn({ retomadas: interrompidas.length }, "Tarefas interrompidas por reinício retomadas");
+    });
+  }
 
   const tarefaExistente = async (id: string) => {
     const tarefa = await obterTarefa(banco, id);
@@ -119,11 +139,7 @@ export function registrarRotasDeTarefas(servidor: FastifyInstance, opcoes: Opcoe
       }
 
       const tarefa = await criarTarefaComPlanilha(opcoes, { arquivo: nome, planilha, dados });
-      const execucao = fila
-        .then(() => executarTarefa(opcoes, tarefa))
-        .catch((erro: unknown) => opcoes.aoFalharInesperadamente?.(erro))
-        .finally(() => opcoes.aoTerminarTarefa?.(tarefa.id));
-      fila = execucao;
+      enfileirar(tarefa);
       pedido.log.info({ tarefa: tarefa.id }, "Tarefa criada");
       return resposta.status(202).send({ tarefa: tarefaPublica(tarefa) });
     },
@@ -141,6 +157,7 @@ export function registrarRotasDeTarefas(servidor: FastifyInstance, opcoes: Opcoe
   });
 
   servidor.get<{ Params: { id: string } }>("/api/tarefas/:id/planilha", { schema: { params: ID } }, async (pedido, resposta) => {
+    exigirAprovador(pedido, "Só o Aprovador pode baixar a planilha preenchida.");
     const tarefa = await tarefaPronta(pedido.params.id);
     if (tarefa.caminhoDaPlanilhaPreenchida === null) throw new ErroDaRota(409, "A planilha preenchida não está disponível.");
     const conteudo = await opcoes.armazenamento.ler(tarefa.caminhoDaPlanilhaPreenchida);

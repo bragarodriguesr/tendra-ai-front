@@ -1,9 +1,10 @@
-import type { FastifyInstance, FastifyReply } from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { apagarSessao, criarSessao, perfilAtivo, pessoaDaSessao } from "../autenticacao/sessoes.ts";
 import { JANELA_EM_MINUTOS, registrarTentativa, tentativasEsgotadas } from "../autenticacao/tentativas.ts";
 import { ErroDoProvedorDeLogin, type VerificadorDeSenha } from "../autenticacao/verificadorSupabase.ts";
 import type { Pessoa } from "../config/pessoas.ts";
 import type { Banco } from "../persistencia/banco.ts";
+import { ErroDaRota } from "./erros.ts";
 
 /**
  * Login, sessão e logout do modo compartilhado (etapa D4, cenários D1 a D6). Com a autenticação
@@ -31,6 +32,14 @@ export const MENSAGEM_DE_TENTATIVAS_ESGOTADAS = `Muitas tentativas de login. Agu
 const MENSAGEM_DE_SESSAO_INVALIDA = "Sessão inválida ou expirada. Entre novamente.";
 const ROTAS_SEM_SESSAO = new Set(["/api/auth/login", "/api/saude"]);
 const IDENTIFICADOR = /^[A-Za-z0-9_-]{43}$/;
+
+/**
+ * Papéis (etapa D7, cenários D8 e D9): com login, só o Aprovador aprova e exporta. No modo local,
+ * sem sessão, o papel não restringe nada (cenário 41).
+ */
+export function exigirAprovador(pedido: FastifyRequest, mensagem: string): void {
+  if (pedido.pessoaDaSessao !== null && pedido.pessoaDaSessao.papel !== "Aprovador") throw new ErroDaRota(403, mensagem);
+}
 
 function lerCookie(cabecalho: string | undefined, nome: string): string | null {
   for (const parte of (cabecalho ?? "").split(";")) {

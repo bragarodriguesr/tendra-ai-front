@@ -7,10 +7,14 @@ import { ClienteDaIa, ErroDaIa, type ApiDoClaude, type EntradaDoRegistro } from 
 import { calcularMetricas, type TabelaDePrecos } from "../observabilidade/metricas.ts";
 import type { Banco } from "../persistencia/banco.ts";
 import {
+  apagarRespostasGeradas,
   atualizarProgresso,
   concluirTarefa,
   criarTarefa,
   falharTarefa,
+  gravarRespostasGeradas,
+  lerRespostasGeradas,
+  listarRequisicoes,
   registrarRequisicao,
   type DadosDaTarefa,
   type Tarefa,
@@ -23,6 +27,10 @@ import { processarTarefa } from "./processarTarefa.ts";
  * `processando`, processa, grava o progresso a cada lote e, no fim, os itens e a planilha
  * preenchida (estado `pronta`) ou o motivo da falha (estado `falha`, sem itens).
  * É o mesmo `processarTarefa` usado pelo comando `responder` (cenário 25).
+ *
+ * Retomada (etapa D8, cenário D15): cada requisição à IA vai para o registro na hora e as respostas
+ * de cada lote são gravadas assim que o lote termina. Executar de novo uma tarefa interrompida
+ * reaproveita os lotes gravados, e o registro e as métricas somam as requisições de antes.
  */
 
 export interface AmbienteDaTarefa {
@@ -53,9 +61,15 @@ export async function criarTarefaComPlanilha(
 /** Processa uma tarefa já criada. Nunca lança: o resultado fica gravado na própria tarefa. */
 export async function executarTarefa(ambiente: AmbienteDaTarefa, tarefa: Tarefa): Promise<void> {
   const registro: EntradaDoRegistro[] = [];
-  const cliente = new ClienteDaIa(ambiente.api, (entrada) => registro.push(entrada));
-  let registroGravado = false;
+  // O cliente avisa cada requisição de forma síncrona; a gravação segue em fila, na ordem.
+  let gravacoes: Promise<void> = Promise.resolve();
+  const cliente = new ClienteDaIa(ambiente.api, (entrada) => {
+    registro.push(entrada);
+    gravacoes = gravacoes.then(() => registrarRequisicao(ambiente.banco, tarefa.id, entrada));
+  });
   try {
+    // Na retomada, as requisições de antes do reinício entram nas métricas.
+    registro.unshift(...(await listarRequisicoes(ambiente.banco, tarefa.id)));
     const planilha = new Uint8Array(await ambiente.armazenamento.ler(tarefa.caminhoDaPlanilha));
     const resultado = await processarTarefa({
       banco: ambiente.banco,
@@ -67,10 +81,14 @@ export async function executarTarefa(ambiente: AmbienteDaTarefa, tarefa: Tarefa)
       nomeDoArquivo: tarefa.arquivo,
       planilha,
       aoProgredir: (processadas, total) => atualizarProgresso(ambiente.banco, tarefa.id, processadas, total),
+      respostasGravadas: await lerRespostasGeradas(ambiente.banco, tarefa.id),
+      aoGerarLote: async (respostas) => {
+        await gravacoes;
+        await gravarRespostasGeradas(ambiente.banco, tarefa.id, respostas);
+      },
     });
     const caminhoDaPlanilhaPreenchida = await ambiente.armazenamento.salvar("resultados", resultado.planilhaPreenchida, "xlsx");
-    await gravarRegistro(ambiente.banco, tarefa.id, registro);
-    registroGravado = true;
+    await gravacoes;
     await concluirTarefa(ambiente.banco, tarefa.id, {
       itens: resultado.itens.map((item, posicao) => ({ ...item, aba: resultado.perguntas[posicao]?.aba ?? "", linha: resultado.perguntas[posicao]?.linha ?? 0 })),
       comportamento: resultado.comportamento,
@@ -80,12 +98,11 @@ export async function executarTarefa(ambiente: AmbienteDaTarefa, tarefa: Tarefa)
   } catch (erro) {
     const conhecido = erro instanceof ErroDaIa || erro instanceof ErroDeTeto || erro instanceof ErroDePlanilha;
     if (!conhecido) ambiente.aoFalharInesperadamente?.(erro);
-    if (!registroGravado) await gravarRegistro(ambiente.banco, tarefa.id, registro);
+    await gravacoes.catch(() => undefined);
     const metricas = calcularMetricas({ registro, itens: [], checagens: [], etapas: [], precos: ambiente.precos });
     await falharTarefa(ambiente.banco, tarefa.id, conhecido ? erro.message : MOTIVO_DE_ERRO_INTERNO, metricas);
   }
+  // Pronta ou em falha, a tarefa não será retomada: as respostas gravadas por lote não servem mais.
+  await apagarRespostasGeradas(ambiente.banco, tarefa.id).catch(() => undefined);
 }
 
-async function gravarRegistro(banco: Banco, id: string, registro: EntradaDoRegistro[]): Promise<void> {
-  for (const entrada of registro) await registrarRequisicao(banco, id, entrada);
-}

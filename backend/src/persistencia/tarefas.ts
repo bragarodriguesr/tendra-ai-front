@@ -3,6 +3,7 @@ import type { ComportamentoDaTarefa } from "../fluxo/processarTarefa.ts";
 import type { MetricasDaTarefa } from "../observabilidade/metricas.ts";
 import type { ItemDaRevisao } from "../rastreabilidade/montarItem.ts";
 import type { Banco } from "./banco.ts";
+import type { RespostaGerada } from "../geracao/separarRespostas.ts";
 
 /**
  * Persistência das tarefas e dos itens (etapa B1). O progresso é gravado ao fim de cada lote
@@ -127,6 +128,40 @@ export async function listarRequisicoes(banco: Banco, id: string): Promise<Entra
   return rows.map((linha) => linha.dados);
 }
 
+/** Resposta de uma pergunta já gerada, gravada ao fim do lote para a retomada (etapa D8). */
+export interface RespostaGravada {
+  numero: number;
+  texto: string;
+  resposta: RespostaGerada;
+}
+
+export async function gravarRespostasGeradas(banco: Banco, id: string, respostas: RespostaGravada[]): Promise<void> {
+  await banco.transaction(async (transacao) => {
+    for (const { numero, texto, resposta } of respostas) {
+      await transacao.query(
+        `INSERT INTO respostas_geradas (tarefa_id, numero, texto, resposta) VALUES ($1, $2, $3, $4)
+         ON CONFLICT (tarefa_id, numero) DO UPDATE SET texto = EXCLUDED.texto, resposta = EXCLUDED.resposta`,
+        [id, numero, texto, JSON.stringify(resposta)],
+      );
+    }
+  });
+}
+
+export async function lerRespostasGeradas(banco: Banco, id: string): Promise<RespostaGravada[]> {
+  const { rows } = await banco.query<RespostaGravada>("SELECT numero, texto, resposta FROM respostas_geradas WHERE tarefa_id = $1 ORDER BY numero", [id]);
+  return rows;
+}
+
+export async function apagarRespostasGeradas(banco: Banco, id: string): Promise<void> {
+  await banco.query("DELETE FROM respostas_geradas WHERE tarefa_id = $1", [id]);
+}
+
+/** Tarefas ainda em `processando`, da mais antiga para a mais nova (retomada, etapa D8). */
+export async function listarTarefasEmProcessamento(banco: Banco): Promise<Tarefa[]> {
+  const { rows } = await banco.query<LinhaDeTarefa>("SELECT * FROM tarefas WHERE estado = 'processando' ORDER BY criada_em, id");
+  return rows.map(paraTarefa);
+}
+
 /** Conclui a tarefa e grava os itens numa só transação: ou tudo, ou nada. */
 export async function concluirTarefa(
   banco: Banco,
@@ -169,6 +204,7 @@ export async function marcarInterrompidas(banco: Banco): Promise<number> {
     `UPDATE tarefas SET estado = 'falha', motivo = $1, concluida_em = now() WHERE estado = 'processando'`,
     [MOTIVO_DE_INTERRUPCAO],
   );
+  await banco.query("DELETE FROM respostas_geradas WHERE tarefa_id IN (SELECT id FROM tarefas WHERE estado <> 'processando')");
   return resultado.affectedRows ?? 0;
 }
 

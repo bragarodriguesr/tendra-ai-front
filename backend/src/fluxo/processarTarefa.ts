@@ -9,6 +9,7 @@ import type { ClienteDaIa } from "../ia/cliente.ts";
 import { VERSOES_DAS_INSTRUCOES } from "../ia/instrucoes.ts";
 import type { DuracaoDaEtapa, EtapaDaTarefa } from "../observabilidade/metricas.ts";
 import type { Banco } from "../persistencia/banco.ts";
+import type { RespostaGravada } from "../persistencia/tarefas.ts";
 import { montarItem, type ChecagemDoItem, type ItemChecado, type ItemDaRevisao } from "../rastreabilidade/montarItem.ts";
 import { buscarFontes } from "../recuperacao/buscarFontes.ts";
 import { aplicarAlertasDeterministicos } from "../regras/alertas.ts";
@@ -57,6 +58,10 @@ export interface OpcoesDaTarefa {
   nomeDoArquivo: string;
   planilha: Uint8Array;
   aoProgredir?: (processadas: number, total: number) => void | Promise<void>;
+  /** Respostas gravadas antes de um reinício; só valem para a pergunta com o mesmo número e texto (etapa D8). */
+  respostasGravadas?: RespostaGravada[];
+  /** Chamado com as respostas de cada lote gerado, para gravá-las (etapa D8). */
+  aoGerarLote?: (respostas: RespostaGravada[]) => void | Promise<void>;
   /** Relógio em milissegundos; nos testes, um relógio controlado. */
   agora?: () => number;
 }
@@ -94,8 +99,23 @@ export async function processarTarefa(opcoes: OpcoesDaTarefa): Promise<Resultado
     checados = await medir("checagem", () => perguntas.map((pergunta) => montarItem({ pergunta, resposta: null, contexto: null, hoje: opcoes.hoje })));
     await opcoes.aoProgredir?.(perguntas.length, perguntas.length);
   } else {
+    const textoDe = new Map(perguntas.map((pergunta) => [pergunta.numero, pergunta.texto]));
+    const jaGeradas = new Map(
+      (opcoes.respostasGravadas ?? []).filter((gravada) => textoDe.get(gravada.numero) === gravada.texto).map((gravada) => [gravada.numero, gravada.resposta]),
+    );
+    const aoGerarLote = opcoes.aoGerarLote;
     const geracao = await medir("geracao", () =>
-      gerarRespostas({ cliente: opcoes.cliente, contexto: fontes.contexto, perguntas, ia: opcoes.ia, aoConcluirLote: opcoes.aoProgredir }),
+      gerarRespostas({
+        cliente: opcoes.cliente,
+        contexto: fontes.contexto,
+        perguntas,
+        ia: opcoes.ia,
+        aoConcluirLote: opcoes.aoProgredir,
+        jaGeradas,
+        ...(aoGerarLote === undefined
+          ? {}
+          : { aoGerarLote: (respostas) => aoGerarLote(respostas.map((resposta) => ({ numero: resposta.numero, texto: textoDe.get(resposta.numero) ?? "", resposta }))) }),
+      }),
     );
     checados = await medir("checagem", () =>
       perguntas.map((pergunta, posicao) =>

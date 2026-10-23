@@ -15,6 +15,7 @@ import { MENSAGEM_DE_LOGIN_RECUSADO, MENSAGEM_DE_TENTATIVAS_ESGOTADAS } from "..
 import { criarServidor } from "../../src/http/servidor.ts";
 import { carregarPrecos } from "../../src/observabilidade/metricas.ts";
 import type { Banco } from "../../src/persistencia/banco.ts";
+import { listarItens } from "../../src/persistencia/tarefas.ts";
 import { listarEventos } from "../../src/revisao/revisao.ts";
 import { ApiSimulada } from "../apoio/apiSimulada.ts";
 import { abrirBancoDeTeste } from "../apoio/banco.ts";
@@ -244,5 +245,39 @@ describe("Cenário D7 · limite de tentativas de login (3 falhas em 15 minutos)"
     for (let i = 0; i < 3; i++) await entrar(APROVADOR.email, "errada");
     await banco.exec("UPDATE tentativas_login SET em = now() - interval '16 minutes'");
     expect((await entrar(APROVADOR.email, "senha-do-aprovador")).statusCode).toBe(200);
+  });
+});
+
+describe("Cenários D8 e D9 · papéis", () => {
+  it("o Revisor recebe 403 ao aprovar: o item não muda e nenhum evento é registrado", async () => {
+    const cookie = await cookieDe(REVISOR.email, "senha-do-revisor");
+    const antes = (await listarItens(banco, tarefaId))[0];
+    const eventosAntes = (await listarEventos(banco, tarefaId)).length;
+    const resposta = await pedir(`/api/tarefas/${tarefaId}/itens/1/aprovar`, cookie, "POST", {});
+    expect(resposta.statusCode).toBe(403);
+    expect(resposta.json()).toEqual({ erro: "Só o Aprovador pode aprovar respostas." });
+    expect((await listarItens(banco, tarefaId))[0]).toEqual(antes);
+    expect(await listarEventos(banco, tarefaId)).toHaveLength(eventosAntes);
+  });
+
+  it("o Revisor recebe 403 ao baixar a planilha preenchida; edita e restaura normalmente", async () => {
+    const cookie = await cookieDe(REVISOR.email, "senha-do-revisor");
+    const planilha = await pedir(`/api/tarefas/${tarefaId}/planilha`, cookie);
+    expect(planilha.statusCode).toBe(403);
+    expect(planilha.json()).toEqual({ erro: "Só o Aprovador pode baixar a planilha preenchida." });
+    expect((await pedir(`/api/tarefas/${tarefaId}/itens/3/texto`, cookie, "PUT", { texto: "Texto revisado pelo Revisor." })).statusCode).toBe(200);
+    expect((await pedir(`/api/tarefas/${tarefaId}/itens/3/restaurar`, cookie, "POST", {})).statusCode).toBe(200);
+  });
+
+  it("o Aprovador aprova e baixa a planilha", async () => {
+    const cookie = await cookieDe(APROVADOR.email, "senha-do-aprovador");
+    const aprovado = await pedir(`/api/tarefas/${tarefaId}/itens/1/aprovar`, cookie, "POST", {});
+    expect(aprovado.statusCode).toBe(200);
+    expect(aprovado.json().item).toMatchObject({ st: "aprovada" });
+    const [evento] = (await listarEventos(banco, tarefaId)).filter((e) => e.acao === "aprovacao");
+    expect(evento).toMatchObject({ pessoa: "Marcelo Vieira", papel: "Aprovador" });
+    const planilha = await pedir(`/api/tarefas/${tarefaId}/planilha`, cookie);
+    expect(planilha.statusCode).toBe(200);
+    expect(planilha.headers["content-type"]).toContain("spreadsheetml");
   });
 });

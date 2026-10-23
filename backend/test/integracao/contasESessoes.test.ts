@@ -43,7 +43,7 @@ describe("D2 · contas e sessões", () => {
     const { rows } = await banco.query<{ tabela: string; rls: boolean }>(
       "SELECT relname AS tabela, relrowsecurity AS rls FROM pg_class WHERE relkind = 'r' AND relnamespace = to_regnamespace(current_schema())::oid ORDER BY relname",
     );
-    expect(rows.length).toBe(11);
+    expect(rows.length).toBe(12);
     expect(rows.filter((linha) => !linha.rls)).toEqual([]);
   });
 });

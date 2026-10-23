@@ -119,11 +119,17 @@ Cada etapa é um pull request separado, com testes próprios e uma verificação
 ### D7. Papéis
 - Revisor recebe 403 ao aprovar (D8) e ao pedir a planilha preenchida (D9), só no modo compartilhado.
 - **Verificação:** testes de D8 e D9 passando.
+- **Situação (23/10/2026): implementada.** `exigirAprovador` (em `http/rotasDeAutenticacao.ts`) recusa com 403 "Só o Aprovador pode aprovar respostas." em `POST /api/tarefas/:id/itens/:numero/aprovar` e "Só o Aprovador pode baixar a planilha preenchida." em `GET /api/tarefas/:id/planilha`, antes de tocar no item ou no arquivo. Só vale com sessão (modo compartilhado); no modo local, o papel continua sem restringir (cenário 41). Testes em `autenticacao.test.ts`: o Revisor recebe 403, o item não muda e nenhum evento é registrado; o Revisor edita, restaura e avalia; o Aprovador aprova e baixa a planilha.
 
 ### D8. Retomada após reinício
 - Gravar cada lote gerado assim que termina (respostas da IA já checadas, por pergunta) e cada requisição no registro assim que acontece, e não só no fim.
 - Ao iniciar no modo compartilhado, `marcarInterrompidas` passa a retomar as tarefas em `processando`: gera só os lotes que faltam e depois roda conflito, alertas e planilha preenchida sobre todos os itens (D15). No modo local, continua marcando como `falha` (cenário 32).
 - **Verificação:** teste de D15 passando, com o processo do backend encerrado no meio de uma tarefa e reiniciado.
+- **Situação (23/10/2026): implementada.**
+  - Migração `005_respostas_geradas.sql`: as respostas de cada lote (já separadas pelos marcadores) ficam gravadas com o número e o texto da pergunta assim que o lote termina, e são apagadas quando a tarefa fica pronta ou falha. Aplicada no Supabase pelo conector; a impressão do esquema (153 linhas) é igual à de um Postgres migrado pelo backend.
+  - `executarTarefa` grava cada requisição no registro na hora, numa fila em ordem, e lê o registro anterior ao começar; `gerarRespostas` pula o lote cujas perguntas já têm resposta gravada com o mesmo texto. Conflito, alertas e planilha preenchida rodam sobre todos os itens no fim.
+  - No modo compartilhado, `npm run servidor` liga `retomarInterrompidas`: ao ficar pronto, o servidor põe na fila (uma tarefa por vez) as tarefas em `processando`. No modo local, `marcarInterrompidas` continua marcando `falha` (cenário 32) e descarta as respostas gravadas.
+  - Teste `retomada.test.ts`: a API para de responder no 3º lote (como um processo que caiu), outro servidor sobre o mesmo banco retoma; a geração recomeça na pergunta 21, a tarefa termina com os 46 itens, uma vez cada, iguais aos de uma execução sem interrupção, e o registro e as métricas somam as requisições de antes e depois.
 
 ### D9. Front com login
 - `src/LoginPage.jsx`: e-mail e senha de verdade, sem valores preenchidos, mensagens de 401 e 429.

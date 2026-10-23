@@ -27,9 +27,12 @@ async function executar(): Promise<void> {
   if (configuracao.api.tipo === "simulada") log.warn(AVISO_DA_API_SIMULADA);
 
   const banco = await abrirBancoConfigurado(configuracao);
-  // Cenário 32: ao iniciar, nenhuma tarefa está de fato em processamento.
-  const interrompidas = await marcarInterrompidas(banco);
-  if (interrompidas > 0) log.warn({ interrompidas }, "Tarefas interrompidas por reinício marcadas como falha");
+  // Cenário 32: no modo local, ao iniciar, nenhuma tarefa está de fato em processamento. No modo
+  // compartilhado, o serviço "dorme" e é reimplantado: as interrompidas são retomadas (cenário D15).
+  if (modo.tipo === "local") {
+    const interrompidas = await marcarInterrompidas(banco);
+    if (interrompidas > 0) log.warn({ interrompidas }, "Tarefas interrompidas por reinício marcadas como falha");
+  }
 
   const servidor = criarServidor({
     banco,
@@ -49,6 +52,7 @@ async function executar(): Promise<void> {
       termosCriticos: await carregarTermosCriticos(),
       precos: await carregarPrecos(),
       pessoas: await carregarPessoas(),
+      retomarInterrompidas: modo.tipo === "compartilhado",
       hoje: () => new Date().toISOString().slice(0, 10),
       aoFalharInesperadamente: (erro) => log.error({ erro: erro instanceof Error ? erro.name : "desconhecido" }, "Falha inesperada no processamento"),
     },
