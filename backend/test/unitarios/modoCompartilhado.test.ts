@@ -42,6 +42,7 @@ describe("Cenário D11 · modo compartilhado", () => {
       supabaseUrl: "https://projeto.supabase.co",
       chaveDeServico: CHAVE_DE_SERVICO,
       origemDoFront: "https://tendra.vercel.app",
+      horasDeSessao: 8,
     });
     expect(configuracao.api).toEqual({ tipo: "real", chaveApi: "chave-da-api-falsa" });
     expect(configuracao.bancoUrl).toBe(COMPLETO.DATABASE_URL);
@@ -52,6 +53,7 @@ describe("Cenário D11 · modo compartilhado", () => {
     ["origem do front com caminho", { TENDRA_ORIGEM_DO_FRONT: "https://tendra.vercel.app/app" }, /TENDRA_ORIGEM_DO_FRONT inválida/],
     ["API simulada", { TENDRA_API_SIMULADA: "1" }, /TENDRA_API_SIMULADA não é aceita/],
     ["modo desconhecido", { TENDRA_MODO: "publico" }, /TENDRA_MODO inválida/],
+    ["sessão com horas fracionadas", { TENDRA_SESSAO_HORAS: "1.5" }, /TENDRA_SESSAO_HORAS inválida/],
   ])("recusa %s", (_caso, alteracao, motivo) => {
     expect(mensagemDoErro({ ...COMPLETO, ...alteracao })).toMatch(motivo);
   });
