@@ -404,7 +404,7 @@ Deploy da fase E no Render às 17:18 UTC; a migração 006 foi aplicada no Supab
 
 | Etapa | Como conferir | Situação |
 |---|---|---|
-| E1 | Reconhecer um alerta, escolher a fonte num conflito e marcar um item como revisado; recarregar a página e ver que continuam. | Pendente no publicado: os logs do Render não têm nenhum pedido de reconhecer, escolher fonte ou revisar depois do deploy, e o banco não tem item com alerta reconhecido ou revisado. Conferido nos testes automatizados e na jornada de ponta a ponta. |
+| E1 | Reconhecer um alerta, escolher a fonte num conflito e marcar um item como revisado; recarregar a página e ver que continuam. | Conferido: o User Teste 3 (Aprovador) reconheceu 4 alertas de fonte desatualizada, escolheu a fonte 1 num conflito e marcou 1 item como revisado na tarefa da RFP-01; o banco guarda quem e quando em cada item, os eventos (`alerta_reconhecido`, `fonte_escolhida` e `revisao`) estão registrados, e tudo continua depois de recarregar a página (teste do grupo). |
 | E2 | Como Aprovador, excluir uma tarefa na tela Tarefas. | Conferido: o User Teste 3 (Aprovador) excluiu a tarefa da RFP-01 criada com a base vazia; a tarefa e os registros saíram do banco e as duas planilhas dela saíram do bucket `rfps` (ficaram só as duas da outra tarefa). O 403 do Revisor está nos testes automatizados. |
 | E3 | Abrir a Base de conhecimento e ver só o botão "Subir documentos". | Conferido: o front publicado não tem mais o botão "Importar RFP passada" (teste manual do grupo e o código publicado na Vercel). |
 
