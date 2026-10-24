@@ -398,6 +398,16 @@ Pedida pelo grupo em 24/10/2026, depois da publicação. SPEC, cenários 57 a 60
 - O botão "Importar RFP passada" saiu da tela Base de conhecimento: ele abria o mesmo seletor, e o tipo de cada arquivo já vem do cabeçalho do `.md`.
 - **Situação (24/10/2026): implementada.**
 
+### Conferência no ambiente publicado (24/10/2026)
+
+Deploy da fase E no Render às 17:18 UTC; a migração 006 foi aplicada no Supabase pelo próprio backend ao subir.
+
+| Etapa | Como conferir | Situação |
+|---|---|---|
+| E1 | Reconhecer um alerta, escolher a fonte num conflito e marcar um item como revisado; recarregar a página e ver que continuam. | Pendente no publicado: os logs do Render não têm nenhum pedido de reconhecer, escolher fonte ou revisar depois do deploy, e o banco não tem item com alerta reconhecido ou revisado. Conferido nos testes automatizados e na jornada de ponta a ponta. |
+| E2 | Como Aprovador, excluir uma tarefa na tela Tarefas. | Conferido: o User Teste 3 (Aprovador) excluiu a tarefa da RFP-01 criada com a base vazia; a tarefa e os registros saíram do banco e as duas planilhas dela saíram do bucket `rfps` (ficaram só as duas da outra tarefa). O 403 do Revisor está nos testes automatizados. |
+| E3 | Abrir a Base de conhecimento e ver só o botão "Subir documentos". | Conferido: o front publicado não tem mais o botão "Importar RFP passada" (teste manual do grupo e o código publicado na Vercel). |
+
 ### Pendências registradas em 24/10/2026 (fora da fase E, por decisão do grupo)
 1. **Fase A:** taxa de aceitação; RFP-03 e variantes de borda com a API real.
 2. **Validação no ambiente publicado:** D15 (reinício no meio de uma tarefa); envio de planilha de 10 MB pelo rewrite da Vercel (PD6).
