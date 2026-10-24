@@ -1,7 +1,6 @@
 import React from "react";
 import { Badge, Button, Field, Icon, IconButton, Input, MonoLabel, Select } from "../../ds/index.js";
 import { ClickRow, DISPLAY, Page, card, h1Style, mono } from "../ui.jsx";
-import { OWN } from "../data.js";
 import { newContact } from "../useWorkspace.js";
 
 // máscaras: 00.000.000/0000-00 e (00) 00000-0000
@@ -79,7 +78,7 @@ export function NewTask({ v, ws, state, pad, isMobile }) {
             </Field>
             <Field label="Tipo" required htmlFor="nt-type"><Select id="nt-type" options={["RFP", "RFI"]} value={f.type} onChange={set("type")} /></Field>
             <Field label="Prazo de submissão" required error={f.errDue} htmlFor="nt-due"><Input id="nt-due" type="date" value={f.due} onChange={set("due")} invalid={!!f.errDue} /></Field>
-            <Field label="Responsável" required error={f.errOwner} htmlFor="nt-owner"><Select id="nt-owner" options={OWN} placeholder="Escolha um usuário" value={f.owner} onChange={set("owner")} invalid={!!f.errOwner} /></Field>
+            <Field label="Responsável" required error={f.errOwner} htmlFor="nt-owner"><Select id="nt-owner" options={f.owners} placeholder="Escolha um usuário" value={f.owner} onChange={set("owner")} invalid={!!f.errOwner} /></Field>
           </div>
           <section aria-labelledby="nt-contacts-title" style={{ display: "flex", flexDirection: "column", gap: 16, paddingTop: 8 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>

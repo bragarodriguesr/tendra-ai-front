@@ -2,7 +2,7 @@ import React from "react";
 import { seedItems, seedDocs, genItems, nowStr, ITEM_TASKS, GENERATED, TASKS, TASK_IDS } from "./data.js";
 import {
   MENSAGEM_FORMATO_DA_RFP, aprovarItemNaApi, avaliarItemNaApi, criarTarefa, editarTextoDoItem, listarAvaliacoes, listarPessoas, restaurarItem, dataHoraDaTela, definirDocumentoAtivo, enderecoDaPlanilha, enviarDocumentosDaBase, hojeIso, listarDocumentosDaBase, listarItensDaTarefa,
-  listarTarefas, paraDocumentoDaTela, paraItemDaTela, reconhecerAlertaNaApi, escolherFonteNaApi, revisarItemNaApi, excluirTarefa
+  listarTarefas, paraDocumentoDaTela, paraItemDaTela, reconhecerAlertaNaApi, escolherFonteNaApi, revisarItemNaApi, excluirTarefa, obterEmpresaDaTarefa, listarUsuarios
 , entrar, obterSessao, quandoPerderASessao, sair} from "../api.js";
 
 let contactSeq = 0;
@@ -33,6 +33,8 @@ const initialState = ({ initialScreen, role }) => ({
   ultimoEnvio: null,
   // Tarefas: as de exemplo (data.js) até o servidor responder; depois, só as do banco.
   tarefas: [], tarefasOrigem: "exemplo", criando: false, pessoas: [],
+  // Usuários da plataforma (campo "Responsável") e barra lateral "Ver detalhes" da tarefa (cenários 62 e 64).
+  usuarios: [], detalhes: null,
   // Tarefa à espera da confirmação de exclusão e exclusão em andamento (cenário 60).
   deleting: null, excluindo: false,
   // Fase D: "compartilhado" quando o backend tem login; a sessão traz nome e papel da pessoa.
@@ -206,7 +208,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         }
         // No celular a Revisão tem duas etapas: abre na lista, ou direto no item quando ele vem escolhido.
         const reviewPane = screen === "review" && extra.sel ? "item" : "list";
-        setState({ screen, navOpen: false, drawer: null, edit: false, showOrig: false, reviewPane, ...sw, ...extra });
+        setState({ screen, navOpen: false, drawer: null, detalhes: null, edit: false, showOrig: false, reviewPane, ...sw, ...extra });
       },
       showView(view) { setState({ view }); window.scrollTo(0, 0); },
       toast(title, desc, tone = "success") {
@@ -559,6 +561,27 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
           api.toast("Tarefa não criada", e.message, "danger");
         }
       },
+      /** Abre a barra lateral com a empresa e os contatos da tarefa, lidos do backend (cenário 64). */
+      async openTaskDetails(id) {
+        setState({ detalhes: { id, carregando: true, empresa: null, contatos: [], erro: null } });
+        if (!api.serverTask(id)) { setState((s) => (s.detalhes && s.detalhes.id === id ? { detalhes: { ...s.detalhes, carregando: false } } : {})); return; }
+        try {
+          const { empresa, contatos } = await obterEmpresaDaTarefa(id);
+          setState((s) => (s.detalhes && s.detalhes.id === id ? { detalhes: { id, carregando: false, empresa, contatos, erro: null } } : {}));
+        } catch (e) {
+          setState((s) => (s.detalhes && s.detalhes.id === id ? { detalhes: { ...s.detalhes, carregando: false, erro: e.message } } : {}));
+        }
+      },
+      closeTaskDetails() { setState({ detalhes: null }); },
+      /** Usuários da plataforma para o campo "Responsável" da Nova RFP (cenário 62). */
+      async loadUsers() {
+        try {
+          const { usuarios } = await listarUsuarios();
+          setState({ usuarios });
+        } catch {
+          // Sem o servidor, o campo usa a lista de exemplo.
+        }
+      },
       /** Pede a confirmação antes de excluir (cenário 60). */
       askDeleteTask(id) { setState({ deleting: id }); },
       /** Exclui a tarefa no backend e a tira de todas as telas; quem estava nela volta para Tarefas. */
@@ -648,6 +671,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
     const onKey = (e) => {
       const s = ref.current, t = e.target && e.target.tagName;
       if (e.key === "Escape" && s.drawer) { ws.setState({ drawer: null }); return; }
+      if (e.key === "Escape" && s.detalhes) { ws.setState({ detalhes: null }); return; }
       if (t === "INPUT" || t === "TEXTAREA" || t === "SELECT" || s.view !== "app" || s.screen !== "review" || s.drawer) return;
       if (e.key === "j" || e.key === "J") ws.step(1);
       if (e.key === "k" || e.key === "K") ws.step(-1);
@@ -678,6 +702,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
   React.useEffect(() => { if (state.screen === "base" || state.screen === "onboarding") ws.loadBase(); }, [ws, state.screen]);
   // Tarefas: lê ao abrir e ao entrar nas telas que as mostram; enquanto alguma processa, consulta o estado a cada 2 segundos.
   React.useEffect(() => { if (["dashboard", "tasks", "task", "export", "review"].includes(state.screen)) ws.loadTasks(); }, [ws, state.screen]);
+  React.useEffect(() => { if (state.screen === "new") ws.loadUsers(); }, [ws, state.screen, state.sessao]);
   const processing = state.tarefas.some((t) => t.estado === "processando");
   React.useEffect(() => {
     if (!processing) return undefined;

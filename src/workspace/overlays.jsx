@@ -49,6 +49,67 @@ export function SourceDrawer({ dr, onClose }) {
   );
 }
 
+const cnpjDaTela = (d) => (d && d.length === 14 ? `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}` : d || "—");
+
+function Linha({ rotulo, valor, mono: emMono }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "120px minmax(0,1fr)", gap: 12, alignItems: "baseline" }}>
+      <span style={{ ...mono(11, "var(--n-400)"), letterSpacing: ".08em", textTransform: "uppercase" }}>{rotulo}</span>
+      <span style={{ ...(emMono ? mono(13) : { fontSize: 14 }), color: "var(--n-900)", overflowWrap: "anywhere" }}>{valor || "—"}</span>
+    </div>
+  );
+}
+
+/** Barra lateral "Ver detalhes" da tarefa: dados da empresa e contatos informados na Nova RFP (cenário 64). Esc fecha. */
+export function TaskDetailsDrawer({ d, onClose }) {
+  const closeRef = React.useRef(null);
+  React.useEffect(() => { closeRef.current && closeRef.current.querySelector("button")?.focus(); }, [d.id]);
+  const t = d.task;
+  return (
+    <>
+      <div style={{ position: "absolute", inset: 0, zIndex: 20, background: "rgba(18,20,15,.32)" }} onClick={onClose} />
+      <aside role="dialog" aria-modal="true" aria-label="Detalhes da tarefa" style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: 520, maxWidth: "92vw", zIndex: 21, background: "var(--n-000)", borderLeft: "1px solid var(--n-200)", boxShadow: "var(--shadow-overlay)", display: "flex", flexDirection: "column", animation: "tdr-fade var(--duration-base) var(--ease-out) both" }}>
+        <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--n-200)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
+            <span style={{ ...mono(11, "var(--n-400)"), letterSpacing: ".1em", textTransform: "uppercase" }}>Detalhes da tarefa</span>
+            <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 20, color: "var(--n-900)", overflowWrap: "anywhere" }}>{t.name}</span>
+          </div>
+          <span ref={closeRef} style={{ display: "flex" }}><IconButton icon="x" label="Fechar detalhes" onClick={onClose} /></span>
+        </div>
+        <div style={{ flex: 1, overflow: "auto", padding: 24, background: "var(--n-050)", display: "flex", flexDirection: "column", gap: 20 }}>
+          <section aria-label="Empresa" style={card(12, { padding: 20, display: "flex", flexDirection: "column", gap: 12 })}>
+            <span style={{ ...mono(11, "var(--n-500)"), letterSpacing: ".1em", textTransform: "uppercase" }}>Empresa</span>
+            <Linha rotulo="Nome" valor={d.empresa ? d.empresa.nome : t.company} />
+            <Linha rotulo="CNPJ" valor={d.empresa ? cnpjDaTela(d.empresa.cnpj) : "—"} emMono />
+            <Linha rotulo="Tipo" valor={t.type} />
+            <Linha rotulo="Prazo" valor={t.due && t.due !== "—" ? `${t.due} (${t.dueText})` : "Sem prazo"} emMono />
+            <Linha rotulo="Responsável" valor={t.owner} />
+            {t.file ? <Linha rotulo="Arquivo" valor={t.file} emMono /> : null}
+          </section>
+          <section aria-label="Contatos" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <span style={{ ...mono(11, "var(--n-500)"), letterSpacing: ".1em", textTransform: "uppercase" }}>Contatos · {d.carregando ? "…" : d.contatos.length}</span>
+            {d.carregando ? <div style={{ fontSize: 14, color: "var(--n-500)" }}>Carregando…</div>
+              : d.erro ? <div role="alert" style={{ fontSize: 14, color: "var(--danger)" }}>Não foi possível ler os dados: {d.erro}</div>
+              : !d.contatos.length ? <div style={{ fontSize: 14, color: "var(--n-500)" }}>Nenhum contato informado na importação.</div>
+              : d.contatos.map((c, i) => (
+                <div key={i} style={card(12, { padding: 16, display: "flex", flexDirection: "column", gap: 10 })}>
+                  <span style={{ fontWeight: 600, color: "var(--n-900)" }}>{c.nome || "Sem nome"}</span>
+                  <Linha rotulo="Cargo" valor={c.cargo} />
+                  <Linha rotulo="Telefone" valor={c.telefone} emMono />
+                  <Linha rotulo="E-mail" valor={c.email ? <a href={`mailto:${c.email}`}>{c.email}</a> : ""} emMono />
+                </div>
+              ))}
+          </section>
+        </div>
+        <div style={{ padding: "16px 24px", borderTop: "1px solid var(--n-200)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={mono(11, "var(--n-400)")}>Esc fecha</span>
+          <Button variant="secondary" onClick={onClose}>Fechar</Button>
+        </div>
+      </aside>
+    </>
+  );
+}
+
 /** Confirmação antes de editar um item já aprovado. */
 export function ConfirmEditDialog({ onCancel, onConfirm }) {
   return (

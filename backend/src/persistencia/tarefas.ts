@@ -3,6 +3,7 @@ import type { ComportamentoDaTarefa } from "../fluxo/processarTarefa.ts";
 import type { MetricasDaTarefa } from "../observabilidade/metricas.ts";
 import type { ItemDaRevisao } from "../rastreabilidade/montarItem.ts";
 import type { Banco } from "./banco.ts";
+import { gravarEmpresaDaTarefa } from "./empresas.ts";
 import type { RespostaGerada } from "../geracao/separarRespostas.ts";
 
 /**
@@ -91,17 +92,21 @@ const paraTarefa = (linha: LinhaDeTarefa): Tarefa => ({
   concluidaEm: linha.concluida_em?.toISOString() ?? null,
 });
 
+/** Cria a tarefa e, na mesma transação, grava a empresa e os contatos informados (cenário 63). */
 export async function criarTarefa(
   banco: Banco,
   tarefa: { id: string; arquivo: string; caminhoDaPlanilha: string; dados: DadosDaTarefa },
 ): Promise<Tarefa> {
-  const { rows } = await banco.query<LinhaDeTarefa>(
-    `INSERT INTO tarefas (id, estado, arquivo, caminho_da_planilha, dados) VALUES ($1, 'processando', $2, $3, $4) RETURNING *`,
-    [tarefa.id, tarefa.arquivo, tarefa.caminhoDaPlanilha, JSON.stringify(tarefa.dados)],
-  );
-  const linha = rows[0];
-  if (linha === undefined) throw new Error("Falha ao criar a tarefa.");
-  return paraTarefa(linha);
+  return banco.transaction(async (transacao) => {
+    const { rows } = await transacao.query<LinhaDeTarefa>(
+      `INSERT INTO tarefas (id, estado, arquivo, caminho_da_planilha, dados) VALUES ($1, 'processando', $2, $3, $4) RETURNING *`,
+      [tarefa.id, tarefa.arquivo, tarefa.caminhoDaPlanilha, JSON.stringify(tarefa.dados)],
+    );
+    const linha = rows[0];
+    if (linha === undefined) throw new Error("Falha ao criar a tarefa.");
+    await gravarEmpresaDaTarefa(transacao, tarefa.id, tarefa.dados);
+    return paraTarefa(linha);
+  });
 }
 
 export async function obterTarefa(banco: Banco, id: string): Promise<Tarefa | null> {

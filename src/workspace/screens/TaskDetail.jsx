@@ -13,23 +13,19 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
   return (
     <Page pad={pad}>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <span style={mono(12, "var(--n-400)")}>
-          <a href="#" onClick={(e) => { e.preventDefault(); ws.go("tasks"); }} style={{ color: "var(--n-400)" }}>Tarefas</a> / {task.name}
-        </span>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 24, flexWrap: "wrap" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {task.hasItems || task.isServer ? <div><Badge tone={task.sTone} icon={task.sIcon}>{task.sTxt}</Badge></div> : null}
             <h1 style={h1Style}>{task.name}</h1>
             <span style={{ color: "var(--n-400)" }}>{task.company} · {task.type} · prazo {task.due} ({task.dueText}) · responsável {task.owner}</span>
           </div>
-          {task.hasItems ? (
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-              {task.isServer
-                ? <Button variant="secondary" icon="download" disabled={!v.podeExportar} title={v.podeExportar ? undefined : "Somente Aprovadores baixam a planilha preenchida."} onClick={() => ws.downloadSheet(task.id)}>Baixar planilha preenchida</Button>
-                : <Button variant="secondary" icon="download" onClick={() => ws.go("export", { taskId: "t1" })}>Exportação</Button>}
-              <Button icon="eye" onClick={() => ws.go("review")}>Abrir revisão</Button>
-            </div>
-          ) : null}
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            {task.hasItems ? (task.isServer
+              ? <Button variant="secondary" icon="download" disabled={!v.podeExportar} title={v.podeExportar ? undefined : "Somente Aprovadores baixam a planilha preenchida."} onClick={() => ws.downloadSheet(task.id)}>Baixar planilha preenchida</Button>
+              : <Button variant="secondary" icon="download" onClick={() => ws.go("export", { taskId: "t1" })}>Exportação</Button>) : null}
+            <Button variant="secondary" icon="building-2" onClick={() => ws.openTaskDetails(task.id)}>Ver detalhes</Button>
+            {task.hasItems ? <Button icon="eye" onClick={() => ws.go("review")}>Abrir revisão</Button> : null}
+          </div>
         </div>
       </div>
 

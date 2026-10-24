@@ -6,6 +6,7 @@ import { criarTarefaComPlanilha, executarTarefa, type AmbienteDaTarefa } from ".
 import { ErroDaRota } from "./erros.ts";
 import { exigirAprovador } from "./rotasDeAutenticacao.ts";
 import { gerarPlanilhaDaRevisao } from "../revisao/planilhaDaRevisao.ts";
+import { obterEmpresaDaTarefa } from "../persistencia/empresas.ts";
 import { excluirTarefa, listarItens, listarRequisicoes, listarTarefas, listarTarefasEmProcessamento, obterTarefa, type DadosDaTarefa, type Tarefa } from "../persistencia/tarefas.ts";
 
 /**
@@ -183,6 +184,12 @@ export function registrarRotasDeTarefas(servidor: FastifyInstance, opcoes: Opcoe
       .header("content-type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
       .header("content-disposition", `attachment; filename="tarefa.xlsx"; filename*=UTF-8''${encodeURIComponent(nome)}`)
       .send(conteudo);
+  });
+
+  // Dados da empresa e contatos informados na Nova RFP (cenários 63 e 64), em qualquer estado da tarefa.
+  servidor.get<{ Params: { id: string } }>("/api/tarefas/:id/empresa", { schema: { params: ID } }, async (pedido) => {
+    await tarefaExistente(pedido.params.id);
+    return await obterEmpresaDaTarefa(banco, pedido.params.id);
   });
 
   servidor.get<{ Params: { id: string } }>("/api/tarefas/:id/registro", { schema: { params: ID } }, async (pedido) => {

@@ -100,6 +100,11 @@ export async function criarTarefa(file, dados) {
   return pedir("/tarefas", { method: "POST", corpo: { arquivo, dados } });
 }
 
+/** Empresa e contatos informados na Nova RFP (cenário 64): `{ empresa: { nome, cnpj } | null, contatos }`. */
+export const obterEmpresaDaTarefa = (id) => pedir(`/tarefas/${id}/empresa`);
+/** Usuários da plataforma para o campo "Responsável" (cenário 62): `{ usuarios: [{ nome, papel }] }`. */
+export const listarUsuarios = () => pedir("/usuarios");
+
 // Revisão (B5): `pessoa` é o id em backend/config/pessoas.json.
 export const listarPessoas = () => pedir("/pessoas");
 export const listarAvaliacoes = (id) => pedir(`/tarefas/${id}/avaliacoes`);

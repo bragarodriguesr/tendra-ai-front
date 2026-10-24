@@ -171,6 +171,7 @@ A organização das pastas está no `PLAN.md`.
 | **C. Front conectado** | Seletor de arquivo real na Nova RFP, progresso, revisão com ações gravadas (a Base já sai conectada da fase A) | Jornada ponta a ponta, da planilha à taxa de aceitação |
 | **D. Publicação compartilhada** | Login real, sessão, hospedagem (Render e Supabase) e segurança de exposição, conforme a fase 1 de `docs/referencia/mvp-proposta-1/PLAN.md` | Demonstração no ambiente compartilhado; checklist daquela fase |
 | **E. Revisão persistida e tarefas** | Reconhecer alerta, escolher fonte e marcar como revisado gravados no backend; exclusão de tarefa; tela Base só com "Subir documentos" | Testes de integração e a jornada ponta a ponta com recarga da página e exclusão |
+| **G. Responsável, empresa e contatos** | Responsável entre os usuários da plataforma; empresa e contatos da Nova RFP em tabelas próprias; "Ver detalhes" na tela da tarefa | Testes de integração, cópia das tarefas antigas conferida e jornada de ponta a ponta |
 
 A fase A sozinha mostra se a ideia funciona. Se a qualidade das respostas não atingir os critérios, o ajuste acontece antes de investir em servidor, tela ou hospedagem. A fase D só começa depois de A, B e C aceitas.
 
