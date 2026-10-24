@@ -10,7 +10,8 @@ import type { ContextoDaBase, DocumentoDoContexto } from "../recuperacao/buscarF
  * Regras determinísticas: a IA não decide nada aqui (constitution II).
  */
 
-export type TipoDeAlerta = "lowconf" | "conflict" | "old" | "critical" | "nocontext";
+/** `manual` nunca sai da geração: é posto quando a pessoa escreve a resposta de um item sem rascunho (cenário 61). */
+export type TipoDeAlerta = "lowconf" | "conflict" | "old" | "critical" | "nocontext" | "manual";
 
 /** Fonte no formato de `mk()` em data.js. */
 export interface FonteDoItem {
@@ -40,8 +41,8 @@ export interface ItemDaRevisao {
   q: string;
   paras: ParagrafoDoItem[];
   srcs: FonteDoItem[];
-  /** `ack`: quem reconheceu o alerta e quando (cenário 57); nunca preenchido na geração. */
-  alerts: { t: TipoDeAlerta; ack?: { by: string; at: string } }[];
+  /** `ack`: quem reconheceu o alerta e quando (cenário 57); `by`, no alerta `manual`, quem escreveu a resposta (cenário 61). */
+  alerts: { t: TipoDeAlerta; ack?: { by: string; at: string }; by?: string }[];
   st: "sugerida" | "sem-rascunho";
   orig: string;
 }

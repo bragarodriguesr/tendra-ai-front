@@ -408,6 +408,32 @@ Deploy da fase E no Render às 17:18 UTC; a migração 006 foi aplicada no Supab
 | E2 | Como Aprovador, excluir uma tarefa na tela Tarefas. | Conferido: o User Teste 3 (Aprovador) excluiu a tarefa da RFP-01 criada com a base vazia; a tarefa e os registros saíram do banco e as duas planilhas dela saíram do bucket `rfps` (ficaram só as duas da outra tarefa). O 403 do Revisor está nos testes automatizados. |
 | E3 | Abrir a Base de conhecimento e ver só o botão "Subir documentos". | Conferido: o front publicado não tem mais o botão "Importar RFP passada" (teste manual do grupo e o código publicado na Vercel). |
 
+## Fase F: melhorias de revisão, Dashboard e saída
+
+Pedida pelo grupo em 24/10/2026, depois da fase E.
+
+### F1. Dashboard com dados reais
+- Com o servidor, os indicadores saem das tarefas e itens do banco. RFP concluída é a tarefa "Pronta" (todos os itens aprovados e nenhum alerta pendente) e termina na última aprovação.
+- Tempo médio por RFP: do envio da planilha à aprovação do último item, nas concluídas; "RFPs concluídas por mês": seis últimos meses, pela data da última aprovação; "Itens aprovados" diz quantos são respostas manuais. Sem o servidor, o Dashboard continua com os exemplos.
+
+### F2. "Sair" e "Entrar" em seguida
+- Causa: "Sair" só esquecia a sessão na tela depois da resposta do backend; com o serviço do Render demorando (plano gratuito, que "dorme"), "Entrar" logo em seguida ainda via a sessão e ia direto ao Workspace.
+- Correção: a tela esquece a sessão na hora; um novo login espera o logout em andamento terminar (senão a resposta dele apagaria o cookie da nova sessão); toda resposta da API sai com `Cache-Control: no-store` e o front pede sem cache.
+
+### F3. Alertas: próximo pendente e resumo recolhido
+- O cartão abre no primeiro alerta pendente e passa ao próximo depois de cada um tratado; com todos tratados, recolhe num resumo que abre o histórico.
+
+### F4. Fontes em conflito em cartões sobrepostos
+- A escolhida fica na frente da pilha com "Fonte escolhida"; a outra, cinza, com "Não escolhida".
+
+### F5. Resposta manual em item sem rascunho (SPEC, cenário 61)
+- O backend aceita o texto num item sem sugestão: parágrafos sem fonte, alerta `manual` com quem escreveu, item em revisão; texto vazio devolve o item a "sem rascunho". A tela abre o editor nesses itens e mostra a etiqueta "Resposta manual".
+
+### F6. Planilha preenchida com o estado da revisão (SPEC, cenário 24)
+- O download gera a planilha a cada pedido, a partir da planilha original e dos itens gravados, sem nova chamada à IA: texto atual (sugestão, edição ou resposta manual), fontes citadas pelos parágrafos (só a escolhida num conflito) e a coluna "Situação na revisão" (aprovada, revisada, em revisão, com quem e quando). A planilha gravada no processamento continua no formato anterior e não é mais usada no download.
+
+**Situação (24/10/2026): implementada.** Testes do backend (cenário 61, cabeçalho sem cache, planilha do download com edição, resposta manual e aprovação, sem nova requisição à IA), jornada de ponta a ponta (resposta manual mantida depois de recarregar; alerta tratado recolhido) e conferência no navegador com um backend de teste com login: Dashboard com tempo médio e concluídas por mês reais; cartão de alertas passando ao próximo pendente e recolhendo; pilha de fontes com a escolhida na frente e a outra cinza; "Entrar" logo depois de "Sair", com o logout atrasado de propósito, pede e-mail e senha, e a sessão nova sobrevive ao fim do logout antigo.
+
 ### Pendências registradas em 24/10/2026 (fora da fase E, por decisão do grupo)
 1. **Fase A:** taxa de aceitação; RFP-03 e variantes de borda com a API real.
 2. **Validação no ambiente publicado:** D15 (reinício no meio de uma tarefa); envio de planilha de 10 MB pelo rewrite da Vercel (PD6).

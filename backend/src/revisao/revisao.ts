@@ -79,12 +79,13 @@ async function itemAtual(transacao: Transacao, tarefaId: string, numero: number)
  * Cenário 42: o texto editado vira os parágrafos (separados por linha em branco), cada um mantendo
  * as fontes do parágrafo na mesma posição; `orig` não muda e o item vai para "em-revisao". Se
  * estava aprovado, a aprovação deixa de valer e o evento "aprovacao_removida" é registrado.
+ * Item sem sugestão (`orig` vazio) segue o cenário 61: resposta manual.
  */
 export async function editarTexto(banco: Banco, entrada: { tarefaId: string; numero: number; pessoa: Pessoa; texto: string }): Promise<ItemGravado> {
   return banco.transaction(async (transacao) => {
     const item = await itemDaTarefa(transacao, entrada.tarefaId, entrada.numero);
-    if (item.st === "sem-rascunho") throw new ErroDeRevisao(400, "Item sem rascunho não pode ser editado nesta versão.");
     const partes = entrada.texto.split(/\n\s*\n/).map((parte) => parte.trim()).filter((parte) => parte !== "");
+    if (item.orig === "") return escreverRespostaManual(transacao, item, { ...entrada, partes });
     if (partes.length === 0) throw new ErroDeRevisao(400, "O texto não pode ficar vazio.");
     const paras = partes.map((t, posicao) => ({ t, s: item.paras[posicao]?.s ?? item.paras.at(-1)?.s ?? [] }));
 
@@ -96,13 +97,36 @@ export async function editarTexto(banco: Banco, entrada: { tarefaId: string; num
 }
 
 /**
+ * Cenário 61: num item sem sugestão, a pessoa escreve a resposta. Os parágrafos ficam sem fonte, o
+ * alerta "sem contexto" dá lugar ao de resposta manual, com quem escreveu, e o item vai para
+ * "em-revisao". Apagar todo o texto devolve o item para "sem-rascunho", com o alerta "sem contexto".
+ */
+async function escreverRespostaManual(
+  transacao: Transacao,
+  item: ItemGravado,
+  entrada: { tarefaId: string; numero: number; pessoa: Pessoa; partes: string[] },
+): Promise<ItemGravado> {
+  const semTexto = entrada.partes.length === 0;
+  if (semTexto && item.st === "sem-rascunho") return itemAtual(transacao, entrada.tarefaId, entrada.numero);
+  const outros = item.alerts.filter((alerta) => alerta.t !== "nocontext" && alerta.t !== "manual");
+  const manual = item.alerts.find((alerta) => alerta.t === "manual") ?? { t: "manual" as const, by: entrada.pessoa.nome };
+  const alerts = semTexto ? [{ t: "nocontext" as const }, ...outros] : [manual, ...outros];
+  const paras = entrada.partes.map((t) => ({ t, s: [] }));
+  if (item.st === "aprovada") await registrarEvento(transacao, { ...entrada, acao: "aprovacao_removida" });
+  await gravarTexto(transacao, entrada.tarefaId, entrada.numero, paras, semTexto ? "sem-rascunho" : "em-revisao", false);
+  await transacao.query("UPDATE itens SET alerts = $3 WHERE tarefa_id = $1 AND numero = $2", [entrada.tarefaId, entrada.numero, JSON.stringify(alerts)]);
+  await registrarEvento(transacao, { ...entrada, acao: "edicao", detalhe: "manual" });
+  return itemAtual(transacao, entrada.tarefaId, entrada.numero);
+}
+
+/**
  * Cenário 43: volta ao texto e às fontes originais de cada parágrafo. Se o texto muda num item
  * aprovado ou revisado, ele volta para "em-revisao" e a aprovação ou a marca de revisado sai.
  */
 export async function restaurarSugestao(banco: Banco, entrada: { tarefaId: string; numero: number; pessoa: Pessoa }): Promise<ItemGravado> {
   return banco.transaction(async (transacao) => {
     const item = await itemDaTarefa(transacao, entrada.tarefaId, entrada.numero);
-    if (item.st === "sem-rascunho") throw new ErroDeRevisao(400, "Item sem rascunho não tem sugestão para restaurar.");
+    if (item.st === "sem-rascunho" || item.orig === "") throw new ErroDeRevisao(400, "Item sem rascunho não tem sugestão para restaurar.");
     const mudou = normalizar(textoDosParagrafos(item.paras)) !== normalizar(item.orig);
     const removeAprovacao = item.st === "aprovada" && mudou;
     const voltaParaRevisao = (item.st === "aprovada" || item.st === "revisada") && mudou;

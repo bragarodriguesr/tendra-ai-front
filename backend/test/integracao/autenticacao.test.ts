@@ -176,7 +176,10 @@ describe("Cenário D4 · autor definido pela sessão", () => {
 
   it("/api/auth/me e /api/pessoas devolvem só a pessoa da sessão", async () => {
     const cookie = await cookieDe(APROVADOR.email, "senha-do-aprovador");
-    expect((await pedir("/api/auth/me", cookie)).json()).toEqual({ pessoa: { nome: "Marcelo Vieira", papel: "Aprovador" } });
+    const sessao = await pedir("/api/auth/me", cookie);
+    expect(sessao.json()).toEqual({ pessoa: { nome: "Marcelo Vieira", papel: "Aprovador" } });
+    // Sem cache: depois de sair, o navegador nunca reaproveita a sessão anterior.
+    expect(sessao.headers["cache-control"]).toBe("no-store");
     expect((await pedir("/api/pessoas", cookie)).json()).toEqual({ pessoas: [{ id: APROVADOR.id, nome: "Marcelo Vieira", papel: "Aprovador" }] });
   });
 

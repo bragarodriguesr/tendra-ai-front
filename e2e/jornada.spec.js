@@ -5,7 +5,8 @@ import { expect, test } from "@playwright/test";
 
 // Jornada da fase C (PLAN.md, portão): base pela tela, RFP pela tela, progresso, revisão gravada,
 // recarga da página e relatório de aceitação; depois, alerta reconhecido e item revisado mantidos
-// depois de recarregar (cenários 57 e 59) e exclusão da tarefa (cenário 60).
+// depois de recarregar (cenários 57 e 59), resposta manual num item sem rascunho (cenário 61) e
+// exclusão da tarefa (cenário 60).
 // API simulada; com TENDRA_E2E_API_REAL=1, a API real (custo).
 
 const RAIZ = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -111,16 +112,36 @@ test("da base à resposta aprovada, mantida depois de recarregar", async ({ page
   await page.getByText(codigoComAlerta, { exact: true }).first().click();
   await page.getByRole("button", { name: "Reconhecer alerta" }).click();
   await expect(page.getByText("Alerta reconhecido", { exact: true })).toBeVisible();
+  // Sem alerta pendente, o cartão se recolhe num resumo que abre o histórico.
+  await expect(page.getByRole("button", { name: /Alerta tratado/ })).toBeVisible();
   await page.getByRole("button", { name: "Marcar como revisado" }).click();
   await expect(page.getByText("Item revisado", { exact: true })).toBeVisible();
   await page.reload();
   await entrar(page);
   await menu(page, "Revisão");
   await page.getByText(codigoComAlerta, { exact: true }).first().click();
+  await page.getByRole("button", { name: /Alerta tratado/ }).click();
   await expect(page.getByText(/Reconhecido por Marcelo Vieira/)).toBeVisible();
   await expect(page.getByRole("button", { name: "Marcar como revisado" })).toBeDisabled();
   const item = (await (await request.get(`${API}/tarefas/${tarefa.id}/itens`)).json()).itens.find((i) => i.id === comAlerta.id);
   expect(item).toMatchObject({ st: "revisada", rby: "Marcelo Vieira", alerts: [{ t: comAlerta.alerts[0].t, ack: { by: "Marcelo Vieira" } }] });
+
+  // 7b. Item sem rascunho: a resposta escrita na tela fica gravada como resposta manual (cenário 61).
+  const semRascunho = itens.find((i) => i.st === "sem-rascunho");
+  const codigoSemRascunho = `REQ-${String(semRascunho.numero).padStart(3, "0")}/${String(itens.length).padStart(3, "0")}`;
+  await page.getByText(codigoSemRascunho, { exact: true }).first().click();
+  await page.getByRole("button", { name: "Editar resposta" }).click();
+  await page.getByRole("textbox", { name: "Resposta" }).fill("Resposta escrita pela equipe, sem fonte na base.");
+  await page.getByRole("button", { name: "Concluir edição" }).click();
+  await expect(page.getByText("Resposta manual", { exact: true })).toBeVisible();
+  await page.reload();
+  await entrar(page);
+  await menu(page, "Revisão");
+  await page.getByText(codigoSemRascunho, { exact: true }).first().click();
+  await expect(page.getByText("Resposta escrita pela equipe, sem fonte na base.")).toBeVisible();
+  await expect(page.getByText(/Resposta manual, sem fonte na base · escrita por Marcelo Vieira/)).toBeVisible();
+  const manual = (await (await request.get(`${API}/tarefas/${tarefa.id}/itens`)).json()).itens.find((i) => i.id === semRascunho.id);
+  expect(manual).toMatchObject({ st: "em-revisao", orig: "", alerts: [{ t: "manual", by: "Marcelo Vieira" }] });
 
   // 8. Excluir a tarefa pela tela Tarefas, com confirmação: some da lista e do banco (cenário 60).
   await menu(page, "Tarefas");

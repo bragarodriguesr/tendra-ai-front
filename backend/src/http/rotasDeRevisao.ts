@@ -34,7 +34,7 @@ const PARAMETROS = {
 } as const;
 const COM_ALERTA = {
   ...PARAMETROS,
-  properties: { ...PARAMETROS.properties, tipo: { type: "string", enum: ["lowconf", "conflict", "old", "critical", "nocontext"] } },
+  properties: { ...PARAMETROS.properties, tipo: { type: "string", enum: ["lowconf", "conflict", "old", "critical", "nocontext", "manual"] } },
 } as const;
 // `pessoa` não é obrigatória no esquema: sem ela, a resposta é "Pessoa não reconhecida" (cenário 41).
 const COM_PESSOA = { type: "object", additionalProperties: false, properties: { pessoa: { type: "string" } } } as const;

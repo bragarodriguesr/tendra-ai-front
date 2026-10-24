@@ -135,7 +135,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 | S3 | Site · Contato | Formulário de pedido de demonstração | Público | P0 | Implementado (envio simulado) |
 | L1 | Login | Entrar no Workspace | Público | P0 | Implementado (autenticação simulada) |
 | L2 | Abertura | Logo animado entre o login e o Dashboard | Ambos | P2 | Implementado |
-| D1 | Dashboard | Visão geral do uso: KPIs, tarefas por status, concluídas por mês, prazos próximos | Ambos | P1 | Implementado (números simulados) |
+| D1 | Dashboard | Visão geral do uso: KPIs, tarefas por status, concluídas por mês, prazos próximos | Ambos | P1 | Implementado (dados reais com o servidor desde 24/10/2026; exemplos sem ele) |
 | T1 | Primeiros passos (antes "Onboarding") | Guiar a empresa pelos primeiros passos; no MVP a base entra pela T2, e a área de envio desta tela segue como protótipo (F-01) | Ambos | P0 | Implementado (envio aqui ainda Simulado) |
 | T2 | Base de conhecimento | Subir `.md`, ver, ativar/desativar e avaliar a idade dos documentos e RFPs passadas (v3, 22/10: envio pela tela ligado ao backend) | Ambos | P0 | Implementado, ligado ao backend |
 | T3 | Painel de tarefas | Listar RFPs e RFIs com progresso, prazo, responsável e status; alertas de tarefa | Ambos | P0 | Implementado |
@@ -163,7 +163,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 
 | Tipo (código) | Gatilho (dado que o front recebe) | O que a tela mostra | O que a pessoa faz | Bloqueia revisar/aprovar |
 | --- | --- | --- | --- | --- |
-| Sem contexto (`nocontext`) | Item chega sem rascunho | Alerta "Informação não localizada na base. Preenchimento manual obrigatório." e "Nenhum rascunho. Escreva a resposta para poder revisar este item." | Escreve a resposta. Ao escrever num item sem fonte, o alerta vira "Resposta manual sem fonte" | Sim, até haver resposta escrita |
+| Sem contexto (`nocontext`) | Item chega sem rascunho | Alerta "Informação não localizada na base. Preenchimento manual obrigatório." e o convite a escrever a resposta em "Editar resposta" | Escreve a resposta no próprio quadro de resposta (gravada no backend desde 24/10/2026; SPEC, cenário 61). Ao escrever num item sem fonte, o alerta vira "Resposta manual sem fonte" e o item ganha a etiqueta "Resposta manual" | Sim, até haver resposta escrita |
 | Baixa confiança (`lowconf`) | Rascunho marcado como de baixa confiança | "Baixa confiança. Confira a fonte antes de aprovar." | "Reconhecer alerta" | Sim, até reconhecer |
 | Fontes conflitantes (`conflict`) | Duas ou mais fontes se contradizem | "Duas fontes se contradizem. Escolha qual vale." e as fontes em conflito marcadas no painel | "Usar esta fonte" em uma delas, ou "Nenhuma, vou escrever" (abre o editor) | Sim, até decidir |
 | Fonte antiga (`old`) | Alguma fonte com mais de 120 dias sem atualização | "Fonte sem atualização há [N] dias, acima do prazo de 120 dias." e o selo "Mais de 120 dias" na fonte | "Reconhecer alerta" | Sim, até reconhecer |
@@ -174,6 +174,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 
 - **Reconhecer registra a pessoa e o horário.** O alerta passa a mostrar "Reconhecido por [nome], [dd/mm/aaaa hh:mm]" e a tela confirma com um aviso.
 - **Vários alertas no mesmo item aparecem empilhados** como cartões sobrepostos, com navegação "Alerta 1 de 2" e o marcador "· pendente" em cada um ainda aberto. Todos precisam ser tratados.
+- **O cartão abre no primeiro alerta pendente e, ao tratar um, passa sozinho ao próximo pendente** (24/10/2026). Com todos tratados, ele se recolhe num resumo com ícone ("Todos os N alertas tratados · ver histórico"), que abre os alertas reconhecidos como histórico e pode ser recolhido de novo.
 - **Não existe "reconhecer todos".** O conflito exige uma escolha, não um clique.
 - **Idade da fonte é sempre visível**, com ou sem alerta, em dias desde a última atualização.
 - **Estados do item:** *Sem rascunho*, *Sugerida*, *Em revisão*, *Revisada*, *Aprovada*.
@@ -301,17 +302,18 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 
 ## 9. Requisitos B: dashboard, tarefas, nova RFP e completude (D1, T3, T4, T5)
 
-**F-39 · P1 · Dashboard** (novo na v2; tela inicial após o login) — Implementado (números Simulados)
+**F-39 · P1 · Dashboard** (novo na v2; tela inicial após o login) — Implementado com dados reais (24/10/2026); sem o servidor, mostra os exemplos
 
-- **Cabeçalho:** "Dashboard · últimos 90 dias", o título "Visão geral do uso" e o botão "Nova RFP/RFI".
+- **Cabeçalho:** "Dashboard · todas as tarefas" (com o servidor; sem ele, "Dashboard · últimos 90 dias"), o título "Visão geral do uso" e o botão "Nova RFP/RFI".
+- **RFP concluída** é a tarefa com status "Pronta": todos os itens aprovados e nenhum alerta pendente. Ela termina na última aprovação.
 - **Quatro indicadores:**
   - RFPs e RFIs trabalhadas ("N em andamento · N concluídas");
   - Itens em aberto ("Em N tarefas ativas, entre revisão e processamento.");
-  - Tempo médio por RFP ("Da importação à exportação do documento.");
-  - Itens aprovados ("Todas com fonte rastreável até o documento de origem.").
+  - Tempo médio por RFP: média, nas RFPs concluídas, do envio da planilha à aprovação do último item, em minutos, horas ou dias; "—" enquanto nenhuma estiver concluída;
+  - Itens aprovados ("Todas com fonte rastreável até o documento de origem.", ou quantas são respostas manuais, sem fonte na base).
 - **Tarefas por status:** barra segmentada com tabela de contagem e percentual por status. Os status: Em revisão, Pronta ou exportada, Falha, Na fila, Processando, Vencido.
-- **RFPs concluídas por mês:** colunas dos últimos seis meses, com o valor no topo e dica ao passar o mouse.
-- **Prazos mais próximos:** tarefas que vencem em menos de 15 dias, da mais próxima para a mais distante, com status, data e prazo restante. O link "Ver todas as tarefas" leva à T3.
+- **RFPs concluídas por mês:** colunas dos seis últimos meses, terminando no atual, contadas pela data da última aprovação, com o valor no topo e dica ao passar o mouse.
+- **Prazos mais próximos:** tarefas que vencem em menos de 15 dias, da mais próxima para a mais distante, com status, data e prazo restante; sem nenhuma, "Nenhuma tarefa vence nos próximos 15 dias.". O link "Ver todas as tarefas" leva à T3.
 - O backend precisa fornecer esses agregados e definir como cada um é calculado (Q-22).
 
 **F-09 · P0 · Criar tarefa importando as perguntas** (T4; MoSCoW: Must) — Implementado (processamento Simulado)
@@ -414,8 +416,9 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
   - tipo (Documento ou RFP passada);
   - "documento · local" em mono (página, seção, cláusula ou linha);
   - idade ("N dias");
-  - selos "Mais de 120 dias", "Em conflito" e "Fonte escolhida";
+  - selos "Mais de 120 dias", "Em conflito", "Fonte escolhida" e "Não escolhida";
   - botões "Abrir no trecho" e, quando houver conflito, "Usar esta fonte".
+- **Fontes em conflito (24/10/2026):** aparecem antes das demais, como cartões sobrepostos, com "Fonte 1 de N" e setas. Depois da escolha, a escolhida fica sempre na frente, com "Fonte escolhida"; a outra fica cinza, com "Não escolhida", como histórico.
 - **T7 (gaveta lateral sobre a revisão):**
   - "Fonte [N] · [tipo]", nome do documento, local e idade;
   - o trecho de origem destacado em limão no documento;
@@ -674,7 +677,7 @@ Esta seção lista o que o front já consome e dispara. Os nomes são descritivo
 | Alerta do item | tipo (`lowconf`, `conflict`, `old`, `critical`, `nocontext`, `manual`), reconhecido por e quando | A idade usada no texto de `old` é a maior entre as fontes acima de 120 dias |
 | Alerta de tarefa (sino) | id, tipo (falha no carregamento, reprocessamento, prazo vencido, prazo próximo), tarefa, texto, data e hora, ação de destino, lido por usuário | Estado de leitura por usuário (Q-20) |
 | Registro de histórico | tipo (aprovação, revisão), pergunta, tarefa de origem, resposta completa, pessoa, data e hora, idade, importado (sim/não), fontes | Itens de RFP importada: sem pessoa (Q-04) |
-| Agregados do Dashboard | tarefas trabalhadas (em andamento e concluídas), itens em aberto, tempo médio por RFP, itens aprovados, tarefas por status, RFPs concluídas por mês (6 meses), prazos nos próximos 15 dias | Período: últimos 90 dias (Q-22) |
+| Agregados do Dashboard | tarefas trabalhadas (em andamento e concluídas), itens em aberto, tempo médio por RFP, itens aprovados, tarefas por status, RFPs concluídas por mês (6 meses), prazos nos próximos 15 dias | Período: últimos 90 dias (Q-22). Desde 24/10/2026, calculados no front a partir das tarefas e itens do servidor, sobre todas as tarefas |
 
 **Ações que o front dispara**
 

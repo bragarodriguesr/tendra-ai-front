@@ -16,6 +16,40 @@ function cnpjValid(d) {
   return dv(12) === +d[12] && dv(13) === +d[13];
 }
 
+const MESES = [["Jan", "janeiro"], ["Fev", "fevereiro"], ["Mar", "março"], ["Abr", "abril"], ["Mai", "maio"], ["Jun", "junho"], ["Jul", "julho"], ["Ago", "agosto"], ["Set", "setembro"], ["Out", "outubro"], ["Nov", "novembro"], ["Dez", "dezembro"]];
+
+/**
+ * Tarefas do servidor concluídas, as mesmas do status "Pronta": todos os itens aprovados e nenhum
+ * alerta pendente. Início no envio da planilha, fim na última aprovação.
+ */
+function concluidas(s, ws) {
+  return s.tarefas.flatMap((t) => {
+    if (t.estado !== "pronta" || !ws.hasItems(t.id, s)) return [];
+    const itens = ws.itemsOf(t.id, s);
+    if (!itens.length || itens.some((i) => i.st !== "aprovada" || !i.atIso || ws.pendingCount(i) > 0)) return [];
+    return [{ inicio: Date.parse(t.criadaEm), fim: Math.max(...itens.map((i) => Date.parse(i.atIso))) }];
+  });
+}
+
+/** Os 6 últimos meses, terminando no atual, com quantas RFPs foram concluídas em cada um. */
+function ultimosMeses(done, hoje = new Date()) {
+  return Array.from({ length: 6 }, (_, n) => {
+    const d = new Date(hoje.getFullYear(), hoje.getMonth() - 5 + n, 1);
+    const [curto, longo] = MESES[d.getMonth()];
+    const total = done.filter((x) => { const f = new Date(x.fim); return f.getFullYear() === d.getFullYear() && f.getMonth() === d.getMonth(); }).length;
+    return [curto, `${longo} de ${d.getFullYear()}`, total];
+  });
+}
+
+/** Duração legível: minutos, horas ou dias (com uma casa decimal). */
+function duracao(ms) {
+  const min = ms / 60000;
+  if (min < 60) return `${Math.max(1, Math.round(min))} min`;
+  const h = min / 60;
+  if (h < 48) return `${h.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} h`;
+  return `${(h / 24).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} dias`;
+}
+
 export function deckLayers(count) {
   const L = Math.min(count - 1, 2);
   return {
@@ -155,14 +189,27 @@ export function buildView(s, ws) {
     .map((g) => ({ ...g, n: tasks.filter((t) => g.of.includes(t.status)).length }))
     .filter((g) => g.n > 0)
     .map((g) => ({ ...g, pct: Math.round((g.n / tasks.length) * 100), width: (g.n / tasks.length) * 100 + "%" }));
-  const months = [["Abr", "abril", 2], ["Mai", "maio", 3], ["Jun", "junho", 3], ["Jul", "julho", 4], ["Ago", "agosto", 3], ["Set", "setembro", 3]];
-  const monthMax = Math.max(...months.map((m) => m[2]));
+  // Com o servidor: RFP concluída é a tarefa pronta com todos os itens aprovados; ela termina na
+  // última aprovação. Tempo médio e concluídas por mês saem dessas datas (sem exemplos fictícios).
+  const done = online ? concluidas(s, ws) : [];
+  const manuaisAprovadas = online
+    ? taskIds.filter((id) => ws.hasItems(id, s)).reduce((a, id) => a + ws.itemsOf(id, s).filter((i) => i.st === "aprovada" && i.alerts.some((x) => x.t === "manual")).length, 0)
+    : 0;
+  const months = online ? ultimosMeses(done) : [["Abr", "abril", 2], ["Mai", "maio", 3], ["Jun", "junho", 3], ["Jul", "julho", 4], ["Ago", "agosto", 3], ["Set", "setembro", 3]];
+  const monthMax = Math.max(1, ...months.map((m) => m[2]));
   const dash = {
-    worked: String(tasks.length + sample.done), workedSub: tasks.length + " em andamento · " + sample.done + " concluídas",
-    open: String(openItems), openSub: "Em " + tasks.filter((t) => !t.isReady).length + " tarefas ativas, entre revisão e processamento.",
-    avg: "2,4 dias",
+    eyebrow: online ? "Dashboard · todas as tarefas" : "Dashboard · últimos 90 dias",
+    worked: String(tasks.length + sample.done),
+    workedSub: online ? (tasks.length - done.length) + " em andamento · " + done.length + (done.length === 1 ? " concluída" : " concluídas") : tasks.length + " em andamento · " + sample.done + " concluídas",
+    open: String(openItems), openSub: ((n) => `Em ${n} ${n === 1 ? "tarefa ativa" : "tarefas ativas"}, entre revisão e processamento.`)(tasks.filter((t) => !t.isReady).length),
+    avg: online ? (done.length ? duracao(done.reduce((a, d) => a + d.fim - d.inicio, 0) / done.length) : "—") : "2,4 dias",
+    avgSub: online
+      ? (done.length ? `Do envio da planilha à aprovação do último item, em ${done.length} ${done.length === 1 ? "RFP concluída" : "RFPs concluídas"}.` : "Nenhuma RFP concluída ainda: conta do envio da planilha à aprovação do último item.")
+      : "Da importação à exportação do documento.",
     approved: (sample.approved + itc.reduce((a, q) => a + q.approved, 0)).toLocaleString("pt-BR"),
-    approvedSub: "Todas com fonte rastreável até o documento de origem.",
+    approvedSub: online && manuaisAprovadas
+      ? `${manuaisAprovadas} ${manuaisAprovadas === 1 ? "resposta manual" : "respostas manuais"}, sem fonte na base; as demais com fonte rastreável até o documento de origem.`
+      : "Todas com fonte rastreável até o documento de origem.",
     status: statusGroups, total: tasks.length,
     months: months.map(([m, full, n]) => ({ m, full, n, pct: (n / monthMax) * 100 })),
     deadlines: tasks.filter((t) => { const m = /faltam? (\d+)/.exec(t.dueText || ""); return t.dueText === "vence hoje" || (m && +m[1] < 15); }).sort((a, b) => dateKey(a.due) - dateKey(b.due))
@@ -212,31 +259,47 @@ export function buildView(s, ws) {
         ack: () => ws.ack(it.id, idx), none: () => { ws.ack(it.id, idx); ws.setState({ edit: true }); }
       };
     });
-    const ai = s.alertAt.id === it.id ? Math.min(s.alertAt.i, Math.max(alerts.length - 1, 0)) : 0;
+    // Sem escolha da pessoa, o cartão mostra o primeiro alerta pendente; com todos tratados, fica recolhido (histórico).
+    const firstPending = alerts.findIndex((a) => a.pending);
+    const ai = s.alertAt.id === it.id ? Math.min(s.alertAt.i, Math.max(alerts.length - 1, 0)) : Math.max(firstPending, 0);
+    const allResolved = alerts.length > 0 && firstPending === -1;
     const hasAnswer = it.paras.length > 0 && it.paras.some((x) => x.t.trim());
     let blockText = "", noRevise = false, noApprove = false;
     const alertWord = p > 1 ? `${p} alertas` : "1 alerta";
     if (it.st === "aprovada") { noApprove = true; noRevise = true; }
-    else if (!hasAnswer) { blockText = ws.isServerItem(s) ? "Sem rascunho: este item fica para preenchimento fora do Tendra.ai nesta versão." : "Escreva a resposta antes de revisar ou aprovar."; noRevise = true; noApprove = true; }
+    else if (!hasAnswer) { blockText = "Escreva a resposta antes de revisar ou aprovar."; noRevise = true; noApprove = true; }
     else if (p > 0) { blockText = `Falta tratar ${alertWord} antes de aprovar.`; noRevise = true; noApprove = true; }
     if (!isA && it.st !== "aprovada") { noApprove = true; blockText = blockText ? blockText + " Somente Aprovadores aprovam." : "Somente Aprovadores aprovam."; }
     if (it.st === "revisada") noRevise = true;
     const openSrc = (k) => () => ws.setState({ drawer: { id: it.id, k } });
+    const decided = it.srcs.some((x) => x.conflict && x.chosen);
     const srcs = it.srcs.map((x, n) => {
       const k = n + 1;
-      return { ...x, k, ageText: x.age + " dias", old: x.age > 120, conflict: !!x.conflict && hasConflict, chosen: !!x.chosen, canUse: !!x.conflict && hasConflict, use: () => ws.useSource(it.id, k), open: openSrc(k) };
+      return {
+        ...x, k, ageText: x.age + " dias", old: x.age > 120, conflict: !!x.conflict && hasConflict, chosen: !!x.chosen, canUse: !!x.conflict && hasConflict, use: () => ws.useSource(it.id, k), open: openSrc(k),
+        // Depois da escolha, a fonte em conflito que não foi escolhida fica só como histórico.
+        discarded: !!x.conflict && decided && !x.chosen
+      };
     });
+    // Fontes em conflito em cartões sobrepostos, a escolhida sempre na frente; as demais fontes seguem na grade.
+    const conflictSrcs = srcs.filter((x) => it.srcs[x.k - 1].conflict).sort((a, b) => Number(b.chosen) - Number(a.chosen));
+    const si = s.srcAt.id === it.id ? Math.min(s.srcAt.i, Math.max(conflictSrcs.length - 1, 0)) : 0;
+    const srcDeck = conflictSrcs.length > 1
+      ? { ...deckLayers(conflictSrcs.length), cur: conflictSrcs[si], index: si, count: conflictSrcs.length, pos: `${si + 1} de ${conflictSrcs.length}`, pending: hasConflict }
+      : null;
     const paras = it.paras.map((pp) => ({ t: pp.t, marks: pp.s.filter((k) => it.srcs[k - 1]).map((k) => ({ k, aria: "Abrir fonte " + k, open: openSrc(k) })) }));
     const text = it.paras.map((x) => x.t).join("\n\n");
-    const fb = s.fb[(s.itemsTask || "") + "/" + it.id] || {}, serverItem = ws.isServerItem(s);
+    const fb = s.fb[(s.itemsTask || "") + "/" + it.id] || {};
     cur = {
       ...it, ...deckLayers(alerts.length), alerts, alert: alerts[ai] || {}, alertIndex: ai, alertPos: `${ai + 1} de ${alerts.length}`, hasMany: alerts.length > 1,
+      allResolved, alertsOpen: !allResolved || s.alertsOpen === it.id,
+      srcDeck, otherSrcs: srcDeck ? srcs.filter((x) => !it.srcs[x.k - 1].conflict) : srcs,
       code: code(it), st: st.l, icon: st.i, tone: st.tone, srcs, paras, noText: !hasAnswer,
       edited: it.orig !== "" && text !== it.orig, text,
-      hasManual: it.alerts.some((a) => a.t === "manual"), isApproved: it.st === "aprovada",
+      hasManual: it.alerts.some((a) => a.t === "manual"), manualBy: it.manualBy || (it.alerts.find((a) => a.t === "manual") || {}).by, isApproved: it.st === "aprovada",
       blockText, noRevise, noApprove, fbUp: fb.value === "up", fbDown: fb.value === "down", fbReason: fb.reason || "",
-      // Itens do banco sem rascunho não têm editor nesta versão (PLAN.md, C5).
-      canEdit: !(serverItem && it.st === "sem-rascunho"),
+      // Item sem rascunho também tem editor: a resposta escrita fica marcada como manual (cenário 61).
+      canEdit: true,
       isApprovedOrRevised: it.st === "revisada" || it.st === "aprovada",
       stateHint: it.st === "aprovada" ? "Editar remove a aprovação." : "Pronta para aprovação."
     };
@@ -265,7 +328,7 @@ export function buildView(s, ws) {
       exported: exp, doExport: onExp, goReview: openItem(t1Pending[0] ? t1Pending[0].id : "r1", "t1")
     };
   };
-  // Com o servidor: uma linha por tarefa pronta, com a planilha preenchida no processamento (C3).
+  // Com o servidor: uma linha por tarefa pronta; a planilha é gerada no download com o estado da revisão (cenário 24).
   const serverCards = tasks.filter((t) => t.isServer && t.hasItems).map((t) => {
     const items = ws.itemsOf(t.id, s), pending = items.find((i) => i.st !== "aprovada") || items[0];
     return {
@@ -273,7 +336,7 @@ export function buildView(s, ws) {
       badge: t.isReady ? "Pronta" : "Em revisão", tone: t.isReady ? "approved" : "neutral", icon: t.isReady ? "circle-check" : "eye",
       disabled: !podeExportar, btn: "Baixar planilha preenchida", doExport: () => ws.downloadSheet(t.id),
       reason: podeExportar
-        ? "Traz as sugestões geradas no processamento, com as fontes. As edições e aprovações da revisão ficam no Tendra.ai."
+        ? "Traz o estado atual da revisão: o texto de cada item (sugestão, edição ou resposta manual), as fontes citadas e a situação (aprovada, revisada, em revisão)."
         : "Somente Aprovadores baixam a planilha preenchida.",
       goReview: () => ws.go("review", { taskId: t.id, sel: pending ? pending.id : undefined, filter: "todos" })
     };

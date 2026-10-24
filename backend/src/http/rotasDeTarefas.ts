@@ -5,6 +5,7 @@ import { ErroDePlanilha, lerPlanilha, validarArquivoDePlanilha } from "../docume
 import { criarTarefaComPlanilha, executarTarefa, type AmbienteDaTarefa } from "../fluxo/executarTarefa.ts";
 import { ErroDaRota } from "./erros.ts";
 import { exigirAprovador } from "./rotasDeAutenticacao.ts";
+import { gerarPlanilhaDaRevisao } from "../revisao/planilhaDaRevisao.ts";
 import { excluirTarefa, listarItens, listarRequisicoes, listarTarefas, listarTarefasEmProcessamento, obterTarefa, type DadosDaTarefa, type Tarefa } from "../persistencia/tarefas.ts";
 
 /**
@@ -174,8 +175,9 @@ export function registrarRotasDeTarefas(servidor: FastifyInstance, opcoes: Opcoe
   servidor.get<{ Params: { id: string } }>("/api/tarefas/:id/planilha", { schema: { params: ID } }, async (pedido, resposta) => {
     exigirAprovador(pedido, "Só o Aprovador pode baixar a planilha preenchida.");
     const tarefa = await tarefaPronta(pedido.params.id);
-    if (tarefa.caminhoDaPlanilhaPreenchida === null) throw new ErroDaRota(409, "A planilha preenchida não está disponível.");
-    const conteudo = await opcoes.armazenamento.ler(tarefa.caminhoDaPlanilhaPreenchida);
+    // Gerada a cada pedido, com o estado atual da revisão (edições, respostas manuais, aprovações), sem chamar a IA.
+    const original = new Uint8Array(await opcoes.armazenamento.ler(tarefa.caminhoDaPlanilha));
+    const conteudo = Buffer.from(await gerarPlanilhaDaRevisao(original, await listarItens(banco, tarefa.id)));
     const nome = `${tarefa.arquivo.replace(/\.xlsx$/i, "")}-preenchida.xlsx`;
     return resposta
       .header("content-type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")

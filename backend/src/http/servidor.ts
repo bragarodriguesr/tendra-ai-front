@@ -105,6 +105,10 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
   });
 
   servidor.decorateRequest("pessoaDaSessao", null);
+  // Respostas da API nunca ficam em cache (navegador ou proxy): sessão e dados mudam a cada ação.
+  servidor.addHook("onSend", async (pedido, resposta) => {
+    if (pedido.url.startsWith("/api/")) resposta.header("cache-control", "no-store");
+  });
   if (opcoes.transporte !== undefined) {
     const { origemDoFront } = opcoes.transporte;
     // Antes da sessão: um pedido recusado aqui não toca em nenhum dado.

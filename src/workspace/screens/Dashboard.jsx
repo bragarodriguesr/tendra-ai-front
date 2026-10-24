@@ -45,11 +45,11 @@ export function Dashboard({ v, ws, pad, isMobile }) {
   const { dash } = v;
   return (
     <Page pad={pad}>
-      <PageHeader eyebrow="Dashboard · últimos 90 dias" title="Visão geral do uso" action={<Button icon="plus" onClick={() => ws.go("new")}>Nova RFP/RFI</Button>} />
+      <PageHeader eyebrow={dash.eyebrow} title="Visão geral do uso" action={<Button icon="plus" onClick={() => ws.go("new")}>Nova RFP/RFI</Button>} />
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,minmax(0,1fr))" : "repeat(auto-fit,minmax(240px,1fr))", gap: isMobile ? 12 : 20 }}>
         <Kpi icon="layout-grid" label="RFPs e RFIs trabalhadas" value={dash.worked} sub={dash.workedSub} compact={isMobile} />
         <Kpi icon="circle-alert" label="Itens em aberto" value={dash.open} sub={dash.openSub} compact={isMobile} />
-        <Kpi icon="clock" label="Tempo médio por RFP" value={dash.avg} sub="Da importação à exportação do documento." compact={isMobile} />
+        <Kpi icon="clock" label="Tempo médio por RFP" value={dash.avg} sub={dash.avgSub} compact={isMobile} />
         <Kpi icon="shield-check" label="Itens aprovados" value={dash.approved} sub={dash.approvedSub} compact={isMobile} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "repeat(auto-fit,minmax(340px,1fr))", gap: 20 }}>
@@ -77,6 +77,9 @@ export function Dashboard({ v, ws, pad, isMobile }) {
           <MonoLabel>Prazos mais próximos</MonoLabel>
           <Button size="sm" variant="ghost" iconEnd="arrow-right" onClick={() => ws.go("tasks")}>Ver todas as tarefas</Button>
         </div>
+        {!dash.deadlines.length ? (
+          <div style={{ padding: isMobile ? "14px 16px" : "14px 24px", borderTop: "1px solid var(--n-100)", fontSize: 14, color: "var(--n-500)" }}>Nenhuma tarefa vence nos próximos 15 dias.</div>
+        ) : null}
         {dash.deadlines.map((t) => (
           <ClickRow key={t.id} onClick={t.open} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap", padding: isMobile ? "14px 16px" : "14px 24px", borderTop: "1px solid var(--n-100)" }}>
             <div style={{ minWidth: 0 }}>
