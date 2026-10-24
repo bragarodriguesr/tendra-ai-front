@@ -124,7 +124,7 @@ A checagem é **determinística** e acontece em dois momentos.
 | **Modelo** | Decidido com avaliação: Sonnet 5.5 contra Opus 5.5, usando o gabarito sintético e os critérios do SPEC. |
 | **Resultado** | Cada item recebe estado, parágrafos, fontes (documento, localização, trecho) e alertas, no **formato de `src/workspace/data.js`**. Todos saem como sugestões pendentes. |
 | **Onde fica** | Banco local. O front acompanha o progresso consultando `GET /api/tarefas/:id` a cada poucos segundos. |
-| **Planilha preenchida** | Cópia da original com as colunas "Resposta sugerida (não revisada)" e "Fonte". |
+| **Planilha preenchida** | No processamento, cópia da original com as colunas "Resposta sugerida (não revisada)" e "Fonte". No download, gerada a cada pedido com o estado atual da revisão (texto, fontes citadas e situação), a partir dos itens gravados e sem chamar a IA (24/10/2026). |
 
 ### Etapa 7: revisão, aprovação e métrica de aceitação (nova)
 

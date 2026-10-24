@@ -502,7 +502,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
           return false;
         }
       },
-      /** Baixa a planilha preenchida no processamento (GET /api/tarefas/:id/planilha). */
+      /** Baixa a planilha preenchida com o estado atual da revisão (GET /api/tarefas/:id/planilha, cenário 24). */
       downloadSheet(id) {
         const link = document.createElement("a");
         link.href = enderecoDaPlanilha(id);

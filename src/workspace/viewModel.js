@@ -328,7 +328,7 @@ export function buildView(s, ws) {
       exported: exp, doExport: onExp, goReview: openItem(t1Pending[0] ? t1Pending[0].id : "r1", "t1")
     };
   };
-  // Com o servidor: uma linha por tarefa pronta, com a planilha preenchida no processamento (C3).
+  // Com o servidor: uma linha por tarefa pronta; a planilha é gerada no download com o estado da revisão (cenário 24).
   const serverCards = tasks.filter((t) => t.isServer && t.hasItems).map((t) => {
     const items = ws.itemsOf(t.id, s), pending = items.find((i) => i.st !== "aprovada") || items[0];
     return {
@@ -336,7 +336,7 @@ export function buildView(s, ws) {
       badge: t.isReady ? "Pronta" : "Em revisão", tone: t.isReady ? "approved" : "neutral", icon: t.isReady ? "circle-check" : "eye",
       disabled: !podeExportar, btn: "Baixar planilha preenchida", doExport: () => ws.downloadSheet(t.id),
       reason: podeExportar
-        ? "Traz as sugestões geradas no processamento, com as fontes. As edições e aprovações da revisão ficam no Tendra.ai."
+        ? "Traz o estado atual da revisão: o texto de cada item (sugestão, edição ou resposta manual), as fontes citadas e a situação (aprovada, revisada, em revisão)."
         : "Somente Aprovadores baixam a planilha preenchida.",
       goReview: () => ws.go("review", { taskId: t.id, sel: pending ? pending.id : undefined, filter: "todos" })
     };

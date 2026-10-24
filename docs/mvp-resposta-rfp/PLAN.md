@@ -429,7 +429,10 @@ Pedida pelo grupo em 24/10/2026, depois da fase E.
 ### F5. Resposta manual em item sem rascunho (SPEC, cenário 61)
 - O backend aceita o texto num item sem sugestão: parágrafos sem fonte, alerta `manual` com quem escreveu, item em revisão; texto vazio devolve o item a "sem rascunho". A tela abre o editor nesses itens e mostra a etiqueta "Resposta manual".
 
-**Situação (24/10/2026): implementada.** Testes do backend (cenário 61, cabeçalho sem cache), jornada de ponta a ponta (resposta manual mantida depois de recarregar; alerta tratado recolhido) e conferência no navegador com um backend de teste com login: Dashboard com tempo médio e concluídas por mês reais; cartão de alertas passando ao próximo pendente e recolhendo; pilha de fontes com a escolhida na frente e a outra cinza; "Entrar" logo depois de "Sair", com o logout atrasado de propósito, pede e-mail e senha, e a sessão nova sobrevive ao fim do logout antigo.
+### F6. Planilha preenchida com o estado da revisão (SPEC, cenário 24)
+- O download gera a planilha a cada pedido, a partir da planilha original e dos itens gravados, sem nova chamada à IA: texto atual (sugestão, edição ou resposta manual), fontes citadas pelos parágrafos (só a escolhida num conflito) e a coluna "Situação na revisão" (aprovada, revisada, em revisão, com quem e quando). A planilha gravada no processamento continua no formato anterior e não é mais usada no download.
+
+**Situação (24/10/2026): implementada.** Testes do backend (cenário 61, cabeçalho sem cache, planilha do download com edição, resposta manual e aprovação, sem nova requisição à IA), jornada de ponta a ponta (resposta manual mantida depois de recarregar; alerta tratado recolhido) e conferência no navegador com um backend de teste com login: Dashboard com tempo médio e concluídas por mês reais; cartão de alertas passando ao próximo pendente e recolhendo; pilha de fontes com a escolhida na frente e a outra cinza; "Entrar" logo depois de "Sair", com o logout atrasado de propósito, pede e-mail e senha, e a sessão nova sobrevive ao fim do logout antigo.
 
 ### Pendências registradas em 24/10/2026 (fora da fase E, por decisão do grupo)
 1. **Fase A:** taxa de aceitação; RFP-03 e variantes de borda com a API real.
