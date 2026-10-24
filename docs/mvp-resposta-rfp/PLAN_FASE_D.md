@@ -139,6 +139,7 @@ Cada etapa é um pull request separado, com testes próprios e uma verificação
 - Aviso fixo de ambiente de testes com dados sintéticos (D12).
 - 401 em qualquer chamada leva de volta ao login.
 - **Verificação:** entrar, recarregar e continuar logado; sair e não voltar sem login; senha errada mostra a mensagem genérica; Revisor não aprova nem exporta.
+- **Situação (23/10/2026): implementada.** O front descobre o modo por `GET /api/auth/me` (`obterSessao` em `src/api.js`): 200 traz a sessão aberta; 401, modo compartilhado sem sessão; sem a rota ou sem servidor, modo local, sem mudança. No compartilhado: login com campos vazios e as mensagens do backend (401, 429, 503); "Entrar" no site vai direto ao Workspace com a sessão aberta; nome e papel vêm da sessão; "Sair" chama o logout; sem "Trocar usuário"; qualquer 401 depois de entrar volta ao login com aviso; o Revisor vê "Aprovar resposta" e "Baixar planilha preenchida" desabilitados, com o motivo; aviso fixo de dados sintéticos no login e no menu lateral (D12). Conferido no navegador (Playwright) contra o backend com login e o Supabase Auth simulado: campos vazios, aviso, senha errada, entrada do Revisor, nome e papel, sem troca de usuário, recarga com sessão, saída com 401 no backend, bloqueio na 4ª tentativa, Revisor sem aprovar nem baixar e Aprovador com o botão de baixar. A jornada de ponta a ponta no modo local continua passando.
 
 ### D10. Publicação e aceite
 - `render.yaml` com o serviço do backend (comando de início, `PORT`, verificação em `/api/saude`) e as variáveis declaradas sem valores.
@@ -146,6 +147,11 @@ Cada etapa é um pull request separado, com testes próprios e uma verificação
 - Rotina de uso documentada no README: acordar o Supabase (pausa após cerca de 7 dias sem uso) e o backend (dorme após cerca de 15 minutos).
 - Carga da base sintética no ambiente publicado, pela tela.
 - **Verificação (critério de pronto da fase):** checklist abaixo conferido no ambiente publicado; PR revisado por outra pessoa.
+- **Situação (23/10/2026): configuração pronta; publicação bloqueada pelo acesso do Render ao repositório.**
+  - `render.yaml` (Blueprint): serviço `tendra-backend`, Node 24, região Virginia (perto do Supabase us-east-1), plano gratuito, `rootDir: backend`, `npm ci`, `node src/cli/servidor.ts`, verificação de saúde em `/api/saude`, variáveis públicas preenchidas e os segredos (`ANTHROPIC_API_KEY`, `DATABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`) como `sync: false`.
+  - `vercel.json`: build do Vite e rewrite de `/api/*` para `https://tendra-backend.onrender.com/api/*` (mesmo endereço para o navegador: cookie de primeira parte, sem CORS). Os previews da Vercel usam o mesmo backend, mas as alterações vindas deles são recusadas pela origem (D10); só o domínio de produção `tendra-ai-front.vercel.app` altera dados.
+  - TLS do Postgres: conexão remota sempre cifrada; com `TENDRA_BANCO_CA` (certificado do painel do Supabase), o certificado é conferido; sem ele, o backend avisa no log.
+  - A criação do serviço pelo conector do Render foi recusada: o Render ainda não tem acesso ao repositório privado no GitHub. Falta o grupo dar esse acesso e preencher os segredos no painel do Render.
 
 ## Variáveis de ambiente do modo compartilhado
 

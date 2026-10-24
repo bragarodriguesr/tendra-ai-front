@@ -3,7 +3,7 @@ import { seedItems, seedDocs, genItems, nowStr, ITEM_TASKS, GENERATED, TASKS, TA
 import {
   MENSAGEM_FORMATO_DA_RFP, aprovarItemNaApi, avaliarItemNaApi, criarTarefa, editarTextoDoItem, listarAvaliacoes, listarPessoas, restaurarItem, dataHoraDaTela, definirDocumentoAtivo, enderecoDaPlanilha, enviarDocumentosDaBase, hojeIso, listarDocumentosDaBase, listarItensDaTarefa,
   listarTarefas, paraDocumentoDaTela, paraItemDaTela
-} from "../api.js";
+, entrar, obterSessao, quandoPerderASessao, sair} from "../api.js";
 
 let contactSeq = 0;
 export const newContact = () => ({ id: "c" + ++contactSeq, name: "", role: "", phone: "", email: "" });
@@ -28,6 +28,8 @@ const initialState = ({ initialScreen, role }) => ({
   docs: seedDocs(), baseOrigem: "exemplo", enviando: false, envio: null, sort: "idade", taskId: "t1",
   // Tarefas: as de exemplo (data.js) até o servidor responder; depois, só as do banco.
   tarefas: [], tarefasOrigem: "exemplo", criando: false, pessoas: [],
+  // Fase D: "compartilhado" quando o backend tem login; a sessão traz nome e papel da pessoa.
+  modo: "local", sessao: null,
   exported: null, exported4: null, exported8: null, expanded: null,
   form: emptyForm(),
   fb: {}, saved: 0, tick: 0, taskRetry: false, alertsRead: {},
@@ -56,12 +58,34 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
     const api = {
       setState,
       get s() { return ref.current; },
-      /** Pessoa que age (backend/config/pessoas.json): a primeira com o papel escolhido em "Trocar usuário". */
+      /**
+       * Pessoa que age. Com login, a da sessão (o backend ignora a pessoa enviada). Sem login, a
+       * primeira de backend/config/pessoas.json com o papel escolhido em "Trocar usuário".
+       */
       person(s = ref.current) {
+        if (s.sessao) return { id: undefined, nome: s.sessao.nome };
         const p = s.pessoas.find((x) => x.papel === s.role);
         return p || (s.role === "Aprovador" ? { id: "marcelo", nome: "Marcelo Vieira" } : { id: "kadu", nome: "Kadu Mendes" });
       },
       name() { return api.person().nome; },
+      /** Descobre o modo do backend e recupera a sessão aberta (fase D, D9). */
+      async iniciarSessao() {
+        const { modo, pessoa } = await obterSessao();
+        setState((s) => ({ modo, sessao: pessoa, role: pessoa ? pessoa.papel : s.role }));
+      },
+      /** Login do modo compartilhado. Lança ErroDaApi com a mensagem do backend. */
+      async entrar(email, senha) {
+        const { pessoa } = await entrar(email, senha);
+        setState({ sessao: pessoa, role: pessoa.papel, pessoas: [] });
+        api.loadBase();
+        api.loadTasks();
+      },
+      /** Sai: apaga a sessão no backend (quando há login) e esquece a pessoa. */
+      async sair() {
+        api.flushSaves();
+        if (ref.current.sessao) await sair().catch(() => {});
+        setState({ sessao: null });
+      },
       readAlert(a) { setState((s) => ({ alertsRead: { ...s.alertsRead, [a.key]: true } })); a.go(); },
       readAllAlerts(keys) { setState((s) => ({ alertsRead: { ...s.alertsRead, ...Object.fromEntries(keys.map((k) => [k, true])) } })); },
       switchRole() {
@@ -526,6 +550,15 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
 
   // Lê a base do servidor ao abrir o Workspace e a cada entrada na Base de conhecimento ou em Primeiros passos.
   React.useEffect(() => { ws.loadBase(); }, [ws]);
+  React.useEffect(() => {
+    ws.iniciarSessao();
+    // Sessão que expira ou acaba em outra aba: volta ao login, se a pessoa estava dentro.
+    quandoPerderASessao(() => {
+      if (!ws.s.sessao) return;
+      ws.setState({ sessao: null, view: "login" });
+      ws.toast("Sessão encerrada", "Entre novamente para continuar.", "danger");
+    });
+  }, [ws]);
   React.useEffect(() => { if (state.screen === "base" || state.screen === "onboarding") ws.loadBase(); }, [ws, state.screen]);
   // Tarefas: lê ao abrir e ao entrar nas telas que as mostram; enquanto alguma processa, consulta o estado a cada 2 segundos.
   React.useEffect(() => { if (["dashboard", "tasks", "task", "export", "review"].includes(state.screen)) ws.loadTasks(); }, [ws, state.screen]);

@@ -1,0 +1,31 @@
+# Backend da Tendra.ai no Render, modo compartilhado (fase D, etapa D10: docs/mvp-resposta-rfp/PLAN_FASE_D.md).
+# Os segredos (sync: false) são preenchidos no painel do Render e nunca ficam no repositório.
+services:
+  - type: web
+    name: tendra-backend
+    runtime: node
+    plan: free
+    region: virginia
+    rootDir: backend
+    branch: main
+    buildCommand: npm ci
+    startCommand: node src/cli/servidor.ts
+    healthCheckPath: /api/saude
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: TENDRA_MODO
+        value: compartilhado
+      - key: SUPABASE_URL
+        value: https://mxulhaoufimpydbwsebi.supabase.co
+      - key: TENDRA_ORIGEM_DO_FRONT
+        value: https://tendra-ai-front.vercel.app
+      - key: TENDRA_NIVEL_LOG
+        value: info
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false

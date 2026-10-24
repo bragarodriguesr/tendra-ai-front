@@ -97,7 +97,7 @@ describe("Cenário 38 · configuração da IA", () => {
 describe("Configuração dos comandos que não chamam a IA", () => {
   it("não exige ANTHROPIC_API_KEY e aplica os mesmos padrões", () => {
     const configuracao = carregarConfiguracaoSemChave({}, PASTA_BASE);
-    expect(configuracao).toEqual({ pastaDados: path.resolve(PASTA_BASE, "../dados"), nivelDeLog: "info", porta: 3000, bancoUrl: null });
+    expect(configuracao).toEqual({ pastaDados: path.resolve(PASTA_BASE, "../dados"), nivelDeLog: "info", porta: 3000, bancoUrl: null, bancoCa: null });
     expect(configuracao).not.toHaveProperty("chaveApi");
   });
 
@@ -111,6 +111,12 @@ describe("Configuração dos comandos que não chamam a IA", () => {
 
   it.each(["0", "70000", "abc", "30.5"])("recusa TENDRA_PORTA inválida (%s)", (porta) => {
     expect(() => carregarConfiguracaoSemChave({ TENDRA_PORTA: porta }, PASTA_BASE)).toThrow(/TENDRA_PORTA/);
+  });
+
+  it("lê o certificado do Postgres de TENDRA_BANCO_CA e recusa o que não é PEM (etapa D10)", () => {
+    const pem = "-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----";
+    expect(carregarConfiguracaoSemChave({ TENDRA_BANCO_CA: pem }, PASTA_BASE).bancoCa).toBe(pem);
+    expect(() => carregarConfiguracaoSemChave({ TENDRA_BANCO_CA: "segredo" }, PASTA_BASE)).toThrow(/^TENDRA_BANCO_CA inválida/);
   });
 
   it("lê a conexão do Postgres de DATABASE_URL e recusa outro formato, sem mostrar o valor (etapa D1)", () => {

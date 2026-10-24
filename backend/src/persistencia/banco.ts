@@ -90,8 +90,22 @@ function processoAtivo(pid: number): boolean {
 }
 
 /** Abre o banco da configuração: o Postgres de `bancoUrl` ou, sem ela, o PGlite em `<pastaDados>/banco`. */
-export function abrirBancoConfigurado(configuracao: { pastaDados: string; bancoUrl: string | null }): Promise<Banco> {
-  return configuracao.bancoUrl === null ? abrirBanco(path.join(configuracao.pastaDados, "banco")) : abrirBancoPostgres(configuracao.bancoUrl);
+export function abrirBancoConfigurado(configuracao: { pastaDados: string; bancoUrl: string | null; bancoCa?: string | null }): Promise<Banco> {
+  if (configuracao.bancoUrl === null) return abrirBanco(path.join(configuracao.pastaDados, "banco"));
+  return abrirBancoPostgres(configuracao.bancoUrl, configuracao.bancoCa ? { ca: configuracao.bancoCa } : {});
+}
+
+const HOSTS_LOCAIS = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
+
+/**
+ * TLS da conexão (etapa D10). Servidor local: sem TLS. Servidor remoto (Supabase): sempre cifrado;
+ * com o certificado da autoridade (`TENDRA_BANCO_CA`, baixado no painel do Supabase), também
+ * conferido; sem ele, cifrado sem conferir o certificado (o Supabase usa uma autoridade própria).
+ */
+export function tlsDoBanco(url: string, ca?: string): pg.PoolConfig["ssl"] {
+  const host = new URL(url).hostname;
+  if (HOSTS_LOCAIS.has(host)) return false;
+  return ca === undefined ? { rejectUnauthorized: false } : { ca, rejectUnauthorized: true };
 }
 
 /** Tipos que o `pg` devolveria como texto e o PGlite devolve como número. */
@@ -103,11 +117,12 @@ const TIPOS_DO_POSTGRES: pg.CustomTypesConfig = {
  * Abre o Postgres de `url` (modo compartilhado) e aplica as migrações pendentes. Com `esquema`,
  * as tabelas ficam nesse esquema, criado se não existir (testes isolados num mesmo servidor).
  */
-export async function abrirBancoPostgres(url: string, opcoes: { esquema?: string } = {}): Promise<Banco> {
+export async function abrirBancoPostgres(url: string, opcoes: { esquema?: string; ca?: string } = {}): Promise<Banco> {
   const { esquema } = opcoes;
+  const ssl = tlsDoBanco(url, opcoes.ca);
   if (esquema !== undefined && !/^[a-z_][a-z0-9_]{0,62}$/.test(esquema)) throw new Error(`Esquema inválido: ${esquema}`);
   if (esquema !== undefined) {
-    const cliente = new pg.Client({ connectionString: url });
+    const cliente = new pg.Client({ connectionString: url, ssl });
     await cliente.connect();
     try {
       await cliente.query(`CREATE SCHEMA IF NOT EXISTS ${esquema}`);
@@ -117,6 +132,7 @@ export async function abrirBancoPostgres(url: string, opcoes: { esquema?: string
   }
   const pool = new pg.Pool({
     connectionString: url,
+    ssl,
     max: 5,
     types: TIPOS_DO_POSTGRES,
     ...(esquema === undefined ? {} : { options: `-c search_path=${esquema}` }),

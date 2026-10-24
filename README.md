@@ -64,3 +64,11 @@ Na primeira vez, rode `npm ci` também em `backend/` e `npx playwright install c
 - **Atalhos na Revisão:** `J` próximo item, `K` anterior, `Esc` fecha a fonte.
 
 `HANDOFF.md`, `chats/` e `project/` são o pacote de design original, mantidos como referência.
+
+## Ambiente compartilhado (fase D)
+
+- **Front:** Vercel, projeto `tendra-ai-front` (`https://tendra-ai-front.vercel.app`). O `vercel.json` encaminha `/api/*` para o backend.
+- **Backend:** Render, serviço `tendra-backend` descrito em `render.yaml`, com `TENDRA_MODO=compartilhado`. Os segredos ficam só no painel do Render.
+- **Banco, arquivos e contas:** Supabase, projeto `Tendra.ai`. Contas são criadas no painel (Authentication → Add user, já confirmada) e ligadas ao nome e ao papel com `npm run cadastrar-perfil` (pasta `backend/`).
+- **Rotina antes de usar:** no plano gratuito, o Supabase pausa depois de cerca de 7 dias sem uso (reative no painel) e o backend "dorme" depois de cerca de 15 minutos sem acesso; o primeiro acesso pode levar até um minuto. Uma tarefa interrompida pelo backend dormindo é retomada quando ele volta.
+- **Uso:** só documentos e RFPs sintéticos.

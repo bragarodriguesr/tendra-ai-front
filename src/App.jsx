@@ -18,11 +18,15 @@ export function App() {
   // "Sair" volta à Home do site: remontar o site o leva para a página inicial.
   const [siteKey, setSiteKey] = React.useState(0);
   const show = (v) => (view === v ? { display: "block" } : { display: "none" });
-  const logout = () => { setSiteKey((k) => k + 1); ws.setState({ navOpen: false }); ws.showView("site"); };
+  const logout = () => { ws.sair(); setSiteKey((k) => k + 1); ws.setState({ navOpen: false }); ws.showView("site"); };
+  // Com a sessão já aberta (fase D), "Entrar" no site vai direto ao Workspace.
+  const login = () => {
+    if (state.sessao) { ws.go("dashboard"); ws.showView("splash"); } else ws.showView("login");
+  };
   return (
     <>
       <div style={view === "site" ? { minHeight: "100vh", background: "#F5F6F1" } : { display: "none" }}>
-        <WebsiteApp key={siteKey} onLogin={() => ws.showView("login")} />
+        <WebsiteApp key={siteKey} onLogin={login} />
       </div>
       {view === "login" ? (
         <LoginPage ws={ws} onSite={() => ws.showView("site")} onEnter={() => { ws.go("dashboard"); ws.showView("splash"); }} />

@@ -57,6 +57,8 @@ const FILTERS = [["todos", "Todos"], ["sem-rascunho", "Sem rascunho"], ["sugerid
 /** Deriva tudo o que as telas mostram a partir do estado. */
 export function buildView(s, ws) {
   const isA = s.role === "Aprovador";
+  // Com login (fase D, cenário D9), só o Aprovador baixa a planilha preenchida; sem login, todos.
+  const podeExportar = !s.sessao || isA;
   // Com o servidor, tarefas, exportação, histórico e alertas vêm do banco; sem ele, dos exemplos de data.js.
   const online = s.tarefasOrigem === "servidor";
   const taskIds = ws.taskIds(s);
@@ -265,8 +267,10 @@ export function buildView(s, ws) {
     return {
       id: t.id, company: t.company, title: t.title, count: t.shortProg, pct: t.pct, blocked: false, filled: true,
       badge: t.isReady ? "Pronta" : "Em revisão", tone: t.isReady ? "approved" : "neutral", icon: t.isReady ? "circle-check" : "eye",
-      disabled: false, btn: "Baixar planilha preenchida", doExport: () => ws.downloadSheet(t.id),
-      reason: "Traz as sugestões geradas no processamento, com as fontes. As edições e aprovações da revisão ficam no Tendra.ai.",
+      disabled: !podeExportar, btn: "Baixar planilha preenchida", doExport: () => ws.downloadSheet(t.id),
+      reason: podeExportar
+        ? "Traz as sugestões geradas no processamento, com as fontes. As edições e aprovações da revisão ficam no Tendra.ai."
+        : "Somente Aprovadores baixam a planilha preenchida.",
       goReview: () => ws.go("review", { taskId: t.id, sel: pending ? pending.id : undefined, filter: "todos" })
     };
   });
@@ -358,7 +362,7 @@ export function buildView(s, ws) {
   };
 
   return {
-    isA, online, userName: ws.name(), navGroups, navValue,
+    isA, online, podeExportar, userName: ws.name(), navGroups, navValue,
     docs, readyDocs, onb, tasks, taskAlerts, alertsUnread, tDeck, dash, task, counts: c, segs, filterTabs, rows,
     revTask: (ws.taskInfo(s.itemsTask, s) || {}).name, cur, savedText, drawer, exportCards, exportTitle, history, historyTabs, form
   };

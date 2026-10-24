@@ -3,6 +3,7 @@ import { Button, IconButton, SidebarNav } from "../ds/index.js";
 import { BRAND_BAR_H, BrandBar } from "../BrandBar.jsx";
 import { buildView } from "./viewModel.js";
 import { MONO } from "./ui.jsx";
+import { AvisoDeDadosSinteticos } from "../LoginPage.jsx";
 import { UserMenu } from "./UserMenu.jsx";
 import { AlertsMenu } from "./AlertsMenu.jsx";
 import { ConfirmEditDialog, SourceDrawer, ToastHost } from "./overlays.jsx";
@@ -38,6 +39,10 @@ function Sidebar({ v, ws, state, isMobile, collapsed }) {
       <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", minHeight: 0 }}>
         <SidebarNav groups={v.navGroups} value={v.navValue} width="100%" collapsed={collapsed} aria-label="Workspace" />
       </div>
+      {/* Ambiente compartilhado: aviso fixo de dados sintéticos (cenário D12). */}
+      {state.modo === "compartilhado" && !collapsed ? (
+        <div style={{ padding: "12px 16px", borderTop: "1px solid var(--n-200)" }}><AvisoDeDadosSinteticos compacto /></div>
+      ) : null}
       {/* O painel de demo aprova só na tela: com o servidor, as aprovações vão para o banco item a item. */}
       {state.tarefasOrigem === "servidor" ? null : collapsed ? (
         <div style={{ padding: "12px 0", borderTop: "1px solid var(--n-200)", display: "flex", justifyContent: "center" }}>
@@ -58,7 +63,7 @@ export function WorkspaceBarActions({ v, state, ws, onLogout }) {
   return (
     <>
       <AlertsMenu alerts={v.taskAlerts} unread={v.alertsUnread} onRead={ws.readAlert} onReadAll={() => ws.readAllAlerts(v.taskAlerts.map((a) => a.key))} />
-      <UserMenu name={v.userName} role={state.role} onSwitch={ws.switchRole} onLogout={onLogout} />
+      <UserMenu name={v.userName} role={state.role} onSwitch={state.sessao ? null : ws.switchRole} onLogout={onLogout} />
       <span className="tdr-bar-logout">
         <Button size="sm" variant="inverse-secondary" icon="log-out" onClick={onLogout}>Sair</Button>
       </span>
