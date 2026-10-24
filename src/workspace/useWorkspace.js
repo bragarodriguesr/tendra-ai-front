@@ -6,6 +6,7 @@ import {
 , entrar, obterSessao, quandoPerderASessao, sair} from "../api.js";
 
 let contactSeq = 0;
+const chaveDosAlertasLidos = (pessoa) => "tendra.alertasLidos." + pessoa;
 export const newContact = () => ({ id: "c" + ++contactSeq, name: "", role: "", phone: "", email: "" });
 const emptyForm = () => ({ name: "", company: "", cnpj: "", type: "RFP", due: "", owner: "", contacts: [newContact()], file: null, fileError: null, identified: false, tried: false });
 
@@ -28,6 +29,8 @@ const initialState = ({ initialScreen, role }) => ({
   edit: false, showOrig: false, drawer: null, dialog: false, toast: null, reviewPane: "list",
   // Base: lista de exemplo até o servidor responder; depois, os documentos do banco.
   docs: seedDocs(), baseOrigem: "exemplo", enviando: false, envio: null, sort: "idade", taskId: "t1",
+  // Último envio de documentos, para o alerta do sino (o quadro do resultado pode ser fechado).
+  ultimoEnvio: null,
   // Tarefas: as de exemplo (data.js) até o servidor responder; depois, só as do banco.
   tarefas: [], tarefasOrigem: "exemplo", criando: false, pessoas: [],
   // Tarefa à espera da confirmação de exclusão e exclusão em andamento (cenário 60).
@@ -78,6 +81,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
       async iniciarSessao() {
         const { modo, pessoa } = await obterSessao();
         setState((s) => ({ modo, sessao: pessoa, role: pessoa ? pessoa.papel : s.role }));
+        api.loadAlertsRead();
       },
       /** Login do modo compartilhado. Lança ErroDaApi com a mensagem do backend. */
       async entrar(email, senha) {
@@ -85,6 +89,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         await saindo.current;
         const { pessoa } = await entrar(email, senha);
         setState({ sessao: pessoa, role: pessoa.papel, pessoas: [] });
+        api.loadAlertsRead();
         api.loadBase();
         api.loadTasks();
       },
@@ -101,11 +106,29 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         saindo.current = gravando.then(() => sair()).catch(() => {});
         await saindo.current;
       },
-      readAlert(a) { setState((s) => ({ alertsRead: { ...s.alertsRead, [a.key]: true } })); a.go(); },
-      readAllAlerts(keys) { setState((s) => ({ alertsRead: { ...s.alertsRead, ...Object.fromEntries(keys.map((k) => [k, true])) } })); },
+      readAlert(a) { api.markAlertsRead([a.key]); a.go(); },
+      readAllAlerts(keys) { api.markAlertsRead(keys); },
+      /** Alertas do sino lidos: guardados no navegador, por pessoa, para não voltarem a cada entrada. */
+      markAlertsRead(keys) {
+        setState((s) => {
+          const alertsRead = { ...s.alertsRead, ...Object.fromEntries(keys.map((k) => [k, true])) };
+          try { localStorage.setItem(chaveDosAlertasLidos(api.person(s).nome), JSON.stringify(alertsRead)); } catch { /* sem armazenamento: só nesta aba */ }
+          return { alertsRead };
+        });
+      },
+      /** Lê os alertas já lidos pela pessoa que entrou (fase D) ou escolhida em "Trocar usuário". */
+      loadAlertsRead() {
+        // Atualização por função: a pessoa é a do estado já com a sessão ou o papel novos.
+        setState((s) => {
+          let lidos = {};
+          try { lidos = JSON.parse(localStorage.getItem(chaveDosAlertasLidos(api.person(s).nome)) || "{}") || {}; } catch { lidos = {}; }
+          return { alertsRead: lidos };
+        });
+      },
       switchRole() {
         api.flushSaves();
         setState((s) => ({ role: s.role === "Aprovador" ? "Revisor" : "Aprovador" }));
+        api.loadAlertsRead();
         // A avaliação mostrada é a da pessoa que age.
         const tid = ref.current.itemsTask;
         if (api.serverTask(tid)) setTimeout(() => api.loadFeedback(tid), 0);
@@ -243,14 +266,14 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         setState({ enviando: true });
         try {
           const { resumo, documentos } = await enviarDocumentosDaBase(files, api.name());
-          setState({ docs: documentos.map((d) => paraDocumentoDaTela(d)), baseOrigem: "servidor", envio: resumo, enviando: false });
+          setState({ docs: documentos.map((d) => paraDocumentoDaTela(d)), baseOrigem: "servidor", envio: resumo, enviando: false, ultimoEnvio: { resumo, em: dataHoraDaTela(new Date().toISOString()) } });
           const ok = resumo.carregados.length + resumo.atualizados.length + resumo.semMudanca.length;
           const falhas = resumo.recusados.length + resumo.ignorados.length;
           api.toast(falhas ? "Envio concluído com recusas" : "Envio concluído",
             `${ok} de ${files.length} arquivo${files.length > 1 ? "s" : ""} na base.${falhas ? " Veja os motivos na tela." : ""}`,
             falhas ? "warning" : "success");
         } catch (e) {
-          setState({ enviando: false });
+          setState({ enviando: false, ultimoEnvio: { erro: e.message, em: dataHoraDaTela(new Date().toISOString()) } });
           api.toast("Envio não concluído", e.message, "danger");
         }
       },

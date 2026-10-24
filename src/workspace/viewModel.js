@@ -50,6 +50,20 @@ function duracao(ms) {
   return `${(h / 24).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} dias`;
 }
 
+/** Dias até o prazo a partir do texto da tela ("vence hoje", "falta 1 dia", "faltam N dias"); null sem prazo ou vencida. */
+function diasAtePrazo(texto) {
+  if (texto === "vence hoje") return 0;
+  if (texto === "falta 1 dia") return 1;
+  const m = /^faltam (\d+) dias$/.exec(texto || "");
+  return m ? +m[1] : null;
+}
+
+/** Hoje em dd/mm/aaaa, para os alertas sem data própria. */
+function dataDeHoje(d = new Date()) {
+  const p = (n) => String(n).padStart(2, "0");
+  return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`;
+}
+
 export function deckLayers(count) {
   const L = Math.min(count - 1, 2);
   return {
@@ -381,14 +395,29 @@ export function buildView(s, ws) {
     srcs: h.srcs.map((x) => ({ label: x.label, open: x.open || (() => ws.toast("Fonte de histórico", "Abra a tarefa de origem para ver o trecho.", "neutral")) }))
   }));
 
-  // alertas da tela de Tarefas
+  // Alertas do sino: tarefas e base de conhecimento (nunca os alertas de itens da Revisão).
   const left = (id) => { const q = ws.counts(id, s); return q.total - q.approved; };
   const taskAlerts = [];
   if (online) {
+    const hoje = dataDeHoje();
+    const abrir = (t) => () => ws.go("task", { taskId: t.id });
     for (const t of tasks) {
-      if (t.isFailed) taskAlerts.push({ key: "falha-" + t.id, at: t.when, icon: "triangle-alert", label: "Falha no carregamento", name: t.company, text: "não pôde ser processada: " + (t.reason || "sem motivo registrado") + ".", action: "Conferir tarefa", go: () => ws.go("task", { taskId: t.id }) });
-      else if (t.hasItems && t.dueText === "Vencida" && !t.isReady) taskAlerts.push({ key: "vencida-" + t.id, at: t.when, icon: "clock", label: "Prazo vencido", name: t.company, text: "está vencida, com " + left(t.id) + " itens sem aprovação.", action: "Abrir tarefa", go: () => ws.go("task", { taskId: t.id }) });
+      const dias = diasAtePrazo(t.dueText);
+      const quem = t.company !== "Empresa não informada" ? t.company : t.title;
+      if (t.isFailed) taskAlerts.push({ key: "falha-" + t.id, kind: "tarefa", at: t.when, icon: "triangle-alert", label: "Falha no processamento", name: quem, text: "não pôde ser processada: " + (t.reason || "sem motivo registrado").replace(/\.$/, "") + ".", action: "Conferir tarefa", go: abrir(t) });
+      else if (t.isReady) taskAlerts.push({ key: "aprovada-" + t.id, kind: "tarefa", at: t.when, icon: "check-check", label: "Tarefa 100% aprovada", name: quem, text: `tem os ${t.items} itens aprovados: a planilha preenchida está pronta para baixar.`, action: "Abrir tarefa", go: abrir(t) });
+      else if (t.dueText === "Vencida") taskAlerts.push({ key: "vencida-" + t.id, kind: "tarefa", at: t.due, icon: "clock", label: "Prazo vencido", name: quem, text: t.hasItems ? `está vencida, com ${left(t.id)} itens sem aprovação.` : "está vencida.", action: "Abrir tarefa", go: abrir(t) });
+      else if (dias !== null && dias <= 5) taskAlerts.push({ key: "prazo-" + t.id + (dias === 0 ? "-hoje" : ""), kind: "tarefa", at: t.due, icon: "clock", label: "Prazo próximo", name: quem, text: (dias === 0 ? "vence hoje" : dias === 1 ? "vence amanhã" : `vence em ${dias} dias`) + (t.hasItems ? `, com ${left(t.id)} itens sem aprovação.` : "."), action: "Abrir tarefa", go: abrir(t) });
+      if (!t.isFailed && !t.isReady && !t.isProcessing && t.hasItems) taskAlerts.push({ key: "pronta-" + t.id, kind: "tarefa", at: t.when, icon: "sparkles", label: "Processamento concluído", name: quem, text: `foi processada: ${t.items} itens para revisar.`, action: "Revisar itens", go: () => ws.go("review", { taskId: t.id }) });
     }
+    const envio = s.ultimoEnvio;
+    if (envio && envio.erro) taskAlerts.push({ key: "envio-erro-" + envio.em, kind: "base", at: envio.em, icon: "triangle-alert", label: "Erro no envio da base", name: "Base de conhecimento", text: "o envio não foi concluído: " + envio.erro.replace(/\.$/, "") + ".", action: "Abrir a base", go: () => ws.go("base") });
+    else if (envio && envio.resumo) {
+      const recusas = envio.resumo.recusados.length + envio.resumo.ignorados.length;
+      if (recusas) taskAlerts.push({ key: "envio-recusas-" + envio.em, kind: "base", at: envio.em, icon: "triangle-alert", label: "Arquivos recusados na base", name: "Base de conhecimento", text: `${recusas} ${recusas === 1 ? "arquivo foi recusado" : "arquivos foram recusados"} no último envio: ` + [...envio.resumo.recusados, ...envio.resumo.ignorados].map((x) => x.nome).join(", ") + ".", action: "Abrir a base", go: () => ws.go("base") });
+    }
+    const antigos = s.docs.filter((d) => !d.off && d.age > 120).length;
+    if (s.baseOrigem === "servidor" && antigos) taskAlerts.push({ key: "base-antigos-" + antigos, kind: "base", at: hoje, icon: "clock", label: "Base desatualizada", name: "Base de conhecimento", text: `${antigos} ${antigos === 1 ? "documento ativo está" : "documentos ativos estão"} há mais de 120 dias sem atualização.`, action: "Abrir a base", go: () => ws.go("base") });
   } else {
   taskAlerts.push(s.taskRetry
     ? { key: "orbis-retry", at: "29/09/2026 10:05", icon: "clock", label: "Reprocessamento", name: "Orbis Energia", text: "voltou para a fila de processamento.", action: "Conferir processamento", go: () => ws.go("task", { taskId: "t5" }) }
@@ -400,7 +429,7 @@ export function buildView(s, ws) {
   taskAlerts.forEach((a) => { a.read = !!s.alertsRead[a.key]; });
   const alertsUnread = taskAlerts.filter((a) => !a.read).length;
   // o card da tela de Tarefas mostra só os alertas ainda não lidos no sino
-  const pendingAlerts = taskAlerts.filter((a) => !a.read);
+  const pendingAlerts = taskAlerts.filter((a) => !a.read && a.kind !== "base");
   const tAi = Math.min(s.tAi, Math.max(pendingAlerts.length - 1, 0));
   const tDeck = { ...deckLayers(pendingAlerts.length), a: pendingAlerts[tAi], pos: `${tAi + 1} de ${pendingAlerts.length}`, hasMany: pendingAlerts.length > 1, index: tAi, count: pendingAlerts.length };
 
