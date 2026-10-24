@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 /** Subpastas permitidas dentro da pasta de dados. */
@@ -17,6 +17,8 @@ export interface Armazenamento {
   salvar(subpasta: Subpasta, conteudo: Uint8Array, extensao: string): Promise<string>;
   /** Lê um arquivo a partir do caminho relativo devolvido por `salvar`. */
   ler(caminhoRelativo: string): Promise<Buffer>;
+  /** Apaga um arquivo gravado por `salvar` (exclusão de tarefa, cenário 60). Arquivo que já não existe não é erro. */
+  apagar(caminhoRelativo: string): Promise<void>;
 }
 
 const EXTENSAO_VALIDA = /^[a-z0-9]{1,10}$/;
@@ -48,6 +50,10 @@ export function criarArmazenamento(pastaDados: string): Armazenamento {
 
     async ler(caminhoRelativo) {
       return readFile(caminhoAbsoluto(caminhoRelativo));
+    },
+
+    async apagar(caminhoRelativo) {
+      await rm(caminhoAbsoluto(caminhoRelativo), { force: true });
     },
   };
 }

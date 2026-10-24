@@ -270,13 +270,13 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 
 **F-03 · P0 · Importar RFPs passadas** (MoSCoW: Must) — Implementado no front. **No MVP (v3):** a RFP passada entra na base como um `.md` com o tipo "RFP passada" no cabeçalho (`tipo: rfp-passada`).
 
-- Na T2, o botão "Importar RFP passada" abre o mesmo seletor de arquivos `.md` de "Subir documentos" (v3, 22/10). O tipo vem do cabeçalho do arquivo, não do botão.
+- Na T2, a RFP passada entra pelo mesmo botão "Subir documentos": o tipo vem do cabeçalho de cada arquivo. O botão separado "Importar RFP passada" saiu em 24/10/2026, porque fazia exatamente o mesmo.
 - No Histórico, respostas vindas de RFPs importadas aparecem com o selo "Histórico importado" e sem aprovador (Q-04).
 
 **F-04 · P0 · Lista da base com aging** (MoSCoW: Must) — Parcial
 
-- **Cabeçalho:** "[N] documentos na base" e "Prazo de aging em vigor: 120 dias sem atualização.". Ao lado, o seletor de ordenação ("Ordenar por idade", "por nome", "por envio") e os botões "Importar RFP passada" e "Subir documentos".
-- Abaixo do cabeçalho, a orientação "Aceita arquivos .md com o cabeçalho de título, tipo e data de atualização, até 10 MB por envio. Enviar de novo um arquivo com o mesmo nome atualiza o documento." (v3, 22/10)
+- **Cabeçalho:** "[N] documentos na base" e "Prazo de aging em vigor: 120 dias sem atualização.". Ao lado, o seletor de ordenação ("Ordenar por idade", "por nome", "por envio") e o botão "Subir documentos" (o único desde 24/10/2026).
+- Abaixo do cabeçalho, a orientação "Aceita arquivos .md com o cabeçalho de título, tipo e data de atualização, até 10 MB por envio. O tipo de cada arquivo (documento ou RFP passada) vem do cabeçalho. Enviar de novo um arquivo com o mesmo nome atualiza o documento." (v3, 22/10; frase do tipo em 24/10)
 - **Colunas da tabela:**
   - Documento: o título do cabeçalho, com a versão ou "Sem versão" e o nome do arquivo abaixo;
   - Tipo (Documento ou RFP passada);
@@ -344,8 +344,9 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
   - Progresso (barra e "N de M aprovados", ou "N de M processadas" durante o processamento);
   - Prazo (data e prazo restante);
   - Responsável;
-  - Status.
-- No celular, cada tarefa vira um cartão. Clicar numa tarefa abre a T5.
+  - Status;
+  - Excluir (ícone de lixeira, 24/10/2026; SPEC, cenário 60): só em tarefas do servidor que não estão em processamento e, com login, só para o Aprovador. Abre a confirmação "Excluir “[nome]”?", que avisa que a tarefa sai para todas as pessoas com itens, edições, aprovações, avaliações, histórico e planilhas, sem como desfazer. Confirmada, a tarefa some da lista; quem estava nela volta para a T3.
+- No celular, cada tarefa vira um cartão, com a lixeira no rodapé. Clicar numa tarefa abre a T5.
 - **Status da tarefa:** Na fila, Processando, Falha, Em revisão, Vencido, Pronta, Exportada.
 - **Pendente:**
   - editar prazo e responsável na própria linha ou na T5;
@@ -686,11 +687,12 @@ Esta seção lista o que o front já consome e dispara. Os nomes são descritivo
 | Ativar / desativar documento | T2 | Documento inativo não entra em novas respostas; respostas aprovadas não mudam |
 | Criar tarefa (arquivo + campos + CNPJ + contatos) | T4 | Validar obrigatórios, prazo não passado, CNPJ e contatos quando preenchidos; aceitar só `.xlsx` no MVP; processar de forma assíncrona; devolver nº de perguntas |
 | Tentar de novo uma tarefa com falha | T5 | Gera o alerta "Reprocessamento" |
+| Excluir tarefa | T3 | Pede confirmação; não exclui tarefa em processamento; com login, só o Aprovador; apaga itens, eventos, avaliações e planilhas (SPEC, cenário 60) |
 | Salvar texto da resposta (automático) | T6 | Aplicar as transições da seção 6; manter o texto original da sugestão |
 | Restaurar sugestão original | T6 | — |
-| Reconhecer alerta | T6 | Registrar pessoa e horário; não existe reconhecer em lote |
-| Escolher fonte em conflito / "Nenhuma, vou escrever" | T6 | Reconhece o alerta de conflito |
-| Marcar como revisado | T6 | Exige resposta escrita e nenhum alerta pendente |
+| Reconhecer alerta | T6 | Registrar pessoa e horário; não existe reconhecer em lote. Gravado no backend desde 24/10/2026 (SPEC, cenário 57) |
+| Escolher fonte em conflito / "Nenhuma, vou escrever" | T6 | Reconhece o alerta de conflito. Gravado no backend desde 24/10/2026 (SPEC, cenário 58) |
+| Marcar como revisado | T6 | Exige resposta escrita e nenhum alerta pendente. Gravado no backend desde 24/10/2026 (SPEC, cenário 59) |
 | Aprovar | T6 | Só Aprovador; exige resposta escrita e nenhum alerta pendente; registrar pessoa e horário |
 | Remover aprovação ao editar | T6 | Registrar o evento; item volta para Em revisão |
 | Enviar feedback | T6 | Sentido e motivo |

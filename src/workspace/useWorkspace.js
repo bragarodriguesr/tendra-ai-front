@@ -2,7 +2,7 @@ import React from "react";
 import { seedItems, seedDocs, genItems, nowStr, ITEM_TASKS, GENERATED, TASKS, TASK_IDS } from "./data.js";
 import {
   MENSAGEM_FORMATO_DA_RFP, aprovarItemNaApi, avaliarItemNaApi, criarTarefa, editarTextoDoItem, listarAvaliacoes, listarPessoas, restaurarItem, dataHoraDaTela, definirDocumentoAtivo, enderecoDaPlanilha, enviarDocumentosDaBase, hojeIso, listarDocumentosDaBase, listarItensDaTarefa,
-  listarTarefas, paraDocumentoDaTela, paraItemDaTela
+  listarTarefas, paraDocumentoDaTela, paraItemDaTela, reconhecerAlertaNaApi, escolherFonteNaApi, revisarItemNaApi, excluirTarefa
 , entrar, obterSessao, quandoPerderASessao, sair} from "../api.js";
 
 let contactSeq = 0;
@@ -28,6 +28,8 @@ const initialState = ({ initialScreen, role }) => ({
   docs: seedDocs(), baseOrigem: "exemplo", enviando: false, envio: null, sort: "idade", taskId: "t1",
   // Tarefas: as de exemplo (data.js) até o servidor responder; depois, só as do banco.
   tarefas: [], tarefasOrigem: "exemplo", criando: false, pessoas: [],
+  // Tarefa à espera da confirmação de exclusão e exclusão em andamento (cenário 60).
+  deleting: null, excluindo: false,
   // Fase D: "compartilhado" quando o backend tem login; a sessão traz nome e papel da pessoa.
   modo: "local", sessao: null,
   exported: null, exported4: null, exported8: null, expanded: null,
@@ -99,20 +101,14 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
       isServerItem: (s = ref.current) => !!api.serverTask(s.itemsTask, s),
       numberOf: (id) => Number(String(id).slice(1)),
       /**
-       * Põe na tela o item devolvido pelo backend, mantendo o que só existe na tela: alertas reconhecidos e fonte escolhida.
+       * Põe na tela o item devolvido pelo backend, que traz também alertas reconhecidos, fonte escolhida e revisão (cenários 57 a 59).
        * Com `keepText`, o texto da tela fica (a pessoa pode ter continuado digitando depois da gravação).
        */
       applyServerItem(tid, item, { keepText = false } = {}) {
         setState((s) => {
           const merge = (list) => list.map((i) => {
             if (i.id !== item.id) return i;
-            const novo = paraItemDaTela(item, i.tot);
-            return {
-              ...novo,
-              ...(keepText ? { paras: i.paras } : null),
-              alerts: novo.alerts.map((a, k) => (i.alerts[k] && i.alerts[k].t === a.t ? i.alerts[k] : a)),
-              srcs: novo.srcs.map((x, k) => (i.srcs[k] && i.srcs[k].chosen ? { ...x, chosen: true } : x))
-            };
+            return { ...paraItemDaTela(item, i.tot), ...(keepText ? { paras: i.paras } : null) };
           });
           return s.itemsTask === tid ? { items: merge(s.items) } : s.store[tid] ? { store: { ...s.store, [tid]: merge(s.store[tid]) } } : {};
         });
@@ -296,12 +292,39 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         api.flushSaves();
         setState({ sel: id, edit: false, showOrig: false });
       },
-      ack(id, idx) {
+      /**
+       * Ação de revisão gravada no backend (cenários 57 a 59): grava antes o texto pendente do item
+       * e põe na tela o item devolvido. Devolve o item, ou null quando o backend recusou.
+       */
+      async serverAction(id, chamada, falha) {
+        const s = ref.current, tid = s.itemsTask;
+        await api.flushSaves(tid + "/" + id);
+        try {
+          const { item } = await chamada(tid, api.numberOf(id), api.person(s).id);
+          api.applyServerItem(tid, item);
+          return item;
+        } catch (e) {
+          api.toast(falha, e.message, "danger");
+          return null;
+        }
+      },
+      async ack(id, idx) {
+        if (api.isServerItem()) {
+          const alerta = ref.current.items.find((i) => i.id === id).alerts[idx];
+          const item = await api.serverAction(id, (tid, n, p) => reconhecerAlertaNaApi(tid, n, p, alerta.t), "Alerta não reconhecido");
+          const gravado = item && item.alerts.find((a) => a.t === alerta.t);
+          if (gravado) api.toast("Alerta reconhecido", `${gravado.ack.by}, ${dataHoraDaTela(gravado.ack.at)}`);
+          return;
+        }
         const by = api.name(), at = nowStr();
         api.upd(id, (i) => { i.alerts = i.alerts.map((a, k) => (k === idx ? { ...a, ack: { by, at } } : a)); return i; });
         api.toast("Alerta reconhecido", `${by}, ${at}`);
       },
-      useSource(id, k) {
+      async useSource(id, k) {
+        if (api.isServerItem()) {
+          if (await api.serverAction(id, (tid, n, p) => escolherFonteNaApi(tid, n, p, k), "Fonte não escolhida")) api.toast("Fonte escolhida", "O alerta de conflito foi reconhecido.");
+          return;
+        }
         const by = api.name(), at = nowStr();
         api.upd(id, (i) => {
           i.srcs = i.srcs.map((s, n) => ({ ...s, chosen: n + 1 === k }));
@@ -335,7 +358,11 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         api.toast("Item aprovado", `${by} · ${at}`);
         if (next) setState({ sel: next.id, edit: false, showOrig: false });
       },
-      revise(id) {
+      async revise(id) {
+        if (api.isServerItem()) {
+          if (await api.serverAction(id, revisarItemNaApi, "Item não marcado como revisado")) api.toast("Item revisado", "Pronto para aprovação.");
+          return;
+        }
         const by = api.name(), at = nowStr();
         api.upd(id, (i) => { i.st = "revisada"; i.rby = by; i.rat = at; return i; });
         api.toast("Item revisado", "Pronto para aprovação.");
@@ -469,6 +496,33 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
           setState((x) => ({ criando: false, form: { ...x.form, fileError: e.message } }));
           api.toast("Tarefa não criada", e.message, "danger");
         }
+      },
+      /** Pede a confirmação antes de excluir (cenário 60). */
+      askDeleteTask(id) { setState({ deleting: id }); },
+      /** Exclui a tarefa no backend e a tira de todas as telas; quem estava nela volta para Tarefas. */
+      async deleteTask() {
+        const s = ref.current, id = s.deleting;
+        if (!id || s.excluindo) return;
+        const nome = api.taskInfo(id).name;
+        setState({ excluindo: true });
+        try {
+          await excluirTarefa(id);
+        } catch (e) {
+          setState({ excluindo: false, deleting: null });
+          api.toast("Tarefa não excluída", e.message, "danger");
+          return;
+        }
+        setState((x) => {
+          const store = { ...x.store };
+          delete store[id];
+          const aberta = x.itemsTask === id;
+          return {
+            excluindo: false, deleting: null, store, tarefas: x.tarefas.filter((t) => t.id !== id),
+            ...(aberta ? { items: [], itemsTask: null, sel: null } : null),
+            ...((x.screen === "task" || x.screen === "review" || x.screen === "export") && (x.taskId === id || aberta) ? { screen: "tasks" } : null)
+          };
+        });
+        api.toast("Tarefa excluída", `${nome} e todos os registros dela foram apagados.`, "neutral");
       },
       retryTask() {
         setState({ taskRetry: true });

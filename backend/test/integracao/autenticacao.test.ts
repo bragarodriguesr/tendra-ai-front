@@ -98,7 +98,7 @@ async function cookieDe(email: string, senha: string): Promise<string> {
   return cabecalho.split(";")[0] ?? "";
 }
 
-const pedir = (url: string, cookie?: string, metodo: "GET" | "POST" | "PUT" = "GET", payload?: object) =>
+const pedir = (url: string, cookie?: string, metodo: "GET" | "POST" | "PUT" | "DELETE" = "GET", payload?: object) =>
   servidor.inject({ method: metodo, url, ...(cookie === undefined ? {} : { headers: { cookie } }), ...(payload === undefined ? {} : { payload }) });
 
 describe("Cenário D1 · login com credenciais válidas", () => {
@@ -267,6 +267,16 @@ describe("Cenários D8 e D9 · papéis", () => {
     expect(planilha.json()).toEqual({ erro: "Só o Aprovador pode baixar a planilha preenchida." });
     expect((await pedir(`/api/tarefas/${tarefaId}/itens/3/texto`, cookie, "PUT", { texto: "Texto revisado pelo Revisor." })).statusCode).toBe(200);
     expect((await pedir(`/api/tarefas/${tarefaId}/itens/3/restaurar`, cookie, "POST", {})).statusCode).toBe(200);
+  });
+
+  it("o Revisor recebe 403 ao excluir a tarefa, que continua com os itens; marca como revisado normalmente", async () => {
+    const cookie = await cookieDe(REVISOR.email, "senha-do-revisor");
+    const exclusao = await pedir(`/api/tarefas/${tarefaId}`, cookie, "DELETE");
+    expect(exclusao.statusCode).toBe(403);
+    expect(exclusao.json()).toEqual({ erro: "Só o Aprovador pode excluir tarefas." });
+    expect(await listarItens(banco, tarefaId)).toHaveLength(46);
+    const revisado = await pedir(`/api/tarefas/${tarefaId}/itens/5/revisar`, cookie, "POST", {});
+    expect(revisado.json().item).toMatchObject({ st: "revisada", rby: "Kadu Mendes" });
   });
 
   it("o Aprovador aprova e baixa a planilha", async () => {

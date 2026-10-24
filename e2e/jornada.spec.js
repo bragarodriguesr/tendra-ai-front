@@ -4,7 +4,9 @@ import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
 
 // Jornada da fase C (PLAN.md, portão): base pela tela, RFP pela tela, progresso, revisão gravada,
-// recarga da página e relatório de aceitação. API simulada; com TENDRA_E2E_API_REAL=1, a API real (custo).
+// recarga da página e relatório de aceitação; depois, alerta reconhecido e item revisado mantidos
+// depois de recarregar (cenários 57 e 59) e exclusão da tarefa (cenário 60).
+// API simulada; com TENDRA_E2E_API_REAL=1, a API real (custo).
 
 const RAIZ = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PULSE = path.join(RAIZ, "base-sintetica", "pulse-beneficios");
@@ -102,4 +104,30 @@ test("da base à resposta aprovada, mantida depois de recarregar", async ({ page
     [alvo.id, "aprovacao", "Marcelo Vieira"],
     [alvo.id, "avaliacao", "Marcelo Vieira"]
   ]);
+
+  // 7. Reconhecer alerta e marcar como revisado: continuam depois de recarregar (cenários 57 e 59).
+  const comAlerta = itens.find((i) => i.st === "sugerida" && i.alerts.length === 1 && ["old", "critical", "lowconf"].includes(i.alerts[0].t));
+  const codigoComAlerta = `REQ-${String(comAlerta.numero).padStart(3, "0")}/${String(itens.length).padStart(3, "0")}`;
+  await page.getByText(codigoComAlerta, { exact: true }).first().click();
+  await page.getByRole("button", { name: "Reconhecer alerta" }).click();
+  await expect(page.getByText("Alerta reconhecido", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Marcar como revisado" }).click();
+  await expect(page.getByText("Item revisado", { exact: true })).toBeVisible();
+  await page.reload();
+  await entrar(page);
+  await menu(page, "Revisão");
+  await page.getByText(codigoComAlerta, { exact: true }).first().click();
+  await expect(page.getByText(/Reconhecido por Marcelo Vieira/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Marcar como revisado" })).toBeDisabled();
+  const item = (await (await request.get(`${API}/tarefas/${tarefa.id}/itens`)).json()).itens.find((i) => i.id === comAlerta.id);
+  expect(item).toMatchObject({ st: "revisada", rby: "Marcelo Vieira", alerts: [{ t: comAlerta.alerts[0].t, ack: { by: "Marcelo Vieira" } }] });
+
+  // 8. Excluir a tarefa pela tela Tarefas, com confirmação: some da lista e do banco (cenário 60).
+  await menu(page, "Tarefas");
+  await page.getByRole("button", { name: "Excluir RFP-01-Rede-Varejo-Alfa" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Excluir tarefa" }).click();
+  await expect(page.getByText("Tarefa excluída", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "0 RFPs e RFIs em andamento" })).toBeVisible();
+  expect((await (await request.get(`${API}/tarefas`)).json()).tarefas).toEqual([]);
+  expect((await request.get(`${API}/tarefas/${tarefa.id}`)).status()).toBe(404);
 });

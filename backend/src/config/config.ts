@@ -40,7 +40,9 @@ export class ErroDeConfiguracao extends Error {
 const PASTA_DADOS_PADRAO = "../dados";
 const NIVEL_DE_LOG_PADRAO: NivelDeLog = "info";
 const PORTA_PADRAO = 3000;
-const MODELO_PADRAO = "claude-opus-5-5";
+// Temporário (24/10/2026): Sonnet 5.5 para reduzir o custo nos testes que não dependem da acurácia.
+// A recomendação da A10 é o Opus 5.5 (PLAN.md, P8), que volta quando a qualidade for testada.
+const MODELO_PADRAO = "claude-sonnet-5-5";
 const MODELO_DE_IDENTIFICACAO_PADRAO = "claude-haiku-5-5";
 const MODELO_DE_CONFLITO_PADRAO = "claude-sonnet-5-5";
 const ESFORCO_PADRAO: NivelDeEsforco = "medium";

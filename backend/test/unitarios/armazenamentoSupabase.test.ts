@@ -15,6 +15,7 @@ function storageFalso() {
       objetos.set(url, new Uint8Array(init.body as Uint8Array));
       return new Response("{}", { status: 200 });
     }
+    if (init.method === "DELETE") return new Response("{}", { status: objetos.delete(url) ? 200 : 400 });
     const objeto = objetos.get(url);
     return objeto === undefined ? new Response("{}", { status: 404 }) : new Response(Buffer.from(objeto), { status: 200 });
   }) as typeof fetch;
@@ -58,5 +59,18 @@ describe("Cenário D14 · Supabase Storage", () => {
     const erro = await semRede.salvar("rfps", new Uint8Array([1]), "xlsx").catch((e: unknown) => e as Error);
     expect(erro).toBeInstanceOf(ErroDeArmazenamento);
     expect((erro as Error).message).not.toContain("sb_secret");
+  });
+
+  it("apaga o objeto do bucket (cenário 60); objeto que já não existe não é erro", async () => {
+    const { buscar, pedidos, objetos } = storageFalso();
+    const armazenamento = criarArmazenamentoSupabase(opcoes(buscar));
+    const caminho = await armazenamento.salvar("resultados", new Uint8Array([1]), "xlsx");
+
+    await armazenamento.apagar(caminho);
+    expect(pedidos.at(-1)).toMatchObject({ metodo: "DELETE", url: `https://projeto.supabase.co/storage/v1/object/rfps/${caminho}` });
+    expect(objetos.size).toBe(0);
+    await armazenamento.apagar(caminho);
+    await expect(armazenamento.apagar("../outro-bucket/arquivo.xlsx")).rejects.toThrow("Caminho fora da pasta de dados.");
+    await expect(criarArmazenamentoSupabase(opcoes(buscar, "sb_secret_errada")).apagar(caminho)).rejects.toThrow("(401)");
   });
 });

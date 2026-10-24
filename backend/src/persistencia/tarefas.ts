@@ -44,7 +44,10 @@ export interface Tarefa {
 
 export type EstadoDoItem = "sugerida" | "em-revisao" | "revisada" | "aprovada" | "sem-rascunho";
 
-/** Item com a posição na planilha e os campos de aprovação do formato de data.js (`by`, `at`). */
+/**
+ * Item com a posição na planilha e os campos de aprovação (`by`, `at`) e de revisão (`rby`, `rat`)
+ * do formato de data.js.
+ */
 export interface ItemGravado extends Omit<ItemDaRevisao, "st"> {
   st: EstadoDoItem;
   numero: number;
@@ -52,6 +55,8 @@ export interface ItemGravado extends Omit<ItemDaRevisao, "st"> {
   linha: number;
   by?: string;
   at?: string;
+  rby?: string;
+  rat?: string;
 }
 
 interface LinhaDeTarefa {
@@ -109,6 +114,18 @@ export async function obterTarefa(banco: Banco, id: string): Promise<Tarefa | nu
 export async function listarTarefas(banco: Banco): Promise<Tarefa[]> {
   const { rows } = await banco.query<LinhaDeTarefa>("SELECT * FROM tarefas ORDER BY criada_em DESC, id");
   return rows.map(paraTarefa);
+}
+
+/**
+ * Apaga a tarefa e, em cascata, itens, eventos, avaliações, requisições e respostas gravadas
+ * (cenário 60). Devolve os caminhos dos arquivos dela, que o chamador apaga do armazenamento.
+ */
+export async function excluirTarefa(banco: Banco, id: string): Promise<string[]> {
+  const { rows } = await banco.query<{ caminho_da_planilha: string; caminho_da_planilha_preenchida: string | null }>(
+    "DELETE FROM tarefas WHERE id = $1 RETURNING caminho_da_planilha, caminho_da_planilha_preenchida",
+    [id],
+  );
+  return rows.flatMap((linha) => [linha.caminho_da_planilha, ...(linha.caminho_da_planilha_preenchida === null ? [] : [linha.caminho_da_planilha_preenchida])]);
 }
 
 /** Progresso ao fim de cada lote. O número de processadas nunca diminui (cenário 16). */
@@ -220,6 +237,8 @@ interface LinhaDeItem {
   orig: string;
   aprovado_por: string | null;
   aprovado_em: Date | null;
+  revisado_por: string | null;
+  revisado_em: Date | null;
 }
 
 export const paraItem = (linha: LinhaDeItem): ItemGravado => ({
@@ -235,6 +254,8 @@ export const paraItem = (linha: LinhaDeItem): ItemGravado => ({
   orig: linha.orig,
   ...(linha.aprovado_por === null ? {} : { by: linha.aprovado_por }),
   ...(linha.aprovado_em === null ? {} : { at: linha.aprovado_em.toISOString() }),
+  ...(linha.revisado_por === null ? {} : { rby: linha.revisado_por }),
+  ...(linha.revisado_em === null ? {} : { rat: linha.revisado_em.toISOString() }),
 });
 
 /** Itens da tarefa, na ordem da planilha. Só existem para tarefas prontas. */

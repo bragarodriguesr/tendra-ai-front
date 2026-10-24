@@ -104,14 +104,11 @@ export function Base({ v, ws, state, pad, isMobile }) {
         </div>
         <div className={isMobile ? "tdr-stack-actions" : undefined} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
           <div style={{ width: isMobile ? "100%" : 200 }}><Select options={SORT_OPTIONS} value={state.sort} onChange={(e) => ws.setState({ sort: e.target.value })} size="sm" aria-label="Ordenação" /></div>
-          <Tooltip content="Arquivo .md com tipo: rfp-passada no cabeçalho" placement="top">
-            <Button variant="secondary" icon="history" onClick={pick} disabled={state.enviando}>Importar RFP passada</Button>
-          </Tooltip>
           <Button icon="upload" onClick={pick} loading={state.enviando}>Subir documentos</Button>
         </div>
       </div>
       <span style={{ fontSize: 13, color: "var(--n-500)" }}>
-        Aceita arquivos <b style={mono(13, "inherit")}>.md</b> com o cabeçalho de título, tipo e data de atualização, até 10 MB por envio. Enviar de novo um arquivo com o mesmo nome atualiza o documento.
+        Aceita arquivos <b style={mono(13, "inherit")}>.md</b> com o cabeçalho de título, tipo e data de atualização, até 10 MB por envio. O tipo de cada arquivo (documento ou RFP passada) vem do cabeçalho. Enviar de novo um arquivo com o mesmo nome atualiza o documento.
       </span>
       {state.baseOrigem === "exemplo" ? (
         <div role="note" style={card(12, { padding: "12px 16px", display: "flex", gap: 10, alignItems: "flex-start", background: "var(--n-050)" })}>

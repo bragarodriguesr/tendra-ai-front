@@ -5,12 +5,13 @@ import { ErroDePlanilha, lerPlanilha, validarArquivoDePlanilha } from "../docume
 import { criarTarefaComPlanilha, executarTarefa, type AmbienteDaTarefa } from "../fluxo/executarTarefa.ts";
 import { ErroDaRota } from "./erros.ts";
 import { exigirAprovador } from "./rotasDeAutenticacao.ts";
-import { listarItens, listarRequisicoes, listarTarefas, listarTarefasEmProcessamento, obterTarefa, type DadosDaTarefa, type Tarefa } from "../persistencia/tarefas.ts";
+import { excluirTarefa, listarItens, listarRequisicoes, listarTarefas, listarTarefasEmProcessamento, obterTarefa, type DadosDaTarefa, type Tarefa } from "../persistencia/tarefas.ts";
 
 /**
  * Rotas de tarefas (etapa B2). A planilha é validada na hora (cenários 4 e 31); o processamento
  * roda em segundo plano, uma tarefa por vez, e o front acompanha pelo estado (cenário 16).
- * Itens e planilha preenchida só existem para tarefas prontas (cenários 17, 23 e 24).
+ * Itens e planilha preenchida só existem para tarefas prontas (cenários 17, 23 e 24). Excluir
+ * apaga a tarefa com todos os registros e arquivos dela (cenário 60).
  */
 
 /** Tarefa como o front a recebe: sem caminhos de arquivo nem métricas. */
@@ -150,6 +151,20 @@ export function registrarRotasDeTarefas(servidor: FastifyInstance, opcoes: Opcoe
   servidor.get<{ Params: { id: string } }>("/api/tarefas/:id", { schema: { params: ID } }, async (pedido) => ({
     tarefa: tarefaPublica(await tarefaExistente(pedido.params.id)),
   }));
+
+  servidor.delete<{ Params: { id: string } }>("/api/tarefas/:id", { schema: { params: ID } }, async (pedido) => {
+    exigirAprovador(pedido, "Só o Aprovador pode excluir tarefas.");
+    const tarefa = await tarefaExistente(pedido.params.id);
+    // A tarefa em processamento ainda grava itens e arquivos: excluir só depois que ela terminar.
+    if (tarefa.estado === "processando") throw new ErroDaRota(409, "A tarefa ainda está em processamento. Exclua depois que ela terminar.");
+    const caminhos = await excluirTarefa(banco, tarefa.id);
+    // Os registros já saíram; um arquivo que falhe ao apagar fica só no log, sem tarefa que aponte para ele.
+    for (const caminho of caminhos) {
+      await opcoes.armazenamento.apagar(caminho).catch((erro: unknown) => pedido.log.warn({ tarefa: tarefa.id, caminho, erro: (erro as Error).message }, "Arquivo da tarefa excluída não foi apagado"));
+    }
+    pedido.log.info({ tarefa: tarefa.id, pessoa: pedido.pessoaDaSessao?.nome }, "Tarefa excluída");
+    return { excluida: true };
+  });
 
   servidor.get<{ Params: { id: string } }>("/api/tarefas/:id/itens", { schema: { params: ID } }, async (pedido) => {
     await tarefaPronta(pedido.params.id);

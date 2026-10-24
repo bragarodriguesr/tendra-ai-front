@@ -88,6 +88,8 @@ export const listarTarefas = () => pedir("/tarefas");
 export const obterTarefa = (id) => pedir(`/tarefas/${id}`);
 export const listarItensDaTarefa = (id) => pedir(`/tarefas/${id}/itens`);
 export const enderecoDaPlanilha = (id) => `/api/tarefas/${id}/planilha`;
+/** Exclui a tarefa com todos os registros e arquivos dela (cenário 60). Só o Aprovador, no modo compartilhado. */
+export const excluirTarefa = (id) => pedir(`/tarefas/${id}`, { method: "DELETE" });
 
 /** Cria a tarefa. Recusa na hora o que não for .xlsx ou passar de 10 MB, com as mesmas mensagens do backend. */
 export async function criarTarefa(file, dados) {
@@ -107,6 +109,10 @@ export const restaurarItem = (id, numero, pessoa) => pedir(doItem(id, numero, "r
 export const aprovarItemNaApi = (id, numero, pessoa) => pedir(doItem(id, numero, "aprovar"), { method: "POST", corpo: { pessoa } });
 export const avaliarItemNaApi = (id, numero, pessoa, valor, motivo) =>
   pedir(doItem(id, numero, "avaliacao"), { method: "PUT", corpo: motivo ? { pessoa, valor, motivo } : { pessoa, valor } });
+// Cenários 57 a 59: o alerta vai pelo tipo; a fonte, pelo número (a partir de 1).
+export const reconhecerAlertaNaApi = (id, numero, pessoa, tipo) => pedir(doItem(id, numero, `alertas/${tipo}/reconhecer`), { method: "POST", corpo: { pessoa } });
+export const escolherFonteNaApi = (id, numero, pessoa, fonte) => pedir(doItem(id, numero, "fonte"), { method: "POST", corpo: { pessoa, fonte } });
+export const revisarItemNaApi = (id, numero, pessoa) => pedir(doItem(id, numero, "revisar"), { method: "POST", corpo: { pessoa } });
 
 const DIA = 24 * 60 * 60 * 1000;
 const p2 = (n) => String(n).padStart(2, "0");
@@ -122,9 +128,15 @@ export function hojeIso(hoje = new Date()) {
   return `${hoje.getFullYear()}-${p2(hoje.getMonth() + 1)}-${p2(hoje.getDate())}`;
 }
 
-/** Converte o item do backend para o formato da tela (o mesmo de `seedItems` em data.js). */
+/** Converte o item do backend para o formato da tela (o mesmo de `seedItems` em data.js), com as datas em dd/mm/aaaa hh:mm. */
 export function paraItemDaTela(item, total) {
-  return { ...item, tot: total, ...(item.at ? { at: dataHoraDaTela(item.at) } : null) };
+  return {
+    ...item,
+    tot: total,
+    alerts: item.alerts.map((a) => (a.ack ? { ...a, ack: { ...a.ack, at: dataHoraDaTela(a.ack.at) } } : a)),
+    ...(item.at ? { at: dataHoraDaTela(item.at) } : null),
+    ...(item.rat ? { rat: dataHoraDaTela(item.rat) } : null)
+  };
 }
 
 /** Converte o documento do backend para o formato da tela (o mesmo de `seedDocs` em data.js). */

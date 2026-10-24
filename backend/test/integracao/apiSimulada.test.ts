@@ -66,6 +66,6 @@ describe("Cenário 27 · configuração do servidor", () => {
     expect(carregarConfiguracaoDoServidor({ ANTHROPIC_API_KEY: "chave-falsa" }, "/tmp").api).toEqual({ tipo: "real", chaveApi: "chave-falsa" });
     const simulada = carregarConfiguracaoDoServidor({ TENDRA_API_SIMULADA: "1" }, "/tmp");
     expect(simulada.api).toEqual({ tipo: "simulada" });
-    expect(simulada.ia.modelo).toBe("claude-opus-5-5");
+    expect(simulada.ia.modelo).toBe("claude-sonnet-5-5");
   });
 });
