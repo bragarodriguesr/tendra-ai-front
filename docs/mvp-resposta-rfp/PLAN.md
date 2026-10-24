@@ -465,7 +465,17 @@ Pedida pelo grupo em 24/10/2026. SPEC, cenários 62 a 64.
 ### G3. "Ver detalhes" e tela da tarefa sem o caminho
 - `GET /api/tarefas/:id/empresa` e a barra lateral "Ver detalhes" ao lado de "Abrir revisão", com a empresa e os contatos. O caminho "Tarefas / [nome]" saiu da tela da tarefa.
 
-**Situação (24/10/2026): implementada.** Testes do backend (lista de usuários, gravação, reaproveitamento de empresa e contato, tarefa sem empresa, exclusão mantendo a empresa) no PGlite e no Postgres; cópia das tarefas antigas conferida no Postgres local (empresas unificadas pelo CNPJ e pelo nome, contatos pelo e-mail, com os dados mais recentes); jornada de ponta a ponta com um contato e a barra "Ver detalhes"; conferência no navegador com login (lista de responsáveis com os perfis, barra lateral e tela sem o caminho).
+**Situação (24/10/2026): implementada e conferida no ambiente publicado.** Testes do backend (lista de usuários, gravação, reaproveitamento de empresa e contato, tarefa sem empresa, exclusão mantendo a empresa) no PGlite e no Postgres; cópia das tarefas antigas conferida no Postgres local (empresas unificadas pelo CNPJ e pelo nome, contatos pelo e-mail, com os dados mais recentes); jornada de ponta a ponta com um contato e a barra "Ver detalhes"; conferência no navegador com login (lista de responsáveis com os perfis, barra lateral e tela sem o caminho).
+
+### Conferência da fase G no ambiente publicado (24/10/2026)
+
+Deploy no Render às 22:33 UTC, com a migração `007_empresas_e_contatos.sql` aplicada na subida. Testes do grupo, conferidos nos logs do Render e no banco do Supabase:
+
+| Etapa | Situação |
+|---|---|
+| G1 Responsável | Conferido: a Nova RFP chamou `GET /api/usuarios` e a tarefa nova (RFP-04, Grupo Gasbras, criada às 22:40) foi gravada com o responsável "User Teste 2", um dos perfis da plataforma. |
+| G2 Empresa e contatos | Conferido: a cópia das tarefas antigas ligou a RFP-01 à Rede Varejo Alfa e a RFP-02 ao Banco Horizonte, com o contato dela; a RFP-04 gravou a empresa com o CNPJ e os dois contatos na ordem do formulário (cargo, telefone e e-mail). As tabelas novas estão com RLS ligado. |
+| G3 "Ver detalhes" | Conferido: a barra lateral foi aberta nas três tarefas (`GET /api/tarefas/:id/empresa` entre 22:37 e 22:41) e a tela da tarefa está sem o caminho, no teste manual do grupo. |
 
 ### Pendências registradas em 24/10/2026 (fora da fase E, por decisão do grupo)
 1. **Fase A:** taxa de aceitação; RFP-03 e variantes de borda com a API real.
