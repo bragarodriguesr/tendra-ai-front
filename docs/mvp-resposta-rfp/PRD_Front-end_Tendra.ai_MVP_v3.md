@@ -227,14 +227,23 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 - Recolhido, cada ícone mantém o nome como rótulo acessível e dica ao passar o mouse, na mesma posição do menu aberto. O estado se mantém ao trocar de tela.
 - Abaixo de 900 px, o ☰ abre o menu por cima do conteúdo.
 
-**F-37 · P1 · Sino de alertas** — Implementado (alertas **Simulados**)
+**F-37 · P1 · Sino de alertas** — Implementado (com o servidor, alertas reais de tarefas e da base desde 24/10/2026; sem ele, Simulados)
 
 - O sino mostra um ponto vermelho enquanto houver alerta não lido; o rótulo acessível diz quantos.
 - Ao clicar, abre a lista "Alertas". Cada alerta mostra: ponto de não lido, ícone, tipo e data, empresa e texto, e a ação.
 - Clicar num alerta marca como lido, fecha a lista e abre o destino. "Marcar como lidos" limpa todos.
 - Os mesmos alertas aparecem no cartão de alertas da tela de Tarefas (F-38). Lido num lugar, some do cartão. A ação do cartão também marca como lido.
-- Tipos hoje: **Falha no carregamento** (tarefa que não processou), **Reprocessamento** (tarefa que voltou para a fila), **Prazo vencido** e **Prazo próximo** (tarefa com itens sem aprovação).
-- O backend precisa gerar esses eventos e guardar o estado de leitura por usuário (Q-20).
+- **Só alertas de tarefas e da base de conhecimento.** Os alertas dos itens (baixa confiança, conflito, fonte antiga, termo crítico, resposta manual) ficam na tela de revisão e nunca vão ao sino.
+- **Tipos com o servidor (24/10/2026),** calculados no front a partir das tarefas, dos itens e da base:
+  - **Falha no processamento:** tarefa em falha, com o motivo;
+  - **Prazo vencido** e **Prazo próximo** (vence em até 5 dias), em tarefas ainda não 100% aprovadas;
+  - **Processamento concluído:** tarefa pronta com itens para revisar;
+  - **Tarefa 100% aprovada:** todos os itens aprovados e nenhum alerta pendente; a planilha preenchida está pronta para baixar;
+  - **Arquivos recusados na base** e **Erro no envio da base:** resultado do último envio de documentos;
+  - **Base desatualizada:** documentos ativos com mais de 120 dias sem atualização.
+- O cartão da tela de Tarefas (F-38) mostra só os alertas de tarefas.
+- O estado de leitura fica guardado no navegador, por pessoa; guardar no backend, para valer em qualquer computador, continua pendente (Q-20).
+- Sem o servidor, continuam os alertas de exemplo: **Falha no carregamento**, **Reprocessamento**, **Prazo vencido** e **Prazo próximo**.
 
 ## 8. Requisitos A: primeiros passos e base de conhecimento (T1, T2)
 
@@ -372,7 +381,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 - **Processando:** na T3, a coluna Progresso mostra "N de M processadas". Na T5, o cartão mostra "Processando: 42 de 180 perguntas.", uma barra, "Você pode sair desta tela. Avisaremos aqui quando terminar." e o botão "Sair e voltar depois".
 - **Falha:** cartão em vermelho com "Falha no carregamento", "Não foi possível carregar este arquivo. Tente de novo ou fale com o suporte." e a causa em linguagem simples (por exemplo, "arquivo ilegível ou protegido por senha"). Botões "Tentar de novo" e "Importar novo arquivo".
 - **Pronta:** cartão "Pronta para exportar", com "N de N itens aprovados." e o botão "Ir para exportação".
-- **Aviso ao terminar:** a falha e o reprocessamento já chegam pelo sino (F-37); o aviso de processamento concluído ainda não existe no sino. Contato de suporte na falha: Pendente.
+- **Aviso ao terminar:** a falha e o processamento concluído chegam pelo sino (F-37). Contato de suporte na falha: Pendente.
 
 **F-13 · P1 · Prazo restante e alertas de prazo** (MoSCoW: Should) — Implementado
 

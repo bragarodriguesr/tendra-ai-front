@@ -434,6 +434,23 @@ Pedida pelo grupo em 24/10/2026, depois da fase E.
 
 **Situação (24/10/2026): implementada.** Testes do backend (cenário 61, cabeçalho sem cache, planilha do download com edição, resposta manual e aprovação, sem nova requisição à IA), jornada de ponta a ponta (resposta manual mantida depois de recarregar; alerta tratado recolhido) e conferência no navegador com um backend de teste com login: Dashboard com tempo médio e concluídas por mês reais; cartão de alertas passando ao próximo pendente e recolhendo; pilha de fontes com a escolhida na frente e a outra cinza; "Entrar" logo depois de "Sair", com o logout atrasado de propósito, pede e-mail e senha, e a sessão nova sobrevive ao fim do logout antigo.
 
+### F7. Sino de alertas com alertas reais
+- Causa do sino vazio: com o servidor, ele só mostrava tarefa em falha e tarefa vencida (e só com itens), e as tarefas publicadas não tinham nenhum dos dois. Os exemplos fictícios só aparecem sem o servidor.
+- Agora, com o servidor: falha no processamento, prazo vencido ou próximo (até 5 dias), processamento concluído, tarefa 100% aprovada, arquivos recusados ou erro no último envio da base e base desatualizada (documentos ativos com mais de 120 dias). Nunca os alertas dos itens da revisão. O cartão da tela de Tarefas mostra só os de tarefas. O estado de leitura fica no navegador, por pessoa.
+- **Situação (24/10/2026): implementada.** Conferida no navegador com um backend de teste com login: os sete tipos aparecem, um alerta lido continua lido depois de recarregar, o cartão de Tarefas não mostra os da base e a recusa de um `.md` sem cabeçalho aparece no sino.
+
+### Conferência da fase F no ambiente publicado (24/10/2026)
+
+Deploy no Render às 18:16 UTC (sem migração). Testes do grupo, conferidos nos logs do Render e no banco do Supabase:
+
+| Etapa | Situação |
+|---|---|
+| F1 Dashboard | Conferido no publicado pelo grupo (teste manual). |
+| F2 Sair e entrar | Conferido: três ciclos de sair e entrar entre 18:20 e 18:26, cada login com e-mail e senha; as respostas da API saem com `Cache-Control: no-store`. |
+| F3 e F4 Alertas e fontes | Conferido: o User Teste 1 escolheu a fonte 2 num conflito e reconheceu os alertas de baixa confiança e de fonte antiga em seguida. |
+| F5 Resposta manual | Conferido: o User Teste 1 escreveu uma resposta num item sem rascunho, reconheceu o alerta de resposta manual e marcou o item como revisado. |
+| F6 Planilha | Conferido: a planilha da tarefa nova (RFP gerada com o Sonnet 5.5) foi baixada às 18:27, gerada em cerca de 2,3 s, com resposta 200. |
+
 ### Pendências registradas em 24/10/2026 (fora da fase E, por decisão do grupo)
 1. **Fase A:** taxa de aceitação; RFP-03 e variantes de borda com a API real.
 2. **Validação no ambiente publicado:** D15 (reinício no meio de uma tarefa); envio de planilha de 10 MB pelo rewrite da Vercel (PD6).
