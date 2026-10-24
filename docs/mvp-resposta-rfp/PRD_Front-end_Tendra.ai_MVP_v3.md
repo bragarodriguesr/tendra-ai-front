@@ -334,13 +334,14 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
   - **CNPJ** — opcional; novo na v2.
   - **Tipo** — RFP ou RFI; obrigatório.
   - **Prazo de submissão** — obrigatório; não pode estar no passado.
-  - **Responsável** — obrigatório; escolhido entre os usuários da empresa.
+  - **Responsável** — obrigatório; escolhido entre os usuários da plataforma (com login, os perfis ativos; sem login, as pessoas de exemplo), lidos de `GET /api/usuarios` desde 24/10/2026 (SPEC, cenário 62).
 - **CNPJ (novo):** máscara 00.000.000/0000-00 e conferência dos dígitos verificadores, com os erros "CNPJ incompleto." e "CNPJ inválido.".
 - **Contatos da empresa (novo):**
   - Bloco no fim do formulário: "Quem acompanha esta proposta do lado do cliente. Opcional."
   - Cada contato tem Nome, Cargo, Telefone (máscara (00) 00000-0000; erro "Telefone incompleto.") e E-mail (erro "E-mail inválido.").
   - "Adicionar contato" inclui outro contato. A lixeira remove um contato e só aparece quando há mais de um.
   - CNPJ e contatos são opcionais, mas o que for preenchido precisa estar válido (Q-17).
+  - **Gravação (24/10/2026; SPEC, cenário 63):** empresa e contatos ficam em tabelas próprias do banco (`empresas`, `contatos`, `tarefa_contatos`), para consulta futura. A empresa é a mesma quando o CNPJ é igual ou, sem CNPJ, quando o nome é igual; o contato com e-mail é o mesmo em todas as tarefas da empresa, com os dados mais recentes.
 - **Erros e envio:** os erros aparecem no campo depois de "Importar perguntas". Sem arquivo, um aviso pede o arquivo. "Cancelar" volta ao painel de tarefas.
 - **Base pequena:** com menos de 3 documentos prontos, a tela avisa "Sua base ainda é pequena. Os itens tendem a ficar sem contexto, mas você pode continuar."
 - **Depois do processamento:** "Processamento concluído", "Identificamos N perguntas." e "O texto original de cada item continua visível na revisão.", com o botão "Abrir revisão".
@@ -370,7 +371,8 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 
 **F-11 · P0 · Visão de completude** (T5; MoSCoW: Must) — Implementado
 
-- **Cabeçalho:** caminho "Tarefas / [nome]", selo de status, nome, e a linha "[empresa] · [tipo] · prazo [data] ([prazo restante]) · responsável [nome]". Botões "Exportação" e "Abrir revisão".
+- **Cabeçalho:** selo de status, nome, e a linha "[empresa] · [tipo] · prazo [data] ([prazo restante]) · responsável [nome]". Botões "Baixar planilha preenchida" (ou "Exportação" sem o servidor), "Ver detalhes" e "Abrir revisão". O caminho "Tarefas / [nome]" saiu em 24/10/2026.
+- **"Ver detalhes" (24/10/2026; SPEC, cenário 64):** abre uma barra lateral, como a do trecho da fonte (T7), com a empresa (nome, CNPJ, tipo, prazo, responsável e arquivo) e os contatos informados na importação (nome, cargo, telefone e e-mail). Esc ou "Fechar" fecham.
 - **Cartão de resumo:** só "X de Y itens aprovados" e a barra segmentada pelos cinco estados (sem rascunho, sugerida, em revisão, revisada, aprovada), com legenda e contagem em texto.
   - **Mudança da v1:** saíram os contadores "com sugestão" e "itens com alerta pendente" do cartão. O alerta pendente continua como filtro e em cada linha.
 - **Filtro (`FilterMenu`):** "Todos" + "Filtrar" com Sem rascunho, Sugerida, Em revisão, Revisada, Aprovada e Alerta pendente, cada um com a contagem. O filtro escolhido vale também na T6.

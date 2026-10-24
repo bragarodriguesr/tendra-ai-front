@@ -454,6 +454,7 @@ Estes cenários vêm de `docs/referencia/mvp-proposta-1/SPEC.md` (30, 36, 38, 39
 - **And** as outras tarefas não mudam
 - **And** uma tarefa em processamento não pode ser excluída (409), porque o processamento ainda grava itens e arquivos
 - **And** no modo compartilhado, só o Aprovador exclui; o Revisor recebe 403 e nada muda (como na planilha preenchida, cenário D9)
+- **And** a empresa e os contatos informados na tarefa ficam para consulta (cenário 63); só a ligação deles com a tarefa sai
 - **And** a exclusão não pode ser desfeita: a tela pede confirmação antes
 
 #### Cenário 61: resposta manual em item sem rascunho
@@ -465,6 +466,30 @@ Estes cenários vêm de `docs/referencia/mvp-proposta-1/SPEC.md` (30, 36, 38, 39
 - **And** como qualquer alerta, o de resposta manual precisa ser reconhecido antes de revisar ou aprovar na tela
 - **And** apagar todo o texto devolve o item para `"sem-rascunho"`, com o alerta "sem contexto"; "restaurar sugestão" não existe para esse item (400)
 - **And** a resposta manual não conta como sugestão da IA no relatório de aceitação (cenário 48): o item segue em "sem rascunho" lá
+
+### Tarefa: responsável, empresa e contatos
+
+#### Cenário 62: responsável escolhido entre os usuários da plataforma
+- **Given** a tela Nova RFP
+- **When** a pessoa abre o campo "Responsável"
+- **Then** as opções são os usuários da plataforma (`GET /api/usuarios`): com login, os perfis ativos; sem login, as pessoas da lista de configuração
+- **And** a lista traz só nome e papel, nunca o e-mail
+
+#### Cenário 63: empresa e contatos gravados numa estrutura própria
+- **Given** uma tarefa criada com empresa, CNPJ e contatos na Nova RFP
+- **When** a tarefa é gravada
+- **Then** a empresa e os contatos ficam nas tabelas `empresas`, `contatos` e `tarefa_contatos`, ligados à tarefa, na mesma transação da criação
+- **And** a empresa é a mesma quando o CNPJ é igual ou, sem CNPJ, quando o nome é igual (sem diferenciar maiúsculas); o nome fica o mais recente
+- **And** o contato com e-mail é o mesmo em todas as tarefas da empresa e fica com os dados mais recentes; contato sem nenhum campo preenchido é ignorado
+- **And** tarefa sem empresa não grava empresa; tarefas anteriores têm empresa e contatos copiados de `tarefas.dados` pela migração
+- **And** excluir a tarefa (cenário 60) apaga só a ligação com os contatos; empresa e contatos ficam para consulta
+- **And** empresa e contatos nunca vão à IA (cenário 6)
+
+#### Cenário 64: detalhes da tarefa
+- **Given** uma tarefa
+- **When** a pessoa usa "Ver detalhes" na tela da tarefa
+- **Then** uma barra lateral mostra a empresa (nome, CNPJ, tipo, prazo, responsável e arquivo) e os contatos na ordem em que foram informados (`GET /api/tarefas/:id/empresa`)
+- **And** sem contatos, a barra diz "Nenhum contato informado na importação."
 
 ### Avaliação da IA
 

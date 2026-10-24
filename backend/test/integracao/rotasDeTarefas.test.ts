@@ -188,3 +188,66 @@ describe("Identificador da tarefa", () => {
     expect(desconhecido.json()).toEqual({ erro: "Tarefa não encontrada." });
   });
 });
+
+describe("Cenários 62 a 64 · responsável, empresa e contatos", () => {
+  const contato = (nome: string, email = "", cargo = "", telefone = "") => ({ nome, cargo, telefone, email });
+
+  beforeEach(async () => {
+    await banco.exec("TRUNCATE empresas CASCADE");
+  });
+
+  it("lista os usuários da plataforma para o campo Responsável, sem e-mail", async () => {
+    expect((await obter("/api/usuarios")).json()).toEqual({ usuarios: [{ nome: "Kadu Mendes", papel: "Revisor" }, { nome: "Marcelo Vieira", papel: "Aprovador" }] });
+  });
+
+  it("grava empresa e contatos numa estrutura própria e devolve os dados da tarefa", async () => {
+    const { id, terminou } = await enviar(RFP_01, {
+      nome: "RFP Alfa",
+      empresa: "Rede Varejo Alfa",
+      cnpj: "11.222.333/0001-81",
+      responsavel: "Marcelo Vieira",
+      contatos: [contato("Ana Souza", "ana@alfa.com.br", "Compras", "(11) 99999-0000"), contato("", "", "", ""), contato("Bruno Lima")],
+    });
+    await terminou();
+    expect((await obter(`/api/tarefas/${id}/empresa`)).json()).toEqual({
+      empresa: { nome: "Rede Varejo Alfa", cnpj: "11222333000181" },
+      contatos: [contato("Ana Souza", "ana@alfa.com.br", "Compras", "(11) 99999-0000"), contato("Bruno Lima")],
+    });
+    const { rows } = await banco.query<{ empresas: number; contatos: number }>("SELECT (SELECT count(*)::int FROM empresas) AS empresas, (SELECT count(*)::int FROM contatos) AS contatos");
+    expect(rows[0]).toEqual({ empresas: 1, contatos: 2 });
+  });
+
+  it("reaproveita a empresa (pelo CNPJ ou, sem CNPJ, pelo nome) e o contato com o mesmo e-mail, com os dados mais recentes", async () => {
+    const a = await enviar(RFP_01, { empresa: "Rede Varejo Alfa", cnpj: "11222333000181", contatos: [contato("Ana", "ANA@alfa.com.br")] });
+    const b = await enviar(RFP_01, { empresa: "Rede Varejo Alfa S.A.", cnpj: "11.222.333/0001-81", contatos: [contato("Ana Souza", "ana@alfa.com.br", "Diretora")] });
+    const c = await enviar(RFP_01, { empresa: "Banco Horizonte" });
+    const d = await enviar(RFP_01, { empresa: "banco horizonte " });
+    await Promise.all([a, b, c, d].map((x) => x.terminou()));
+
+    expect((await obter(`/api/tarefas/${a.id}/empresa`)).json()).toEqual({
+      empresa: { nome: "Rede Varejo Alfa S.A.", cnpj: "11222333000181" },
+      contatos: [contato("Ana Souza", "ana@alfa.com.br", "Diretora")],
+    });
+    const { rows } = await banco.query<{ nome: string; tarefas: number; contatos: number }>(
+      "SELECT e.nome, (SELECT count(*)::int FROM tarefas t WHERE t.empresa_id = e.id) AS tarefas, (SELECT count(*)::int FROM contatos c WHERE c.empresa_id = e.id) AS contatos FROM empresas e ORDER BY lower(e.nome)",
+    );
+    expect(rows).toEqual([
+      { nome: "banco horizonte", tarefas: 2, contatos: 0 },
+      { nome: "Rede Varejo Alfa S.A.", tarefas: 2, contatos: 1 },
+    ]);
+  });
+
+  it("tarefa sem empresa não grava empresa; excluir a tarefa mantém empresa e contatos para consulta", async () => {
+    const sem = await enviar(RFP_01, {});
+    const com = await enviar(RFP_01, { empresa: "Rede Varejo Alfa", contatos: [contato("Ana", "ana@alfa.com.br")] });
+    await Promise.all([sem.terminou(), com.terminou()]);
+    expect((await obter(`/api/tarefas/${sem.id}/empresa`)).json()).toEqual({ empresa: null, contatos: [] });
+
+    expect((await servidor.inject({ method: "DELETE", url: `/api/tarefas/${com.id}` })).statusCode).toBe(200);
+    const { rows } = await banco.query<{ empresas: number; contatos: number; ligacoes: number }>(
+      "SELECT (SELECT count(*)::int FROM empresas) AS empresas, (SELECT count(*)::int FROM contatos) AS contatos, (SELECT count(*)::int FROM tarefa_contatos) AS ligacoes",
+    );
+    expect(rows[0]).toEqual({ empresas: 1, contatos: 1, ligacoes: 0 });
+    expect((await obter("/api/tarefas/00000000-0000-4000-8000-000000000000/empresa")).statusCode).toBe(404);
+  });
+});

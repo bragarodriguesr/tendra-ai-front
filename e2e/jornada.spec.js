@@ -50,10 +50,21 @@ test("da base à resposta aprovada, mantida depois de recarregar", async ({ page
   await page.locator("#nt-cnpj").fill("11222333000181");
   await page.locator("#nt-due").fill("2099-12-31");
   await page.locator("#nt-owner").selectOption({ label: "Marcelo Vieira" });
+  const contato = page.getByRole("group", { name: "Contato 1" });
+  await contato.getByLabel("Nome").fill("Ana Souza");
+  await contato.getByLabel("E-mail").fill("ana@alfa.com.br");
   await page.getByRole("button", { name: "Importar perguntas" }).click();
 
   // 3. Progresso até a tarefa ficar pronta; a planilha preenchida pode ser baixada.
   await expect(page.getByRole("heading", { level: 1, name: "RFP-01-Rede-Varejo-Alfa" })).toBeVisible();
+  // "Ver detalhes": empresa e contatos gravados na importação (cenários 63 e 64).
+  await page.getByRole("button", { name: "Ver detalhes" }).click();
+  const detalhes = page.getByRole("dialog", { name: "Detalhes da tarefa" });
+  await expect(detalhes).toContainText("Rede Varejo Alfa");
+  await expect(detalhes).toContainText("11.222.333/0001-81");
+  await expect(detalhes).toContainText("Ana Souza");
+  await expect(detalhes).toContainText("ana@alfa.com.br");
+  await detalhes.getByRole("button", { name: "Fechar", exact: true }).click();
   await expect(page.getByRole("button", { name: "Abrir revisão" })).toBeVisible({ timeout: 120_000 });
   const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Baixar planilha preenchida" }).click()]);
   expect(download.suggestedFilename()).toBe("RFP-01-Rede-Varejo-Alfa-preenchida.xlsx");

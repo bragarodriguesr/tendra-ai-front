@@ -451,6 +451,22 @@ Deploy no Render às 18:16 UTC (sem migração). Testes do grupo, conferidos nos
 | F5 Resposta manual | Conferido: o User Teste 1 escreveu uma resposta num item sem rascunho, reconheceu o alerta de resposta manual e marcou o item como revisado. |
 | F6 Planilha | Conferido: a planilha da tarefa nova (RFP gerada com o Sonnet 5.5) foi baixada às 18:27, gerada em cerca de 2,3 s, com resposta 200. |
 
+## Fase G: responsável, empresa e contatos da tarefa
+
+Pedida pelo grupo em 24/10/2026. SPEC, cenários 62 a 64.
+
+### G1. Responsável entre os usuários da plataforma
+- `GET /api/usuarios`: com login, os perfis ativos; sem login, a lista de configuração; só nome e papel. O campo "Responsável" da Nova RFP usa essa lista.
+
+### G2. Empresa e contatos em estrutura própria
+- Migração `007_empresas_e_contatos.sql`: tabelas `empresas` (CNPJ único; sem CNPJ, nome único sem diferenciar maiúsculas), `contatos` (e-mail único por empresa) e `tarefa_contatos` (ordem do formulário), coluna `tarefas.empresa_id` e RLS nas tabelas novas. A migração copia empresa e contatos das tarefas já gravadas a partir de `tarefas.dados`.
+- A criação da tarefa grava empresa e contatos na mesma transação. Excluir a tarefa apaga só a ligação com os contatos.
+
+### G3. "Ver detalhes" e tela da tarefa sem o caminho
+- `GET /api/tarefas/:id/empresa` e a barra lateral "Ver detalhes" ao lado de "Abrir revisão", com a empresa e os contatos. O caminho "Tarefas / [nome]" saiu da tela da tarefa.
+
+**Situação (24/10/2026): implementada.** Testes do backend (lista de usuários, gravação, reaproveitamento de empresa e contato, tarefa sem empresa, exclusão mantendo a empresa) no PGlite e no Postgres; cópia das tarefas antigas conferida no Postgres local (empresas unificadas pelo CNPJ e pelo nome, contatos pelo e-mail, com os dados mais recentes); jornada de ponta a ponta com um contato e a barra "Ver detalhes"; conferência no navegador com login (lista de responsáveis com os perfis, barra lateral e tela sem o caminho).
+
 ### Pendências registradas em 24/10/2026 (fora da fase E, por decisão do grupo)
 1. **Fase A:** taxa de aceitação; RFP-03 e variantes de borda com a API real.
 2. **Validação no ambiente publicado:** D15 (reinício no meio de uma tarefa); envio de planilha de 10 MB pelo rewrite da Vercel (PD6).

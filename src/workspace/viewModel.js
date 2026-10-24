@@ -1,4 +1,4 @@
-import { AL, ST, code, plural, ITEM_TASKS, TODAY_ISO } from "./data.js";
+import { AL, ST, code, plural, ITEM_TASKS, TODAY_ISO, OWN } from "./data.js";
 import { hojeIso } from "../api.js";
 
 const DANGER = "#A8402E";
@@ -454,12 +454,15 @@ export function buildView(s, ws) {
     errDue: dueErr || null,
     errOwner: tried && !f.owner ? "Escolha um responsável." : null,
     smallBase: readyDocs < 3, today,
+    // Responsável: com o servidor, os usuários da plataforma (cenário 62); sem ele, os de exemplo.
+    owners: online && s.usuarios.length ? s.usuarios.map((u) => u.nome) : OWN,
     errFile: f.fileError || (tried && !f.file ? "Selecione a planilha de perguntas (.xlsx)." : null)
   };
 
   return {
     isA, online, podeExportar, userName: ws.name(), navGroups, navValue,
     deletingTask: s.deleting ? tasks.find((t) => t.id === s.deleting) || null : null,
+    detalhes: s.detalhes ? { ...s.detalhes, task: tasks.find((t) => t.id === s.detalhes.id) || ws.taskInfo(s.detalhes.id, s) || {} } : null,
     docs, readyDocs, onb, tasks, taskAlerts, alertsUnread, tDeck, dash, task, counts: c, segs, filterTabs, rows,
     revTask: (ws.taskInfo(s.itemsTask, s) || {}).name, cur, savedText, drawer, exportCards, exportTitle, history, historyTabs, form
   };
