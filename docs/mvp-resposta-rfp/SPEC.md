@@ -358,7 +358,7 @@ Decisões de 21/10/2026: a Tendra sugere a resposta seguindo o modelo da própri
 
 ### Revisão e aceitação
 
-Estes cenários vêm de `docs/referencia/mvp-proposta-1/SPEC.md` (30, 36, 38, 39, 40, 41 e 47), adaptados às fases A a C. O bloqueio por papel entrou na fase D (cenários D8 e D9). Reconhecer alerta, escolher fonte em conflito e marcar como revisado passaram a ser gravados em 24/10/2026 (cenários 57 a 59), junto com a exclusão de tarefa (cenário 60). Escrever resposta em item sem fonte continua fora desta versão.
+Estes cenários vêm de `docs/referencia/mvp-proposta-1/SPEC.md` (30, 36, 38, 39, 40, 41 e 47), adaptados às fases A a C. O bloqueio por papel entrou na fase D (cenários D8 e D9). Reconhecer alerta, escolher fonte em conflito e marcar como revisado passaram a ser gravados em 24/10/2026 (cenários 57 a 59), junto com a exclusão de tarefa (cenário 60) e a resposta manual em item sem rascunho (cenário 61).
 
 #### Cenário 41: pessoa que age
 - **Given** uma ação de revisão (editar, restaurar, aprovar, avaliar, reconhecer alerta, escolher fonte ou marcar como revisado)
@@ -368,7 +368,7 @@ Estes cenários vêm de `docs/referencia/mvp-proposta-1/SPEC.md` (30, 36, 38, 39
 - **Nota:** exceção E1. O papel é gravado, mas não restringe nenhuma ação nesta versão.
 
 #### Cenário 42: editar rascunho
-- **Given** um item `"sugerida"`, `"em-revisao"` ou `"aprovada"`
+- **Given** um item `"sugerida"`, `"em-revisao"`, `"revisada"` ou `"aprovada"` com sugestão da IA (para item sem sugestão, ver o cenário 61)
 - **When** a pessoa salva um texto editado
 - **Then** `paras` passa a refletir o novo texto, `orig` não muda e o item vai para `"em-revisao"`
 - **And** se estava aprovado, os campos de aprovação deixam de valer e o evento "aprovação removida" é registrado
@@ -425,6 +425,7 @@ Estes cenários vêm de `docs/referencia/mvp-proposta-1/SPEC.md` (30, 36, 38, 39
 - **And** depois de recarregar a página ou de reiniciar o backend, o alerta continua reconhecido, para todas as pessoas
 - **And** reconhecer de novo um alerta já reconhecido não muda nada nem registra outro evento; um alerta que o item não tem dá 404
 - **Nota:** "Nenhuma, vou escrever", num conflito, reconhece o alerta de conflito da mesma forma e abre o editor.
+- **Na tela:** depois de tratar um alerta, o cartão passa sozinho ao próximo alerta pendente do item; com todos tratados, ele se recolhe num resumo ("Todos os N alertas tratados · ver histórico"), que abre os alertas reconhecidos como histórico.
 
 #### Cenário 58: escolher fonte em conflito
 - **Given** um item com o alerta de conflito ainda não reconhecido
@@ -432,6 +433,7 @@ Estes cenários vêm de `docs/referencia/mvp-proposta-1/SPEC.md` (30, 36, 38, 39
 - **Then** a fonte fica marcada como escolhida, passa a ser a fonte de todos os parágrafos, e o alerta de conflito fica reconhecido pela mesma pessoa, com a data e hora do backend
 - **And** o evento é registrado com o número da fonte
 - **And** uma fonte que não está em conflito é recusada com 400; sem conflito pendente, a resposta é 409; nos dois casos nada muda
+- **Na tela:** as fontes em conflito aparecem como cartões sobrepostos, com setas para passar de uma a outra; depois da escolha, a escolhida fica sempre na frente, com o selo "Fonte escolhida", e a outra fica cinza, com o selo "Não escolhida", só como histórico.
 
 #### Cenário 59: marcar como revisado
 - **Given** um item com rascunho, ainda não aprovado
@@ -451,6 +453,16 @@ Estes cenários vêm de `docs/referencia/mvp-proposta-1/SPEC.md` (30, 36, 38, 39
 - **And** uma tarefa em processamento não pode ser excluída (409), porque o processamento ainda grava itens e arquivos
 - **And** no modo compartilhado, só o Aprovador exclui; o Revisor recebe 403 e nada muda (como na planilha preenchida, cenário D9)
 - **And** a exclusão não pode ser desfeita: a tela pede confirmação antes
+
+#### Cenário 61: resposta manual em item sem rascunho
+- **Given** um item `"sem-rascunho"`, sem sugestão da IA (`orig` vazio)
+- **When** a pessoa escreve a resposta no quadro de resposta da tela de revisão
+- **Then** o texto vira os parágrafos do item, sem fonte, o item vai para `"em-revisao"` e o alerta "sem contexto" dá lugar ao alerta de resposta manual, com o nome de quem escreveu
+- **And** a tela mostra a etiqueta "Resposta manual" no item e "Resposta manual, sem fonte na base · escrita por [nome]" abaixo da resposta
+- **And** a edição é registrada como evento (`edicao`, com o detalhe `manual`); outra pessoa pode editar depois, e quem escreveu primeiro continua registrado
+- **And** como qualquer alerta, o de resposta manual precisa ser reconhecido antes de revisar ou aprovar na tela
+- **And** apagar todo o texto devolve o item para `"sem-rascunho"`, com o alerta "sem contexto"; "restaurar sugestão" não existe para esse item (400)
+- **And** a resposta manual não conta como sugestão da IA no relatório de aceitação (cenário 48): o item segue em "sem rascunho" lá
 
 ### Avaliação da IA
 
@@ -528,7 +540,7 @@ Exigidos pela constitution (IV). São medidos pelo comando de avaliação (cená
 - Qualquer formato de base que não seja `.md`, conversão de outros formatos e exclusão de documentos. A base entra pela tela ou pelo comando, sempre em `.md`.
 - RFP em formato diferente de `.xlsx`.
 - **Tradução das respostas para o idioma da RFP ou para outros idiomas.** No MVP, as respostas são sempre escritas em português (cenário 50). A tradução fica registrada como evolução futura do produto.
-- Resposta manual em item sem fonte. Nesta versão, a tela não oferece o editor para itens sem rascunho. Reconhecer alerta, escolher fonte e "marcar como revisado" estão nos cenários 57 a 59; o bloqueio por papel, nos cenários D8 e D9.
+- A planilha preenchida (cenário 24) é gerada no processamento: não traz edições, aprovações nem respostas manuais feitas depois na revisão.
 - Exportação final aprovada, histórico e trilha de auditoria completa. A planilha do cenário 24 contém respostas sugeridas, identificadas como não revisadas.
 - Tela da taxa de aceitação: o relatório é consultado por rota e por comando.
 - Envio de qualquer resposta ao cliente final.

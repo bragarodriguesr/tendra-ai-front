@@ -64,6 +64,8 @@ O modo é escolhido por variável de ambiente (`TENDRA_MODO=local|compartilhado`
 - **Given** uma pessoa autenticada
 - **When** ela pede para sair (`POST /api/auth/logout`)
 - **Then** a sessão é apagada no backend, e o mesmo cookie passa a receber 401 em qualquer rota do Workspace
+- **And** "Entrar" logo depois de "Sair" sempre pede e-mail e senha, mesmo antes de o backend responder ao logout; um novo login espera esse logout terminar, para que a resposta dele não apague o cookie da nova sessão
+- **And** nenhuma resposta da API fica em cache (`Cache-Control: no-store`), no navegador nem no proxy (correção de 24/10/2026)
 
 #### Cenário D6: sessão expira sem uso
 - **Given** uma sessão sem nenhuma requisição há mais tempo que o limite configurado (padrão: 8 horas)

@@ -30,6 +30,7 @@ async function pedir(caminho, { method = "GET", corpo } = {}) {
   try {
     resposta = await fetch("/api" + caminho, {
       method,
+      cache: "no-store",
       headers: corpo === undefined ? undefined : { "Content-Type": "application/json" },
       body: corpo === undefined ? undefined : JSON.stringify(corpo)
     });
@@ -50,7 +51,7 @@ async function pedir(caminho, { method = "GET", corpo } = {}) {
  */
 export async function obterSessao() {
   try {
-    const resposta = await fetch("/api/auth/me");
+    const resposta = await fetch("/api/auth/me", { cache: "no-store" });
     if (resposta.status === 401) return { modo: "compartilhado", pessoa: null };
     if (!resposta.ok) return { modo: "local", pessoa: null };
     const json = await resposta.json();
@@ -134,7 +135,10 @@ export function paraItemDaTela(item, total) {
     ...item,
     tot: total,
     alerts: item.alerts.map((a) => (a.ack ? { ...a, ack: { ...a.ack, at: dataHoraDaTela(a.ack.at) } } : a)),
-    ...(item.at ? { at: dataHoraDaTela(item.at) } : null),
+    // Resposta manual (cenário 61): quem escreveu vem no alerta.
+    ...(item.alerts.some((a) => a.t === "manual" && a.by) ? { manualBy: item.alerts.find((a) => a.t === "manual").by } : null),
+    // Data da aprovação em ISO, para os indicadores do Dashboard.
+    ...(item.at ? { at: dataHoraDaTela(item.at), atIso: item.at } : null),
     ...(item.rat ? { rat: dataHoraDaTela(item.rat) } : null)
   };
 }

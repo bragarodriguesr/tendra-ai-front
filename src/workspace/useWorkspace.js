@@ -21,6 +21,8 @@ function prazoDaTela(prazo) {
 
 const initialState = ({ initialScreen, role }) => ({
   view: "site", tAi: 0, hfilter: "todos", alertAt: { id: null, i: 0 },
+  // Cartão de fontes em conflito mostrado e item com o histórico de alertas aberto (todos tratados).
+  srcAt: { id: null, i: 0 }, alertsOpen: null,
   screen: initialScreen, role,
   items: seedItems(), itemsTask: "t1", store: {}, sel: "r4", filter: "todos",
   edit: false, showOrig: false, drawer: null, dialog: false, toast: null, reviewPane: "list",
@@ -50,6 +52,8 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
   // Textos editados ainda não gravados, por "tarefa/item": gravados 800 ms depois da última tecla.
   const pendingSaves = React.useRef({});
   const toastTimer = React.useRef(null);
+  // Logout em andamento (fase D): o login seguinte espera ele terminar.
+  const saindo = React.useRef(Promise.resolve());
 
   const ws = React.useMemo(() => {
     const setState = (patch) => setRaw((s) => {
@@ -77,16 +81,25 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
       },
       /** Login do modo compartilhado. Lança ErroDaApi com a mensagem do backend. */
       async entrar(email, senha) {
+        // Um "Sair" ainda em andamento termina antes: a resposta dele apaga o cookie e não pode apagar o da nova sessão.
+        await saindo.current;
         const { pessoa } = await entrar(email, senha);
         setState({ sessao: pessoa, role: pessoa.papel, pessoas: [] });
         api.loadBase();
         api.loadTasks();
       },
-      /** Sai: apaga a sessão no backend (quando há login) e esquece a pessoa. */
+      /**
+       * Sai: esquece a pessoa na hora, antes da resposta do backend, para que "Entrar" logo em
+       * seguida sempre peça e-mail e senha; depois apaga a sessão no backend (quando há login).
+       */
       async sair() {
-        api.flushSaves();
-        if (ref.current.sessao) await sair().catch(() => {});
-        setState({ sessao: null });
+        const tinhaSessao = !!ref.current.sessao;
+        // Grava o texto pendente ainda com a sessão aberta.
+        const gravando = api.flushSaves();
+        setState({ sessao: null, fb: {}, pessoas: [] });
+        if (!tinhaSessao) return;
+        saindo.current = gravando.then(() => sair()).catch(() => {});
+        await saindo.current;
       },
       readAlert(a) { setState((s) => ({ alertsRead: { ...s.alertsRead, [a.key]: true } })); a.go(); },
       readAllAlerts(keys) { setState((s) => ({ alertsRead: { ...s.alertsRead, ...Object.fromEntries(keys.map((k) => [k, true])) } })); },
@@ -281,10 +294,11 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         });
         const s = ref.current;
         if (!api.isServerItem(s)) { setState({ saved: Date.now() }); return; }
-        // Texto vazio não é gravado: o backend recusa (sem editor para item sem rascunho nesta versão).
+        // Texto vazio só é gravado na resposta manual (item sem sugestão): o item volta a "sem rascunho" (cenário 61).
         const key = s.itemsTask + "/" + s.sel, old = pendingSaves.current[key];
         if (old) clearTimeout(old.timer);
-        if (text.trim() === "") { delete pendingSaves.current[key]; return; }
+        const atual = s.items.find((i) => i.id === s.sel);
+        if (text.trim() === "" && atual && atual.orig !== "") { delete pendingSaves.current[key]; return; }
         pendingSaves.current[key] = { tid: s.itemsTask, id: s.sel, pessoa: api.person(s).id, text, timer: setTimeout(() => api.flushSaves(key), 800) };
       },
       /** Escolhe o item na Revisão, gravando antes o texto pendente. */
@@ -308,21 +322,45 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
           return null;
         }
       },
+      /**
+       * Depois de tratar o alerta `idx`, o cartão passa ao próximo alerta pendente do item; sem
+       * nenhum pendente, ele se recolhe e fica só o resumo, que abre o histórico.
+       */
+      nextAlert(id, idx) {
+        // Atualização por função: o item reconhecido pode ainda não estar em `ref.current`.
+        setState((s) => {
+          const item = s.items.find((i) => i.id === id);
+          if (!item) return {};
+          const pend = item.alerts.map((a, k) => (a.ack ? -1 : k)).filter((k) => k >= 0);
+          const next = pend.find((k) => k > idx) ?? pend[0];
+          return next === undefined ? { alertAt: { id: null, i: 0 }, alertsOpen: null } : { alertAt: { id, i: next } };
+        });
+      },
       async ack(id, idx) {
         if (api.isServerItem()) {
           const alerta = ref.current.items.find((i) => i.id === id).alerts[idx];
           const item = await api.serverAction(id, (tid, n, p) => reconhecerAlertaNaApi(tid, n, p, alerta.t), "Alerta não reconhecido");
           const gravado = item && item.alerts.find((a) => a.t === alerta.t);
-          if (gravado) api.toast("Alerta reconhecido", `${gravado.ack.by}, ${dataHoraDaTela(gravado.ack.at)}`);
+          if (gravado) {
+            api.nextAlert(id, idx);
+            api.toast("Alerta reconhecido", `${gravado.ack.by}, ${dataHoraDaTela(gravado.ack.at)}`);
+          }
           return;
         }
         const by = api.name(), at = nowStr();
         api.upd(id, (i) => { i.alerts = i.alerts.map((a, k) => (k === idx ? { ...a, ack: { by, at } } : a)); return i; });
+        api.nextAlert(id, idx);
         api.toast("Alerta reconhecido", `${by}, ${at}`);
       },
       async useSource(id, k) {
+        // A escolhida vai para a frente da pilha de fontes; o cartão de alertas passa ao próximo pendente.
+        const conflito = ref.current.items.find((i) => i.id === id).alerts.findIndex((a) => a.t === "conflict");
+        const depois = () => { setState({ srcAt: { id: null, i: 0 } }); api.nextAlert(id, conflito); };
         if (api.isServerItem()) {
-          if (await api.serverAction(id, (tid, n, p) => escolherFonteNaApi(tid, n, p, k), "Fonte não escolhida")) api.toast("Fonte escolhida", "O alerta de conflito foi reconhecido.");
+          if (await api.serverAction(id, (tid, n, p) => escolherFonteNaApi(tid, n, p, k), "Fonte não escolhida")) {
+            depois();
+            api.toast("Fonte escolhida", "O alerta de conflito foi reconhecido.");
+          }
           return;
         }
         const by = api.name(), at = nowStr();
@@ -332,6 +370,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
           i.alerts = i.alerts.map((a) => (a.t === "conflict" ? { ...a, ack: { by, at } } : a));
           return i;
         });
+        depois();
         api.toast("Fonte escolhida", "O alerta de conflito foi reconhecido.");
       },
       async approve() {

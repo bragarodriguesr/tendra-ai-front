@@ -38,10 +38,34 @@ function ItemList({ v, ws, state, isMobile }) {
   );
 }
 
+/** Todos os alertas tratados: o cartão recolhe num resumo, que abre o histórico. */
+function AlertsResolved({ cur, ws }) {
+  const n = cur.alerts.length;
+  return (
+    <button
+      type="button" onClick={() => ws.setState({ alertsOpen: cur.id })} aria-expanded="false"
+      style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 999, border: "1px solid var(--n-200)", background: "var(--n-000)", color: "#4B5046", cursor: "pointer", font: "inherit", fontSize: 13 }}
+    >
+      <Icon name="check-check" size="sm" />
+      <span>{n > 1 ? `Todos os ${n} alertas tratados` : "Alerta tratado"}</span>
+      <span style={mono(12, "var(--n-500)")}>· ver histórico</span>
+      <Icon name="chevron-down" size="sm" />
+    </button>
+  );
+}
+
 function ItemAlerts({ cur, ws }) {
+  if (!cur.alertsOpen) return <AlertsResolved cur={cur} ws={ws} />;
   const a = cur.alert;
   const move = (d) => ws.setState({ alertAt: { id: cur.id, i: (cur.alertIndex + d + cur.alerts.length) % cur.alerts.length } });
   return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    {cur.allResolved ? (
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#4B5046" }}><Icon name="check-check" size="sm" />Histórico de alertas · todos tratados</span>
+        <Button size="sm" variant="ghost" icon="minus" onClick={() => ws.setState({ alertsOpen: null })} aria-expanded="true">Recolher</Button>
+      </div>
+    ) : null}
     <AlertDeck
       deck={cur} pending={a.pending} icon={a.icon} label={a.label} suffix={a.pending ? <span>· pendente</span> : null}
       pos={cur.hasMany ? cur.alertPos : null} onPrev={() => move(-1)} onNext={() => move(1)}
@@ -56,6 +80,7 @@ function ItemAlerts({ cur, ws }) {
       ) : null}
       {a.isAck ? <span style={mono(12, "var(--n-500)")}>{a.ackText}</span> : null}
     </AlertDeck>
+    </div>
   );
 }
 
@@ -88,7 +113,7 @@ function Answer({ v, ws, state, cur }) {
         <Textarea rows={8} value={cur.text} placeholder="Escreva a resposta. Separe parágrafos com uma linha em branco." onChange={(e) => ws.onDraft(e.target.value)} aria-label="Resposta" autoFocus />
       ) : (
         <>
-          {cur.noText ? <div style={{ color: "var(--n-400)", lineHeight: 1.6 }}>{cur.canEdit ? "Nenhum rascunho. Escreva a resposta para poder revisar este item." : "Nenhum rascunho. A base não tem informação para esta pergunta; nesta versão a resposta é preenchida fora do Tendra.ai."}</div> : null}
+          {cur.noText ? <div style={{ color: "var(--n-400)", lineHeight: 1.6 }}>Nenhum rascunho: a base não tem informação para esta pergunta. Use "Editar resposta" para escrever a resposta; ela fica marcada como resposta manual.</div> : null}
           {cur.paras.map((p, n) => (
             <div key={n} style={{ display: "flex", gap: 12, alignItems: "flex-start", fontSize: 16, lineHeight: 1.65, color: "var(--n-700)" }}>
               <span style={{ flex: 1 }}>{p.t}</span>
@@ -115,31 +140,69 @@ function Answer({ v, ws, state, cur }) {
   );
 }
 
-function Sources({ cur }) {
+/** Cartão de uma fonte. A não escolhida num conflito já decidido fica cinza, só como histórico. */
+function SourceCard({ s, style }) {
+  const off = s.discarded;
+  return (
+    <div aria-disabled={off || undefined} style={card(14, {
+      display: "flex", flexDirection: "column", gap: 12, padding: 16,
+      borderColor: s.conflict ? "var(--danger)" : "var(--n-200)",
+      ...(off ? { background: "var(--n-100)", color: "var(--n-400)" } : null), ...style
+    })}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ ...mono(11, off ? "var(--n-400)" : undefined), fontWeight: 500, background: off ? "var(--n-200)" : "var(--n-100)", borderRadius: 6, padding: "2px 8px" }}>[{s.k}]</span>
+        <span style={{ fontSize: 12, color: "var(--n-400)" }}>{s.type}</span>
+      </div>
+      <div style={{ ...mono(13, off ? "var(--n-400)" : undefined), lineHeight: 1.4, wordBreak: "break-word" }}>{s.doc} · {s.loc}</div>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <span style={mono(12, off ? "var(--n-400)" : "var(--n-700)")}>{s.ageText}</span>
+        {s.old && !off ? <Badge tone="danger" icon="clock">Mais de 120 dias</Badge> : null}
+        {s.conflict ? <Badge tone="danger" icon="copy">Em conflito</Badge> : null}
+        {s.chosen ? <Badge tone="approved" icon="check">Fonte escolhida</Badge> : null}
+        {off ? <Badge tone="neutral" icon="minus">Não escolhida</Badge> : null}
+      </div>
+      <div style={{ display: "flex", gap: 8, marginTop: "auto" }}>
+        <Button size="sm" variant="secondary" icon="external-link" onClick={s.open}>Abrir no trecho</Button>
+        {s.canUse ? <Button size="sm" icon="check" onClick={s.use}>Usar esta fonte</Button> : null}
+      </div>
+    </div>
+  );
+}
+
+/** Fontes em conflito como cartões sobrepostos: a escolhida fica na frente; setas passam pelas demais. */
+function ConflictSources({ cur, ws }) {
+  const d = cur.srcDeck;
+  const move = (n) => ws.setState({ srcAt: { id: cur.id, i: (d.index + n + d.count) % d.count } });
+  return (
+    <div role="region" aria-label="Fontes em conflito" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 13, color: d.pending ? "#A8402E" : "#4B5046", display: "flex", alignItems: "center", gap: 6 }}>
+          <Icon name="copy" size="sm" />{d.pending ? "Fontes em conflito: escolha qual vale" : "Fontes em conflito · decidido"}
+        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <IconButton icon="chevron-left" label="Fonte anterior" onClick={() => move(-1)} />
+          <span style={{ ...mono(12, "var(--n-700)"), whiteSpace: "nowrap" }}>Fonte {d.pos}</span>
+          <IconButton icon="chevron-right" label="Próxima fonte" onClick={() => move(1)} />
+        </div>
+      </div>
+      <div style={{ position: "relative", paddingBottom: d.pad }}>
+        {d.layers.map((ly, i) => <div key={i} style={ly} />)}
+        <SourceCard s={d.cur} style={{ position: "relative", zIndex: 5 }} />
+      </div>
+    </div>
+  );
+}
+
+function Sources({ cur, ws }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <MonoLabel>Fontes · {cur.srcs.length}</MonoLabel>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(300px,100%),1fr))", gap: 16 }}>
-        {cur.srcs.map((s) => (
-          <div key={s.k} style={card(14, { display: "flex", flexDirection: "column", gap: 12, padding: 16, borderColor: s.conflict ? "var(--danger)" : "var(--n-200)" })}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ ...mono(11), fontWeight: 500, background: "var(--n-100)", borderRadius: 6, padding: "2px 8px" }}>[{s.k}]</span>
-              <span style={{ fontSize: 12, color: "var(--n-400)" }}>{s.type}</span>
-            </div>
-            <div style={{ ...mono(13), lineHeight: 1.4, wordBreak: "break-word" }}>{s.doc} · {s.loc}</div>
-            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-              <span style={mono(12, "var(--n-700)")}>{s.ageText}</span>
-              {s.old ? <Badge tone="danger" icon="clock">Mais de 120 dias</Badge> : null}
-              {s.conflict ? <Badge tone="danger" icon="copy">Em conflito</Badge> : null}
-              {s.chosen ? <Badge tone="approved" icon="check">Fonte escolhida</Badge> : null}
-            </div>
-            <div style={{ display: "flex", gap: 8, marginTop: "auto" }}>
-              <Button size="sm" variant="secondary" icon="external-link" onClick={s.open}>Abrir no trecho</Button>
-              {s.canUse ? <Button size="sm" icon="check" onClick={s.use}>Usar esta fonte</Button> : null}
-            </div>
-          </div>
-        ))}
-      </div>
+      {cur.srcDeck ? <ConflictSources cur={cur} ws={ws} /> : null}
+      {cur.otherSrcs.length ? (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(300px,100%),1fr))", gap: 16 }}>
+          {cur.otherSrcs.map((s) => <SourceCard key={s.k} s={s} />)}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -170,6 +233,7 @@ export function Review({ v, ws, state, height, isMobile }) {
                   <span style={{ ...mono(13), fontWeight: 500 }}>{cur.code}</span>
                   <Badge tone={cur.tone} icon={cur.icon}>{cur.st}</Badge>
                   {cur.edited ? <Badge tone="neutral" icon="pencil">Editado</Badge> : null}
+                  {cur.hasManual ? <Badge tone="accent" icon="pencil">Resposta manual</Badge> : null}
                 </div>
                 {isMobile ? (
                   <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -186,7 +250,7 @@ export function Review({ v, ws, state, height, isMobile }) {
               <h2 style={{ margin: 0, fontFamily: DISPLAY, fontWeight: 600, fontSize: isMobile ? 22 : 26, letterSpacing: "-.02em", lineHeight: 1.25, color: "var(--n-900)", maxWidth: "40ch", textWrap: "pretty" }}>{cur.q}</h2>
               {cur.alerts.length > 0 ? <ItemAlerts cur={cur} ws={ws} /> : null}
               <Answer v={v} ws={ws} state={state} cur={cur} />
-              {cur.srcs.length > 0 ? <Sources cur={cur} /> : null}
+              {cur.srcs.length > 0 ? <Sources cur={cur} ws={ws} /> : null}
               <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", color: "var(--n-700)" }}>
                 <span style={{ fontSize: 13 }}>Esta resposta ajudou?</span>
                 <button type="button" onClick={() => ws.rate("up")} aria-label="Positivo" aria-pressed={cur.fbUp} style={fbStyle(cur.fbUp)}><Icon name="thumbs-up" size="md" /></button>

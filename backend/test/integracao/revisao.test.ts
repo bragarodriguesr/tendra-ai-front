@@ -101,8 +101,10 @@ describe("Cenário 41 · pessoa que age", () => {
     expect(await eventos()).toEqual([]);
   });
 
-  it("lista as pessoas da configuração para o front", async () => {
-    expect((await servidor.inject({ method: "GET", url: "/api/pessoas" })).json().pessoas.map((pessoa: { id: string }) => pessoa.id)).toEqual(["kadu", "marcelo"]);
+  it("lista as pessoas da configuração para o front, sem cache", async () => {
+    const resposta = await servidor.inject({ method: "GET", url: "/api/pessoas" });
+    expect(resposta.json().pessoas.map((pessoa: { id: string }) => pessoa.id)).toEqual(["kadu", "marcelo"]);
+    expect(resposta.headers["cache-control"]).toBe("no-store");
   });
 });
 
@@ -140,13 +142,13 @@ describe("Cenários 42 a 45 · editar, restaurar e aprovar", () => {
     expect((await eventos()).map((evento) => evento.acao)).toEqual(["aprovacao", "aprovacao_removida", "edicao"]);
   });
 
-  it("item sem rascunho não pode ser aprovado nem editado; nada muda", async () => {
+  it("item sem rascunho não pode ser aprovado nem restaurado; nada muda", async () => {
     const antes = await item(2);
     expect(antes?.st).toBe("sem-rascunho");
     const aprovar = await acao("POST", "2/aprovar", { pessoa: "marcelo" });
     expect(aprovar.statusCode).toBe(400);
     expect(aprovar.json()).toEqual({ erro: "Item sem rascunho não pode ser aprovado." });
-    expect((await acao("PUT", "2/texto", { pessoa: "marcelo", texto: "Resposta manual." })).statusCode).toBe(400);
+    expect((await acao("POST", "2/restaurar", { pessoa: "marcelo" })).statusCode).toBe(400);
     expect(await item(2)).toEqual(antes);
   });
 
@@ -377,5 +379,47 @@ describe("Cenário 60 · excluir tarefa", () => {
     expect(resposta.statusCode).toBe(409);
     expect(resposta.json()).toEqual({ erro: "A tarefa ainda está em processamento. Exclua depois que ela terminar." });
     expect(await linhas("itens", tarefaId)).toBe(46);
+  });
+});
+
+describe("Cenário 61 · resposta manual em item sem rascunho", () => {
+  it("a resposta escrita fica sem fonte, com o alerta de resposta manual e quem escreveu; o item vai para em revisão", async () => {
+    const antes = await item(2);
+    expect(antes).toMatchObject({ st: "sem-rascunho", orig: "", paras: [] });
+    const outros = antes?.alerts.filter((alerta) => alerta.t !== "nocontext") ?? [];
+
+    const escrito = (await acao("PUT", "2/texto", { pessoa: "marcelo", texto: "Resposta escrita pela equipe.\n\nSegundo parágrafo." })).json().item;
+    expect(escrito).toMatchObject({
+      st: "em-revisao",
+      orig: "",
+      paras: [{ t: "Resposta escrita pela equipe.", s: [] }, { t: "Segundo parágrafo.", s: [] }],
+      alerts: [{ t: "manual", by: "Marcelo Vieira" }, ...outros],
+    });
+    expect((await acao("POST", "2/restaurar", { pessoa: "kadu" })).statusCode).toBe(400);
+
+    // Outra pessoa edita: quem escreveu continua sendo quem escreveu primeiro.
+    const editado = (await acao("PUT", "2/texto", { pessoa: "kadu", texto: "Resposta revisada." })).json().item;
+    expect(editado.alerts[0]).toEqual({ t: "manual", by: "Marcelo Vieira" });
+    expect((await acao("POST", "2/alertas/manual/reconhecer", { pessoa: "kadu" })).json().item.alerts[0]).toMatchObject({ t: "manual", ack: { by: "Kadu Mendes" } });
+    expect((await acao("POST", "2/aprovar", { pessoa: "marcelo" })).json().item).toMatchObject({ st: "aprovada", by: "Marcelo Vieira" });
+
+    // A resposta manual não conta como sugestão da IA no relatório de aceitação.
+    const aceitacao = (await servidor.inject({ method: "GET", url: `/api/tarefas/${tarefaId}/aceitacao` })).json().aceitacao;
+    expect(aceitacao).toMatchObject({ comRascunho: 23, semRascunho: 23, aprovados: 0 });
+    expect((await eventos()).map((evento) => [evento.acao, evento.detalhe])).toEqual([
+      ["edicao", "manual"],
+      ["edicao", "manual"],
+      ["alerta_reconhecido", "manual"],
+      ["aprovacao", null],
+    ]);
+  });
+
+  it("apagar todo o texto devolve o item para sem rascunho, com o alerta sem contexto", async () => {
+    await acao("PUT", "2/texto", { pessoa: "kadu", texto: "Resposta manual." });
+    const apagado = (await acao("PUT", "2/texto", { pessoa: "kadu", texto: "  " })).json().item;
+    expect(apagado).toMatchObject({ st: "sem-rascunho", paras: [], orig: "" });
+    expect(apagado.alerts[0]).toEqual({ t: "nocontext" });
+    expect(apagado.alerts.some((alerta: { t: string }) => alerta.t === "manual")).toBe(false);
+    expect((await acao("POST", "2/aprovar", { pessoa: "marcelo" })).statusCode).toBe(400);
   });
 });
