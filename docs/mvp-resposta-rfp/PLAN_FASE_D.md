@@ -147,11 +147,13 @@ Cada etapa é um pull request separado, com testes próprios e uma verificação
 - Rotina de uso documentada no README: acordar o Supabase (pausa após cerca de 7 dias sem uso) e o backend (dorme após cerca de 15 minutos).
 - Carga da base sintética no ambiente publicado, pela tela.
 - **Verificação (critério de pronto da fase):** checklist abaixo conferido no ambiente publicado; PR revisado por outra pessoa.
-- **Situação (23/10/2026): configuração pronta; publicação bloqueada pelo acesso do Render ao repositório.**
+- **Situação (24/10/2026): publicado.**
   - `render.yaml` (Blueprint): serviço `tendra-backend`, Node 24, região Virginia (perto do Supabase us-east-1), plano gratuito, `rootDir: backend`, `npm ci`, `node src/cli/servidor.ts`, verificação de saúde em `/api/saude`, variáveis públicas preenchidas e os segredos (`ANTHROPIC_API_KEY`, `DATABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`) como `sync: false`.
   - `vercel.json`: build do Vite e rewrite de `/api/*` para `https://tendra-backend.onrender.com/api/*` (mesmo endereço para o navegador: cookie de primeira parte, sem CORS). Os previews da Vercel usam o mesmo backend, mas as alterações vindas deles são recusadas pela origem (D10); só o domínio de produção `tendra-ai-front.vercel.app` altera dados.
   - TLS do Postgres: conexão remota sempre cifrada; com `TENDRA_BANCO_CA` (certificado do painel do Supabase), o certificado é conferido; sem ele, o backend avisa no log.
-  - A criação do serviço pelo conector do Render foi recusada: o Render ainda não tem acesso ao repositório privado no GitHub. Falta o grupo dar esse acesso e preencher os segredos no painel do Render.
+  - O grupo deu ao Render acesso ao repositório; o serviço `tendra-backend` (`srv-dbdsgnks728c738ccop0`) foi criado pelo conector em 23/10/2026, a partir da `main`. O primeiro deploy parou, como esperado, mostrando no log o nome das três variáveis que faltavam (cenário D11). Com os segredos preenchidos pelo grupo no painel do Render, o deploy de 24/10/2026 ficou no ar.
+  - Conferido em 24/10/2026, no ambiente publicado: `GET /api/saude` responde `{"ok":true}` direto no Render e pelo front (`https://tendra-ai-front.vercel.app/api/saude`, pelo rewrite da Vercel); rota do Workspace sem sessão recebe 401; login com conta inexistente recebe "E-mail ou senha incorretos." (Supabase Auth real); alteração com outra origem recebe 403 "Origem não autorizada.". O grupo entrou com a conta de teste User Teste 1 (Revisor) pelo front publicado.
+  - A verificação de saúde (`/api/saude`) está no `render.yaml`; no serviço criado pelo conector, ela é configurada no painel (Settings → Health Check Path).
 
 ## Variáveis de ambiente do modo compartilhado
 
@@ -168,20 +170,22 @@ Cada etapa é um pull request separado, com testes próprios e uma verificação
 
 ## Checklist de aceite
 
-| Cenário | Como conferir |
-|---|---|
-| D1, D4 | Entrar com uma conta válida leva ao Workspace com o nome e o papel certos; recarregar mantém a sessão. |
-| D2 | E-mail inexistente, senha errada e conta desativada mostram a mesma mensagem. |
-| D3, D5, D6 | Abrir uma rota do Workspace sem login, depois de sair e depois de expirar a sessão retorna 401. |
-| D4 | Uma ação enviada com outro nome de pessoa fica registrada com a pessoa da sessão (teste automatizado). |
-| D7 | Errar a senha 5 vezes bloqueia novas tentativas com a mensagem de aguardar. |
-| D8, D9 | Como Revisor, aprovar e baixar a planilha preenchida são recusados; editar e avaliar funcionam. |
-| D10 | O endereço abre só com HTTPS; o cookie tem `HttpOnly`, `Secure` e `SameSite`. |
-| D11 | O CI mostra a varredura de segredos sem alertas; iniciar o backend sem uma variável mostra o nome dela. |
-| D12 | O aviso de dados sintéticos aparece no login e no Workspace. |
-| D13 | Duas pessoas em computadores diferentes veem as mesmas tarefas e as ações uma da outra; o relatório de aceitação soma as duas. |
-| D14 | O arquivo da RFP aparece no bucket privado e não abre por endereço público. |
-| D15 | Reiniciar o serviço no Render no meio de uma tarefa e ver a tarefa terminar com todos os itens. |
+Situação em 24/10/2026, no ambiente publicado (Render, Vercel e Supabase) ou, quando indicado, só nos testes automatizados.
+
+| Cenário | Como conferir | Situação |
+|---|---|---|
+| D1, D4 | Entrar com uma conta válida leva ao Workspace com o nome e o papel certos; recarregar mantém a sessão. | Conferido: login do User Teste 1 (Revisor) pelo front publicado. |
+| D2 | E-mail inexistente, senha errada e conta desativada mostram a mesma mensagem. | Conferido no publicado para e-mail inexistente; senha errada e conta desativada nos testes automatizados. |
+| D3, D5, D6 | Abrir uma rota do Workspace sem login, depois de sair e depois de expirar a sessão retorna 401. | Conferido no publicado para rota sem login; sair e expirar nos testes automatizados. |
+| D4 | Uma ação enviada com outro nome de pessoa fica registrada com a pessoa da sessão (teste automatizado). | Testes automatizados. |
+| D7 | Errar a senha 3 vezes bloqueia novas tentativas com a mensagem de aguardar. | Testes automatizados e servidor real contra o Supabase Auth (a 4ª tentativa recebe 429). |
+| D8, D9 | Como Revisor, aprovar e baixar a planilha preenchida são recusados; editar e avaliar funcionam. | Testes automatizados e navegador com backend de teste; falta conferir no publicado com uma tarefa. |
+| D10 | O endereço abre só com HTTPS; o cookie tem `HttpOnly`, `Secure` e `SameSite`. | Conferido no publicado: HTTPS e recusa de outra origem; atributos do cookie nos testes automatizados. |
+| D11 | O CI mostra a varredura de segredos sem alertas; iniciar o backend sem uma variável mostra o nome dela. | Conferido: varredura de segredos no CI e log do primeiro deploy no Render com o nome das variáveis que faltavam. |
+| D12 | O aviso de dados sintéticos aparece no login e no Workspace. | Conferido no navegador com backend de teste; falta confirmar no publicado. |
+| D13 | Duas pessoas em computadores diferentes veem as mesmas tarefas e as ações uma da outra; o relatório de aceitação soma as duas. | Pendente: precisa de uma conta Aprovador e de duas pessoas usando ao mesmo tempo. |
+| D14 | O arquivo da RFP aparece no bucket privado e não abre por endereço público. | Pendente: precisa de uma tarefa criada no publicado (o bucket privado já foi conferido na D3). |
+| D15 | Reiniciar o serviço no Render no meio de uma tarefa e ver a tarefa terminar com todos os itens. | Pendente: reiniciar o serviço no Render no meio de uma tarefa. |
 
 ## Fora deste plano
 
