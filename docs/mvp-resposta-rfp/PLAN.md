@@ -374,6 +374,8 @@ O spec curto e o plano detalhado da fase D são escritos quando ela for começar
 
 **Situação (23/10/2026): iniciada com exceção, por decisão do grupo.** A fase D começou com a lista de fidelidade da fase A em revisão e a taxa de aceitação ainda não medida; as duas pendências continuam valendo. Hospedagem decidida (P11): front na Vercel, backend no Render, banco, arquivos e contas no Supabase. Spec curto em `docs/mvp-resposta-rfp/SPEC_FASE_D.md` e plano detalhado em `docs/mvp-resposta-rfp/PLAN_FASE_D.md`, escritos com consulta à referência por pedido expresso.
 
+**Situação (24/10/2026): publicada.** As etapas D1 a D10 estão implementadas e o ambiente compartilhado está no ar: front em `https://tendra-ai-front.vercel.app` (Vercel), backend `tendra-backend` no Render e banco, arquivos e contas no Supabase. O grupo entrou com a conta de teste pelo front publicado. Faltam, no checklist de `PLAN_FASE_D.md`, os cenários que precisam de uma conta Aprovador e de uma tarefa no ambiente publicado (D8, D9, D13 a D15). Continuam valendo as pendências da fase A: a lista de fidelidade e a taxa de aceitação, que agora pode ser medida no banco compartilhado.
+
 ## Definição de pronto (proposta, P10)
 
 Uma etapa só é concluída quando:
