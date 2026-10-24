@@ -6,7 +6,7 @@ import { MONO } from "./ui.jsx";
 import { AvisoDeDadosSinteticos } from "../LoginPage.jsx";
 import { UserMenu } from "./UserMenu.jsx";
 import { AlertsMenu } from "./AlertsMenu.jsx";
-import { ConfirmEditDialog, SourceDrawer, ToastHost } from "./overlays.jsx";
+import { ConfirmDeleteTaskDialog, ConfirmEditDialog, SourceDrawer, ToastHost } from "./overlays.jsx";
 import { Dashboard } from "./screens/Dashboard.jsx";
 import { Tasks } from "./screens/Tasks.jsx";
 import { NewTask } from "./screens/NewTask.jsx";
@@ -103,6 +103,7 @@ export function WorkspaceApp({ state, ws, onSite, onLogout }) {
 
         {v.drawer ? <SourceDrawer dr={v.drawer} onClose={() => ws.setState({ drawer: null })} /> : null}
         {state.dialog ? <ConfirmEditDialog onCancel={() => ws.setState({ dialog: false })} onConfirm={() => ws.confirmEdit(v.cur && v.cur.id)} /> : null}
+        {v.deletingTask ? <ConfirmDeleteTaskDialog task={v.deletingTask} busy={state.excluindo} onCancel={() => ws.setState({ deleting: null })} onConfirm={ws.deleteTask} /> : null}
       </div>
     </div>
   );

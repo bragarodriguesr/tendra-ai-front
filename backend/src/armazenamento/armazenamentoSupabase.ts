@@ -20,14 +20,14 @@ export function criarArmazenamentoSupabase(opcoes: { supabaseUrl: string; chaveD
   const cabecalhos: Record<string, string> = { apikey: opcoes.chaveDeServico };
   if (opcoes.chaveDeServico.startsWith("eyJ")) cabecalhos.Authorization = `Bearer ${opcoes.chaveDeServico}`;
 
-  async function pedir(caminho: string, init: RequestInit): Promise<Response> {
+  async function pedir(caminho: string, init: RequestInit, aceitar: (status: number) => boolean = () => false): Promise<Response> {
     let resposta: Response;
     try {
       resposta = await buscar(`${base}/${caminho}`, { ...init, headers: { ...cabecalhos, ...(init.headers as Record<string, string> | undefined) } });
     } catch {
       throw new ErroDeArmazenamento("Falha de comunicação com o armazenamento de arquivos.");
     }
-    if (!resposta.ok) throw new ErroDeArmazenamento(`O armazenamento de arquivos recusou a operação (${resposta.status}).`);
+    if (!resposta.ok && !aceitar(resposta.status)) throw new ErroDeArmazenamento(`O armazenamento de arquivos recusou a operação (${resposta.status}).`);
     return resposta;
   }
 
@@ -47,6 +47,12 @@ export function criarArmazenamentoSupabase(opcoes: { supabaseUrl: string; chaveD
       if (!CAMINHO_GERADO.test(caminho)) throw new ErroDeArmazenamento("Caminho fora da pasta de dados.");
       const resposta = await pedir(caminho, { method: "GET" });
       return Buffer.from(await resposta.arrayBuffer());
+    },
+
+    async apagar(caminho) {
+      if (!CAMINHO_GERADO.test(caminho)) throw new ErroDeArmazenamento("Caminho fora da pasta de dados.");
+      // Objeto que já não existe: o Storage responde 400 ou 404, e o resultado é o mesmo.
+      await pedir(caminho, { method: "DELETE" }, (status) => status === 400 || status === 404);
     },
   };
 }

@@ -1,13 +1,14 @@
 import type { Pessoa } from "../config/pessoas.ts";
 import type { Banco } from "../persistencia/banco.ts";
 import { paraItem, type ItemGravado } from "../persistencia/tarefas.ts";
-import type { ParagrafoDoItem } from "../rastreabilidade/montarItem.ts";
+import type { ParagrafoDoItem, TipoDeAlerta } from "../rastreabilidade/montarItem.ts";
 import { porcentagemAlterada } from "./diferenca.ts";
 
 /**
- * Revisão persistida (etapa B5, cenários 41 a 49): editar, restaurar, aprovar e avaliar, sempre
- * com a pessoa da lista de configuração e a data e hora do backend. Cada ação grava um evento só
- * de inclusão, sem o texto das respostas. Nenhuma ação é do sistema: aprovar é sempre de uma pessoa.
+ * Revisão persistida (etapa B5, cenários 41 a 49, e cenários 57 a 59): editar, restaurar, aprovar,
+ * avaliar, reconhecer alerta, escolher fonte e marcar como revisado, sempre com a pessoa que age e a
+ * data e hora do backend. Cada ação grava um evento só de inclusão, sem o texto das respostas.
+ * Nenhuma ação é do sistema: aprovar é sempre de uma pessoa.
  */
 
 export class ErroDeRevisao extends Error {
@@ -48,19 +49,22 @@ async function itemDaTarefa(transacao: Transacao, tarefaId: string, numero: numb
 
 async function registrarEvento(
   transacao: Transacao,
-  evento: { tarefaId: string; numero: number; acao: string; pessoa: Pessoa; porcentagem?: number; avaliacao?: string; motivo?: string | null },
+  evento: { tarefaId: string; numero: number; acao: string; pessoa: Pessoa; porcentagem?: number; avaliacao?: string; motivo?: string | null; detalhe?: string },
 ): Promise<void> {
   await transacao.query(
-    `INSERT INTO eventos (tarefa_id, item_numero, acao, pessoa, papel, porcentagem_alterada, avaliacao, motivo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-    [evento.tarefaId, evento.numero, evento.acao, evento.pessoa.nome, evento.pessoa.papel, evento.porcentagem ?? null, evento.avaliacao ?? null, evento.motivo ?? null],
+    `INSERT INTO eventos (tarefa_id, item_numero, acao, pessoa, papel, porcentagem_alterada, avaliacao, motivo, detalhe) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+    [evento.tarefaId, evento.numero, evento.acao, evento.pessoa.nome, evento.pessoa.papel, evento.porcentagem ?? null, evento.avaliacao ?? null, evento.motivo ?? null, evento.detalhe ?? null],
   );
 }
 
+/** Grava o texto; a marca de revisado só fica enquanto o item continua "revisada" ou é aprovado depois. */
 async function gravarTexto(transacao: Transacao, tarefaId: string, numero: number, paras: ParagrafoDoItem[], st: ItemGravado["st"], manterAprovacao: boolean) {
   await transacao.query(
-    `UPDATE itens SET paras = $3, st = $4,
+    `UPDATE itens SET paras = $3, st = $4::text,
        aprovado_por = CASE WHEN $5 THEN aprovado_por ELSE NULL END,
-       aprovado_em = CASE WHEN $5 THEN aprovado_em ELSE NULL END
+       aprovado_em = CASE WHEN $5 THEN aprovado_em ELSE NULL END,
+       revisado_por = CASE WHEN $4::text IN ('revisada', 'aprovada') THEN revisado_por ELSE NULL END,
+       revisado_em = CASE WHEN $4::text IN ('revisada', 'aprovada') THEN revisado_em ELSE NULL END
      WHERE tarefa_id = $1 AND numero = $2`,
     [tarefaId, numero, JSON.stringify(paras), st, manterAprovacao],
   );
@@ -91,15 +95,19 @@ export async function editarTexto(banco: Banco, entrada: { tarefaId: string; num
   });
 }
 
-/** Cenário 43: volta ao texto e às fontes originais de cada parágrafo. Se o texto muda num item aprovado, a aprovação sai. */
+/**
+ * Cenário 43: volta ao texto e às fontes originais de cada parágrafo. Se o texto muda num item
+ * aprovado ou revisado, ele volta para "em-revisao" e a aprovação ou a marca de revisado sai.
+ */
 export async function restaurarSugestao(banco: Banco, entrada: { tarefaId: string; numero: number; pessoa: Pessoa }): Promise<ItemGravado> {
   return banco.transaction(async (transacao) => {
     const item = await itemDaTarefa(transacao, entrada.tarefaId, entrada.numero);
     if (item.st === "sem-rascunho") throw new ErroDeRevisao(400, "Item sem rascunho não tem sugestão para restaurar.");
     const mudou = normalizar(textoDosParagrafos(item.paras)) !== normalizar(item.orig);
     const removeAprovacao = item.st === "aprovada" && mudou;
+    const voltaParaRevisao = (item.st === "aprovada" || item.st === "revisada") && mudou;
     if (removeAprovacao) await registrarEvento(transacao, { ...entrada, acao: "aprovacao_removida" });
-    await gravarTexto(transacao, entrada.tarefaId, entrada.numero, item.parasOriginais, removeAprovacao ? "em-revisao" : item.st, !removeAprovacao);
+    await gravarTexto(transacao, entrada.tarefaId, entrada.numero, item.parasOriginais, voltaParaRevisao ? "em-revisao" : item.st, !removeAprovacao);
     await registrarEvento(transacao, { ...entrada, acao: "restauracao", porcentagem: 0 });
     return itemAtual(transacao, entrada.tarefaId, entrada.numero);
   });
@@ -117,6 +125,74 @@ export async function aprovarItem(banco: Banco, entrada: { tarefaId: string; num
     await registrarEvento(transacao, { ...entrada, acao: "aprovacao", porcentagem: porcentagemAlterada(item.orig, textoDosParagrafos(item.paras)) });
     return itemAtual(transacao, entrada.tarefaId, entrada.numero);
   });
+}
+
+/**
+ * Cenário 57: grava quem reconheceu o alerta e quando, no próprio item. Reconhecer de novo um
+ * alerta já reconhecido devolve o item como está, sem novo evento.
+ */
+export async function reconhecerAlerta(banco: Banco, entrada: { tarefaId: string; numero: number; pessoa: Pessoa; tipo: TipoDeAlerta }): Promise<ItemGravado> {
+  return banco.transaction(async (transacao) => {
+    const item = await itemDaTarefa(transacao, entrada.tarefaId, entrada.numero);
+    const posicao = item.alerts.findIndex((alerta) => alerta.t === entrada.tipo);
+    if (posicao === -1) throw new ErroDeRevisao(404, "O item não tem esse alerta.");
+    if (item.alerts[posicao]?.ack !== undefined) return itemAtual(transacao, entrada.tarefaId, entrada.numero);
+    const at = await agoraDoBanco(transacao);
+    const alerts = item.alerts.map((alerta, k) => (k === posicao ? { ...alerta, ack: { by: entrada.pessoa.nome, at } } : alerta));
+    await transacao.query("UPDATE itens SET alerts = $3 WHERE tarefa_id = $1 AND numero = $2", [entrada.tarefaId, entrada.numero, JSON.stringify(alerts)]);
+    await registrarEvento(transacao, { ...entrada, acao: "alerta_reconhecido", detalhe: entrada.tipo });
+    return itemAtual(transacao, entrada.tarefaId, entrada.numero);
+  });
+}
+
+/**
+ * Cenário 58: num conflito ainda não reconhecido, a fonte escolhida passa a sustentar todos os
+ * parágrafos, fica marcada como escolhida e o alerta de conflito é reconhecido pela mesma pessoa.
+ */
+export async function escolherFonte(banco: Banco, entrada: { tarefaId: string; numero: number; pessoa: Pessoa; fonte: number }): Promise<ItemGravado> {
+  return banco.transaction(async (transacao) => {
+    const item = await itemDaTarefa(transacao, entrada.tarefaId, entrada.numero);
+    if (!item.alerts.some((alerta) => alerta.t === "conflict" && alerta.ack === undefined)) throw new ErroDeRevisao(409, "O item não tem conflito pendente.");
+    if (item.srcs[entrada.fonte - 1]?.conflict !== true) throw new ErroDeRevisao(400, "Escolha uma das fontes em conflito.");
+    const at = await agoraDoBanco(transacao);
+    const srcs = item.srcs.map((fonte, k) => ({ ...fonte, chosen: k + 1 === entrada.fonte }));
+    const paras = item.paras.map((paragrafo) => ({ ...paragrafo, s: [entrada.fonte] }));
+    const alerts = item.alerts.map((alerta) => (alerta.t === "conflict" && alerta.ack === undefined ? { ...alerta, ack: { by: entrada.pessoa.nome, at } } : alerta));
+    await transacao.query("UPDATE itens SET srcs = $3, paras = $4, alerts = $5 WHERE tarefa_id = $1 AND numero = $2", [
+      entrada.tarefaId,
+      entrada.numero,
+      JSON.stringify(srcs),
+      JSON.stringify(paras),
+      JSON.stringify(alerts),
+    ]);
+    await registrarEvento(transacao, { ...entrada, acao: "fonte_escolhida", detalhe: String(entrada.fonte) });
+    return itemAtual(transacao, entrada.tarefaId, entrada.numero);
+  });
+}
+
+/**
+ * Cenário 59: item com rascunho, ainda não aprovado, vai para "revisada" com quem marcou e quando.
+ * Marcar de novo um item já revisado devolve o item como está, sem novo evento.
+ */
+export async function marcarComoRevisado(banco: Banco, entrada: { tarefaId: string; numero: number; pessoa: Pessoa }): Promise<ItemGravado> {
+  return banco.transaction(async (transacao) => {
+    const item = await itemDaTarefa(transacao, entrada.tarefaId, entrada.numero);
+    if (item.st === "sem-rascunho" || item.paras.length === 0) throw new ErroDeRevisao(400, "Item sem rascunho não pode ser marcado como revisado.");
+    if (item.st === "aprovada") throw new ErroDeRevisao(409, "Item já aprovado.");
+    if (item.st === "revisada") return itemAtual(transacao, entrada.tarefaId, entrada.numero);
+    await transacao.query(
+      `UPDATE itens SET st = 'revisada', revisado_por = $3, revisado_em = now() WHERE tarefa_id = $1 AND numero = $2`,
+      [entrada.tarefaId, entrada.numero, entrada.pessoa.nome],
+    );
+    await registrarEvento(transacao, { ...entrada, acao: "revisao" });
+    return itemAtual(transacao, entrada.tarefaId, entrada.numero);
+  });
+}
+
+/** Data e hora do backend, a mesma do `now()` da transação, para o que fica gravado no JSON do item. */
+async function agoraDoBanco(transacao: Transacao): Promise<string> {
+  const { rows } = await transacao.query<{ agora: Date }>("SELECT now() AS agora");
+  return (rows[0]?.agora ?? new Date()).toISOString();
 }
 
 export interface Avaliacao {
@@ -151,13 +227,15 @@ export async function avaliarItem(
 
 export interface EventoDeRevisao {
   item: string;
-  acao: "edicao" | "restauracao" | "aprovacao" | "aprovacao_removida" | "avaliacao";
+  acao: "edicao" | "restauracao" | "aprovacao" | "aprovacao_removida" | "avaliacao" | "alerta_reconhecido" | "fonte_escolhida" | "revisao";
   pessoa: string;
   papel: string;
   em: string;
   porcentagemAlterada: number | null;
   avaliacao: string | null;
   motivo: string | null;
+  /** Tipo do alerta reconhecido ou número da fonte escolhida. */
+  detalhe: string | null;
 }
 
 /** Cenário 49: os eventos da tarefa na ordem em que ocorreram, sem o texto das respostas. */
@@ -171,6 +249,7 @@ export async function listarEventos(banco: Banco, tarefaId: string): Promise<Eve
     porcentagem_alterada: string | null;
     avaliacao: string | null;
     motivo: string | null;
+    detalhe: string | null;
   }>("SELECT * FROM eventos WHERE tarefa_id = $1 ORDER BY id", [tarefaId]);
   return rows.map((linha) => ({
     item: `r${linha.item_numero}`,
@@ -181,6 +260,7 @@ export async function listarEventos(banco: Banco, tarefaId: string): Promise<Eve
     porcentagemAlterada: linha.porcentagem_alterada === null ? null : Number(linha.porcentagem_alterada),
     avaliacao: linha.avaliacao,
     motivo: linha.motivo,
+    detalhe: linha.detalhe,
   }));
 }
 

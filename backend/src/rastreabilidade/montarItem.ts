@@ -24,6 +24,8 @@ export interface FonteDoItem {
   /** Texto literal do documento na localização indicada. */
   ex: string;
   conflict?: boolean;
+  /** Fonte escolhida num conflito (cenário 58). */
+  chosen?: boolean;
 }
 
 export interface ParagrafoDoItem {
@@ -38,7 +40,8 @@ export interface ItemDaRevisao {
   q: string;
   paras: ParagrafoDoItem[];
   srcs: FonteDoItem[];
-  alerts: { t: TipoDeAlerta }[];
+  /** `ack`: quem reconheceu o alerta e quando (cenário 57); nunca preenchido na geração. */
+  alerts: { t: TipoDeAlerta; ack?: { by: string; at: string } }[];
   st: "sugerida" | "sem-rascunho";
   orig: string;
 }

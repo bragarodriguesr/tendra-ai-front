@@ -57,3 +57,15 @@ describe("Cenário 31 · arquivos gravados com nome gerado pelo backend", () => 
     await expect(armazenamento.ler("")).rejects.toThrow(ErroDeArmazenamento);
   });
 });
+
+describe("Cenário 60 · arquivos da tarefa excluída", () => {
+  it("apaga o arquivo; apagar de novo não é erro; fora da pasta de dados é recusado", async () => {
+    const armazenamento = criarArmazenamento(pastaDados);
+    const caminho = await armazenamento.salvar("resultados", new Uint8Array([1]), "xlsx");
+
+    await armazenamento.apagar(caminho);
+    await expect(armazenamento.ler(caminho)).rejects.toThrow();
+    await armazenamento.apagar(caminho);
+    await expect(armazenamento.apagar("../fora.txt")).rejects.toThrow(ErroDeArmazenamento);
+  });
+});

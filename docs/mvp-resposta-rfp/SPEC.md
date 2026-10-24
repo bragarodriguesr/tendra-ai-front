@@ -358,10 +358,10 @@ Decisões de 21/10/2026: a Tendra sugere a resposta seguindo o modelo da própri
 
 ### Revisão e aceitação
 
-Estes cenários vêm de `docs/referencia/mvp-proposta-1/SPEC.md` (30, 36, 38, 39, 40, 41 e 47), adaptados às fases A a C. Reconhecer alerta, escolher fonte em conflito, escrever resposta em item sem fonte, revisar e o bloqueio por papel ficam para depois da versão 1.
+Estes cenários vêm de `docs/referencia/mvp-proposta-1/SPEC.md` (30, 36, 38, 39, 40, 41 e 47), adaptados às fases A a C. O bloqueio por papel entrou na fase D (cenários D8 e D9). Reconhecer alerta, escolher fonte em conflito e marcar como revisado passaram a ser gravados em 24/10/2026 (cenários 57 a 59), junto com a exclusão de tarefa (cenário 60). Escrever resposta em item sem fonte continua fora desta versão.
 
 #### Cenário 41: pessoa que age
-- **Given** uma ação de revisão (editar, restaurar, aprovar ou avaliar)
+- **Given** uma ação de revisão (editar, restaurar, aprovar, avaliar, reconhecer alerta, escolher fonte ou marcar como revisado)
 - **When** a requisição chega sem pessoa ou com uma pessoa que não está na lista de configuração
 - **Then** a resposta é 400 com a mensagem "Pessoa não reconhecida" e nada é alterado
 - **And** quando a pessoa é válida, a ação grava o nome e o papel dela e a data e hora do backend
@@ -382,7 +382,7 @@ Estes cenários vêm de `docs/referencia/mvp-proposta-1/SPEC.md` (30, 36, 38, 39
 - **Given** uma pessoa válida e um item com rascunho
 - **When** ela aprova o item
 - **Then** o item vai para `"aprovada"`, com `by` (nome da pessoa) e `at` (data e hora do backend)
-- **Nota:** o reconhecimento de alertas continua só na tela, em memória. O backend não bloqueia a aprovação por alerta nem por papel nesta versão.
+- **Nota:** o reconhecimento de alertas fica gravado (cenário 57), mas o backend não bloqueia a aprovação por alerta pendente; quem bloqueia é a tela. O bloqueio por papel é o do cenário D8.
 
 #### Cenário 45: aprovar item sem rascunho
 - **Given** um item `"sem-rascunho"` com `paras` vazio
@@ -395,7 +395,7 @@ Estes cenários vêm de `docs/referencia/mvp-proposta-1/SPEC.md` (30, 36, 38, 39
 - **Then** a avaliação fica gravada com pessoa, item, valor, motivo e data e hora do backend, e uma nova avaliação da mesma pessoa substitui a anterior
 
 #### Cenário 47: persistência
-- **Given** documentos, tarefas, itens editados, aprovações e avaliações gravados
+- **Given** documentos, tarefas, itens editados, aprovações, avaliações, alertas reconhecidos, fontes escolhidas e itens revisados gravados
 - **When** o backend é reiniciado
 - **Then** todas essas informações continuam disponíveis exatamente como estavam
 
@@ -412,11 +412,45 @@ Estes cenários vêm de `docs/referencia/mvp-proposta-1/SPEC.md` (30, 36, 38, 39
 - **Método (decidido na B5, P9):** diferença por palavras entre `orig` e o texto aprovado, pela maior subsequência comum; textos iguais dão 0% e textos sem palavra em comum dão 100%. "Aprovado sem edição" é o item aprovado com o texto igual a `orig`.
 
 #### Cenário 49: registro de eventos
-- **Given** ações de edição, restauração, aprovação, remoção de aprovação e avaliação
+- **Given** ações de edição, restauração, aprovação, remoção de aprovação, avaliação, reconhecimento de alerta, escolha de fonte e revisão
 - **When** os eventos da tarefa são consultados
 - **Then** cada ação aparece uma vez, com pessoa, ação, item e data e hora do backend, na ordem em que ocorreu
-- **And** os eventos só são acrescentados, nunca alterados ou apagados
+- **And** os eventos só são acrescentados, nunca alterados ou apagados; a única exceção é a exclusão da tarefa, que apaga os eventos dela (cenário 60)
 - **And** não contêm o texto das respostas, só a porcentagem alterada nas edições
+
+#### Cenário 57: reconhecer alerta
+- **Given** um item com um alerta ainda não reconhecido (por exemplo, fonte desatualizada, termo crítico ou baixa confiança)
+- **When** a pessoa reconhece o alerta
+- **Then** o alerta fica gravado no item como reconhecido, com o nome da pessoa e a data e hora do backend, e o evento é registrado com o tipo do alerta
+- **And** depois de recarregar a página ou de reiniciar o backend, o alerta continua reconhecido, para todas as pessoas
+- **And** reconhecer de novo um alerta já reconhecido não muda nada nem registra outro evento; um alerta que o item não tem dá 404
+- **Nota:** "Nenhuma, vou escrever", num conflito, reconhece o alerta de conflito da mesma forma e abre o editor.
+
+#### Cenário 58: escolher fonte em conflito
+- **Given** um item com o alerta de conflito ainda não reconhecido
+- **When** a pessoa escolhe uma das fontes em conflito
+- **Then** a fonte fica marcada como escolhida, passa a ser a fonte de todos os parágrafos, e o alerta de conflito fica reconhecido pela mesma pessoa, com a data e hora do backend
+- **And** o evento é registrado com o número da fonte
+- **And** uma fonte que não está em conflito é recusada com 400; sem conflito pendente, a resposta é 409; nos dois casos nada muda
+
+#### Cenário 59: marcar como revisado
+- **Given** um item com rascunho, ainda não aprovado
+- **When** a pessoa (Revisor ou Aprovador) marca o item como revisado
+- **Then** o item vai para `"revisada"`, com `rby` (nome da pessoa) e `rat` (data e hora do backend), e o evento é registrado
+- **And** editar o texto depois, ou restaurar uma sugestão diferente do texto atual, devolve o item para `"em-revisao"` e tira a marca de revisado
+- **And** aprovar um item revisado mantém quem revisou
+- **And** item sem rascunho é recusado com 400, e item aprovado, com 409; marcar de novo um item já revisado não muda nada
+- **Nota:** como na aprovação (cenário 44), quem bloqueia "marcar como revisado" com alerta pendente é a tela.
+
+#### Cenário 60: excluir tarefa
+- **Given** uma tarefa pronta ou em falha
+- **When** a pessoa exclui a tarefa na tela Tarefas e confirma
+- **Then** a tarefa sai do banco com todos os registros dela (itens, eventos, avaliações, registro de requisições e respostas gravadas para a retomada) e com os arquivos dela (planilha enviada e planilha preenchida)
+- **And** ela some da tela de todas as pessoas, e quem estava nela volta para a tela Tarefas
+- **And** as outras tarefas não mudam
+- **And** uma tarefa em processamento não pode ser excluída (409), porque o processamento ainda grava itens e arquivos
+- **And** no modo compartilhado, só o Aprovador exclui; o Revisor recebe 403 e nada muda (como na planilha preenchida, cenário D9)
+- **And** a exclusão não pode ser desfeita: a tela pede confirmação antes
 
 ### Avaliação da IA
 
@@ -494,7 +528,7 @@ Exigidos pela constitution (IV). São medidos pelo comando de avaliação (cená
 - Qualquer formato de base que não seja `.md`, conversão de outros formatos e exclusão de documentos. A base entra pela tela ou pelo comando, sempre em `.md`.
 - RFP em formato diferente de `.xlsx`.
 - **Tradução das respostas para o idioma da RFP ou para outros idiomas.** No MVP, as respostas são sempre escritas em português (cenário 50). A tradução fica registrada como evolução futura do produto.
-- Reconhecimento de alerta persistido, escolha de fonte em conflito, resposta manual em item sem fonte, "marcar como revisado" e bloqueio de aprovação por papel (cenários 31 a 35 e 37 de `docs/referencia/mvp-proposta-1/SPEC.md`). Nesta versão, a tela não oferece o editor para itens sem rascunho.
+- Resposta manual em item sem fonte. Nesta versão, a tela não oferece o editor para itens sem rascunho. Reconhecer alerta, escolher fonte e "marcar como revisado" estão nos cenários 57 a 59; o bloqueio por papel, nos cenários D8 e D9.
 - Exportação final aprovada, histórico e trilha de auditoria completa. A planilha do cenário 24 contém respostas sugeridas, identificadas como não revisadas.
 - Tela da taxa de aceitação: o relatório é consultado por rota e por comando.
 - Envio de qualquer resposta ao cliente final.

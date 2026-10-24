@@ -6,18 +6,23 @@ import {
   aprovarItem,
   avaliarItem,
   editarTexto,
+  escolherFonte,
   listarAvaliacoes,
   listarEventos,
+  marcarComoRevisado,
   MOTIVOS_DE_AVALIACAO_NEGATIVA,
+  reconhecerAlerta,
   reconhecerPessoa,
   relatorioDeAceitacao,
   restaurarSugestao,
 } from "../revisao/revisao.ts";
+import type { TipoDeAlerta } from "../rastreabilidade/montarItem.ts";
 
 /**
  * Rotas da revisão (etapa B5). No modo local, toda ação recebe `pessoa` (o id na lista de
  * configuração, exceção E1); com login, a pessoa é a da sessão e o campo é ignorado (cenário D4).
- * Usam a data e hora do backend. O reconhecimento de alerta continua só na tela.
+ * Usam a data e hora do backend. Reconhecer alerta, escolher fonte e marcar como revisado são dos
+ * cenários 57 a 59; nenhuma ação de revisão depende do papel, exceto aprovar (cenário D8).
  */
 
 const PARAMETROS = {
@@ -26,6 +31,10 @@ const PARAMETROS = {
     id: { type: "string", pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
     numero: { type: "string", pattern: "^[1-9][0-9]{0,5}$" },
   },
+} as const;
+const COM_ALERTA = {
+  ...PARAMETROS,
+  properties: { ...PARAMETROS.properties, tipo: { type: "string", enum: ["lowconf", "conflict", "old", "critical", "nocontext"] } },
 } as const;
 // `pessoa` não é obrigatória no esquema: sem ela, a resposta é "Pessoa não reconhecida" (cenário 41).
 const COM_PESSOA = { type: "object", additionalProperties: false, properties: { pessoa: { type: "string" } } } as const;
@@ -67,6 +76,29 @@ export function registrarRotasDeRevisao(servidor: FastifyInstance, opcoes: { ban
       exigirAprovador(pedido, "Só o Aprovador pode aprovar respostas.");
       return { item: await aprovarItem(banco, alvo(pedido)) };
     },
+  );
+
+  servidor.post<{ Params: Parametros & { tipo: TipoDeAlerta }; Body: ComPessoa }>(
+    "/api/tarefas/:id/itens/:numero/alertas/:tipo/reconhecer",
+    { schema: { params: COM_ALERTA, body: COM_PESSOA } },
+    async (pedido) => ({ item: await reconhecerAlerta(banco, { ...alvo(pedido), tipo: pedido.params.tipo }) }),
+  );
+
+  servidor.post<{ Params: Parametros; Body: ComPessoa & { fonte: number } }>(
+    "/api/tarefas/:id/itens/:numero/fonte",
+    {
+      schema: {
+        params: PARAMETROS,
+        body: { type: "object", required: ["fonte"], additionalProperties: false, properties: { pessoa: { type: "string" }, fonte: { type: "integer", minimum: 1, maximum: 100 } } },
+      },
+    },
+    async (pedido) => ({ item: await escolherFonte(banco, { ...alvo(pedido), fonte: pedido.body.fonte }) }),
+  );
+
+  servidor.post<{ Params: Parametros; Body: ComPessoa }>(
+    "/api/tarefas/:id/itens/:numero/revisar",
+    { schema: { params: PARAMETROS, body: COM_PESSOA } },
+    async (pedido) => ({ item: await marcarComoRevisado(banco, alvo(pedido)) }),
   );
 
   servidor.put<{ Params: Parametros; Body: ComPessoa & { valor: "positiva" | "negativa"; motivo?: string } }>(

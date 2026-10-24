@@ -59,6 +59,8 @@ export function buildView(s, ws) {
   const isA = s.role === "Aprovador";
   // Com login (fase D, cenário D9), só o Aprovador baixa a planilha preenchida; sem login, todos.
   const podeExportar = !s.sessao || isA;
+  // Excluir tarefa (cenário 60) segue a regra de baixar a planilha: com login, só o Aprovador.
+  const podeExcluir = podeExportar;
   // Com o servidor, tarefas, exportação, histórico e alertas vêm do banco; sem ele, dos exemplos de data.js.
   const online = s.tarefasOrigem === "servidor";
   const taskIds = ws.taskIds(s);
@@ -137,7 +139,9 @@ export function buildView(s, ws) {
       ...t, dueColor: urgent ? DANGER : t.dueColor, dueWeight: urgent ? 600 : 400, title: t.name.split(" — ")[0],
       pct: t.hasItems || t.isReady ? t.pct : t.isProcessing ? (t.isServer ? (t.items ? Math.round((t.done / t.items) * 100) : 0) : 23) : 0,
       compText: t.hasItems || t.isReady ? t.shortProg : t.isServer ? serverProgress : t.isProcessing ? "42 de 180 processadas" : t.isFailed ? "0 de 0" : "Reprocessando",
-      status: status[0], tone: status[1], icon: status[2], open: () => ws.go("task", { taskId: id })
+      status: status[0], tone: status[1], icon: status[2], open: () => ws.go("task", { taskId: id }),
+      // Só tarefas do banco, e não durante o processamento, que ainda grava itens e arquivos.
+      canDelete: !!t.isServer && !t.isProcessing && podeExcluir, del: () => ws.askDeleteTask(id)
     };
   });
 
@@ -363,6 +367,7 @@ export function buildView(s, ws) {
 
   return {
     isA, online, podeExportar, userName: ws.name(), navGroups, navValue,
+    deletingTask: s.deleting ? tasks.find((t) => t.id === s.deleting) || null : null,
     docs, readyDocs, onb, tasks, taskAlerts, alertsUnread, tDeck, dash, task, counts: c, segs, filterTabs, rows,
     revTask: (ws.taskInfo(s.itemsTask, s) || {}).name, cur, savedText, drawer, exportCards, exportTitle, history, historyTabs, form
   };

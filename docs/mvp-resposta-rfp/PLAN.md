@@ -40,7 +40,7 @@ Cada etapa abaixo é uma mudança pequena, com objetivo claro, testes próprios 
 | P5 | Interface da carga (nome e opções) | Etapa A4 | **Decidido na A4 (revisto em 22/10/2026):** a carga principal é pela tela Base de conhecimento, com "Subir documentos" abrindo o seletor de arquivos `.md` do computador. O comando `npm run carregar-base -- <pasta> [--enviado-por <nome>]` continua, com a mesma carga, e termina com código 1 quando algum arquivo é recusado. A identidade do documento passou a ser o nome do arquivo. |
 | P6 | Formato das citações enviado ao Claude: blocos ou texto corrido | Etapa A5 | **Implementado na A5 com blocos** (documentos com conteúdo em blocos, citações `content_block_location`). **Validado com a API real em 23/10/2026:** as citações devolvem o bloco certo e os marcadores separam as respostas do lote. |
 | P7 | Fluxo de revisão de código e proteção da `main` exigindo a integração contínua | Primeiro commit de código | Branch + pull request revisado por outra pessoa, com CI obrigatória. |
-| P8 | Modelo da geração e tamanho do lote | Fim da fase A | Decididos pela etapa A10, com dados. Valores configuráveis: `TENDRA_MODELO`, `TENDRA_ESFORCO`, `TENDRA_TAMANHO_LOTE`. **Recomendação da A10 (23/10/2026):** Opus 5.5 com esforço `medium` e lote de 10, o único que atingiu todos os critérios medidos pelo código; registrar como decisão depois da fidelidade. |
+| P8 | Modelo da geração e tamanho do lote | Fim da fase A | Decididos pela etapa A10, com dados. Valores configuráveis: `TENDRA_MODELO`, `TENDRA_ESFORCO`, `TENDRA_TAMANHO_LOTE`. **Recomendação da A10 (23/10/2026):** Opus 5.5 com esforço `medium` e lote de 10, o único que atingiu todos os critérios medidos pelo código. **Aplicado temporariamente (24/10/2026), por decisão do grupo:** Sonnet 5.5 (padrão do código e do ambiente publicado), para reduzir o custo enquanto se validam requisitos que não dependem da acurácia; esforço e lote continuam `medium` e 10. Volta ao Opus 5.5, a pedido do grupo, quando a qualidade das respostas for testada. Na A10, com a `geracao-v2`, o Sonnet reprovou só no conflito da RFP-01. |
 | P12 | Valor sugerido nas RFPs com valores permitidos (cenários 50 a 56 do SPEC, acrescentados depois deste plano) | Etapa A6 ou etapa própria | A A5 já gera em português (cenário 50). O valor sugerido (cenários 53 e 54) precisa de uma decisão de formato: o modelo não combina citações com saída estruturada. Sugestão: uma linha `Valor: <valor>` depois do marcador, conferida contra a lista. |
 | P9 | Método de cálculo da porcentagem de texto alterado | Etapa B5 | **Decidido na B5:** diferença por palavras: palavras retiradas mais palavras acrescentadas, sobre a soma das palavras dos dois textos, pela maior subsequência comum (`revisao/diferenca.ts`). |
 | P10 | Simplificação da definição de pronto e dos tipos de teste (ver as seções correspondentes) | Primeiro pull request | Aprovar a versão deste plano ou manter a constitution como está. |
@@ -241,10 +241,11 @@ Ver etapa A1.
     - **Revisão da lista de fidelidade da v2 (23/10/2026):** as citações estavam corretas, mas as respostas eram só o trecho citado (sem "Sim.", sem versão nem data), porque a checagem retirava todo texto fora de uma citação. Decisão: a resposta é redigida com as fontes como contexto e a checagem passa a ser por parágrafo (SPEC, cenário 18): parágrafo com ao menos uma citação válida fica com a redação do modelo; parágrafo sem citação válida sai com `lowconf`; trecho ligado a uma citação que não confere continua saindo (cenário 19). O guardrail do conteúdo fica nas instruções e na fidelidade revisada por pessoa, sem chamada extra de verificação.
     - **`geracao-v3`:** resposta direta e coerente com a pergunta (começa por "Sim." ou "Não." quando sustentado, responde a cada parte), cada parágrafo com ao menos uma citação, uso permitido do título, versão e data do documento, sem repetir informação; mantém os limites da v2.
     - **Resultado com `geracao-v3` (Opus 5.5):** todos os critérios medidos pelo código aprovados na RFP-01 e na RFP-02 (3 execuções): validade das fontes e ausência de texto sem fonte 100%, relevância 98% e 92%, contexto insuficiente, conflito e guardrails 100%, idioma 100%. Trechos retirados pela checagem caíram de 40 para 0 ou 1 por execução, e o alerta `lowconf` de 27 itens para 0 ou 1. Custo de US$ 0,24 (RFP-01) e US$ 0,32 a 0,33 (RFP-02).
-  - **Pendente (portão da fase A):**
-    1. Preencher a lista de fidelidade (`fidelidade.xlsx`) de uma execução do Opus com `geracao-v3` e rodar o `avaliar` com `--fidelidade`.
-    2. Registrar o modelo em P8 (recomendação: Opus 5.5).
-    3. As variantes de borda (`base-sintetica/rfps/variantes/`) e a RFP-03 ainda não foram executadas com a API real.
+  - **Portão da fase A (24/10/2026): fechado por decisão do grupo, com a fidelidade conferida em amostra.**
+    1. **Fidelidade:** o grupo conferiu 25 das 68 respostas sugeridas da execução do Opus com `geracao-v3` na RFP-02 (lista enviada pelo grupo, guardada em `dados/fidelidade-opus-v3-RFP-02-preenchida.xlsx`, fora do repositório), todas "sim": 100% na amostra, acima do limite de 90%. Como a lista está parcial, o `avaliar --fidelidade` registra o critério como pendente (25 de 68 conferidas); o grupo decidiu fechar o portão com a amostra. As observações da lista apontam a falta do alerta de fonte desatualizada em 1.01 a 1.29: o alerta existe nos itens (32 itens com `old` nessa execução) e aparece na tela de revisão, mas a lista de fidelidade não tem coluna de alertas.
+    2. **Modelo (P8):** recomendação Opus 5.5; aplicado temporariamente o Sonnet 5.5 (ver P8).
+    3. **Pendente:** a taxa de aceitação, a medir depois no ambiente compartilhado, com revisões e avaliações do grupo (relatório do cenário 48).
+    4. **Pendente:** as variantes de borda (`base-sintetica/rfps/variantes/`) e a RFP-03 ainda não foram executadas com a API real.
 
 ## Fase B: backend local com revisão
 
@@ -374,7 +375,34 @@ O spec curto e o plano detalhado da fase D são escritos quando ela for começar
 
 **Situação (23/10/2026): iniciada com exceção, por decisão do grupo.** A fase D começou com a lista de fidelidade da fase A em revisão e a taxa de aceitação ainda não medida; as duas pendências continuam valendo. Hospedagem decidida (P11): front na Vercel, backend no Render, banco, arquivos e contas no Supabase. Spec curto em `docs/mvp-resposta-rfp/SPEC_FASE_D.md` e plano detalhado em `docs/mvp-resposta-rfp/PLAN_FASE_D.md`, escritos com consulta à referência por pedido expresso.
 
-**Situação (24/10/2026): publicada.** As etapas D1 a D10 estão implementadas e o ambiente compartilhado está no ar: front em `https://tendra-ai-front.vercel.app` (Vercel), backend `tendra-backend` no Render e banco, arquivos e contas no Supabase. O grupo entrou com a conta de teste pelo front publicado. Faltam, no checklist de `PLAN_FASE_D.md`, os cenários que precisam de uma conta Aprovador e de uma tarefa no ambiente publicado (D8, D9, D13 a D15). Continuam valendo as pendências da fase A: a lista de fidelidade e a taxa de aceitação, que agora pode ser medida no banco compartilhado.
+**Situação (24/10/2026): publicada.** As etapas D1 a D10 estão implementadas e o ambiente compartilhado está no ar: front em `https://tendra-ai-front.vercel.app` (Vercel), backend `tendra-backend` no Render e banco, arquivos e contas no Supabase. O grupo entrou com a conta de teste pelo front publicado. Os cenários do checklist de `PLAN_FASE_D.md` foram conferidos no ambiente publicado em 24/10/2026, menos o D15 (reinício no meio de uma tarefa), que o grupo vai testar depois. Continua valendo a pendência da fase A: a taxa de aceitação, que agora pode ser medida no banco compartilhado.
+
+## Fase E: revisão persistida e gestão de tarefas
+
+Pedida pelo grupo em 24/10/2026, depois da publicação. SPEC, cenários 57 a 60.
+
+### E1. Reconhecer alerta, escolher fonte e marcar como revisado no backend
+- Migração `006_revisao_persistida.sql`: colunas `revisado_por` e `revisado_em` nos itens; ações `alerta_reconhecido`, `fonte_escolhida` e `revisao` nos eventos, com a coluna `detalhe` (tipo do alerta ou número da fonte).
+- Rotas `POST /api/tarefas/:id/itens/:numero/alertas/:tipo/reconhecer`, `.../fonte` (`{ fonte }`) e `.../revisar`, com a pessoa que age (da sessão ou da lista de configuração). O reconhecimento fica no JSON do item (`alerts[].ack`, `srcs[].chosen`), no formato de `data.js`.
+- Editar, ou restaurar uma sugestão diferente do texto atual, tira a marca de revisado; aprovar a mantém.
+- No front, as três ações chamam o backend quando o item é do banco e põem na tela o item devolvido; sem servidor, continuam na tela, como antes.
+- **Situação (24/10/2026): implementada.** Testes em `revisao.test.ts` (cenários 57 a 59) e na jornada de ponta a ponta (alerta reconhecido e item revisado continuam depois de recarregar).
+
+### E2. Excluir tarefa
+- `DELETE /api/tarefas/:id`: só o Aprovador no modo compartilhado (403 para o Revisor); 409 durante o processamento; apaga a tarefa e, em cascata, itens, eventos, avaliações, requisições e respostas gravadas, e depois as planilhas no armazenamento (disco ou Supabase Storage). Falha ao apagar um arquivo fica só no log.
+- A trava "eventos só aceitam inclusão" passa a deixar apagar os eventos quando a tarefa deles já não existe, o que só acontece na exclusão em cascata.
+- Na tela Tarefas, a lixeira em cada tarefa do servidor (fora do processamento) abre a confirmação; quem estava na tarefa volta para a lista.
+- **Situação (24/10/2026): implementada.** Testes em `revisao.test.ts` (cenário 60), `autenticacao.test.ts` (Revisor recebe 403), nos armazenamentos e na jornada de ponta a ponta.
+
+### E3. Base só com "Subir documentos"
+- O botão "Importar RFP passada" saiu da tela Base de conhecimento: ele abria o mesmo seletor, e o tipo de cada arquivo já vem do cabeçalho do `.md`.
+- **Situação (24/10/2026): implementada.**
+
+### Pendências registradas em 24/10/2026 (fora da fase E, por decisão do grupo)
+1. **Fase A:** taxa de aceitação; RFP-03 e variantes de borda com a API real.
+2. **Validação no ambiente publicado:** D15 (reinício no meio de uma tarefa); envio de planilha de 10 MB pelo rewrite da Vercel (PD6).
+3. **Valor sugerido nas RFPs com valores permitidos** (cenários 50 a 56, P12): decidir o formato antes de implementar.
+4. **Decisões e configuração do grupo:** certificado do banco em `TENDRA_BANCO_CA` no Render; a função `public.rls_auto_enable()` do Supabase, apontada pelo advisor de segurança; proteção da `main` (P7); definição de pronto (P10); plano gratuito da Vercel (PD7); região Brasil para o produto (PD8).
 
 ## Definição de pronto (proposta, P10)
 

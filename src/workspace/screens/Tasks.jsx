@@ -1,9 +1,20 @@
 import React from "react";
-import { Badge, Button, ProgressBar } from "../../ds/index.js";
+import { Badge, Button, IconButton, ProgressBar, Tooltip } from "../../ds/index.js";
 import { AlertDeck, ClickRow, Page, PageHeader, card, mono } from "../ui.jsx";
 
-const COLS = "minmax(0,2.2fr) 64px minmax(0,1.7fr) 150px 130px 130px";
-const rowGrid = { display: "grid", minWidth: 940, gridTemplateColumns: COLS, gap: 16 };
+const COLS = "minmax(0,2.2fr) 64px minmax(0,1.7fr) 150px 130px 130px 56px";
+const rowGrid = { display: "grid", minWidth: 1010, gridTemplateColumns: COLS, gap: 16 };
+
+/** Excluir tarefa (cenário 60): o clique não abre a tarefa; a exclusão pede confirmação. */
+function DeleteTask({ t }) {
+  if (!t.canDelete) return null;
+  const label = `Excluir ${t.title}`;
+  return (
+    <Tooltip content="Excluir tarefa" placement="top">
+      <IconButton icon="trash-2" label={label} variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); t.del(); }} />
+    </Tooltip>
+  );
+}
 
 export function TaskAlerts({ v, ws }) {
   const { tDeck } = v;
@@ -30,6 +41,7 @@ export function Tasks({ v, ws, pad, isMobile }) {
           <div role="row" style={{ ...rowGrid, padding: "12px 20px", background: "var(--n-050)", borderBottom: "1px solid var(--n-200)", ...mono(11, "var(--n-500)"), letterSpacing: ".1em", textTransform: "uppercase" }}>
             <span role="columnheader">Tarefa</span><span role="columnheader">Itens</span><span role="columnheader">Progresso</span>
             <span role="columnheader">Prazo</span><span role="columnheader">Responsável</span><span role="columnheader">Status</span>
+            <span role="columnheader"><span style={{ position: "absolute", left: -9999 }}>Ações</span></span>
           </div>
           {v.tasks.map((t) => (
             <ClickRow key={t.id} role="row" aria-label={`Abrir ${t.title}`} onClick={t.open} style={{ ...rowGrid, padding: "16px 20px", borderTop: "1px solid var(--n-100)", alignItems: "center", background: "var(--n-000)" }}>
@@ -48,6 +60,7 @@ export function Tasks({ v, ws, pad, isMobile }) {
               </div>
               <span role="cell">{t.owner}</span>
               <div role="cell"><Badge tone={t.tone} icon={t.icon}>{t.status}</Badge></div>
+              <div role="cell"><DeleteTask t={t} /></div>
             </ClickRow>
           ))}
         </div>
@@ -68,6 +81,7 @@ export function Tasks({ v, ws, pad, isMobile }) {
                 <span><span style={mono(undefined)}>{t.due}</span> · <span style={{ color: t.dueColor, fontWeight: t.dueWeight }}>{t.dueText}</span></span>
                 <span>{t.owner}</span>
               </div>
+              {t.canDelete ? <div style={{ display: "flex", justifyContent: "flex-end" }}><DeleteTask t={t} /></div> : null}
             </ClickRow>
           ))}
         </div>

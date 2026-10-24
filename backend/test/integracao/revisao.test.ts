@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { access, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -90,6 +90,9 @@ describe("Cenário 41 · pessoa que age", () => {
       await acao("POST", "1/aprovar", corpo),
       await acao("POST", "1/restaurar", corpo),
       await acao("PUT", "1/avaliacao", { ...corpo, valor: "positiva" }),
+      await acao("POST", "1/revisar", corpo),
+      await acao("POST", "1/fonte", { ...corpo, fonte: 1 }),
+      await acao("POST", "1/alertas/old/reconhecer", corpo),
     ]) {
       expect(resposta.statusCode).toBe(400);
       expect(resposta.json()).toEqual({ erro: "Pessoa não reconhecida" });
@@ -232,4 +235,147 @@ describe("Cenário 47 · persistência da revisão após reiniciar", () => {
       await rm(pasta, { recursive: true, force: true });
     }
   }, 120_000);
+});
+
+/** Põe no item 1 alertas e fontes de teste, para os cenários que dependem deles. */
+async function prepararItem1(dados: { alerts: object[]; srcs?: object[]; paras?: object[] }) {
+  const atual = await item(1);
+  await banco.query("UPDATE itens SET alerts = $3, srcs = $4, paras = $5 WHERE tarefa_id = $1 AND numero = $2", [
+    tarefaId,
+    1,
+    JSON.stringify(dados.alerts),
+    JSON.stringify(dados.srcs ?? atual?.srcs),
+    JSON.stringify(dados.paras ?? atual?.paras),
+  ]);
+}
+
+describe("Cenário 57 · reconhecer alerta", () => {
+  it("grava quem reconheceu e quando no item; reconhecer de novo não muda nada", async () => {
+    await prepararItem1({ alerts: [{ t: "critical" }, { t: "old" }] });
+    const reconhecido = await acao("POST", "1/alertas/old/reconhecer", { pessoa: "kadu" });
+    expect(reconhecido.statusCode).toBe(200);
+    const [critico, antigo] = reconhecido.json().item.alerts;
+    expect(critico).toEqual({ t: "critical" });
+    expect(antigo).toMatchObject({ t: "old", ack: { by: "Kadu Mendes" } });
+    expect(Date.parse(antigo.ack.at)).not.toBeNaN();
+
+    expect((await acao("POST", "1/alertas/old/reconhecer", { pessoa: "marcelo" })).json().item.alerts[1]).toEqual(antigo);
+    expect((await item(1))?.alerts).toEqual([{ t: "critical" }, antigo]);
+    expect((await eventos()).map((evento) => [evento.acao, evento.pessoa, evento.detalhe])).toEqual([["alerta_reconhecido", "Kadu Mendes", "old"]]);
+  });
+
+  it("alerta que o item não tem dá 404 e tipo desconhecido dá 400; nada muda", async () => {
+    await prepararItem1({ alerts: [{ t: "old" }] });
+    const ausente = await acao("POST", "1/alertas/conflict/reconhecer", { pessoa: "kadu" });
+    expect(ausente.statusCode).toBe(404);
+    expect(ausente.json()).toEqual({ erro: "O item não tem esse alerta." });
+    expect((await acao("POST", "1/alertas/qualquer/reconhecer", { pessoa: "kadu" })).statusCode).toBe(400);
+    expect((await item(1))?.alerts).toEqual([{ t: "old" }]);
+    expect(await eventos()).toEqual([]);
+  });
+});
+
+describe("Cenário 58 · escolher fonte em conflito", () => {
+  const fonte = (doc: string) => ({ doc, loc: "Seção · linha 1", type: "Documento", age: 10, ex: `Trecho de ${doc}.`, conflict: true });
+
+  beforeEach(async () => {
+    await prepararItem1({
+      alerts: [{ t: "conflict" }],
+      srcs: [fonte("a.md"), fonte("b.md")],
+      paras: [{ t: "Primeiro parágrafo.", s: [1] }, { t: "Segundo parágrafo.", s: [1, 2] }],
+    });
+  });
+
+  it("a fonte escolhida sustenta todos os parágrafos e o conflito fica reconhecido pela mesma pessoa", async () => {
+    const escolhido = (await acao("POST", "1/fonte", { pessoa: "kadu", fonte: 2 })).json().item;
+    expect(escolhido.srcs.map((x: { doc: string; chosen: boolean }) => [x.doc, x.chosen])).toEqual([["a.md", false], ["b.md", true]]);
+    expect(escolhido.paras).toEqual([{ t: "Primeiro parágrafo.", s: [2] }, { t: "Segundo parágrafo.", s: [2] }]);
+    expect(escolhido.alerts).toEqual([{ t: "conflict", ack: { by: "Kadu Mendes", at: expect.any(String) } }]);
+    expect(await item(1)).toMatchObject({ srcs: escolhido.srcs, paras: escolhido.paras, alerts: escolhido.alerts });
+    expect((await eventos()).map((evento) => [evento.acao, evento.detalhe])).toEqual([["fonte_escolhida", "2"]]);
+  });
+
+  it("fonte fora do conflito dá 400; sem conflito pendente, 409; nada muda", async () => {
+    const antes = await item(1);
+    expect((await acao("POST", "1/fonte", { pessoa: "kadu", fonte: 3 })).json()).toEqual({ erro: "Escolha uma das fontes em conflito." });
+    expect((await acao("POST", "1/fonte", { pessoa: "kadu", fonte: 0 })).statusCode).toBe(400);
+    expect(await item(1)).toEqual(antes);
+
+    await acao("POST", "1/alertas/conflict/reconhecer", { pessoa: "kadu" });
+    const semConflito = await acao("POST", "1/fonte", { pessoa: "kadu", fonte: 1 });
+    expect(semConflito.statusCode).toBe(409);
+    expect(semConflito.json()).toEqual({ erro: "O item não tem conflito pendente." });
+    expect((await eventos()).map((evento) => evento.acao)).toEqual(["alerta_reconhecido"]);
+  });
+});
+
+describe("Cenário 59 · marcar como revisado", () => {
+  it("grava quem marcou e quando; marcar de novo não muda nada; editar tira a marca", async () => {
+    const revisado = (await acao("POST", "1/revisar", { pessoa: "kadu" })).json().item;
+    expect(revisado).toMatchObject({ st: "revisada", rby: "Kadu Mendes" });
+    expect(Date.parse(revisado.rat)).not.toBeNaN();
+    expect((await acao("POST", "1/revisar", { pessoa: "marcelo" })).json().item).toEqual(revisado);
+
+    const editado = (await acao("PUT", "1/texto", { pessoa: "kadu", texto: "Texto novo." })).json().item;
+    expect(editado.st).toBe("em-revisao");
+    expect(editado).not.toHaveProperty("rby");
+    expect(editado).not.toHaveProperty("rat");
+    expect((await eventos()).map((evento) => evento.acao)).toEqual(["revisao", "edicao"]);
+  });
+
+  it("aprovar mantém quem revisou; item aprovado ou sem rascunho não é marcado", async () => {
+    await acao("POST", "1/revisar", { pessoa: "kadu" });
+    expect((await acao("POST", "1/aprovar", { pessoa: "marcelo" })).json().item).toMatchObject({ st: "aprovada", by: "Marcelo Vieira", rby: "Kadu Mendes" });
+    const aprovado = await acao("POST", "1/revisar", { pessoa: "kadu" });
+    expect(aprovado.statusCode).toBe(409);
+    expect(aprovado.json()).toEqual({ erro: "Item já aprovado." });
+    expect((await acao("POST", "2/revisar", { pessoa: "kadu" })).json()).toEqual({ erro: "Item sem rascunho não pode ser marcado como revisado." });
+  });
+
+  it("restaurar um item revisado e editado o devolve para em revisão", async () => {
+    await acao("PUT", "1/texto", { pessoa: "kadu", texto: "Texto novo." });
+    await acao("POST", "1/revisar", { pessoa: "kadu" });
+    const restaurado = (await acao("POST", "1/restaurar", { pessoa: "kadu" })).json().item;
+    expect(restaurado).toMatchObject({ st: "em-revisao", paras: [{ t: "Resposta 1.", s: [1] }] });
+    expect(restaurado).not.toHaveProperty("rby");
+  });
+});
+
+describe("Cenário 60 · excluir tarefa", () => {
+  const existe = (caminho: string) => access(path.join(pastaDados, caminho)).then(() => true, () => false);
+  const linhas = async (tabela: string, id: string) =>
+    (await banco.query<{ total: number }>(`SELECT count(*)::int AS total FROM ${tabela} WHERE tarefa_id = $1`, [id])).rows[0]?.total;
+
+  it("apaga a tarefa com itens, eventos, avaliações, requisições e arquivos; as outras tarefas não mudam", async () => {
+    const outra = await tarefaPronta(banco);
+    await acao("POST", "1/aprovar", { pessoa: "marcelo" });
+    await acao("POST", "3/revisar", { pessoa: "kadu" });
+    await acao("PUT", "1/avaliacao", { pessoa: "kadu", valor: "positiva" });
+    await servidor.inject({ method: "POST", url: `/api/tarefas/${outra}/itens/1/aprovar`, payload: { pessoa: "marcelo" } });
+    const tarefa = await obterTarefa(banco, tarefaId);
+    const arquivos = [tarefa?.caminhoDaPlanilha ?? "", tarefa?.caminhoDaPlanilhaPreenchida ?? ""];
+    expect(await Promise.all(arquivos.map(existe))).toEqual([true, true]);
+
+    const resposta = await servidor.inject({ method: "DELETE", url: `/api/tarefas/${tarefaId}` });
+    expect(resposta.statusCode).toBe(200);
+    expect(resposta.json()).toEqual({ excluida: true });
+
+    expect((await servidor.inject({ method: "GET", url: `/api/tarefas/${tarefaId}` })).statusCode).toBe(404);
+    for (const tabela of ["itens", "eventos", "avaliacoes", "requisicoes", "respostas_geradas"]) expect(await linhas(tabela, tarefaId)).toBe(0);
+    expect(await Promise.all(arquivos.map(existe))).toEqual([false, false]);
+    expect((await servidor.inject({ method: "GET", url: "/api/tarefas" })).json().tarefas.map((t: { id: string }) => t.id)).toEqual([outra]);
+    expect(await linhas("eventos", outra)).toBe(1);
+    await expect(banco.exec("DELETE FROM eventos")).rejects.toThrow(/só aceitam inclusão/);
+
+    const deNovo = await servidor.inject({ method: "DELETE", url: `/api/tarefas/${tarefaId}` });
+    expect(deNovo.statusCode).toBe(404);
+  });
+
+  it("tarefa em processamento não é excluída", async () => {
+    await banco.query("UPDATE tarefas SET estado = 'processando' WHERE id = $1", [tarefaId]);
+    const resposta = await servidor.inject({ method: "DELETE", url: `/api/tarefas/${tarefaId}` });
+    expect(resposta.statusCode).toBe(409);
+    expect(resposta.json()).toEqual({ erro: "A tarefa ainda está em processamento. Exclua depois que ela terminar." });
+    expect(await linhas("itens", tarefaId)).toBe(46);
+  });
 });

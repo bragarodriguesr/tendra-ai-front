@@ -192,5 +192,5 @@ Situação em 24/10/2026, no ambiente publicado (Render, Vercel e Supabase) ou, 
 
 - Tela de cadastro, recuperação de senha, convite por e-mail, SSO e MFA.
 - Cota de gasto da API por pessoa.
-- Persistir reconhecimento de alerta, escolha de fonte em conflito e "Marcar como revisado" (continuam só na tela, como na fase C).
+- Persistir reconhecimento de alerta, escolha de fonte em conflito e "Marcar como revisado": feito depois da fase D, em 24/10/2026 (`PLAN.md`, fase E; SPEC, cenários 57 a 59).
 - Dados reais de clientes.
