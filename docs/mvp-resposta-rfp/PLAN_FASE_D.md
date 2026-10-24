@@ -153,6 +153,7 @@ Cada etapa é um pull request separado, com testes próprios e uma verificação
   - TLS do Postgres: conexão remota sempre cifrada; com `TENDRA_BANCO_CA` (certificado do painel do Supabase), o certificado é conferido; sem ele, o backend avisa no log.
   - O grupo deu ao Render acesso ao repositório; o serviço `tendra-backend` (`srv-dbdsgnks728c738ccop0`) foi criado pelo conector em 23/10/2026, a partir da `main`. O primeiro deploy parou, como esperado, mostrando no log o nome das três variáveis que faltavam (cenário D11). Com os segredos preenchidos pelo grupo no painel do Render, o deploy de 24/10/2026 ficou no ar.
   - Conferido em 24/10/2026, no ambiente publicado: `GET /api/saude` responde `{"ok":true}` direto no Render e pelo front (`https://tendra-ai-front.vercel.app/api/saude`, pelo rewrite da Vercel); rota do Workspace sem sessão recebe 401; login com conta inexistente recebe "E-mail ou senha incorretos." (Supabase Auth real); alteração com outra origem recebe 403 "Origem não autorizada.". O grupo entrou com a conta de teste User Teste 1 (Revisor) pelo front publicado.
+  - Testes do grupo no publicado em 24/10/2026: perfis User Teste 2 (Revisor) e User Teste 3 (Aprovador) ligados pelo conector. A primeira tarefa (RFP-01) foi criada antes da carga da base e terminou com os 46 itens sem rascunho e nenhuma chamada à API, como esperado com a base vazia. Depois da carga dos 16 documentos da Pulse Benefícios, a segunda tarefa (RFP-01) terminou em cerca de 1 minuto com a API real: 39 respostas sugeridas, 7 sem rascunho e 7 chamadas registradas (contagem, 5 lotes de geração e conflito).
   - A verificação de saúde (`/api/saude`) está no `render.yaml`; no serviço criado pelo conector, ela é configurada no painel (Settings → Health Check Path).
 
 ## Variáveis de ambiente do modo compartilhado
@@ -174,18 +175,18 @@ Situação em 24/10/2026, no ambiente publicado (Render, Vercel e Supabase) ou, 
 
 | Cenário | Como conferir | Situação |
 |---|---|---|
-| D1, D4 | Entrar com uma conta válida leva ao Workspace com o nome e o papel certos; recarregar mantém a sessão. | Conferido: login do User Teste 1 (Revisor) pelo front publicado. |
+| D1, D4 | Entrar com uma conta válida leva ao Workspace com o nome e o papel certos; recarregar mantém a sessão. | Conferido no publicado (24/10/2026): login do User Teste 1 e do User Teste 2 (Revisores), com nome e papel certos e a sessão mantida ao recarregar. |
 | D2 | E-mail inexistente, senha errada e conta desativada mostram a mesma mensagem. | Conferido no publicado para e-mail inexistente; senha errada e conta desativada nos testes automatizados. |
-| D3, D5, D6 | Abrir uma rota do Workspace sem login, depois de sair e depois de expirar a sessão retorna 401. | Conferido no publicado para rota sem login; sair e expirar nos testes automatizados. |
+| D3, D5, D6 | Abrir uma rota do Workspace sem login, depois de sair e depois de expirar a sessão retorna 401. | Conferido no publicado: rota sem login e rota depois de sair (`GET /api/tarefas` → 401 logo após o logout); expirar nos testes automatizados. |
 | D4 | Uma ação enviada com outro nome de pessoa fica registrada com a pessoa da sessão (teste automatizado). | Testes automatizados. |
 | D7 | Errar a senha 3 vezes bloqueia novas tentativas com a mensagem de aguardar. | Testes automatizados e servidor real contra o Supabase Auth (a 4ª tentativa recebe 429). |
-| D8, D9 | Como Revisor, aprovar e baixar a planilha preenchida são recusados; editar e avaliar funcionam. | Testes automatizados e navegador com backend de teste; falta conferir no publicado com uma tarefa. |
+| D8, D9 | Como Revisor, aprovar e baixar a planilha preenchida são recusados; editar e avaliar funcionam. | Testes automatizados e navegador com backend de teste. No publicado, pendente: os logs do Render não têm nenhum pedido de aprovar ou baixar a planilha, e a conta Aprovador (User Teste 3, cadastrada em 24/10/2026) ainda não entrou. |
 | D10 | O endereço abre só com HTTPS; o cookie tem `HttpOnly`, `Secure` e `SameSite`. | Conferido no publicado: HTTPS e recusa de outra origem; atributos do cookie nos testes automatizados. |
 | D11 | O CI mostra a varredura de segredos sem alertas; iniciar o backend sem uma variável mostra o nome dela. | Conferido: varredura de segredos no CI e log do primeiro deploy no Render com o nome das variáveis que faltavam. |
-| D12 | O aviso de dados sintéticos aparece no login e no Workspace. | Conferido no navegador com backend de teste; falta confirmar no publicado. |
-| D13 | Duas pessoas em computadores diferentes veem as mesmas tarefas e as ações uma da outra; o relatório de aceitação soma as duas. | Pendente: precisa de uma conta Aprovador e de duas pessoas usando ao mesmo tempo. |
-| D14 | O arquivo da RFP aparece no bucket privado e não abre por endereço público. | Pendente: precisa de uma tarefa criada no publicado (o bucket privado já foi conferido na D3). |
-| D15 | Reiniciar o serviço no Render no meio de uma tarefa e ver a tarefa terminar com todos os itens. | Pendente: reiniciar o serviço no Render no meio de uma tarefa. |
+| D12 | O aviso de dados sintéticos aparece no login e no Workspace. | Conferido no publicado (24/10/2026), segundo o teste manual. |
+| D13 | Duas pessoas em computadores diferentes veem as mesmas tarefas e as ações uma da outra; o relatório de aceitação soma as duas. | Parcial no publicado: o User Teste 1 carregou a base (16 documentos) e criou as tarefas, e o User Teste 2 entrou e viu as mesmas tarefas. Falta uma ação de uma pessoa vista pela outra e o relatório de aceitação somando as duas (nenhuma edição, aprovação ou avaliação registrada ainda). |
+| D14 | O arquivo da RFP aparece no bucket privado e não abre por endereço público. | Conferido no publicado (24/10/2026): as RFPs enviadas e as planilhas preenchidas estão no bucket `rfps` (`rfps/…` e `resultados/…`), e o endereço público do arquivo responde "Bucket not found". |
+| D15 | Reiniciar o serviço no Render no meio de uma tarefa e ver a tarefa terminar com todos os itens. | Pendente: as duas tarefas do publicado terminaram sem reinício do serviço (nenhum evento de reinício no Render entre a criação e o fim). |
 
 ## Fora deste plano
 
