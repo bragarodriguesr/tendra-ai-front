@@ -1,0 +1,42 @@
+/* Direção Aurora — gradientes feitos só com as quatro cores da marca.
+   Posições usam --x1/--y1/--x2/--y2 (−14…14) para o movimento lento; sem JS, valem 0. */
+:root {
+  --aurora-base: #E7EFBC;   /* limão a 25% sobre papel */
+  --aurora-sage-soft: #A4AA98;
+
+  --grad-aurora-lime:
+    radial-gradient(62% 72% at calc(14% + var(--x1, 0) * 1%) calc(88% - var(--y1, 0) * 1%), var(--brand-lime) 0%, transparent 72%),
+    radial-gradient(52% 58% at calc(90% + var(--x2, 0) * 1%) calc(10% + var(--y2, 0) * 1%), var(--brand-paper) 0%, transparent 72%),
+    radial-gradient(58% 66% at calc(88% - var(--x1, 0) * 1%) calc(98% + var(--y2, 0) * 1%), var(--aurora-sage-soft) 0%, transparent 72%),
+    var(--aurora-base);
+
+  --grad-mist-paper:
+    radial-gradient(80% 100% at 85% 0%, rgba(200, 247, 61, 0.34) 0%, transparent 70%),
+    radial-gradient(70% 90% at 0% 100%, rgba(110, 114, 104, 0.18) 0%, transparent 70%),
+    var(--brand-paper);
+
+  --grad-aurora-ink:
+    radial-gradient(70% 90% at calc(14% + var(--x1, 0) * 1%) 100%, rgba(200, 247, 61, 0.5) 0%, transparent 70%),
+    radial-gradient(60% 80% at calc(90% + var(--x2, 0) * 1%) 0%, rgba(110, 114, 104, 0.55) 0%, transparent 70%),
+    var(--brand-ink);
+
+  --grad-glow-action: linear-gradient(135deg, var(--brand-lime) 0%, #E3F0A8 100%);
+  --grad-bar: linear-gradient(90deg, var(--brand-sage) 0%, var(--brand-lime) 100%);
+  --grad-badge-ok: linear-gradient(90deg, rgba(200, 247, 61, 0.42), rgba(245, 246, 241, 0.7));
+}
+
+/* Movimento: as quatro variáveis são registradas como <number> para poder animar.
+   Ligue com data-aurora="move" no elemento que carrega o gradiente. 31–44s por ciclo. */
+@property --x1 { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --y1 { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --x2 { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --y2 { syntax: "<number>"; inherits: true; initial-value: 0; }
+@keyframes tdr-drift-x1 { from { --x1: -12; } to { --x1: 12; } }
+@keyframes tdr-drift-y1 { from { --y1: -10; } to { --y1: 10; } }
+@keyframes tdr-drift-x2 { from { --x2: -14; } to { --x2: 14; } }
+@keyframes tdr-drift-y2 { from { --y2: -12; } to { --y2: 12; } }
+[data-aurora="move"] {
+  animation: tdr-drift-x1 38s ease-in-out infinite alternate, tdr-drift-y1 31s ease-in-out infinite alternate,
+             tdr-drift-x2 44s ease-in-out infinite alternate, tdr-drift-y2 35s ease-in-out infinite alternate;
+}
+@media (prefers-reduced-motion: reduce) { [data-aurora="move"] { animation: none; } }

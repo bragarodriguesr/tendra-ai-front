@@ -4,7 +4,6 @@
 
 .tdr-site-hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: var(--space-12); align-items: center; }
 .tdr-site-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gutter-grid); }
-.tdr-site-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gutter-grid); }
 .tdr-site-trust { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-12); align-items: center; }
 .tdr-site-plans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gutter-grid); align-items: start; }
 .tdr-site-footer-cols { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)); gap: var(--space-10); }
@@ -15,7 +14,6 @@
   .tdr-site-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tdr-site-plans { grid-template-columns: minmax(0, 1fr); }
   .tdr-site-plans { max-width: 520px; margin: 0 auto; width: 100%; }
-  .tdr-site-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--space-8); }
   .tdr-site-footer-cols { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-8); }
   .tdr-site-footer-brand { grid-column: 1 / -1; }
 }
@@ -30,7 +28,6 @@
     --text-lead-size: 17px;
   }
   .tdr-site-footer-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .tdr-site-stat-value { font-size: 32px !important; }
   .tdr-site-cta > button { flex: 1 1 100%; }
   .tdr-site-steps { grid-template-columns: minmax(0, 1fr); }
 }
@@ -80,4 +77,21 @@
   .tdr-site-teams { margin-top: var(--space-10); }
   .tdr-site-teams ul { flex-direction: column; align-items: flex-start; gap: var(--space-2); }
   .tdr-site-teams li + li::before { display: none; }
+}
+
+/* "IA nativa": campo Aurora Limão em movimento; os dados ficam em cards brancos por cima. */
+.tdr-site-ai-head { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: var(--space-12); align-items: end; }
+.tdr-site-ai-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gutter-grid); }
+.tdr-site-ai-card { opacity: 0; transform: translateY(28px); }
+.tdr-site-ai-steps.is-in .tdr-site-ai-card { animation: tdr-ai-reveal 900ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 280ms); }
+@keyframes tdr-ai-reveal { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+.tdr-site-ai-chip { width: 44px; height: 44px; border-radius: var(--radius-lg); background: var(--brand-lime); color: var(--brand-ink); display: flex; align-items: center; justify-content: center; }
+@media (max-width: 900px) {
+  .tdr-site-ai-head { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
+  .tdr-site-ai-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) { .tdr-site-ai-steps { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) {
+  .tdr-site-ai-card { opacity: 1; transform: none; }
+  .tdr-site-ai-steps.is-in .tdr-site-ai-card { animation: none; }
 }

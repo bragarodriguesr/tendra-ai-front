@@ -1,0 +1,24 @@
+<!-- @dsCard group="Gradients" viewport="700x180" name="Gradientes pequenos" subtitle="Barra, selo e botão — o mesmo vocabulário em escala de UI" -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="../styles.css" />
+  <style>
+    html, body { margin: 0; background: var(--surface-page); }
+    * { box-sizing: border-box; }
+    body { font-family: var(--font-sans); color: var(--text-body); padding: 18px 22px; }
+    .g { display: grid; gap: 10px; }
+    .cap { font-family: var(--font-mono); font-size: 10px; line-height: 1.5; letter-spacing: 0.06em; color: var(--text-meta); }
+    .nm { font-family: var(--font-display); font-weight: 600; font-size: 14px; color: var(--text-strong); }
+
+  </style>
+</head>
+<body>
+<div style="display: flex; gap: 26px; align-items: center; flex-wrap: wrap">
+  <div class="g" style="gap: 8px; width: 220px"><div style="height: 6px; border-radius: 99px; background: var(--border-default); overflow: hidden"><div style="width: 92%; height: 100%; background: var(--grad-bar)"></div></div><div class="cap">--grad-bar · sálvia → limão</div></div>
+  <div class="g" style="gap: 8px"><span style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.03em; color: var(--text-state); background: var(--grad-badge-ok); border: 1px solid var(--brand-lime); border-radius: 6px; padding: 5px 9px; width: max-content">CONFORMIDADE OK</span><div class="cap">--grad-badge-ok</div></div>
+  <div class="g" style="gap: 8px"><span style="font-size: 14px; font-weight: 600; color: var(--brand-ink); background: var(--grad-glow-action); border: 1px solid var(--brand-lime); border-radius: 9px; padding: 11px 18px; width: max-content">Agendar demo</span><div class="cap">--grad-glow-action</div></div>
+</div>
+</body>
+</html>

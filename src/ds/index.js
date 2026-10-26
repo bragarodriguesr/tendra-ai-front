@@ -2,6 +2,7 @@
 export { AnimatedLogo } from "./components/core/AnimatedLogo.jsx";
 export { Badge } from "./components/core/Badge.jsx";
 export { Button } from "./components/core/Button.jsx";
+export { Aurora } from "./components/core/Aurora.jsx";
 export { Card } from "./components/core/Card.jsx";
 export { Divider } from "./components/core/Divider.jsx";
 export { Icon } from "./components/core/Icon.jsx";
