@@ -97,7 +97,7 @@ function ManualEditor({ cur, ws }) {
         {r.canUndo && !r.loading ? <Button size="sm" variant="ghost" icon="refresh-cw" onClick={ws.undoAiReview}>Desfazer revisão</Button> : null}
         {!r.ready && !r.loading ? <span style={mono(11, "var(--n-400)")}>{r.words} de {r.min} palavras</span> : null}
         <button
-          type="button" className={"tdr-ai-btn" + (r.loading ? " is-loading" : "")} disabled={!r.ready} aria-busy={r.loading || undefined}
+          type="button" className={"tdr-ai-btn" + (r.loading ? " is-loading" : "")} disabled={!r.ready} aria-busy={r.loading || undefined} data-aurora={r.ready || r.loading ? "move" : undefined}
           title={r.ready ? "Revisa gramática, norma escrita, coerência e clareza, sem acrescentar informação." : r.loading ? "Revisando…" : `Escreva ao menos ${r.min} palavras para revisar com IA.`}
           onClick={ws.reviseWithAi}
         >

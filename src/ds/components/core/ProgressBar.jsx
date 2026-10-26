@@ -1,7 +1,7 @@
 import React from "react";
 import { MonoLabel } from "./MonoLabel.jsx";
 
-export function ProgressBar({ value = 0, label, showValue = true, tone = "paper", animate = true, style, ...rest }) {
+export function ProgressBar({ value = 0, label, showValue = true, tone = "paper", animate = true, aurora = false, style, ...rest }) {
   const pct = Math.max(0, Math.min(100, value));
   const inverse = tone === "ink";
   return (
@@ -20,6 +20,7 @@ export function ProgressBar({ value = 0, label, showValue = true, tone = "paper"
         aria-valuemin={0}
         aria-valuemax={100}
         aria-label={typeof label === "string" ? label : undefined}
+        data-aurora={aurora ? "move" : undefined}
         style={{
           height: 6,
           borderRadius: "var(--radius-pill)",
@@ -32,7 +33,7 @@ export function ProgressBar({ value = 0, label, showValue = true, tone = "paper"
             height: "100%",
             width: pct + "%",
             borderRadius: "var(--radius-pill)",
-            background: inverse ? "var(--brand-lime)" : "var(--brand-sage)",
+            background: aurora ? "var(--grad-aurora-lime)" : inverse ? "var(--brand-lime)" : "var(--brand-sage)",
             animation: animate ? "tdr-fill var(--duration-fill) var(--ease-out) both" : undefined
           }}
         />

@@ -35,13 +35,13 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
           {task.isServer ? (
             <>
               <div style={cardTitle}>{task.items ? `Processando: ${task.done} de ${task.items} perguntas.` : "Lendo a planilha."}</div>
-              <ProgressBar value={task.items ? Math.round((task.done / task.items) * 100) : 0} />
+              <ProgressBar aurora value={task.items ? Math.round((task.done / task.items) * 100) : 0} />
               <div style={{ ...mono(12, "var(--n-500)"), overflowWrap: "anywhere" }}>{task.file}</div>
             </>
           ) : (
             <>
               <div style={cardTitle}>Processando: 42 de 180 perguntas.</div>
-              <ProgressBar value={23} />
+              <ProgressBar aurora value={23} />
             </>
           )}
           <div style={{ color: "var(--n-400)" }}>Você pode sair desta tela. Avisaremos aqui quando terminar.</div>

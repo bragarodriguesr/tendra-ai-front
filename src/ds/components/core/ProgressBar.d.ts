@@ -9,6 +9,8 @@ export interface ProgressBarProps extends React.HTMLAttributes<HTMLDivElement> {
   /** paper: trilha cinza + barra sálvia · ink: trilha tinta + barra limão */
   tone?: "paper" | "ink";
   animate?: boolean;
+  /** Brand Aurora (Aurora Limão em movimento) na barra. Só mediante pedido explícito: hoje, tarefa em processamento. */
+  aurora?: boolean;
 }
 
 export declare function ProgressBar(props: ProgressBarProps): JSX.Element;
