@@ -121,7 +121,7 @@ O logo existe em vetor (`assets/logo/`, quatro lockups + quatro app icons) e em 
 | --- | --- |
 | `styles.css` | Entrada de CSS global — só `@import`. Importado por `src/index.css`. |
 | `index.js` | Barrel com todos os componentes: `import { Button } from "../ds"`. |
-| `tokens/` | `fonts` · `colors` · `typography` · `spacing` · `radii` · `elevation` · `motion` · `dataviz` |
+| `tokens/` | `fonts` · `colors` · `typography` · `spacing` · `radii` · `elevation` · `motion` · `dataviz` · `gradients` (Brand Aurora, sob pedido) |
 | `components/core/` | Button, IconButton, Badge, Tag, Card, Divider, ProgressBar, Logo, AnimatedLogo (+ custom element `<tendra-logo>`), Icon, MonoLabel |
 | `components/forms/` | Field, Input, Textarea, Select, Checkbox, Radio, Switch |
 | `components/navigation/` | Tabs, FilterMenu, Breadcrumb, SidebarNav, TopBar |
@@ -146,3 +146,48 @@ import { Button, Card, Icon } from "../ds";
 ```
 
 Depois use os tokens diretamente (`var(--brand-ink)`, `var(--space-6)`) e monte a interface com os componentes. Nenhum componente depende de npm: só React e as custom properties.
+
+---
+
+## BRAND AURORA (seção adicional · uso somente sob pedido)
+
+Direção de marca complementar: a mesma paleta (limão, papel, sálvia, tinta) tratada como **luz** — campos esfumados, tom sobre tom, deriva lenta. Esta seção é **aditiva**: não altera nenhuma definição, token ou componente das seções acima, e **as regras do DS continuam valendo** (inclusive "sem gradiente" nas superfícies da marca e do produto).
+
+### Regra de ativação — leia antes de usar
+- **O Brand Aurora só é aplicado quando o pedido o citar de forma explícita** (ex.: "use o Brand Aurora no hero", "aplique a Aurora no banner"). Sem esse pedido, **não** use `Aurora`, `--grad-*`, `--aurora-*` nem `data-aurora`, em nenhuma tela, componente, slide ou peça — nem "para dar um toque", nem por consistência com outra peça.
+- Termos genéricos ("mais moderno", "mais visual", "com gradiente", "estilo IA") **não** são pedido explícito. Em caso de dúvida, pergunte.
+- O pedido vale só para o elemento nomeado. Não propague a outras telas ou componentes, e não troque estilos existentes por Aurora por iniciativa própria.
+- Não altere `Card`, `Button`, `ProgressBar`, `Badge` etc. para aceitar variantes Aurora; a Aurora é um componente à parte, que envolve o conteúdo.
+
+### Arquivos
+| Caminho | O que é |
+| --- | --- |
+| `tokens/gradients.css` | `--grad-aurora-lime` · `--grad-mist-paper` · `--grad-aurora-ink` · `--grad-glow-action` · `--grad-bar` · `--grad-badge-ok`, `--aurora-base`, `--aurora-sage-soft` e o movimento (`data-aurora="move"`). Só declara variáveis e regras de atributo: sem uso explícito, nada muda na interface. |
+| `components/core/Aurora.jsx` (+ `.d.ts`, `.prompt.md`) | Componente `Aurora` (`variant` lime · mist · ink, `move`, `radius`, `padding`, `as`). Exportado em `index.js`. |
+| `brand-aurora/brand-aurora.dc.html` | Guia visual da direção (abrir no navegador; usa `support.js` ao lado). |
+| `brand-aurora/gradients-*.html` | Cards de especímen: anatomia, receitas, sobre tinta, movimento, tamanho pequeno. Linkam `../styles.css`. |
+
+### Receitas
+| Token | Receita | Uso (quando pedido) |
+| --- | --- | --- |
+| `--grad-aurora-lime` | limão baixo-esquerda · papel alto-direita · sálvia clara canto oposto, base `#E7EFBC` | capa, hero, post, fechamento. Texto em tinta |
+| `--grad-mist-paper` | papel com sopro de limão (34%) e sálvia (18%) | fundo de página e de seção, hero de site |
+| `--grad-aurora-ink` | tinta com brilho de limão (50%) e sálvia (55%) | card de produto, capa de proposta, seção escura. Texto em papel |
+| `--grad-glow-action` | 135° limão → `#E3F0A8` | **um** CTA comercial por tela |
+| `--grad-bar` · `--grad-badge-ok` | sálvia → limão · limão 42% → papel | barra de progresso, selo de aprovado |
+
+### Regras de aplicação (depois de pedido)
+- **A paleta não muda**: só limão, papel, sálvia e tinta. Ciano, roxo e azul estão fora.
+- **Uma mancha saturada por superfície.**
+- **Dado nunca fica direto sobre o campo.** Tabela, formulário e resposta gerada vão em `Card` branco ou painel por cima.
+- **Texto em tinta sobre `lime`/`mist`; em papel sobre `ink`.** Limão continua preenchimento, nunca texto (exceção: campo tinta).
+- **Movimento é opcional e lento:** `<Aurora move>` / `data-aurora="move"` (31–44s por ciclo), só em superfície de marca — em tela de trabalho o campo fica parado. Respeita `prefers-reduced-motion`.
+- **Sem texto com gradiente**, sem gradiente linear de 2 cores a 90°, sem brilho atrás de tabela e sem `backdrop-blur`.
+- O símbolo continua de traço chapado; o brilho vive no campo atrás dele. Abaixo de 32px o campo volta a ser sólido.
+
+```jsx
+import { Aurora } from "../ds";
+
+// somente mediante pedido explícito
+<Aurora variant="lime" padding="lg"><h1>…</h1></Aurora>
+```

@@ -1,0 +1,23 @@
+<!-- @dsCard group="Gradients" viewport="700x220" name="Aurora em movimento" subtitle="Deriva de 31–44s por ciclo, desligada com prefers-reduced-motion" -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="../styles.css" />
+  <style>
+    html, body { margin: 0; background: var(--surface-page); }
+    * { box-sizing: border-box; }
+    body { font-family: var(--font-sans); color: var(--text-body); padding: 18px 22px; }
+    .g { display: grid; gap: 10px; }
+    .cap { font-family: var(--font-mono); font-size: 10px; line-height: 1.5; letter-spacing: 0.06em; color: var(--text-meta); }
+    .nm { font-family: var(--font-display); font-weight: 600; font-size: 14px; color: var(--text-strong); }
+
+  </style>
+</head>
+<body>
+<div data-aurora="move" style="height: 150px; border-radius: var(--radius-xl); background: var(--grad-aurora-lime); padding: 22px 26px; display: flex; align-items: flex-end">
+  <div style="font-family: var(--font-display); font-weight: 600; font-size: 26px; line-height: 1.1; letter-spacing: -0.03em; color: var(--brand-ink)">As manchas se movem; o texto não.</div>
+</div>
+<div class="cap" style="margin-top: 12px; line-height: 1.7">data-aurora="move" · 4 variáveis (--x1 --y1 --x2 --y2) registradas com @property e animadas em 38 / 31 / 44 / 35s, alternando.<br />Só em superfície de marca. Em tela de trabalho (tabela, formulário, revisão) o campo fica parado.</div>
+</body>
+</html>

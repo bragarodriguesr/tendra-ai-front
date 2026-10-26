@@ -1,0 +1,25 @@
+<!-- @dsCard group="Gradients" viewport="700x230" name="Receitas" subtitle="Quatro gradientes, só das quatro cores" -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="../styles.css" />
+  <style>
+    html, body { margin: 0; background: var(--surface-page); }
+    * { box-sizing: border-box; }
+    body { font-family: var(--font-sans); color: var(--text-body); padding: 18px 22px; }
+    .g { display: grid; gap: 10px; }
+    .cap { font-family: var(--font-mono); font-size: 10px; line-height: 1.5; letter-spacing: 0.06em; color: var(--text-meta); }
+    .nm { font-family: var(--font-display); font-weight: 600; font-size: 14px; color: var(--text-strong); }
+
+  </style>
+</head>
+<body>
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px">
+  <div class="g" style="gap: 8px"><div style="height: 120px; border-radius: var(--radius-lg); background: var(--grad-aurora-lime)"></div><div class="nm">Aurora Limão</div><div class="cap">--grad-aurora-lime<br />capa · hero · post</div></div>
+  <div class="g" style="gap: 8px"><div style="height: 120px; border-radius: var(--radius-lg); background: var(--grad-mist-paper); border: 1px solid var(--border-default)"></div><div class="nm">Névoa Papel</div><div class="cap">--grad-mist-paper<br />fundo de página e seção</div></div>
+  <div class="g" style="gap: 8px"><div style="height: 120px; border-radius: var(--radius-lg); background: var(--grad-aurora-ink)"></div><div class="nm">Aurora Tinta</div><div class="cap">--grad-aurora-ink<br />produto · capa escura</div></div>
+  <div class="g" style="gap: 8px"><div style="height: 120px; border-radius: var(--radius-lg); background: var(--brand-paper); display: grid; place-items: center"><span style="font-size: 13px; font-weight: 600; color: var(--brand-ink); background: var(--grad-glow-action); border: 1px solid var(--brand-lime); border-radius: 9px; padding: 11px 18px">Agendar demo</span></div><div class="nm">Brilho de Ação</div><div class="cap">--grad-glow-action<br />um CTA por tela</div></div>
+</div>
+</body>
+</html>
