@@ -21,7 +21,7 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
           </div>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             {task.hasItems ? (task.isServer
-              ? <Button variant="secondary" icon="download" disabled={!v.podeExportar} title={v.podeExportar ? undefined : "Somente Aprovadores baixam a planilha preenchida."} onClick={() => ws.askDownload(task.id)}>Baixar planilha preenchida</Button>
+              ? <Button variant="secondary" icon="download" disabled={!task.podeBaixar} title={task.podeBaixar ? undefined : "O Revisor baixa a planilha quando a tarefa estiver pronta: todos os itens aprovados e nenhum alerta pendente."} onClick={() => ws.askDownload(task.id)}>Baixar planilha preenchida</Button>
               : <Button variant="secondary" icon="download" onClick={() => ws.go("export", { taskId: "t1" })}>Exportação</Button>) : null}
             <Button variant="secondary" icon="building-2" onClick={() => ws.openTaskDetails(task.id)}>Ver detalhes</Button>
             {task.hasItems ? <Button icon="eye" onClick={() => ws.go("review")}>Abrir revisão</Button> : null}
@@ -66,7 +66,7 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
           <div><Badge tone="approved" icon="check-check">Pronta para exportar</Badge></div>
           <div style={cardTitle}>{task.progText}</div>
           <ProgressBar value={100} />
-          <div style={{ color: "var(--n-400)", lineHeight: 1.6 }}>Nenhum alerta pendente. Um Aprovador pode exportar a planilha com respostas e fontes.</div>
+          <div style={{ color: "var(--n-400)", lineHeight: 1.6 }}>Nenhum alerta pendente. A planilha com respostas e fontes já pode ser baixada por Aprovadores e Revisores.</div>
           <div><Button icon="download" onClick={() => ws.go("export", task.isServer ? {} : { taskId: task.id })}>Ir para exportação</Button></div>
         </div>
       ) : null}

@@ -308,7 +308,7 @@ export function Review({ v, ws, state, height, isMobile }) {
               <div className={isMobile ? "tdr-review-actions" : undefined} style={{ display: "flex", gap: isMobile ? 8 : 12, alignItems: "center", flexWrap: "wrap", ...(isMobile ? { width: "100%" } : null) }}>
                 {cur.isApprovedOrRevised ? <span style={{ fontSize: 13, color: "var(--n-400)" }}>{cur.stateHint}</span> : null}
                 <Button variant="secondary" icon="check" disabled={cur.noRevise} onClick={() => ws.revise(cur.id)}>Marcar como revisado</Button>
-                <Button icon="shield-check" disabled={cur.noApprove} onClick={ws.approve}>Aprovar resposta</Button>
+                {cur.canApprove ? <Button icon="shield-check" disabled={cur.noApprove} onClick={ws.approve}>Aprovar resposta</Button> : null}
               </div>
             </div>
           </>

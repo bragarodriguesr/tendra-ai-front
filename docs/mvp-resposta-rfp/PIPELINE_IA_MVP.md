@@ -107,9 +107,10 @@ A pessoa decide. Nenhum item é aprovado ou exportado pela IA.
 ```mermaid
 flowchart LR
     H1["1 · Revisar item a item<br/>Pessoa · tela de Revisão<br/>Abre a fonte no trecho exato, edita, avalia"]:::pessoa
-    H2["2 · Tratar os alertas<br/>Pessoa<br/>Reconhece um a um; não existe reconhecer todos"]:::pessoa
-    H3["3 · Revisar e aprovar<br/>Pessoa · dois papéis<br/>Só o Aprovador aprova"]:::pessoa
-    H4["4 · Exportar<br/>Sistema · sem IA<br/>Só com 100% aprovado e sem alerta pendente"]:::sistema
+    H2["2 · Tratar os alertas<br/>Pessoa<br/>Reconhece um a um; não existe reconhecer todos<br/>Resposta manual não vira alerta"]:::pessoa
+    H3["3 · Revisar e aprovar<br/>Pessoa · dois papéis<br/>Só o Aprovador aprova; o Revisor nem vê o botão"]:::pessoa
+    H4["4 · Baixar a planilha<br/>Sistema · sem IA<br/>Aprovador a qualquer momento, com aviso;<br/>Revisor só com 100% aprovado e sem alerta pendente"]:::sistema
+    H7["Revisar com IA (resposta manual)<br/>IA 3 · Claude Haiku 5.5<br/>A partir de 30 palavras; só redação,<br/>nada acrescentado; a pessoa confere e pode desfazer"]:::ia
     RES(["Resultado final<br/>Planilha com respostas aprovadas<br/>e fonte rastreável"]):::final
     H5[("Registro de eventos<br/>Quem editou, reconheceu, revisou,<br/>aprovou e exportou, e quando")]:::dados
     H6["Editar depois de aprovar<br/>Pede confirmação, remove a aprovação<br/>e bloqueia a exportação de novo"]:::excecao
@@ -119,9 +120,11 @@ flowchart LR
     H2 --> H5
     H3 --> H5
     H4 -.-> H6
+    H1 -.-> H7
 
     classDef pessoa fill:#adf0c7,stroke:#2dc75c,color:#1a1a1a
     classDef sistema fill:#c6dcff,stroke:#659df2,color:#1a1a1a
+    classDef ia fill:#dedaff,stroke:#8f7fee,color:#1a1a1a
     classDef dados fill:#f7f7f7,stroke:#b0b0b0,color:#1a1a1a
     classDef excecao fill:#ffffff,stroke:#b0b0b0,color:#1a1a1a
     classDef final fill:#2dc75c,stroke:#067429,color:#1a1a1a

@@ -108,9 +108,11 @@ const FILTERS = [["todos", "Todos"], ["sem-rascunho", "Sem rascunho"], ["sugerid
 /** Deriva tudo o que as telas mostram a partir do estado. */
 export function buildView(s, ws) {
   const isA = s.role === "Aprovador";
-  // Com login (fase D, cenário D9), só o Aprovador baixa a planilha preenchida; sem login, todos.
+  // Com login (fase D, cenário D9), o Aprovador baixa a planilha preenchida de qualquer tarefa; o Revisor,
+  // só da tarefa "Pronta" (revisto em 26/10/2026). Sem login, todos.
   const podeExportar = !s.sessao || isA;
-  // Excluir tarefa (cenário 60) segue a regra de baixar a planilha: com login, só o Aprovador.
+  const podeBaixar = (t) => podeExportar || !!(t && t.isReady);
+  // Excluir tarefa (cenário 60): com login, só o Aprovador.
   const podeExcluir = podeExportar;
   // Com o servidor, tarefas, exportação, histórico e alertas vêm do banco; sem ele, dos exemplos de data.js.
   const online = s.tarefasOrigem === "servidor";
@@ -235,7 +237,7 @@ export function buildView(s, ws) {
   // detalhe da tarefa
   const task0 = ws.taskInfo(s.taskId, s) || ws.taskInfo(taskIds[0], s) || ws.taskInfo("t1", s);
   const tkr = tasks.find((x) => x.id === task0.id) || {};
-  const task = { ...task0, sTxt: tkr.status, sTone: tkr.tone, sIcon: tkr.icon, hasItems: !!task0.hasItems, isReady: !!task0.isReady };
+  const task = { ...task0, sTxt: tkr.status, sTone: tkr.tone, sIcon: tkr.icon, hasItems: !!task0.hasItems, isReady: !!task0.isReady, podeBaixar: podeBaixar(task0) };
   // Estados dos itens, na ordem do fluxo. Cores de dataviz (tokens/dataviz.css): Em revisão em
   // Petróleo como no Dashboard, Aprovada em Limão; as demais escolhidas para separar as vizinhas.
   const segs = [
@@ -294,7 +296,8 @@ export function buildView(s, ws) {
     if (it.st === "aprovada") { noApprove = true; noRevise = true; }
     else if (!hasAnswer) { blockText = "Escreva a resposta antes de revisar ou aprovar."; noRevise = true; noApprove = true; }
     else if (p > 0) { blockText = `Falta tratar ${alertWord} antes de aprovar.`; noRevise = true; noApprove = true; }
-    if (!isA && it.st !== "aprovada") { noApprove = true; blockText = blockText ? blockText + " Somente Aprovadores aprovam." : "Somente Aprovadores aprovam."; }
+    // O Revisor não aprova: o botão nem aparece para ele (26/10/2026).
+    if (!isA) noApprove = true;
     if (it.st === "revisada") noRevise = true;
     const openSrc = (k) => () => ws.setState({ drawer: { id: it.id, k } });
     const decided = it.srcs.some((x) => x.conflict && x.chosen);
@@ -332,7 +335,7 @@ export function buildView(s, ws) {
       blockText, noRevise, noApprove, fbUp: fb.value === "up", fbDown: fb.value === "down", fbReason: fb.reason || "",
       // Item sem rascunho também tem editor: a resposta escrita fica marcada como manual (cenário 61).
       canEdit: true,
-      isApprovedOrRevised: it.st === "revisada" || it.st === "aprovada",
+      isApprovedOrRevised: it.st === "revisada" || it.st === "aprovada", canApprove: isA,
       stateHint: it.st === "aprovada" ? "Editar remove a aprovação." : "Pronta para aprovação."
     };
   }
@@ -354,9 +357,10 @@ export function buildView(s, ws) {
     return {
       id, company, title, count: approved + " de " + total + " itens aprovados", pct: Math.round((approved / total) * 100), blocked,
       badge: blocked ? "Bloqueada" : exp ? "Exportada" : "Pronta", tone: blocked ? "neutral" : "approved", icon: blocked ? "lock" : exp ? "check-check" : "circle-check",
-      disabled: blocked || !isA, btn: exp ? "Baixar novamente" : "Exportar documento",
+      // Revisor e Aprovador exportam a tarefa pronta (26/10/2026).
+      disabled: blocked, btn: exp ? "Baixar novamente" : "Exportar documento",
       reason: blocked ? total - approved + " de " + total + " itens ainda não foram aprovados. Exportação bloqueada até 100% aprovado."
-        : !isA ? "Somente Aprovadores exportam." : "Todos os itens estão aprovados e sem alerta pendente.",
+        : "Todos os itens estão aprovados e sem alerta pendente.",
       exported: exp, doExport: onExp, goReview: openItem(t1Pending[0] ? t1Pending[0].id : "r1", "t1")
     };
   };
@@ -366,10 +370,10 @@ export function buildView(s, ws) {
     return {
       id: t.id, company: t.company, title: t.title, count: t.shortProg, pct: t.pct, blocked: false, filled: true,
       badge: t.isReady ? "Pronta" : "Em revisão", tone: t.isReady ? "approved" : "neutral", icon: t.isReady ? "circle-check" : "eye",
-      disabled: !podeExportar, btn: "Baixar planilha preenchida", doExport: () => ws.askDownload(t.id),
-      reason: podeExportar
+      disabled: !podeBaixar(t), btn: "Baixar planilha preenchida", doExport: () => ws.askDownload(t.id),
+      reason: podeBaixar(t)
         ? "Traz o estado atual da revisão: o texto de cada item (sugestão, edição ou resposta manual), as fontes citadas e a situação (aprovada, revisada, em revisão)."
-        : "Somente Aprovadores baixam a planilha preenchida.",
+        : "O Revisor baixa a planilha quando a tarefa estiver pronta: todos os itens aprovados e nenhum alerta pendente.",
       goReview: () => ws.go("review", { taskId: t.id, sel: pending ? pending.id : undefined, filter: "todos" })
     };
   });

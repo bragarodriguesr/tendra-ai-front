@@ -35,6 +35,14 @@ export function tarefaPublica(tarefa: Tarefa) {
   };
 }
 
+/**
+ * Tarefa "Pronta": todos os itens aprovados e nenhum alerta pendente. A resposta manual é só registro
+ * de autoria e não conta como pendente (ajuste I3), como na tela.
+ */
+function revisaoConcluida(itens: Awaited<ReturnType<typeof listarItens>>): boolean {
+  return itens.length > 0 && itens.every((item) => item.st === "aprovada" && item.alerts.every((alerta) => alerta.ack !== undefined || alerta.t === "manual"));
+}
+
 const ID = { type: "object", properties: { id: { type: "string", pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" } } } as const;
 const TEXTO_CURTO = { type: "string", maxLength: 200 } as const;
 const BASE64 = /^[A-Za-z0-9+/]*={0,2}$/;
@@ -177,11 +185,13 @@ export function registrarRotasDeTarefas(servidor: FastifyInstance, opcoes: Opcoe
   });
 
   servidor.get<{ Params: { id: string } }>("/api/tarefas/:id/planilha", { schema: { params: ID } }, async (pedido, resposta) => {
-    exigirAprovador(pedido, "Só o Aprovador pode baixar a planilha preenchida.");
     const tarefa = await tarefaPronta(pedido.params.id);
+    const itens = await listarItens(banco, tarefa.id);
+    // Cenário D9 (revisto em 26/10/2026): o Revisor baixa só a planilha da tarefa concluída; o Aprovador, em qualquer estado.
+    if (!revisaoConcluida(itens)) exigirAprovador(pedido, "O Revisor só baixa a planilha de tarefas prontas: todos os itens aprovados e nenhum alerta pendente.");
     // Gerada a cada pedido, com o estado atual da revisão (edições, respostas manuais, aprovações), sem chamar a IA.
     const original = new Uint8Array(await opcoes.armazenamento.ler(tarefa.caminhoDaPlanilha));
-    const conteudo = Buffer.from(await gerarPlanilhaDaRevisao(original, await listarItens(banco, tarefa.id)));
+    const conteudo = Buffer.from(await gerarPlanilhaDaRevisao(original, itens));
     const nome = `${tarefa.arquivo.replace(/\.xlsx$/i, "")}-preenchida.xlsx`;
     return resposta
       .header("content-type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")

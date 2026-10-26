@@ -86,8 +86,8 @@ O mapeamento persona-papel é uma sugestão de partida; quem recebe cada papel �
 | Editar a resposta sugerida | Sim | Sim | Implementado |
 | Reconhecer um alerta (registrado com nome e horário) | Sim | Sim | Implementado |
 | Marcar item como "Revisado" | Sim | Sim | Implementado |
-| **Aprovar item** | Não | Sim | Implementado; para o Revisor o botão fica desabilitado com "Somente Aprovadores aprovam." |
-| **Exportar o documento final** | Não | Sim | Implementado; para o Revisor: "Somente Aprovadores exportam." |
+| **Aprovar item** | Não | Sim | Implementado; para o Revisor o botão "Aprovar resposta" não aparece (26/10/2026) |
+| **Exportar o documento final** | Só da tarefa pronta | Sim | Implementado; o Revisor baixa a planilha preenchida só da tarefa "Pronta" (100% aprovada, sem alerta pendente); nas demais o botão fica desabilitado (26/10/2026) |
 | Ver histórico de aprovações e revisões | Sim | Sim | Implementado |
 
 As linhas de subir documentos, ativar/desativar, criar tarefa e exportar seguem como suposições deste PRD (Q-05).
@@ -186,7 +186,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
   - "Aprovar resposta" leva a *Aprovada* (com nome e horário); só o Aprovador, direto de *Sugerida*, *Em revisão* ou *Revisada*.
   - Editar um item *Revisada* o devolve para *Em revisão*.
   - Editar um item *Aprovada* pede confirmação ("Editar remove a aprovação. O item volta para Em revisão e o evento fica registrado.") e, confirmado, o devolve para *Em revisão*.
-- **Revisar e aprovar exigem resposta escrita e todos os alertas tratados.** O motivo aparece ao lado dos botões desabilitados: "Escreva a resposta antes de revisar ou aprovar.", "Falta tratar [N] alerta(s) antes de aprovar." e, para o Revisor, "Somente Aprovadores aprovam.".
+- **Revisar e aprovar exigem resposta escrita e todos os alertas tratados.** O motivo aparece ao lado dos botões desabilitados: "Escreva a resposta antes de revisar ou aprovar.", "Falta tratar [N] alerta(s) antes de aprovar.". Para o Revisor, o botão "Aprovar resposta" não aparece (26/10/2026).
 - **Alerta nunca depende só de cor.** Ícone, rótulo em texto e posição fixa acima da resposta.
 
 ## 7. Requisitos 0: site público, login e casca do Workspace (novo na v2)
@@ -462,7 +462,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 
 **F-22 · P0 · Portões de validação: revisar e aprovar** (MoSCoW: Must) — Implementado
 
-- "Marcar como revisado" está disponível para os dois papéis. "Aprovar resposta" só para o Aprovador; para o Revisor aparece desabilitado com "Somente Aprovadores aprovam.".
+- "Marcar como revisado" está disponível para os dois papéis. "Aprovar resposta" só para o Aprovador; para o Revisor o botão não aparece (26/10/2026).
 - **Ao revisar:** o item vai para *Revisada* e a tela confirma "Item revisado · Pronto para aprovação.". A barra de ações passa a mostrar "Pronta para aprovação.".
 - **Ao aprovar:**
   - o item mostra o selo "Aprovado por [nome] · [data hora]";
@@ -493,7 +493,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
   - "X de N itens aprovados" e uma barra de progresso;
   - a descrição do conteúdo do arquivo.
 - **Bloqueada** (item não aprovado ou alerta pendente): "Exportar documento" fica desabilitado, com o texto "[N] de [M] itens ainda não foram aprovados. Exportação bloqueada até 100% aprovado." e o botão "Ir para revisão", que abre o primeiro item pendente.
-- **Pronta:** "Exportar documento" fica habilitado só para o Aprovador, com "Todos os itens estão aprovados e sem alerta pendente.". O Revisor vê "Somente Aprovadores exportam.".
+- **Pronta:** o download fica habilitado para o Aprovador e para o Revisor, com "Todos os itens estão aprovados e sem alerta pendente.". Nas tarefas ainda não prontas, só o Aprovador baixa (26/10/2026).
 - **Conteúdo do arquivo**, para cada item e na ordem original:
   - a pergunta;
   - o ID do item;
@@ -554,12 +554,12 @@ Texto como está no front. A voz é direta, sem exclamação, sem emoji e sem a 
 | Resposta manual sem fonte | T6 | Cartão "Sem contexto" no lugar das fontes: "Informação não localizada na base. A resposta foi escrita manualmente." | Nenhuma (registro de autoria) |
 | Sem resposta | T6 | "Escreva a resposta antes de revisar ou aprovar." | Editar resposta |
 | Aprovação bloqueada | T6 | "Falta tratar 1 alerta antes de aprovar." | Tratar o alerta |
-| Revisor tentando aprovar | T6 | "Somente Aprovadores aprovam." | Nenhuma |
+| Revisor tentando aprovar | T6 | Botão "Aprovar resposta" não aparece para o Revisor (26/10/2026) | Nenhuma |
 | Filtro sem itens | T6 | "Nenhum item neste filtro." / "Escolha outro estado para continuar a revisão." | Trocar filtro |
 | Documento indisponível | T7 | "Este documento não está mais na base. Mostramos o nome e a página registrados." | Fechar |
 | Editar item aprovado | T6 | "Editar remove a aprovação." / "O item volta para Em revisão e o evento fica registrado." | Editar e remover aprovação; Cancelar |
 | Exportação bloqueada | T8 | "[N] de [M] itens ainda não foram aprovados. Exportação bloqueada até 100% aprovado." | Ir para revisão |
-| Revisor na exportação | T8 | "Somente Aprovadores exportam." | Nenhuma |
+| Revisor na exportação | T8 | Tarefa não pronta: "O Revisor baixa a planilha quando a tarefa estiver pronta: todos os itens aprovados e nenhum alerta pendente." | Nenhuma |
 | Falha ao salvar | T6 | "Não foi possível salvar. Seu texto continua nesta tela e tentaremos de novo." (Pendente) | Tentar agora |
 
 **Avisos de confirmação** (aparecem no canto e somem sozinhos): "Alerta reconhecido", "Fonte escolhida", "Item revisado", "Item aprovado", "Sugestão restaurada", "Aprovação removida", "Nova tentativa", "Documento exportado", "Documento ativado/inativo". No celular aparecem no topo, para não cobrir os botões de revisar e aprovar.
