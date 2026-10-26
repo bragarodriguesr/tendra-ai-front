@@ -70,7 +70,7 @@ export function Tasks({ v, ws, pad, isMobile }) {
               </div>
               <span role="cell" style={mono(13)}>{t.items}</span>
               <div role="cell" style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-start" }}>
-                <div style={{ width: "100%" }}><ProgressBar value={t.pct} /></div>
+                <div style={{ width: "100%" }}><ProgressBar value={t.pct} fillClassName={t.isProcessing ? "tdr-progress-ai" : undefined} /></div>
                 <span style={{ fontSize: 12, color: "#4B5046" }}>{t.compText}</span>
               </div>
               <div role="cell" style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -94,7 +94,7 @@ export function Tasks({ v, ws, pad, isMobile }) {
                 </div>
                 <Badge tone={t.tone} icon={t.icon}>{t.status}</Badge>
               </div>
-              <ProgressBar value={t.pct} />
+              <ProgressBar value={t.pct} fillClassName={t.isProcessing ? "tdr-progress-ai" : undefined} />
               <span style={{ fontSize: 13, color: "#4B5046" }}>{t.compText}</span>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 13 }}>
                 <span><span style={mono(undefined)}>{t.due}</span> · <span style={{ color: t.dueColor, fontWeight: t.dueWeight }}>{t.dueText}</span></span>
