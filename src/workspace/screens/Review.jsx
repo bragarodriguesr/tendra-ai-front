@@ -84,6 +84,30 @@ function ItemAlerts({ cur, ws }) {
   );
 }
 
+/**
+ * Editor da resposta manual com "Revisar com IA" no canto inferior direito (cenário 65): desabilitado
+ * até 30 palavras; habilitado, com o gradiente animado em limão.
+ */
+function ManualEditor({ cur, ws }) {
+  const r = cur.aiReview;
+  return (
+    <div style={{ position: "relative" }}>
+      <Textarea rows={8} value={cur.text} placeholder="Escreva a resposta. Separe parágrafos com uma linha em branco." onChange={(e) => ws.onDraft(e.target.value)} aria-label="Resposta" autoFocus readOnly={r.loading} style={{ paddingBottom: 56, display: "block" }} />
+      <div style={{ position: "absolute", right: 10, bottom: 10, display: "flex", alignItems: "center", gap: 10 }}>
+        {r.canUndo && !r.loading ? <Button size="sm" variant="ghost" icon="refresh-cw" onClick={ws.undoAiReview}>Desfazer revisão</Button> : null}
+        {!r.ready && !r.loading ? <span style={mono(11, "var(--n-400)")}>{r.words} de {r.min} palavras</span> : null}
+        <button
+          type="button" className={"tdr-ai-btn" + (r.loading ? " is-loading" : "")} disabled={!r.ready} aria-busy={r.loading || undefined}
+          title={r.ready ? "Revisa gramática, norma escrita, coerência e clareza, sem acrescentar informação." : r.loading ? "Revisando…" : `Escreva ao menos ${r.min} palavras para revisar com IA.`}
+          onClick={ws.reviseWithAi}
+        >
+          <Icon name={r.loading ? "loader-circle" : "sparkles"} size="sm" />{r.loading ? "Revisando…" : "Revisar com IA"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function Answer({ v, ws, state, cur }) {
   const startEdit = () => (cur.isApproved ? ws.setState({ dialog: true }) : ws.setState({ edit: true }));
   return (
@@ -110,7 +134,9 @@ function Answer({ v, ws, state, cur }) {
         </div>
       ) : null}
       {state.edit ? (
-        <Textarea rows={8} value={cur.text} placeholder="Escreva a resposta. Separe parágrafos com uma linha em branco." onChange={(e) => ws.onDraft(e.target.value)} aria-label="Resposta" autoFocus />
+        cur.aiReview ? <ManualEditor cur={cur} ws={ws} /> : (
+          <Textarea rows={8} value={cur.text} placeholder="Escreva a resposta. Separe parágrafos com uma linha em branco." onChange={(e) => ws.onDraft(e.target.value)} aria-label="Resposta" autoFocus />
+        )
       ) : (
         <>
           {cur.noText ? <div style={{ color: "var(--n-400)", lineHeight: 1.6 }}>Nenhum rascunho: a base não tem informação para esta pergunta. Use "Editar resposta" para escrever a resposta; ela fica marcada como resposta manual.</div> : null}

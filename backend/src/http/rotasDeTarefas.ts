@@ -7,7 +7,10 @@ import { ErroDaRota } from "./erros.ts";
 import { exigirAprovador } from "./rotasDeAutenticacao.ts";
 import { gerarPlanilhaDaRevisao } from "../revisao/planilhaDaRevisao.ts";
 import { obterEmpresaDaTarefa } from "../persistencia/empresas.ts";
-import { excluirTarefa, listarItens, listarRequisicoes, listarTarefas, listarTarefasEmProcessamento, obterTarefa, type DadosDaTarefa, type Tarefa } from "../persistencia/tarefas.ts";
+import { ClienteDaIa, ErroDaIa } from "../ia/cliente.ts";
+import { MODELO_DE_REVISAO_DE_TEXTO_PADRAO } from "../config/config.ts";
+import { ErroDaRevisaoDeTexto, MAXIMO_DE_CARACTERES, MINIMO_DE_PALAVRAS, contarPalavras, revisarTexto } from "../revisao/revisaoDeTexto.ts";
+import { excluirTarefa, listarItens, listarRequisicoes, registrarRequisicao, listarTarefas, listarTarefasEmProcessamento, obterTarefa, type DadosDaTarefa, type Tarefa } from "../persistencia/tarefas.ts";
 
 /**
  * Rotas de tarefas (etapa B2). A planilha é validada na hora (cenários 4 e 31); o processamento
@@ -191,6 +194,41 @@ export function registrarRotasDeTarefas(servidor: FastifyInstance, opcoes: Opcoe
     await tarefaExistente(pedido.params.id);
     return await obterEmpresaDaTarefa(banco, pedido.params.id);
   });
+
+  // "Revisar com IA" (cenário 65): só a redação de uma resposta manual (item sem sugestão da IA), com o
+  // modelo da revisão de texto. Nada é gravado no item: o texto revisado volta para o editor da tela.
+  // A requisição entra no registro da tarefa, sem o texto (cenário 29).
+  servidor.post<{ Params: { id: string; numero: string }; Body: { texto: string } }>(
+    "/api/tarefas/:id/itens/:numero/revisar-texto",
+    {
+      schema: {
+        params: { type: "object", properties: { ...ID.properties, numero: { type: "string", pattern: "^[1-9][0-9]{0,5}$" } } },
+        body: { type: "object", required: ["texto"], additionalProperties: false, properties: { texto: { type: "string", maxLength: MAXIMO_DE_CARACTERES } } },
+      },
+    },
+    async (pedido) => {
+      const { id } = pedido.params;
+      const numero = Number(pedido.params.numero);
+      const tarefa = await tarefaPronta(id);
+      const { rows } = await banco.query<{ orig: string }>("SELECT orig FROM itens WHERE tarefa_id = $1 AND numero = $2", [tarefa.id, numero]);
+      if (rows[0] === undefined) throw new ErroDaRota(404, "Item não encontrado.");
+      if (rows[0].orig !== "") throw new ErroDaRota(409, "A revisão com IA é só para respostas escritas em itens sem rascunho.");
+      if (contarPalavras(pedido.body.texto) < MINIMO_DE_PALAVRAS) throw new ErroDaRota(400, `Escreva ao menos ${MINIMO_DE_PALAVRAS} palavras para revisar com IA.`);
+
+      let gravacao: Promise<void> = Promise.resolve();
+      const cliente = new ClienteDaIa(opcoes.api, (entrada) => { gravacao = registrarRequisicao(banco, tarefa.id, entrada); });
+      try {
+        const texto = await revisarTexto({ cliente, modelo: opcoes.ia.modeloDeRevisaoDeTexto ?? MODELO_DE_REVISAO_DE_TEXTO_PADRAO, texto: pedido.body.texto, numero });
+        return { texto };
+      } catch (erro) {
+        if (erro instanceof ErroDaRevisaoDeTexto) throw new ErroDaRota(422, erro.message);
+        if (erro instanceof ErroDaIa) throw new ErroDaRota(502, `Revisão com IA indisponível: ${erro.message}`);
+        throw erro;
+      } finally {
+        await gravacao;
+      }
+    },
+  );
 
   servidor.get<{ Params: { id: string } }>("/api/tarefas/:id/registro", { schema: { params: ID } }, async (pedido) => {
     await tarefaExistente(pedido.params.id);

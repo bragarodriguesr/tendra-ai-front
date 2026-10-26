@@ -251,3 +251,78 @@ describe("Cenários 62 a 64 · responsável, empresa e contatos", () => {
     expect((await obter("/api/tarefas/00000000-0000-4000-8000-000000000000/empresa")).statusCode).toBe(404);
   });
 });
+
+describe("Cenário 65 · Revisar com IA (resposta manual)", () => {
+  const ORIGINAL =
+    "a empresa oferece suporte em portugues de segunda a sexta das 8h as 18h e tem plantao 24 horas para incidentes criticos, com atendimento por telefone e email e acompanhamento do chamado ate a solucao final pela equipe";
+  const REVISADO =
+    "A empresa oferece suporte em português de segunda a sexta, das 8h às 18h, e mantém plantão 24 horas para incidentes críticos, com atendimento por telefone e e-mail e acompanhamento do chamado até a solução final pela equipe.";
+  const revisao = (textoRevisado: string) => (parametros: ParametrosDaGeracao) => {
+    expect(parametros.output_config?.format).toBeDefined();
+    return { ...semUso(textoRevisado), model: parametros.model } as MensagemDaIa;
+  };
+  const semUso = (textoRevisado: string) =>
+    ({ id: "msg", type: "message", role: "assistant", content: [{ type: "text", text: textoRevisado, citations: null }], stop_reason: "end_turn", stop_sequence: null, usage: { input_tokens: 300, output_tokens: 80, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 } });
+  const revisar = (id: string, numero: number, texto: string) => servidor.inject({ method: "POST", url: `/api/tarefas/${id}/itens/${numero}/revisar-texto`, payload: { texto } });
+
+  async function tarefaPronta() {
+    const { id, terminou } = await enviar(RFP_01);
+    await terminou();
+    const { itens } = (await obter(`/api/tarefas/${id}/itens`)).json() as { itens: { numero: number; orig: string }[] };
+    return { id, semRascunho: itens.find((i) => i.orig === "")!.numero, comSugestao: itens.find((i) => i.orig !== "")!.numero };
+  }
+
+  it("revisa a redação com o Haiku 5.5, sem gravar no item, e registra a requisição sem o texto", async () => {
+    const { id, semRascunho } = await tarefaPronta();
+    const simulada = api as ApiSimulada;
+    const antes = simulada.geracoes.length;
+    simulada.respostas = [revisao(JSON.stringify({ texto: REVISADO }))];
+
+    const resposta = await revisar(id, semRascunho, ORIGINAL);
+    expect(resposta.statusCode).toBe(200);
+    expect(resposta.json()).toEqual({ texto: REVISADO });
+
+    const pedido = simulada.geracoes.at(-1)!;
+    expect(simulada.geracoes.length).toBe(antes + 1);
+    expect(pedido.model).toBe("claude-haiku-5-5");
+    expect(pedido.output_config?.effort).toBe("low");
+    expect(JSON.stringify(pedido.system)).toContain("Não acrescente nenhum fato");
+    expect(JSON.stringify(pedido.messages)).toContain(`<texto>\\n${ORIGINAL}\\n</texto>`);
+
+    const { requisicoes } = (await obter(`/api/tarefas/${id}/registro`)).json() as { requisicoes: { etapa: string; perguntas: number[]; resultado: string }[] };
+    const ultima = requisicoes.at(-1)!;
+    expect(ultima).toMatchObject({ etapa: "revisao-texto", perguntas: [semRascunho], resultado: "sucesso", modelo: "claude-haiku-5-5" });
+    expect(JSON.stringify(ultima)).not.toContain("suporte");
+    const { itens } = (await obter(`/api/tarefas/${id}/itens`)).json() as { itens: { numero: number; paras: unknown[]; st: string }[] };
+    expect(itens.find((i) => i.numero === semRascunho)).toMatchObject({ paras: [], st: "sem-rascunho" });
+  });
+
+  it("recusa texto com menos de 30 palavras e item com sugestão da IA, sem chamar a IA", async () => {
+    const { id, semRascunho, comSugestao } = await tarefaPronta();
+    const simulada = api as ApiSimulada;
+    const antes = simulada.geracoes.length;
+    const curto = await revisar(id, semRascunho, "Texto curto demais para revisar.");
+    expect(curto.statusCode).toBe(400);
+    expect(curto.json().erro).toBe("Escreva ao menos 30 palavras para revisar com IA.");
+    expect((await revisar(id, comSugestao, ORIGINAL)).statusCode).toBe(409);
+    expect((await revisar(id, 999, ORIGINAL)).statusCode).toBe(404);
+    expect(simulada.geracoes.length).toBe(antes);
+  });
+
+  it("recusa a revisão que traz números novos ou aumenta demais o texto; resposta fora do formato é falha da IA", async () => {
+    const { id, semRascunho } = await tarefaPronta();
+    const simulada = api as ApiSimulada;
+    simulada.respostas = [revisao(JSON.stringify({ texto: REVISADO.replace("24 horas", "24 horas, com SLA de 2 horas") }))];
+    const numeroNovo = await revisar(id, semRascunho, ORIGINAL);
+    expect(numeroNovo.statusCode).toBe(422);
+    expect(numeroNovo.json().erro).toBe("A revisão trouxe números que não estão no texto. O texto foi mantido.");
+
+    simulada.respostas = [revisao(JSON.stringify({ texto: `${REVISADO} ${REVISADO.replace(/\d/g, "")}` }))];
+    expect((await revisar(id, semRascunho, ORIGINAL)).statusCode).toBe(422);
+
+    simulada.respostas = [revisao("Aqui está o texto revisado.")];
+    const invalida = await revisar(id, semRascunho, ORIGINAL);
+    expect(invalida.statusCode).toBe(502);
+    expect(invalida.json().erro).toBe("Revisão com IA indisponível: A resposta da IA veio num formato inesperado.");
+  });
+});

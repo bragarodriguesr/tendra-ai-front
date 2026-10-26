@@ -161,6 +161,21 @@ test("da base à resposta aprovada, mantida depois de recarregar", async ({ page
   const manual = (await (await request.get(`${API}/tarefas/${tarefa.id}/itens`)).json()).itens.find((i) => i.id === semRascunho.id);
   expect(manual).toMatchObject({ st: "em-revisao", orig: "", alerts: [{ t: "manual", by: "Marcelo Vieira" }] });
 
+  // 7c. "Revisar com IA" na resposta manual (cenário 65): desabilitado até 30 palavras; a revisão vai para o editor e pode ser desfeita.
+  await page.getByRole("button", { name: "Editar resposta" }).click();
+  const revisarComIa = page.getByRole("button", { name: "Revisar com IA" });
+  await expect(revisarComIa).toBeDisabled();
+  const editor = page.getByRole("textbox", { name: "Resposta" });
+  const rascunho = "a equipe atende em português de segunda a sexta, com plantão para incidentes críticos, acompanhamento do chamado até a solução e relatório mensal dos atendimentos enviado ao gestor do contrato, com indicadores de prazo e de satisfação de cada mês.";
+  await editor.fill(rascunho);
+  await expect(revisarComIa).toBeEnabled();
+  await revisarComIa.click();
+  await expect(page.getByText("Texto revisado com IA", { exact: true })).toBeVisible();
+  await expect(editor).toHaveValue("A" + rascunho.slice(1));
+  await page.getByRole("button", { name: "Desfazer revisão" }).click();
+  await expect(editor).toHaveValue(rascunho);
+  await page.getByRole("button", { name: "Concluir edição" }).click();
+
   // 8. Excluir a tarefa pela tela Tarefas, com confirmação: some da lista e do banco (cenário 60).
   await menu(page, "Tarefas");
   await page.getByRole("button", { name: "Excluir RFP-01-Rede-Varejo-Alfa" }).click();

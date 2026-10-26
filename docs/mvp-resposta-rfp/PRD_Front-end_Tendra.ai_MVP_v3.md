@@ -474,6 +474,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 **F-23 · P0 · Feedback por resposta** — Implementado
 
 - "Esta resposta ajudou?" com polegar para cima e para baixo, só em itens com sugestão da IA (item sem rascunho não tem o que avaliar, 26/10/2026).
+- **"Revisar com IA" (26/10/2026, SPEC, cenário 65):** no editor da resposta de um item sem rascunho, um botão com o ícone de estrelas no canto inferior direito, desabilitado até o texto ter 30 palavras (digitadas ou coladas) e, habilitado, com um gradiente limão em movimento. A IA revisa só gramática, norma escrita, coerência e clareza, sem acrescentar nem deduzir informação, com o Haiku 5.5; o texto revisado volta para o editor e "Desfazer revisão" restaura o anterior.
 - No polegar para baixo, aparece o seletor de motivo: Fonte incorreta, Texto impreciso, Informação desatualizada, Outro.
 - **Mudança da v1:** a justificativa livre virou seletor de motivo. Um campo de texto livre opcional pode voltar se o piloto pedir.
 
@@ -851,7 +852,7 @@ O diagrama completo está em `docs/mvp-resposta-rfp/PIPELINE_IA_MVP.md` e, edit�
 | 1 | Preparar a base: escrever os `.md` com cabeçalho (`titulo`, `tipo`, `atualizado_em` e `versao` opcional; ver `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`), subir os arquivos pela T2 (ou rodar o comando de carga), validar, dividir em blocos com localização (arquivo, seção, linha), gravar no banco | Pessoa e código, sem IA | T2 mostra o resultado do envio e lista os documentos com idade e selo de 120 dias |
 | 2 | Entender a RFP: validar o `.xlsx`, criar a tarefa, ler a planilha, achar as perguntas pela coluna "Pergunta"; plano B com modelo pequeno e saída estruturada se a coluna não for achada; confirmar a lista | Código; IA só no plano B | T4 mostra "Identificamos N perguntas" |
 | 3 | Gerar respostas: montar o contexto (documentos ativos e prontos), redigir por lote de cerca de 10 perguntas com citações, conferir cada citação, calcular alertas (sem contexto, baixa confiança, fonte antiga, termo crítico), detectar conflito entre as fontes citadas, gravar os itens | Código; IA 1 (redação) e IA 2 (conflito) | T5 e T6 recebem estados, parágrafos, fontes e alertas no contrato da seção 16 |
-| 4 | Revisar, aprovar e exportar: tratamento de alertas, revisão, aprovação, exportação em `.xlsx` e registro de eventos | Pessoas; código na exportação | T6, T8 e T9, como já descritos |
+| 4 | Revisar, aprovar e exportar: tratamento de alertas, revisão, aprovação, exportação em `.xlsx` e registro de eventos | Pessoas; código na exportação; IA 3 (Haiku 5.5) só no "Revisar com IA" da resposta manual, que corrige a redação sem acrescentar informação | T6, T8 e T9, como já descritos |
 | 5 | Medir a qualidade: gabarito sintético de cerca de 30 perguntas, critérios, bloqueio de mudanças abaixo dos limites | Código | Fora das telas; alimenta o piloto |
 
 **Proteções que o produto precisa garantir**
