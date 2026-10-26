@@ -1,5 +1,5 @@
 import React from "react";
-import { Badge, Button, Card, Divider, Icon, MonoLabel, ProgressBar, SourceTrail } from "../ds/index.js";
+import { Aurora, Badge, Button, Card, Divider, Icon, MonoLabel, ProgressBar, SourceTrail, Tag } from "../ds/index.js";
 
 const Section = ({ children, tone, style, id }) => (
   <section id={id} style={{ background: tone === "ink" ? "var(--surface-inverse)" : tone === "sunken" ? "var(--surface-sunken)" : "transparent", ...style }}>
@@ -89,21 +89,65 @@ export function HomePage({ onPage }) {
         </div>
       </Section>
 
-      <Section>
-        <div className="tdr-site-stats">
-          {[
-            { v: "4h 12m", k: "por edital de 200 itens" },
-            { v: "83%", k: "de reaproveitamento da base" },
-            { v: "3,2×", k: "mais RFPs respondidos por trimestre" },
-            { v: "100%", k: "das respostas com fonte citada" }
-          ].map((s) => (
-            <div key={s.k} style={{ display: "grid", gap: "var(--space-2)", borderTop: "var(--border-width-accent) solid var(--brand-sage)", paddingTop: "var(--space-4)" }}>
-              <div className="tdr-site-stat-value" style={{ fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: 40, letterSpacing: "-0.03em", color: "var(--text-strong)" }}>{s.v}</div>
-              <div style={{ fontSize: "var(--text-sm-size)", lineHeight: 1.5, color: "var(--text-body)", textWrap: "pretty" }}>{s.k}</div>
+      <Aurora variant="lime" move radius={0} as="section" id="ia-nativa" className="tdr-site-ai">
+        <div style={{ maxWidth: "var(--page-max)", margin: "0 auto", padding: "var(--gutter-section) var(--page-pad)", display: "grid", gap: "var(--space-10)" }}>
+          <div className="tdr-site-ai-head">
+            <div style={{ display: "grid", gap: "var(--space-5)" }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--space-2)", color: "var(--brand-ink)" }}>
+                <span className="tdr-site-ai-star" aria-hidden="true"><Icon name="sparkles" size="lg" /></span>
+                <MonoLabel style={{ color: "var(--brand-ink)" }}>Plataforma AI native</MonoLabel>
+              </span>
+              <h2 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: "var(--text-d2-size)", lineHeight: "var(--text-d2-lh)", letterSpacing: "var(--text-d2-ls)", color: "var(--brand-ink)", maxWidth: "20ch", textWrap: "pretty" }}>
+                A IA não é um recurso extra. É como a Tendra.ai foi construída.
+              </h2>
             </div>
-          ))}
+            <p style={{ margin: 0, fontSize: "var(--text-lead-size)", lineHeight: "var(--text-lead-lh)", color: "var(--brand-ink)", maxWidth: "var(--measure-lead)", textWrap: "pretty" }}>
+              Cada etapa da resposta passa por um modelo de linguagem, sempre sob regras que garantem fonte, privacidade e revisão humana. A IA sugere; a sua equipe decide.
+            </p>
+          </div>
+
+          <div className="tdr-site-ai-steps">
+            {[
+              { n: "01", t: "Entende o edital", d: "Lê a planilha e separa as perguntas item por item. Se a estrutura fugir do padrão, a IA localiza as perguntas e a sua equipe confirma a lista.", tag: "IA + regras" },
+              { n: "02", t: "Redige com a sua base", d: "O modelo cruza cada pergunta com a base aprovada e escreve a resposta citando o documento e o trecho. Citação que não existe no documento é descartada.", tag: "IA com citação" },
+              { n: "03", t: "Sinaliza o que exige atenção", d: "Alertas apontam respostas sem fonte, de baixa confiança ou com base vencida. A IA também revisa o texto sob demanda.", tag: "IA + regras" },
+              { n: "04", t: "A pessoa aprova", d: "Nada é aprovado nem exportado pela IA. O revisor responsável decide, e a trilha de auditoria registra.", tag: "Pessoa decide" }
+            ].map((s, i) => (
+              <Card key={s.n} padding="lg" radius="2xl" className="tdr-site-ai-card" style={{ "--i": i }}>
+                <div style={{ display: "grid", gap: "var(--space-4)" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-3)" }}>
+                    <span className="tdr-site-ai-chip" aria-hidden="true"><Icon name="sparkles" size="lg" /></span>
+                    <MonoLabel>{s.n}</MonoLabel>
+                  </div>
+                  <div style={{ fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: "var(--text-h3-size)", letterSpacing: "-0.02em", color: "var(--text-strong)" }}>{s.t}</div>
+                  <div style={{ fontSize: "var(--text-ui-size)", lineHeight: 1.6, color: "var(--text-body)", textWrap: "pretty" }}>{s.d}</div>
+                  <div><Tag>{s.tag}</Tag></div>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <Card padding="lg" radius="2xl" className="tdr-site-ai-card" style={{ "--i": 4 }}>
+            <div className="tdr-site-ai-pillars">
+              {[
+                { icon: "clock", t: "Produtividade", d: "Edital respondido em horas, não semanas, reaproveitando o que a empresa já aprovou." },
+                { icon: "shield-check", t: "Segurança", d: "Seus documentos nunca treinam modelo compartilhado. CNPJ e contatos não vão para a IA." },
+                { icon: "check-check", t: "Qualidade", d: "Toda resposta cita a fonte e passa por revisão humana nominal antes de sair." }
+              ].map((r) => (
+                <div key={r.t} style={{ display: "flex", gap: "var(--space-4)", alignItems: "flex-start" }}>
+                  <span style={{ color: "var(--brand-sage)", marginTop: 2 }}><Icon name={r.icon} size="lg" /></span>
+                  <span style={{ display: "grid", gap: 4 }}>
+                    <span style={{ fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: 17, color: "var(--text-strong)" }}>{r.t}</span>
+                    <span style={{ fontSize: "var(--text-sm-size)", lineHeight: 1.55, color: "var(--text-body)", textWrap: "pretty" }}>{r.d}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Card>
         </div>
-      </Section>
+        <span className="tdr-site-ai-spark tdr-site-ai-spark-a" aria-hidden="true"><Icon name="sparkles" size="lg" /></span>
+        <span className="tdr-site-ai-spark tdr-site-ai-spark-b" aria-hidden="true"><Icon name="sparkles" size="lg" /></span>
+      </Aurora>
 
       <Section tone="ink" id="seguranca">
         <div className="tdr-site-trust">
@@ -138,7 +182,7 @@ export function HomePage({ onPage }) {
       </Section>
 
       <Section>
-        <Card tone="accent" radius="3xl" padding="lg">
+        <Aurora variant="lime" radius="3xl" padding="md">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-8)", flexWrap: "wrap" }}>
             <div style={{ display: "grid", gap: "var(--space-3)" }}>
               <MonoLabel style={{ color: "var(--brand-ink)" }}>Webinar · 14 de outubro</MonoLabel>
@@ -148,7 +192,7 @@ export function HomePage({ onPage }) {
             </div>
             <Button icon="play">Inscrever</Button>
           </div>
-        </Card>
+        </Aurora>
       </Section>
     </>
   );
