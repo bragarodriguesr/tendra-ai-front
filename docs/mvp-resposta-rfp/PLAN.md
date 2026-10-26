@@ -546,6 +546,11 @@ Pedida pelo grupo em 26/10/2026. SPEC_FASE_D, cenários D8 e D9 revistos.
 
 ### J4. Contador de "Revisão" no menu lateral (ajuste de 26/10/2026)
 - O número mostrava os itens da tarefa aberta com alerta pendente (na RFP-02 do publicado, 22: os 9 sem rascunho, com o "sem contexto", e 13 sugeridos com alerta não reconhecido), o que parecia incoerente com os 84 itens. Agora mostra os itens ainda a trabalhar: sem rascunho, sugeridos e em revisão, fora os revisados e aprovados (na mesma RFP, 81). O filtro "Alerta pendente" da revisão continua igual.
+- **Situação (26/10/2026): implementada e conferida no ambiente publicado.** Front da Vercel com o merge às 17:30 UTC; contador conferido pelo grupo no teste manual.
+
+### J5. Barra de progresso limão durante o processamento (ajuste de 26/10/2026)
+- Enquanto a tarefa é processada, a barra preenchida do painel de tarefas (computador e celular) e da tela da tarefa usa o mesmo gradiente limão em movimento do botão "Revisar com IA"; com movimento reduzido, fica parada. As demais barras (em revisão, prontas, Exportação) continuam sálvia. O `ProgressBar` do DS ganhou `fillClassName`. Só front.
+- **Situação (26/10/2026): implementada e conferida no ambiente publicado.** Build e jornada de ponta a ponta; prints com a barra em 70% (126 de 180) num backend local de teste, validados pelo grupo; front da Vercel com o merge às 18:56 UTC e conferido pelo grupo no teste manual.
 
 ### Pendências registradas em 24/10/2026 (fora da fase E, por decisão do grupo)
 1. **Fase A:** taxa de aceitação; RFP-03 e variantes de borda com a API real.

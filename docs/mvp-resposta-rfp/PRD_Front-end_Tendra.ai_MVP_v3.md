@@ -386,7 +386,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 
 **F-12 · P0 · Status de processamento** (T3, T5) — Implementado (Simulado)
 
-- **Processando:** na T3, a coluna Progresso mostra "N de M processadas". Na T5, o cartão mostra "Processando: 42 de 180 perguntas.", uma barra, "Você pode sair desta tela. Avisaremos aqui quando terminar." e o botão "Sair e voltar depois".
+- **Processando:** na T3, a coluna Progresso mostra "N de M processadas". Na T5, o cartão mostra "Processando: 42 de 180 perguntas.", uma barra, "Você pode sair desta tela. Avisaremos aqui quando terminar." e o botão "Sair e voltar depois". Nas duas telas, só durante o processamento, a barra preenchida usa o gradiente limão em movimento do botão "Revisar com IA" (26/10/2026; parado com movimento reduzido).
 - **Falha:** cartão em vermelho com "Falha no carregamento", "Não foi possível carregar este arquivo. Tente de novo ou fale com o suporte." e a causa em linguagem simples (por exemplo, "arquivo ilegível ou protegido por senha"). Botões "Tentar de novo" e "Importar novo arquivo".
 - **Pronta:** cartão "Pronta para exportar", com "N de N itens aprovados." e o botão "Ir para exportação".
 - **Aviso ao terminar:** a falha e o processamento concluído chegam pelo sino (F-37). Contato de suporte na falha: Pendente.
