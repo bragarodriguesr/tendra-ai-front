@@ -142,6 +142,24 @@ export function ConfirmDeleteTaskDialog({ task, busy, onCancel, onConfirm }) {
   );
 }
 
+/** Download da planilha com a revisão ainda não concluída: pede a confirmação antes de baixar. */
+export function ConfirmDownloadDialog({ task, onCancel, onConfirm }) {
+  return (
+    <div style={{ position: "absolute", inset: 0, zIndex: 30, background: "rgba(18,20,15,.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div role="alertdialog" aria-modal="true" aria-labelledby="tdr-dl-title" aria-describedby="tdr-dl-desc" style={{ width: 460, maxWidth: "calc(100vw - 32px)", boxSizing: "border-box", background: "var(--n-000)", borderRadius: 16, padding: 28, display: "flex", flexDirection: "column", gap: 16, boxShadow: "var(--shadow-overlay)" }}>
+        <div id="tdr-dl-title" style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 22, color: "var(--n-900)" }}>A revisão ainda não foi finalizada.</div>
+        <div id="tdr-dl-desc" style={{ lineHeight: 1.6 }}>
+          “{task.title}” ainda não está pronta{task.shortProg ? ` (${task.shortProg})` : ""}. A planilha sai com o estado atual da revisão, e os itens não aprovados aparecem com a situação deles.
+        </div>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+          <Button variant="secondary" onClick={onCancel} autoFocus>Voltar para revisão</Button>
+          <Button icon="download" onClick={onConfirm}>Baixar mesmo assim</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ToastHost({ toast, onClose, isMobile }) {
   return (
     <>

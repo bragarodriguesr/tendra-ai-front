@@ -477,6 +477,23 @@ Deploy no Render às 22:33 UTC, com a migração `007_empresas_e_contatos.sql` a
 | G2 Empresa e contatos | Conferido: a cópia das tarefas antigas ligou a RFP-01 à Rede Varejo Alfa e a RFP-02 ao Banco Horizonte, com o contato dela; a RFP-04 gravou a empresa com o CNPJ e os dois contatos na ordem do formulário (cargo, telefone e e-mail). As tabelas novas estão com RLS ligado. |
 | G3 "Ver detalhes" | Conferido: a barra lateral foi aberta nas três tarefas (`GET /api/tarefas/:id/empresa` entre 22:37 e 22:41) e a tela da tarefa está sem o caminho, no teste manual do grupo. |
 
+## Fase H: ajustes de revisão, alertas e download
+
+Pedida pelo grupo em 26/10/2026. Só front; sem mudança no backend nem no banco.
+
+### H1. Item sem rascunho
+- O "Sem contexto" sai do cartão de alertas e vai para o lugar das fontes, no cinza da fonte não escolhida, com "Fontes · Nenhuma fonte localizada", o mesmo ícone e o mesmo texto. Os demais alertas do item (por exemplo, termo crítico) continuam no cartão.
+- "Esta resposta ajudou?" só aparece em itens com sugestão da IA.
+
+### H2. Alertas
+- Tela de Tarefas: "Recolher" deixa o cartão de alertas num resumo, no formato dos alertas tratados da revisão; a escolha fica no navegador.
+- Sino: a lista rola dentro do painel; cada alerta tem um "X", que o tira da lista até o próximo login; o botão de ação tira o alerta de vez para a pessoa que agiu; processamento concluído, tarefa 100% aprovada e o resultado do envio da base somem 5 dias depois de criados. O estado continua no navegador, por pessoa (Q-20).
+
+### H3. Download com a revisão não finalizada
+- Com a tarefa ainda não "Pronta", "Baixar planilha preenchida" (detalhe da tarefa e Exportação) pede confirmação: "Baixar mesmo assim" baixa; "Voltar para revisão" fecha sem baixar.
+
+**Situação (26/10/2026): implementada.** Jornada de ponta a ponta com o pop-up ("Voltar para revisão" sem baixar, "Baixar mesmo assim" baixando) e conferência no navegador com um backend de teste com login: item sem rascunho com o cartão no lugar das fontes e sem a avaliação; 16 alertas com a lista rolando dentro da tela; "X" mantido depois de recarregar e desfeito por um novo login; alerta tratado pela ação fora mesmo depois de um novo login; aviso de 6 dias fora do sino; cartão de Tarefas recolhido depois de recarregar; tarefa pronta baixando direto, sem pop-up.
+
 ### Pendências registradas em 24/10/2026 (fora da fase E, por decisão do grupo)
 1. **Fase A:** taxa de aceitação; RFP-03 e variantes de borda com a API real.
 2. **Validação no ambiente publicado:** D15 (reinício no meio de uma tarefa); envio de planilha de 10 MB pelo rewrite da Vercel (PD6).

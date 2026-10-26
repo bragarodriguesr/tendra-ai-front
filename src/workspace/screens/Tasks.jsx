@@ -1,5 +1,5 @@
 import React from "react";
-import { Badge, Button, IconButton, ProgressBar, Tooltip } from "../../ds/index.js";
+import { Badge, Button, Icon, IconButton, ProgressBar, Tooltip } from "../../ds/index.js";
 import { AlertDeck, ClickRow, Page, PageHeader, card, mono } from "../ui.jsx";
 
 const COLS = "minmax(0,2.2fr) 64px minmax(0,1.7fr) 150px 130px 130px 56px";
@@ -16,8 +16,24 @@ function DeleteTask({ t }) {
   );
 }
 
+/** Alertas recolhidos: um resumo, no mesmo formato dos alertas tratados da Revisão, que abre o cartão. */
+function TaskAlertsCollapsed({ n, ws }) {
+  return (
+    <button
+      type="button" onClick={() => ws.collapseTaskAlerts(false)} aria-expanded="false"
+      style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 999, border: "1px solid var(--n-200)", background: "var(--n-000)", color: "#4B5046", cursor: "pointer", font: "inherit", fontSize: 13 }}
+    >
+      <Icon name="bell" size="sm" />
+      <span>{n > 1 ? `${n} alertas recolhidos` : "1 alerta recolhido"}</span>
+      <span style={mono(12, "var(--n-500)")}>· mostrar</span>
+      <Icon name="chevron-down" size="sm" />
+    </button>
+  );
+}
+
 export function TaskAlerts({ v, ws }) {
   const { tDeck } = v;
+  if (tDeck.collapsed) return <TaskAlertsCollapsed n={tDeck.count} ws={ws} />;
   const a = tDeck.a;
   const move = (d) => ws.setState({ tAi: (tDeck.index + d + tDeck.count) % tDeck.count });
   return (
@@ -26,7 +42,10 @@ export function TaskAlerts({ v, ws }) {
       pos={tDeck.hasMany ? tDeck.pos : null} onPrev={() => move(-1)} onNext={() => move(1)}
     >
       <div style={{ color: "var(--n-900)", lineHeight: 1.5 }}><b>{a.name}</b> {a.text}</div>
-      <div><Button size="sm" variant="secondary" iconEnd="arrow-right" onClick={() => ws.readAlert(a)}>{a.action}</Button></div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <Button size="sm" variant="secondary" iconEnd="arrow-right" onClick={() => ws.readAlert(a)}>{a.action}</Button>
+        <Button size="sm" variant="ghost" icon="minus" onClick={() => ws.collapseTaskAlerts(true)} aria-expanded="true">Recolher</Button>
+      </div>
     </AlertDeck>
   );
 }

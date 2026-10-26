@@ -21,7 +21,7 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
           </div>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             {task.hasItems ? (task.isServer
-              ? <Button variant="secondary" icon="download" disabled={!v.podeExportar} title={v.podeExportar ? undefined : "Somente Aprovadores baixam a planilha preenchida."} onClick={() => ws.downloadSheet(task.id)}>Baixar planilha preenchida</Button>
+              ? <Button variant="secondary" icon="download" disabled={!v.podeExportar} title={v.podeExportar ? undefined : "Somente Aprovadores baixam a planilha preenchida."} onClick={() => ws.askDownload(task.id)}>Baixar planilha preenchida</Button>
               : <Button variant="secondary" icon="download" onClick={() => ws.go("export", { taskId: "t1" })}>Exportação</Button>) : null}
             <Button variant="secondary" icon="building-2" onClick={() => ws.openTaskDetails(task.id)}>Ver detalhes</Button>
             {task.hasItems ? <Button icon="eye" onClick={() => ws.go("review")}>Abrir revisão</Button> : null}
