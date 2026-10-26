@@ -492,7 +492,17 @@ Pedida pelo grupo em 26/10/2026. Só front; sem mudança no backend nem no banco
 ### H3. Download com a revisão não finalizada
 - Com a tarefa ainda não "Pronta", "Baixar planilha preenchida" (detalhe da tarefa e Exportação) pede confirmação: "Baixar mesmo assim" baixa; "Voltar para revisão" fecha sem baixar.
 
-**Situação (26/10/2026): implementada.** Jornada de ponta a ponta com o pop-up ("Voltar para revisão" sem baixar, "Baixar mesmo assim" baixando) e conferência no navegador com um backend de teste com login: item sem rascunho com o cartão no lugar das fontes e sem a avaliação; 16 alertas com a lista rolando dentro da tela; "X" mantido depois de recarregar e desfeito por um novo login; alerta tratado pela ação fora mesmo depois de um novo login; aviso de 6 dias fora do sino; cartão de Tarefas recolhido depois de recarregar; tarefa pronta baixando direto, sem pop-up.
+**Situação (26/10/2026): implementada e conferida no ambiente publicado.** Jornada de ponta a ponta com o pop-up ("Voltar para revisão" sem baixar, "Baixar mesmo assim" baixando) e conferência no navegador com um backend de teste com login: item sem rascunho com o cartão no lugar das fontes e sem a avaliação; 16 alertas com a lista rolando dentro da tela; "X" mantido depois de recarregar e desfeito por um novo login; alerta tratado pela ação fora mesmo depois de um novo login; aviso de 6 dias fora do sino; cartão de Tarefas recolhido depois de recarregar; tarefa pronta baixando direto, sem pop-up.
+
+### Conferência da fase H no ambiente publicado (26/10/2026)
+
+Publicada pela Vercel com o merge às 13:27 UTC (só front; sem deploy do backend). Testes do grupo:
+
+| Etapa | Situação |
+|---|---|
+| H1 Item sem rascunho | Conferido pelo grupo (teste manual): cartão "Sem contexto" no lugar das fontes, com "Nenhuma fonte localizada", e sem "Esta resposta ajudou?". |
+| H2 Alertas | Conferido pelo grupo (teste manual): cartão de Tarefas recolhido; sino com rolagem, "X" por alerta, alerta tratado pela ação fora da lista e avisos com validade de 5 dias. |
+| H3 Download | Conferido: pop-up antes do download de tarefa não pronta; as planilhas das tarefas RFP-04 e RFP-02 foram baixadas às 13:33, nos logs do Render. |
 
 ### Pendências registradas em 24/10/2026 (fora da fase E, por decisão do grupo)
 1. **Fase A:** taxa de aceitação; RFP-03 e variantes de borda com a API real.
