@@ -121,7 +121,9 @@ export function buildView(s, ws) {
   const openItem = (id, tid) => () => ws.go("review", { taskId: tid || s.itemsTask, sel: id, filter: "todos" });
 
   // navegação
-  const pend = s.items.filter((i) => ws.pendingCount(i) > 0).length;
+  // Contador de "Revisão": itens ainda a trabalhar na tarefa aberta (sem rascunho, sugeridos e em revisão),
+  // fora os já revisados e aprovados (26/10/2026; antes contava os itens com alerta pendente).
+  const pend = s.items.filter((i) => i.st !== "revisada" && i.st !== "aprovada").length;
   const go = (sc) => (e) => { e && e.preventDefault && e.preventDefault(); ws.go(sc); };
   const navGroups = [
     { label: "Início", items: [{ value: "dashboard", label: "Dashboard", icon: "layout-dashboard", onClick: go("dashboard") }] },

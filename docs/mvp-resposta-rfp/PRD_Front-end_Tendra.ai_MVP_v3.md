@@ -151,7 +151,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 **Menu lateral** (grupos e itens, na ordem):
 
 - **Início:** Dashboard.
-- **Trabalho:** Tarefas (contagem de tarefas), Revisão (contagem de itens com alerta pendente na tarefa aberta), Exportação, Histórico.
+- **Trabalho:** Tarefas (contagem de tarefas), Revisão (contagem dos itens ainda a trabalhar na tarefa aberta: sem rascunho, sugeridos e em revisão, fora os revisados e aprovados; antes de 26/10/2026 contava os itens com alerta pendente), Exportação, Histórico.
 - **Base:** Base de conhecimento (contagem de documentos), Primeiros passos.
 - **Painel de demo** no rodapé: "Aprovar todos os itens" — **Simulado**, não vai para produção.
 

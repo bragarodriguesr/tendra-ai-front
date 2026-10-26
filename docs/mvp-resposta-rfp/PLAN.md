@@ -544,6 +544,9 @@ Pedida pelo grupo em 26/10/2026. SPEC_FASE_D, cenários D8 e D9 revistos.
 
 **Situação (26/10/2026): implementada e conferida no ambiente publicado.** Deploy no Render às 15:01 UTC; o grupo conferiu J1 e J2 com os dois perfis em teste manual (sem ações de revisão gravadas no período; os logs do Render estavam indisponíveis na hora da conferência). O cartão duplicado criado por engano fora da moldura do Miro foi apagado. Testes do backend no PGlite e no Postgres (Revisor recebe 403 em tarefa não pronta, baixa a tarefa pronta com resposta manual sem reconhecimento e volta a receber 403 com um alerta pendente); conferência no navegador com os dois logins: Revisor sem "Aprovar resposta", download bloqueado na tarefa em revisão e liberado (e baixado) na pronta, também na Exportação; Aprovador com o botão e o download em qualquer estado.
 
+### J4. Contador de "Revisão" no menu lateral (ajuste de 26/10/2026)
+- O número mostrava os itens da tarefa aberta com alerta pendente (na RFP-02 do publicado, 22: os 9 sem rascunho, com o "sem contexto", e 13 sugeridos com alerta não reconhecido), o que parecia incoerente com os 84 itens. Agora mostra os itens ainda a trabalhar: sem rascunho, sugeridos e em revisão, fora os revisados e aprovados (na mesma RFP, 81). O filtro "Alerta pendente" da revisão continua igual.
+
 ### Pendências registradas em 24/10/2026 (fora da fase E, por decisão do grupo)
 1. **Fase A:** taxa de aceitação; RFP-03 e variantes de borda com a API real.
 2. **Validação no ambiente publicado:** D15 (reinício no meio de uma tarefa); envio de planilha de 10 MB pelo rewrite da Vercel (PD6).
