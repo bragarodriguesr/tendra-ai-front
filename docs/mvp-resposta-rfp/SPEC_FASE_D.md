@@ -16,7 +16,7 @@ constitution: 1.0.0
   - o grupo usa um único ambiente publicado: front na Vercel, backend no Render, banco, arquivos e contas no Supabase;
   - só entra quem tem conta pré-cadastrada; a sessão é do backend e acaba ao sair;
   - quem age na revisão é sempre a pessoa da sessão, nunca um valor enviado pelo navegador;
-  - o Revisor edita, restaura e avalia, mas não aprova nem exporta; o Aprovador faz tudo;
+  - o Revisor edita, restaura e avalia, mas não aprova (o botão nem aparece para ele) e só baixa a planilha de tarefa pronta (revisto em 26/10/2026); o Aprovador faz tudo;
   - uma tarefa interrompida pelo reinício do backend (o plano gratuito do Render "dorme") continua de onde parou;
   - o modo local das fases A a C continua funcionando para desenvolvimento e para o teste de ponta a ponta, sem login.
 - **Fora desta fase:** tela de cadastro, recuperação de senha, convite por e-mail, SSO, MFA, cota de gasto por pessoa (decisão de 11/10/2026: sem cota; o gasto máximo é o saldo pré-pago da conta da Anthropic) e dados reais de clientes.
@@ -29,7 +29,7 @@ constitution: 1.0.0
 | Banco | PGlite em `dados/banco` | Postgres do Supabase |
 | Arquivos das RFPs | Disco local, em `dados/` | Supabase Storage, em bucket privado |
 | Pessoa que age | `config/pessoas.json`, enviada no corpo (cenário 41) | Sessão de login (D4) |
-| Papéis | Registrados, sem restrição | Revisor não aprova nem exporta (D8 e D9) |
+| Papéis | Registrados, sem restrição | Revisor não aprova (D8) e só baixa a planilha de tarefa pronta (D9) |
 
 O modo é escolhido por variável de ambiente (`TENDRA_MODO=local|compartilhado`, padrão `local`). As migrações do banco são as mesmas nos dois modos.
 
@@ -86,10 +86,12 @@ O modo é escolhido por variável de ambiente (`TENDRA_MODO=local|compartilhado`
 - **Then** a resposta é 403, o item não muda e nenhum evento é registrado
 - **And** o Revisor continua podendo editar, restaurar e avaliar
 
-#### Cenário D9: Revisor tenta exportar
+#### Cenário D9: Revisor e a planilha preenchida (revisto em 26/10/2026)
 - **Given** um Revisor autenticado
-- **When** ele pede a planilha preenchida de qualquer tarefa
-- **Then** a resposta é 403
+- **When** ele pede a planilha preenchida de uma tarefa que ainda não está pronta (algum item não aprovado ou algum alerta pendente; a resposta manual não conta como pendente)
+- **Then** a resposta é 403 com "O Revisor só baixa a planilha de tarefas prontas: todos os itens aprovados e nenhum alerta pendente."
+- **And** com a tarefa pronta, ele baixa a planilha como o Aprovador
+- **And** na tela, "Baixar planilha preenchida" fica desabilitado para o Revisor nas tarefas que não estão prontas (detalhe da tarefa e Exportação), e o botão "Aprovar resposta" não aparece para ele na revisão (D8)
 
 ### Segurança de exposição
 

@@ -528,6 +528,22 @@ Deploy no Render às 14:05 UTC. Testes do grupo, conferidos no registro de requi
 - Agora a resposta manual é só registro de autoria: não aparece no cartão de alertas, não conta como alerta pendente (lista de itens, filtro "Alerta pendente", tarefa "Pronta", Dashboard) e não bloqueia revisar nem aprovar. No lugar das fontes continua o cartão "Sem contexto", com "A resposta foi escrita manualmente.". A etiqueta "Resposta manual" e "escrita por [nome]" continuam. Só front; o backend já não exigia o reconhecimento para aprovar.
 - **Situação (26/10/2026): implementada e conferida no ambiente publicado.** Jornada de ponta a ponta: depois de escrever e recarregar, o cartão "Sem contexto" no lugar das fontes, nenhum alerta de resposta manual e "Marcar como revisado" habilitado. No publicado (front da Vercel com o merge às 14:22 UTC), o User Teste 1 escreveu uma resposta manual no item 60 da RFP-02 às 14:24 (evento `edicao`, detalhe `manual`) sem precisar reconhecer alerta; o restante (cartão no lugar das fontes, item fora do filtro de alertas) foi conferido pelo grupo no teste manual.
 
+## Fase J: papéis na revisão e no download
+
+Pedida pelo grupo em 26/10/2026. SPEC_FASE_D, cenários D8 e D9 revistos.
+
+### J1. Revisor baixa a planilha da tarefa pronta
+- `GET /api/tarefas/:id/planilha`: o Revisor baixa só quando a tarefa está pronta (todos os itens aprovados e nenhum alerta pendente; resposta manual não conta); senão, 403 com o motivo. O Aprovador continua baixando em qualquer estado, com o aviso da fase H.
+- Front: "Baixar planilha preenchida" (detalhe da tarefa e Exportação) habilitado para o Revisor só nas tarefas "Pronta".
+
+### J2. Revisor sem o botão "Aprovar resposta"
+- Na revisão, o botão não aparece para o Revisor (antes ficava desabilitado com "Somente Aprovadores aprovam."). A recusa 403 do backend (D8) continua.
+
+### J3. Pipeline de IA no Miro
+- Cartão "Revisar com IA (resposta manual)" (IA 3, Haiku 5.5) na moldura "4 · Revisar, aprovar e exportar" do board, e os cartões de revisão, alertas, aprovação e download atualizados com as regras das fases I e J. O mesmo em `PIPELINE_IA_MVP.md`.
+
+**Situação (26/10/2026): implementada.** Testes do backend no PGlite e no Postgres (Revisor recebe 403 em tarefa não pronta, baixa a tarefa pronta com resposta manual sem reconhecimento e volta a receber 403 com um alerta pendente); conferência no navegador com os dois logins: Revisor sem "Aprovar resposta", download bloqueado na tarefa em revisão e liberado (e baixado) na pronta, também na Exportação; Aprovador com o botão e o download em qualquer estado.
+
 ### Pendências registradas em 24/10/2026 (fora da fase E, por decisão do grupo)
 1. **Fase A:** taxa de aceitação; RFP-03 e variantes de borda com a API real.
 2. **Validação no ambiente publicado:** D15 (reinício no meio de uma tarefa); envio de planilha de 10 MB pelo rewrite da Vercel (PD6).

@@ -263,11 +263,11 @@ describe("Cenários D8 e D9 · papéis", () => {
     expect(await listarEventos(banco, tarefaId)).toHaveLength(eventosAntes);
   });
 
-  it("o Revisor recebe 403 ao baixar a planilha preenchida; edita e restaura normalmente", async () => {
+  it("o Revisor recebe 403 ao baixar a planilha de tarefa ainda não pronta; edita e restaura normalmente", async () => {
     const cookie = await cookieDe(REVISOR.email, "senha-do-revisor");
     const planilha = await pedir(`/api/tarefas/${tarefaId}/planilha`, cookie);
     expect(planilha.statusCode).toBe(403);
-    expect(planilha.json()).toEqual({ erro: "Só o Aprovador pode baixar a planilha preenchida." });
+    expect(planilha.json()).toEqual({ erro: "O Revisor só baixa a planilha de tarefas prontas: todos os itens aprovados e nenhum alerta pendente." });
     expect((await pedir(`/api/tarefas/${tarefaId}/itens/3/texto`, cookie, "PUT", { texto: "Texto revisado pelo Revisor." })).statusCode).toBe(200);
     expect((await pedir(`/api/tarefas/${tarefaId}/itens/3/restaurar`, cookie, "POST", {})).statusCode).toBe(200);
   });
@@ -292,5 +292,19 @@ describe("Cenários D8 e D9 · papéis", () => {
     const planilha = await pedir(`/api/tarefas/${tarefaId}/planilha`, cookie);
     expect(planilha.statusCode).toBe(200);
     expect(planilha.headers["content-type"]).toContain("spreadsheetml");
+  });
+
+  it("o Revisor baixa a planilha da tarefa pronta (todos os itens aprovados e nenhum alerta pendente; resposta manual não conta)", async () => {
+    const cookie = await cookieDe(REVISOR.email, "senha-do-revisor");
+    await banco.query(`UPDATE itens SET st = 'aprovada', aprovado_por = 'Marcelo Vieira', aprovado_em = now(),
+      alerts = (SELECT coalesce(jsonb_agg(CASE WHEN a->>'t' = 'manual' THEN a ELSE a || '{"ack":{"by":"Marcelo Vieira","at":"2026-10-26T10:00:00Z"}}'::jsonb END), '[]'::jsonb) FROM jsonb_array_elements(alerts) a)
+      WHERE tarefa_id = $1`, [tarefaId]);
+    await banco.query(`UPDATE itens SET alerts = '[{"t":"manual","by":"Kadu Mendes"}]' WHERE tarefa_id = $1 AND numero = 2`, [tarefaId]);
+    const planilha = await pedir(`/api/tarefas/${tarefaId}/planilha`, cookie);
+    expect(planilha.statusCode).toBe(200);
+    expect(planilha.headers["content-type"]).toContain("spreadsheetml");
+
+    await banco.query(`UPDATE itens SET alerts = '[{"t":"critical"}]' WHERE tarefa_id = $1 AND numero = 3`, [tarefaId]);
+    expect((await pedir(`/api/tarefas/${tarefaId}/planilha`, cookie)).statusCode).toBe(403);
   });
 });
