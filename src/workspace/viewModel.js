@@ -58,6 +58,9 @@ function diasAtePrazo(texto) {
   return m ? +m[1] : null;
 }
 
+// Avisos do sino (processamento concluído, tarefa 100% aprovada, resultado do envio da base) somem 5 dias depois de criados.
+const VALIDADE_DOS_AVISOS = 5 * 24 * 60 * 60 * 1000;
+
 /** Hoje em dd/mm/aaaa, para os alertas sem data própria. */
 function dataDeHoje(d = new Date()) {
   const p = (n) => String(n).padStart(2, "0");
@@ -263,15 +266,19 @@ export function buildView(s, ws) {
     const st = ST[it.st], p = ws.pendingCount(it);
     const maxAge = it.srcs.filter((x) => x.age > 120).reduce((m, x) => Math.max(m, x.age), 0);
     const hasConflict = it.alerts.some((a) => a.t === "conflict" && !a.ack);
-    const alerts = it.alerts.map((a, idx) => {
+    // "Sem contexto" não entra no cartão de alertas: aparece no lugar das fontes, como cartão sem fonte.
+    const semContexto = it.alerts.find((a) => a.t === "nocontext");
+    const noSource = semContexto ? { label: AL.nocontext.l, icon: AL.nocontext.i, pending: !semContexto.ack, text: AL.nocontext.x } : null;
+    const alerts = it.alerts.flatMap((a, idx) => {
+      if (a.t === "nocontext") return [];
       const d = AL[a.t], pending = !a.ack;
-      return {
+      return [{
         label: d.l, icon: a.ack ? "check" : d.i, pending, isAck: !!a.ack,
-        text: a.t === "old" ? `Fonte sem atualização há ${maxAge} dias, acima do prazo de 120 dias.` : a.t === "nocontext" && !pending ? "" : d.x,
+        text: a.t === "old" ? `Fonte sem atualização há ${maxAge} dias, acima do prazo de 120 dias.` : d.x,
         ackText: a.ack ? `Reconhecido por ${a.ack.by}, ${a.ack.at}` : "",
-        showAck: pending && a.t !== "conflict" && a.t !== "nocontext", showNone: pending && a.t === "conflict",
+        showAck: pending && a.t !== "conflict", showNone: pending && a.t === "conflict",
         ack: () => ws.ack(it.id, idx), none: () => { ws.ack(it.id, idx); ws.setState({ edit: true }); }
-      };
+      }];
     });
     // Sem escolha da pessoa, o cartão mostra o primeiro alerta pendente; com todos tratados, fica recolhido (histórico).
     const firstPending = alerts.findIndex((a) => a.pending);
@@ -307,7 +314,9 @@ export function buildView(s, ws) {
     cur = {
       ...it, ...deckLayers(alerts.length), alerts, alert: alerts[ai] || {}, alertIndex: ai, alertPos: `${ai + 1} de ${alerts.length}`, hasMany: alerts.length > 1,
       allResolved, alertsOpen: !allResolved || s.alertsOpen === it.id,
-      srcDeck, otherSrcs: srcDeck ? srcs.filter((x) => !it.srcs[x.k - 1].conflict) : srcs,
+      srcDeck, otherSrcs: srcDeck ? srcs.filter((x) => !it.srcs[x.k - 1].conflict) : srcs, noSource,
+      // "Esta resposta ajudou?" avalia a sugestão da IA: item sem rascunho não tem o que avaliar.
+      canRate: it.orig !== "",
       code: code(it), st: st.l, icon: st.i, tone: st.tone, srcs, paras, noText: !hasAnswer,
       edited: it.orig !== "" && text !== it.orig, text,
       hasManual: it.alerts.some((a) => a.t === "manual"), manualBy: it.manualBy || (it.alerts.find((a) => a.t === "manual") || {}).by, isApproved: it.st === "aprovada",
@@ -348,7 +357,7 @@ export function buildView(s, ws) {
     return {
       id: t.id, company: t.company, title: t.title, count: t.shortProg, pct: t.pct, blocked: false, filled: true,
       badge: t.isReady ? "Pronta" : "Em revisão", tone: t.isReady ? "approved" : "neutral", icon: t.isReady ? "circle-check" : "eye",
-      disabled: !podeExportar, btn: "Baixar planilha preenchida", doExport: () => ws.downloadSheet(t.id),
+      disabled: !podeExportar, btn: "Baixar planilha preenchida", doExport: () => ws.askDownload(t.id),
       reason: podeExportar
         ? "Traz o estado atual da revisão: o texto de cada item (sugestão, edição ou resposta manual), as fontes citadas e a situação (aprovada, revisada, em revisão)."
         : "Somente Aprovadores baixam a planilha preenchida.",
@@ -405,16 +414,16 @@ export function buildView(s, ws) {
       const dias = diasAtePrazo(t.dueText);
       const quem = t.company !== "Empresa não informada" ? t.company : t.title;
       if (t.isFailed) taskAlerts.push({ key: "falha-" + t.id, kind: "tarefa", at: t.when, icon: "triangle-alert", label: "Falha no processamento", name: quem, text: "não pôde ser processada: " + (t.reason || "sem motivo registrado").replace(/\.$/, "") + ".", action: "Conferir tarefa", go: abrir(t) });
-      else if (t.isReady) taskAlerts.push({ key: "aprovada-" + t.id, kind: "tarefa", at: t.when, icon: "check-check", label: "Tarefa 100% aprovada", name: quem, text: `tem os ${t.items} itens aprovados: a planilha preenchida está pronta para baixar.`, action: "Abrir tarefa", go: abrir(t) });
+      else if (t.isReady) taskAlerts.push({ key: "aprovada-" + t.id, kind: "tarefa", at: t.when, criadoEm: Math.max(...ws.itemsOf(t.id, s).map((i) => Date.parse(i.atIso) || 0)), icon: "check-check", label: "Tarefa 100% aprovada", name: quem, text: `tem os ${t.items} itens aprovados: a planilha preenchida está pronta para baixar.`, action: "Abrir tarefa", go: abrir(t) });
       else if (t.dueText === "Vencida") taskAlerts.push({ key: "vencida-" + t.id, kind: "tarefa", at: t.due, icon: "clock", label: "Prazo vencido", name: quem, text: t.hasItems ? `está vencida, com ${left(t.id)} itens sem aprovação.` : "está vencida.", action: "Abrir tarefa", go: abrir(t) });
       else if (dias !== null && dias <= 5) taskAlerts.push({ key: "prazo-" + t.id + (dias === 0 ? "-hoje" : ""), kind: "tarefa", at: t.due, icon: "clock", label: "Prazo próximo", name: quem, text: (dias === 0 ? "vence hoje" : dias === 1 ? "vence amanhã" : `vence em ${dias} dias`) + (t.hasItems ? `, com ${left(t.id)} itens sem aprovação.` : "."), action: "Abrir tarefa", go: abrir(t) });
-      if (!t.isFailed && !t.isReady && !t.isProcessing && t.hasItems) taskAlerts.push({ key: "pronta-" + t.id, kind: "tarefa", at: t.when, icon: "sparkles", label: "Processamento concluído", name: quem, text: `foi processada: ${t.items} itens para revisar.`, action: "Revisar itens", go: () => ws.go("review", { taskId: t.id }) });
+      if (!t.isFailed && !t.isReady && !t.isProcessing && t.hasItems) taskAlerts.push({ key: "pronta-" + t.id, kind: "tarefa", at: t.when, criadoEm: t.whenMs, icon: "sparkles", label: "Processamento concluído", name: quem, text: `foi processada: ${t.items} itens para revisar.`, action: "Revisar itens", go: () => ws.go("review", { taskId: t.id }) });
     }
     const envio = s.ultimoEnvio;
-    if (envio && envio.erro) taskAlerts.push({ key: "envio-erro-" + envio.em, kind: "base", at: envio.em, icon: "triangle-alert", label: "Erro no envio da base", name: "Base de conhecimento", text: "o envio não foi concluído: " + envio.erro.replace(/\.$/, "") + ".", action: "Abrir a base", go: () => ws.go("base") });
+    if (envio && envio.erro) taskAlerts.push({ key: "envio-erro-" + envio.em, kind: "base", at: envio.em, criadoEm: envio.emMs, icon: "triangle-alert", label: "Erro no envio da base", name: "Base de conhecimento", text: "o envio não foi concluído: " + envio.erro.replace(/\.$/, "") + ".", action: "Abrir a base", go: () => ws.go("base") });
     else if (envio && envio.resumo) {
       const recusas = envio.resumo.recusados.length + envio.resumo.ignorados.length;
-      if (recusas) taskAlerts.push({ key: "envio-recusas-" + envio.em, kind: "base", at: envio.em, icon: "triangle-alert", label: "Arquivos recusados na base", name: "Base de conhecimento", text: `${recusas} ${recusas === 1 ? "arquivo foi recusado" : "arquivos foram recusados"} no último envio: ` + [...envio.resumo.recusados, ...envio.resumo.ignorados].map((x) => x.nome).join(", ") + ".", action: "Abrir a base", go: () => ws.go("base") });
+      if (recusas) taskAlerts.push({ key: "envio-recusas-" + envio.em, kind: "base", at: envio.em, criadoEm: envio.emMs, icon: "triangle-alert", label: "Arquivos recusados na base", name: "Base de conhecimento", text: `${recusas} ${recusas === 1 ? "arquivo foi recusado" : "arquivos foram recusados"} no último envio: ` + [...envio.resumo.recusados, ...envio.resumo.ignorados].map((x) => x.nome).join(", ") + ".", action: "Abrir a base", go: () => ws.go("base") });
     }
     const antigos = s.docs.filter((d) => !d.off && d.age > 120).length;
     if (s.baseOrigem === "servidor" && antigos) taskAlerts.push({ key: "base-antigos-" + antigos, kind: "base", at: hoje, icon: "clock", label: "Base desatualizada", name: "Base de conhecimento", text: `${antigos} ${antigos === 1 ? "documento ativo está" : "documentos ativos estão"} há mais de 120 dias sem atualização.`, action: "Abrir a base", go: () => ws.go("base") });
@@ -425,13 +434,16 @@ export function buildView(s, ws) {
   taskAlerts.push({ key: "cordel-vencido", at: "29/09/2026 08:00", icon: "clock", label: "Prazo vencido", name: "Cordel Seguros", text: "está vencida, com " + left("t3") + " itens sem aprovação.", action: "Abrir tarefa", go: () => ws.go("task", { taskId: "t3" }) });
   if (!s.exported) taskAlerts.push({ key: "meridian-prazo", at: "28/09/2026 17:30", icon: "clock", label: "Prazo próximo", name: "Banco Meridian", text: "vence em 4 dias com " + left("t1") + " itens sem aprovação.", action: "Revisar itens", go: () => ws.go("review", { taskId: "t1", sel: "r4", filter: "todos" }) });
   }
+  // Fora da lista: avisos com mais de 5 dias (para todos), os tratados pelo botão de ação e os fechados no "X" até o próximo login.
+  const agora = Date.now();
+  const bellAlerts = taskAlerts.filter((a) => !(a.criadoEm && agora - a.criadoEm > VALIDADE_DOS_AVISOS) && !s.alertsDone[a.key] && !s.alertsHidden[a.key]);
   // os mesmos alertas no sino da barra superior, com o estado de leitura
-  taskAlerts.forEach((a) => { a.read = !!s.alertsRead[a.key]; });
-  const alertsUnread = taskAlerts.filter((a) => !a.read).length;
+  bellAlerts.forEach((a) => { a.read = !!s.alertsRead[a.key]; a.hide = () => ws.hideAlert(a.key); });
+  const alertsUnread = bellAlerts.filter((a) => !a.read).length;
   // o card da tela de Tarefas mostra só os alertas ainda não lidos no sino
-  const pendingAlerts = taskAlerts.filter((a) => !a.read && a.kind !== "base");
+  const pendingAlerts = bellAlerts.filter((a) => !a.read && a.kind !== "base");
   const tAi = Math.min(s.tAi, Math.max(pendingAlerts.length - 1, 0));
-  const tDeck = { ...deckLayers(pendingAlerts.length), a: pendingAlerts[tAi], pos: `${tAi + 1} de ${pendingAlerts.length}`, hasMany: pendingAlerts.length > 1, index: tAi, count: pendingAlerts.length };
+  const tDeck = { ...deckLayers(pendingAlerts.length), a: pendingAlerts[tAi], pos: `${tAi + 1} de ${pendingAlerts.length}`, hasMany: pendingAlerts.length > 1, index: tAi, count: pendingAlerts.length, collapsed: s.tAlertsCollapsed };
 
   // formulário de nova RFP
   const f = s.form, tried = f.tried, today = online ? hojeIso() : TODAY_ISO;
@@ -462,8 +474,9 @@ export function buildView(s, ws) {
   return {
     isA, online, podeExportar, userName: ws.name(), navGroups, navValue,
     deletingTask: s.deleting ? tasks.find((t) => t.id === s.deleting) || null : null,
+    downloadTask: s.confirmDownload ? tasks.find((t) => t.id === s.confirmDownload) || null : null,
     detalhes: s.detalhes ? { ...s.detalhes, task: tasks.find((t) => t.id === s.detalhes.id) || ws.taskInfo(s.detalhes.id, s) || {} } : null,
-    docs, readyDocs, onb, tasks, taskAlerts, alertsUnread, tDeck, dash, task, counts: c, segs, filterTabs, rows,
+    docs, readyDocs, onb, tasks, taskAlerts: bellAlerts, alertsUnread, tDeck, dash, task, counts: c, segs, filterTabs, rows,
     revTask: (ws.taskInfo(s.itemsTask, s) || {}).name, cur, savedText, drawer, exportCards, exportTitle, history, historyTabs, form
   };
 }

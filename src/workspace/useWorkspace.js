@@ -7,6 +7,13 @@ import {
 
 let contactSeq = 0;
 const chaveDosAlertasLidos = (pessoa) => "tendra.alertasLidos." + pessoa;
+// Alertas do sino fechados no "X" (voltam no próximo login) e tratados pelo botão de ação (não voltam).
+const chaveDosAlertasFechados = (pessoa) => "tendra.alertasFechados." + pessoa;
+const chaveDosAlertasTratados = (pessoa) => "tendra.alertasTratados." + pessoa;
+const CHAVE_ALERTAS_RECOLHIDOS = "tendra.alertasRecolhidos";
+const lerMapa = (chave) => { try { return JSON.parse(localStorage.getItem(chave) || "{}") || {}; } catch { return {}; } };
+const gravar = (chave, valor) => { try { localStorage.setItem(chave, valor); } catch { /* sem armazenamento: só nesta aba */ } };
+const recolhidosAntes = () => { try { return localStorage.getItem(CHAVE_ALERTAS_RECOLHIDOS) === "1"; } catch { return false; } };
 export const newContact = () => ({ id: "c" + ++contactSeq, name: "", role: "", phone: "", email: "" });
 const emptyForm = () => ({ name: "", company: "", cnpj: "", type: "RFP", due: "", owner: "", contacts: [newContact()], file: null, fileError: null, identified: false, tried: false });
 
@@ -41,7 +48,9 @@ const initialState = ({ initialScreen, role }) => ({
   modo: "local", sessao: null,
   exported: null, exported4: null, exported8: null, expanded: null,
   form: emptyForm(),
-  fb: {}, saved: 0, tick: 0, taskRetry: false, alertsRead: {},
+  fb: {}, saved: 0, tick: 0, taskRetry: false, alertsRead: {}, alertsHidden: {}, alertsDone: {},
+  // Cartão de alertas da tela de Tarefas recolhido, e tarefa à espera da confirmação do download.
+  tAlertsCollapsed: recolhidosAntes(), confirmDownload: null,
   vw: typeof window !== "undefined" ? window.innerWidth : 1440, navOpen: false, sideCollapsed: false
 });
 
@@ -91,6 +100,8 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         await saindo.current;
         const { pessoa } = await entrar(email, senha);
         setState({ sessao: pessoa, role: pessoa.papel, pessoas: [] });
+        // Novo login: os alertas fechados no "X" voltam a aparecer.
+        try { localStorage.removeItem(chaveDosAlertasFechados(pessoa.nome)); } catch { /* sem armazenamento */ }
         api.loadAlertsRead();
         api.loadBase();
         api.loadTasks();
@@ -108,24 +119,31 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         saindo.current = gravando.then(() => sair()).catch(() => {});
         await saindo.current;
       },
-      readAlert(a) { api.markAlertsRead([a.key]); a.go(); },
-      readAllAlerts(keys) { api.markAlertsRead(keys); },
-      /** Alertas do sino lidos: guardados no navegador, por pessoa, para não voltarem a cada entrada. */
-      markAlertsRead(keys) {
+      /** Botão de ação do alerta: o alerta sai do sino de vez para a pessoa, que vai para a tela indicada. */
+      readAlert(a) { api.markAlerts("alertsDone", chaveDosAlertasTratados, [a.key]); a.go(); },
+      readAllAlerts(keys) { api.markAlerts("alertsRead", chaveDosAlertasLidos, keys); },
+      /** "X" do alerta: sai da lista até o próximo login. */
+      hideAlert(key) { api.markAlerts("alertsHidden", chaveDosAlertasFechados, [key]); },
+      /** Estado dos alertas do sino (lidos, fechados ou tratados): guardado no navegador, por pessoa. */
+      markAlerts(campo, chave, keys) {
         setState((s) => {
-          const alertsRead = { ...s.alertsRead, ...Object.fromEntries(keys.map((k) => [k, true])) };
-          try { localStorage.setItem(chaveDosAlertasLidos(api.person(s).nome), JSON.stringify(alertsRead)); } catch { /* sem armazenamento: só nesta aba */ }
-          return { alertsRead };
+          const mapa = { ...s[campo], ...Object.fromEntries(keys.map((k) => [k, true])) };
+          gravar(chave(api.person(s).nome), JSON.stringify(mapa));
+          return { [campo]: mapa };
         });
       },
-      /** Lê os alertas já lidos pela pessoa que entrou (fase D) ou escolhida em "Trocar usuário". */
+      /** Lê o estado dos alertas da pessoa que entrou (fase D) ou escolhida em "Trocar usuário". */
       loadAlertsRead() {
         // Atualização por função: a pessoa é a do estado já com a sessão ou o papel novos.
         setState((s) => {
-          let lidos = {};
-          try { lidos = JSON.parse(localStorage.getItem(chaveDosAlertasLidos(api.person(s).nome)) || "{}") || {}; } catch { lidos = {}; }
-          return { alertsRead: lidos };
+          const nome = api.person(s).nome;
+          return { alertsRead: lerMapa(chaveDosAlertasLidos(nome)), alertsHidden: lerMapa(chaveDosAlertasFechados(nome)), alertsDone: lerMapa(chaveDosAlertasTratados(nome)) };
         });
+      },
+      /** Recolhe ou abre o cartão de alertas da tela de Tarefas; a escolha fica no navegador. */
+      collapseTaskAlerts(recolher) {
+        gravar(CHAVE_ALERTAS_RECOLHIDOS, recolher ? "1" : "0");
+        setState({ tAlertsCollapsed: recolher });
       },
       switchRole() {
         api.flushSaves();
@@ -268,14 +286,14 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         setState({ enviando: true });
         try {
           const { resumo, documentos } = await enviarDocumentosDaBase(files, api.name());
-          setState({ docs: documentos.map((d) => paraDocumentoDaTela(d)), baseOrigem: "servidor", envio: resumo, enviando: false, ultimoEnvio: { resumo, em: dataHoraDaTela(new Date().toISOString()) } });
+          setState({ docs: documentos.map((d) => paraDocumentoDaTela(d)), baseOrigem: "servidor", envio: resumo, enviando: false, ultimoEnvio: { resumo, em: dataHoraDaTela(new Date().toISOString()), emMs: Date.now() } });
           const ok = resumo.carregados.length + resumo.atualizados.length + resumo.semMudanca.length;
           const falhas = resumo.recusados.length + resumo.ignorados.length;
           api.toast(falhas ? "Envio concluído com recusas" : "Envio concluído",
             `${ok} de ${files.length} arquivo${files.length > 1 ? "s" : ""} na base.${falhas ? " Veja os motivos na tela." : ""}`,
             falhas ? "warning" : "success");
         } catch (e) {
-          setState({ enviando: false, ultimoEnvio: { erro: e.message, em: dataHoraDaTela(new Date().toISOString()) } });
+          setState({ enviando: false, ultimoEnvio: { erro: e.message, em: dataHoraDaTela(new Date().toISOString()), emMs: Date.now() } });
           api.toast("Envio não concluído", e.message, "danger");
         }
       },
@@ -356,8 +374,11 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         setState((s) => {
           const item = s.items.find((i) => i.id === id);
           if (!item) return {};
-          const pend = item.alerts.map((a, k) => (a.ack ? -1 : k)).filter((k) => k >= 0);
-          const next = pend.find((k) => k > idx) ?? pend[0];
+          // Posições no cartão, que não mostra o "Sem contexto" (ele fica no lugar das fontes).
+          const noCartao = item.alerts.filter((a) => a.t !== "nocontext");
+          const atual = item.alerts.slice(0, idx).filter((a) => a.t !== "nocontext").length;
+          const pend = noCartao.map((a, k) => (a.ack ? -1 : k)).filter((k) => k >= 0);
+          const next = pend.find((k) => k > atual) ?? pend[0];
           return next === undefined ? { alertAt: { id: null, i: 0 }, alertsOpen: null } : { alertAt: { id, i: next } };
         });
       },
@@ -527,6 +548,17 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
           return false;
         }
       },
+      /** "Baixar planilha preenchida": com a revisão ainda não concluída (tarefa não "Pronta"), pergunta antes. */
+      askDownload(id) {
+        const t = api.taskInfo(id);
+        if (t && t.isReady) api.downloadSheet(id);
+        else setState({ confirmDownload: id });
+      },
+      confirmDownloadSheet() {
+        const id = ref.current.confirmDownload;
+        setState({ confirmDownload: null });
+        if (id) api.downloadSheet(id);
+      },
       /** Baixa a planilha preenchida com o estado atual da revisão (GET /api/tarefas/:id/planilha, cenário 24). */
       downloadSheet(id) {
         const link = document.createElement("a");
@@ -650,7 +682,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
           id: t.id, name: d.nome || t.arquivo, company: d.empresa || "Empresa não informada", type: d.tipo || "RFP", items: t.total,
           ...prazoDaTela(d.prazo), dueColor: "#12140F", owner: d.responsavel || "—", isServer: true, file: t.arquivo,
           isProcessing: t.estado === "processando", isFailed: t.estado === "falha", reason: t.motivo, done: t.processadas,
-          when: dataHoraDaTela(t.concluidaEm || t.criadaEm)
+          when: dataHoraDaTela(t.concluidaEm || t.criadaEm), whenMs: Date.parse(t.concluidaEm || t.criadaEm)
         };
         if (api.hasItems(t.id, s)) {
           const cc = api.counts(t.id, s);
@@ -672,6 +704,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
       const s = ref.current, t = e.target && e.target.tagName;
       if (e.key === "Escape" && s.drawer) { ws.setState({ drawer: null }); return; }
       if (e.key === "Escape" && s.detalhes) { ws.setState({ detalhes: null }); return; }
+      if (e.key === "Escape" && s.confirmDownload) { ws.setState({ confirmDownload: null }); return; }
       if (t === "INPUT" || t === "TEXTAREA" || t === "SELECT" || s.view !== "app" || s.screen !== "review" || s.drawer) return;
       if (e.key === "j" || e.key === "J") ws.step(1);
       if (e.key === "k" || e.key === "K") ws.step(-1);

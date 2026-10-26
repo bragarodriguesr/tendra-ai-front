@@ -163,7 +163,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 
 | Tipo (código) | Gatilho (dado que o front recebe) | O que a tela mostra | O que a pessoa faz | Bloqueia revisar/aprovar |
 | --- | --- | --- | --- | --- |
-| Sem contexto (`nocontext`) | Item chega sem rascunho | Alerta "Informação não localizada na base. Preenchimento manual obrigatório." e o convite a escrever a resposta em "Editar resposta" | Escreve a resposta no próprio quadro de resposta (gravada no backend desde 24/10/2026; SPEC, cenário 61). Ao escrever num item sem fonte, o alerta vira "Resposta manual sem fonte" e o item ganha a etiqueta "Resposta manual" | Sim, até haver resposta escrita |
+| Sem contexto (`nocontext`) | Item chega sem rascunho | Cartão "Sem contexto" no lugar das fontes, no cinza da fonte não escolhida, com "Fontes · Nenhuma fonte localizada" e o texto "Informação não localizada na base. Preenchimento manual obrigatório." (fora do cartão de alertas desde 26/10/2026), e o convite a escrever a resposta em "Editar resposta" | Escreve a resposta no próprio quadro de resposta (gravada no backend desde 24/10/2026; SPEC, cenário 61). Ao escrever num item sem fonte, o alerta vira "Resposta manual sem fonte" e o item ganha a etiqueta "Resposta manual" | Sim, até haver resposta escrita |
 | Baixa confiança (`lowconf`) | Rascunho marcado como de baixa confiança | "Baixa confiança. Confira a fonte antes de aprovar." | "Reconhecer alerta" | Sim, até reconhecer |
 | Fontes conflitantes (`conflict`) | Duas ou mais fontes se contradizem | "Duas fontes se contradizem. Escolha qual vale." e as fontes em conflito marcadas no painel | "Usar esta fonte" em uma delas, ou "Nenhuma, vou escrever" (abre o editor) | Sim, até decidir |
 | Fonte antiga (`old`) | Alguma fonte com mais de 120 dias sem atualização | "Fonte sem atualização há [N] dias, acima do prazo de 120 dias." e o selo "Mais de 120 dias" na fonte | "Reconhecer alerta" | Sim, até reconhecer |
@@ -242,7 +242,13 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
   - **Arquivos recusados na base** e **Erro no envio da base:** resultado do último envio de documentos;
   - **Base desatualizada:** documentos ativos com mais de 120 dias sem atualização.
 - O cartão da tela de Tarefas (F-38) mostra só os alertas de tarefas.
-- O estado de leitura fica guardado no navegador, por pessoa; guardar no backend, para valer em qualquer computador, continua pendente (Q-20).
+- **Validade, fechar e tratar (26/10/2026):**
+  - os avisos **Processamento concluído**, **Tarefa 100% aprovada**, **Arquivos recusados na base** e **Erro no envio da base** somem do sino 5 dias depois de criados, para todas as pessoas;
+  - o "X" de cada alerta tira o alerta da lista até o próximo login da pessoa;
+  - o botão de ação do alerta leva à tela indicada e tira o alerta da lista de vez, para a pessoa que agiu (também no cartão da tela de Tarefas);
+  - com muitos alertas, a lista do sino rola dentro do painel.
+- O cartão de alertas da tela de Tarefas pode ser recolhido num resumo ("N alertas recolhidos · mostrar"), no formato dos alertas tratados da revisão; a escolha fica guardada no navegador.
+- O estado de leitura, de fechado e de tratado fica guardado no navegador, por pessoa; guardar no backend, para valer em qualquer computador, continua pendente (Q-20).
 - Sem o servidor, continuam os alertas de exemplo: **Falha no carregamento**, **Reprocessamento**, **Prazo vencido** e **Prazo próximo**.
 
 ## 8. Requisitos A: primeiros passos e base de conhecimento (T1, T2)
@@ -371,7 +377,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 
 **F-11 · P0 · Visão de completude** (T5; MoSCoW: Must) — Implementado
 
-- **Cabeçalho:** selo de status, nome, e a linha "[empresa] · [tipo] · prazo [data] ([prazo restante]) · responsável [nome]". Botões "Baixar planilha preenchida" (ou "Exportação" sem o servidor), "Ver detalhes" e "Abrir revisão". O caminho "Tarefas / [nome]" saiu em 24/10/2026.
+- **Cabeçalho:** selo de status, nome, e a linha "[empresa] · [tipo] · prazo [data] ([prazo restante]) · responsável [nome]". Botões "Baixar planilha preenchida" (ou "Exportação" sem o servidor), "Ver detalhes" e "Abrir revisão". O caminho "Tarefas / [nome]" saiu em 24/10/2026. Com a tarefa ainda não "Pronta", "Baixar planilha preenchida" (aqui e na Exportação) pede confirmação antes: "Baixar mesmo assim" ou "Voltar para revisão" (26/10/2026).
 - **"Ver detalhes" (24/10/2026; SPEC, cenário 64):** abre uma barra lateral, como a do trecho da fonte (T7), com a empresa (nome, CNPJ, tipo, prazo, responsável e arquivo) e os contatos informados na importação (nome, cargo, telefone e e-mail). Esc ou "Fechar" fecham.
 - **Cartão de resumo:** só "X de Y itens aprovados" e a barra segmentada pelos cinco estados (sem rascunho, sugerida, em revisão, revisada, aprovada), com legenda e contagem em texto.
   - **Mudança da v1:** saíram os contadores "com sugestão" e "itens com alerta pendente" do cartão. O alerta pendente continua como filtro e em cada linha.
@@ -467,7 +473,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 
 **F-23 · P0 · Feedback por resposta** — Implementado
 
-- "Esta resposta ajudou?" com polegar para cima e para baixo.
+- "Esta resposta ajudou?" com polegar para cima e para baixo, só em itens com sugestão da IA (item sem rascunho não tem o que avaliar, 26/10/2026).
 - No polegar para baixo, aparece o seletor de motivo: Fonte incorreta, Texto impreciso, Informação desatualizada, Outro.
 - **Mudança da v1:** a justificativa livre virou seletor de motivo. Um campo de texto livre opcional pode voltar se o piloto pedir.
 

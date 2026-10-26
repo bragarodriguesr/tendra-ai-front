@@ -1,6 +1,6 @@
 import React from "react";
 import { Badge, Button, EmptyState, Icon, IconButton, MonoLabel, Select, Textarea, FilterMenu } from "../../ds/index.js";
-import { AlertDeck, ClickRow, DISPLAY, card, mono } from "../ui.jsx";
+import { AlertDeck, ClickRow, DISPLAY, card, eyebrow, mono } from "../ui.jsx";
 
 const FB_REASONS = ["Fonte incorreta", "Texto impreciso", "Informação desatualizada", "Outro"];
 const fbStyle = (on) => ({
@@ -193,16 +193,33 @@ function ConflictSources({ cur, ws }) {
   );
 }
 
+/** Item sem rascunho: o aviso "Sem contexto" no lugar das fontes, no cinza da fonte não escolhida. */
+function NoSourceCard({ ns }) {
+  return (
+    <div role="note" style={card(14, { display: "flex", flexDirection: "column", gap: 12, padding: 16, background: "var(--n-100)", color: "var(--n-400)" })}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, ...eyebrow, fontWeight: 500, color: "var(--n-500)" }}>
+        <Icon name={ns.icon} size="md" />
+        {ns.label}
+        {ns.pending ? <span>· pendente</span> : null}
+      </div>
+      <div style={{ lineHeight: 1.5 }}>{ns.text}</div>
+    </div>
+  );
+}
+
+const SOURCE_GRID = { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(300px,100%),1fr))", gap: 16 };
+
 function Sources({ cur, ws }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <MonoLabel>Fontes · {cur.srcs.length}</MonoLabel>
+      <MonoLabel>Fontes · {cur.srcs.length || "Nenhuma fonte localizada"}</MonoLabel>
       {cur.srcDeck ? <ConflictSources cur={cur} ws={ws} /> : null}
       {cur.otherSrcs.length ? (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(300px,100%),1fr))", gap: 16 }}>
+        <div style={SOURCE_GRID}>
           {cur.otherSrcs.map((s) => <SourceCard key={s.k} s={s} />)}
         </div>
       ) : null}
+      {cur.noSource ? <div style={SOURCE_GRID}><NoSourceCard ns={cur.noSource} /></div> : null}
     </div>
   );
 }
@@ -250,13 +267,13 @@ export function Review({ v, ws, state, height, isMobile }) {
               <h2 style={{ margin: 0, fontFamily: DISPLAY, fontWeight: 600, fontSize: isMobile ? 22 : 26, letterSpacing: "-.02em", lineHeight: 1.25, color: "var(--n-900)", maxWidth: "40ch", textWrap: "pretty" }}>{cur.q}</h2>
               {cur.alerts.length > 0 ? <ItemAlerts cur={cur} ws={ws} /> : null}
               <Answer v={v} ws={ws} state={state} cur={cur} />
-              {cur.srcs.length > 0 ? <Sources cur={cur} ws={ws} /> : null}
-              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", color: "var(--n-700)" }}>
+              {cur.srcs.length > 0 || cur.noSource ? <Sources cur={cur} ws={ws} /> : null}
+              {cur.canRate ? <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", color: "var(--n-700)" }}>
                 <span style={{ fontSize: 13 }}>Esta resposta ajudou?</span>
                 <button type="button" onClick={() => ws.rate("up")} aria-label="Positivo" aria-pressed={cur.fbUp} style={fbStyle(cur.fbUp)}><Icon name="thumbs-up" size="md" /></button>
                 <button type="button" onClick={() => ws.rate("down")} aria-label="Negativo" aria-pressed={cur.fbDown} style={fbStyle(cur.fbDown)}><span style={{ display: "flex", transform: "rotate(180deg)" }}><Icon name="thumbs-up" size="md" /></span></button>
                 {cur.fbDown ? <div style={{ width: 220 }}><Select options={FB_REASONS} placeholder="Motivo" size="sm" aria-label="Motivo" value={cur.fbReason} onChange={(e) => ws.rate("down", e.target.value)} /></div> : null}
-              </div>
+              </div> : null}
             </div>
             <div style={{ borderTop: "1px solid var(--n-200)", background: "var(--n-000)", padding: `${isMobile ? 12 : 16}px ${padX}px`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: isMobile ? 10 : 16, flexWrap: "wrap" }}>
               <div style={{ fontSize: 13, lineHeight: 1.5, color: "var(--n-900)", display: "flex", alignItems: "center", gap: 8, maxWidth: 420 }}>
