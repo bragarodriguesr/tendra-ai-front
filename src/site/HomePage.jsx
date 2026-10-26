@@ -108,17 +108,14 @@ export function HomePage({ onPage }) {
 
           <div className="tdr-site-ai-steps">
             {[
-              { n: "01", t: "Entende o edital", d: "Lê a planilha e separa as perguntas item por item. Se a estrutura fugir do padrão, a IA localiza as perguntas e a sua equipe confirma a lista.", tag: "IA + regras" },
-              { n: "02", t: "Redige com a sua base", d: "O modelo cruza cada pergunta com a base aprovada e escreve a resposta citando o documento e o trecho. Citação que não existe no documento é descartada.", tag: "IA com citação" },
-              { n: "03", t: "Sinaliza o que exige atenção", d: "Alertas apontam respostas sem fonte, de baixa confiança ou com base vencida. A IA também revisa o texto sob demanda.", tag: "IA + regras" },
-              { n: "04", t: "A pessoa aprova", d: "Nada é aprovado nem exportado pela IA. O revisor responsável decide, e a trilha de auditoria registra.", tag: "Pessoa decide" }
+              { t: "Entende o edital", d: "Lê a planilha e separa as perguntas item por item. Se a estrutura fugir do padrão, a IA localiza as perguntas e a sua equipe confirma a lista.", tag: "IA + regras" },
+              { t: "Redige com a sua base", d: "O modelo cruza cada pergunta com a base aprovada e escreve a resposta citando o documento e o trecho. Citação que não existe no documento é descartada.", tag: "IA com citação" },
+              { t: "Sinaliza o que exige atenção", d: "Alertas apontam respostas sem fonte, de baixa confiança ou com base vencida. A IA também revisa o texto sob demanda.", tag: "IA + regras" },
+              { t: "A pessoa aprova", d: "Nada é aprovado nem exportado pela IA. O revisor responsável decide, e a trilha de auditoria registra.", tag: "Pessoa decide" }
             ].map((s, i) => (
-              <Card key={s.n} padding="lg" radius="2xl" className="tdr-site-ai-card" style={{ "--i": i }}>
+              <Card key={s.t} padding="lg" radius="2xl" className="tdr-site-ai-card" style={{ "--i": i }}>
                 <div style={{ display: "grid", gap: "var(--space-4)" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-3)" }}>
-                    <span className="tdr-site-ai-chip" aria-hidden="true"><Icon name="sparkles" size="lg" /></span>
-                    <MonoLabel>{s.n}</MonoLabel>
-                  </div>
+                  <span className="tdr-site-ai-chip" aria-hidden="true"><Icon name="sparkles" size="lg" /></span>
                   <div style={{ fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: "var(--text-h3-size)", letterSpacing: "-0.02em", color: "var(--text-strong)" }}>{s.t}</div>
                   <div style={{ fontSize: "var(--text-ui-size)", lineHeight: 1.6, color: "var(--text-body)", textWrap: "pretty" }}>{s.d}</div>
                   <div><Tag>{s.tag}</Tag></div>
@@ -126,27 +123,7 @@ export function HomePage({ onPage }) {
               </Card>
             ))}
           </div>
-
-          <Card padding="lg" radius="2xl" className="tdr-site-ai-card" style={{ "--i": 4 }}>
-            <div className="tdr-site-ai-pillars">
-              {[
-                { icon: "clock", t: "Produtividade", d: "Edital respondido em horas, não semanas, reaproveitando o que a empresa já aprovou." },
-                { icon: "shield-check", t: "Segurança", d: "Seus documentos nunca treinam modelo compartilhado. CNPJ e contatos não vão para a IA." },
-                { icon: "check-check", t: "Qualidade", d: "Toda resposta cita a fonte e passa por revisão humana nominal antes de sair." }
-              ].map((r) => (
-                <div key={r.t} style={{ display: "flex", gap: "var(--space-4)", alignItems: "flex-start" }}>
-                  <span style={{ color: "var(--brand-sage)", marginTop: 2 }}><Icon name={r.icon} size="lg" /></span>
-                  <span style={{ display: "grid", gap: 4 }}>
-                    <span style={{ fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: 17, color: "var(--text-strong)" }}>{r.t}</span>
-                    <span style={{ fontSize: "var(--text-sm-size)", lineHeight: 1.55, color: "var(--text-body)", textWrap: "pretty" }}>{r.d}</span>
-                  </span>
-                </div>
-              ))}
-            </div>
-          </Card>
         </div>
-        <span className="tdr-site-ai-spark tdr-site-ai-spark-a" aria-hidden="true"><Icon name="sparkles" size="lg" /></span>
-        <span className="tdr-site-ai-spark tdr-site-ai-spark-b" aria-hidden="true"><Icon name="sparkles" size="lg" /></span>
       </Aurora>
 
       <Section tone="ink" id="seguranca">
