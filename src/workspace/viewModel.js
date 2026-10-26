@@ -266,11 +266,15 @@ export function buildView(s, ws) {
     const st = ST[it.st], p = ws.pendingCount(it);
     const maxAge = it.srcs.filter((x) => x.age > 120).reduce((m, x) => Math.max(m, x.age), 0);
     const hasConflict = it.alerts.some((a) => a.t === "conflict" && !a.ack);
-    // "Sem contexto" não entra no cartão de alertas: aparece no lugar das fontes, como cartão sem fonte.
+    // "Sem contexto" e resposta manual não entram no cartão de alertas: o item sem fonte mostra o cartão
+    // "Sem contexto" no lugar das fontes, antes e depois de a pessoa escrever a resposta.
     const semContexto = it.alerts.find((a) => a.t === "nocontext");
-    const noSource = semContexto ? { label: AL.nocontext.l, icon: AL.nocontext.i, pending: !semContexto.ack, text: AL.nocontext.x } : null;
+    const manual = it.alerts.find((a) => a.t === "manual");
+    const noSource = semContexto ? { label: AL.nocontext.l, icon: AL.nocontext.i, pending: !semContexto.ack, text: AL.nocontext.x }
+      : manual && !it.srcs.length ? { label: AL.nocontext.l, icon: AL.nocontext.i, pending: false, text: "Informação não localizada na base. A resposta foi escrita manualmente." }
+      : null;
     const alerts = it.alerts.flatMap((a, idx) => {
-      if (a.t === "nocontext") return [];
+      if (a.t === "nocontext" || a.t === "manual") return [];
       const d = AL[a.t], pending = !a.ack;
       return [{
         label: d.l, icon: a.ack ? "check" : d.i, pending, isAck: !!a.ack,

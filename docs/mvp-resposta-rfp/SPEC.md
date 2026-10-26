@@ -463,7 +463,7 @@ Estes cenários vêm de `docs/referencia/mvp-proposta-1/SPEC.md` (30, 36, 38, 39
 - **Then** o texto vira os parágrafos do item, sem fonte, o item vai para `"em-revisao"` e o alerta "sem contexto" dá lugar ao alerta de resposta manual, com o nome de quem escreveu
 - **And** a tela mostra a etiqueta "Resposta manual" no item e "Resposta manual, sem fonte na base · escrita por [nome]" abaixo da resposta
 - **And** a edição é registrada como evento (`edicao`, com o detalhe `manual`); outra pessoa pode editar depois, e quem escreveu primeiro continua registrado
-- **And** como qualquer alerta, o de resposta manual precisa ser reconhecido antes de revisar ou aprovar na tela
+- **And** o alerta de resposta manual é só registro de autoria: não aparece no cartão de alertas, não precisa ser reconhecido e não bloqueia revisar nem aprovar (decisão de 26/10/2026; antes precisava ser reconhecido). No lugar das fontes continua o cartão "Sem contexto", com "Fontes · Nenhuma fonte localizada" e o texto "Informação não localizada na base. A resposta foi escrita manualmente."
 - **And** apagar todo o texto devolve o item para `"sem-rascunho"`, com o alerta "sem contexto"; "restaurar sugestão" não existe para esse item (400)
 - **And** a resposta manual não conta como sugestão da IA no relatório de aceitação (cenário 48): o item segue em "sem rascunho" lá
 
