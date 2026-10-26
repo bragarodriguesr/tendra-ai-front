@@ -526,7 +526,7 @@ Deploy no Render às 14:05 UTC. Testes do grupo, conferidos no registro de requi
 ### I3. Resposta manual sem alerta a reconhecer (ajuste de 26/10/2026)
 - No teste do grupo, escrever num item sem rascunho trocava o cartão "Sem contexto" (fase H) pelo alerta "Resposta manual sem fonte", que precisava ser reconhecido por quem acabou de escrever.
 - Agora a resposta manual é só registro de autoria: não aparece no cartão de alertas, não conta como alerta pendente (lista de itens, filtro "Alerta pendente", tarefa "Pronta", Dashboard) e não bloqueia revisar nem aprovar. No lugar das fontes continua o cartão "Sem contexto", com "A resposta foi escrita manualmente.". A etiqueta "Resposta manual" e "escrita por [nome]" continuam. Só front; o backend já não exigia o reconhecimento para aprovar.
-- **Situação (26/10/2026): implementada.** Jornada de ponta a ponta: depois de escrever e recarregar, o cartão "Sem contexto" no lugar das fontes, nenhum alerta de resposta manual e "Marcar como revisado" habilitado.
+- **Situação (26/10/2026): implementada e conferida no ambiente publicado.** Jornada de ponta a ponta: depois de escrever e recarregar, o cartão "Sem contexto" no lugar das fontes, nenhum alerta de resposta manual e "Marcar como revisado" habilitado. No publicado (front da Vercel com o merge às 14:22 UTC), o User Teste 1 escreveu uma resposta manual no item 60 da RFP-02 às 14:24 (evento `edicao`, detalhe `manual`) sem precisar reconhecer alerta; o restante (cartão no lugar das fontes, item fora do filtro de alertas) foi conferido pelo grupo no teste manual.
 
 ### Pendências registradas em 24/10/2026 (fora da fase E, por decisão do grupo)
 1. **Fase A:** taxa de aceitação; RFP-03 e variantes de borda com a API real.
