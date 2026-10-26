@@ -1,7 +1,7 @@
 import React from "react";
 import { MonoLabel } from "./MonoLabel.jsx";
 
-export function ProgressBar({ value = 0, label, showValue = true, tone = "paper", animate = true, style, ...rest }) {
+export function ProgressBar({ value = 0, label, showValue = true, tone = "paper", animate = true, fillClassName, style, ...rest }) {
   const pct = Math.max(0, Math.min(100, value));
   const inverse = tone === "ink";
   return (
@@ -28,12 +28,14 @@ export function ProgressBar({ value = 0, label, showValue = true, tone = "paper"
         }}
       >
         <div
+          className={fillClassName}
           style={{
             height: "100%",
             width: pct + "%",
             borderRadius: "var(--radius-pill)",
-            background: inverse ? "var(--brand-lime)" : "var(--brand-sage)",
-            animation: animate ? "tdr-fill var(--duration-fill) var(--ease-out) both" : undefined
+            // Com fillClassName, cor e animação vêm da classe.
+            background: fillClassName ? undefined : inverse ? "var(--brand-lime)" : "var(--brand-sage)",
+            animation: fillClassName ? undefined : animate ? "tdr-fill var(--duration-fill) var(--ease-out) both" : undefined
           }}
         />
       </div>

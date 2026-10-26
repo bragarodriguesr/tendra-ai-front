@@ -9,6 +9,8 @@ export interface ProgressBarProps extends React.HTMLAttributes<HTMLDivElement> {
   /** paper: trilha cinza + barra sálvia · ink: trilha tinta + barra limão */
   tone?: "paper" | "ink";
   animate?: boolean;
+  /** Classe da barra preenchida; substitui a cor e a animação padrão. */
+  fillClassName?: string;
 }
 
 export declare function ProgressBar(props: ProgressBarProps): JSX.Element;

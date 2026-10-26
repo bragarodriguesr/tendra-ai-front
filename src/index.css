@@ -120,4 +120,7 @@ label:has(> [role="switch"]) * { box-sizing: border-box; }
 .tdr-ai-btn.is-loading svg { animation: tdr-ai-spin 1s linear infinite; }
 @keyframes tdr-ai-flow { from { background-position: 0% 50%; } to { background-position: 300% 50%; } }
 @keyframes tdr-ai-spin { to { transform: rotate(360deg); } }
+/* Barra de progresso de tarefa em processamento: mesmo gradiente limão do "Revisar com IA". */
+.tdr-progress-ai { background: linear-gradient(110deg, #C8F73D 0%, #E6FF9A 25%, #B6EA1E 50%, #E6FF9A 75%, #C8F73D 100%); background-size: 300% 100%; animation: tdr-fill var(--duration-fill) var(--ease-out) both, tdr-ai-flow 3s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .tdr-progress-ai { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .tdr-ai-btn, .tdr-ai-btn.is-loading, .tdr-ai-btn.is-loading svg { animation: none; } }
