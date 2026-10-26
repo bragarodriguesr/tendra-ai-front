@@ -18,6 +18,11 @@ export const newContact = () => ({ id: "c" + ++contactSeq, name: "", role: "", p
 const emptyForm = () => ({ name: "", company: "", cnpj: "", type: "RFP", due: "", owner: "", contacts: [newContact()], file: null, fileError: null, identified: false, tried: false });
 
 const DIA = 24 * 60 * 60 * 1000;
+/**
+ * Alerta que pede ação na revisão. A resposta manual é só um registro de autoria: a tela já mostra a
+ * etiqueta "Resposta manual" e o autor, então ela não precisa ser reconhecida nem bloqueia revisar e aprovar.
+ */
+const alertaPendente = (a) => !a.ack && a.t !== "manual";
 /** Prazo AAAA-MM-DD da tarefa em dd/mm/aaaa e o texto relativo a hoje. */
 function prazoDaTela(prazo) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(prazo || "");
@@ -238,7 +243,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
       },
       upd(id, fn) { setState((s) => ({ items: s.items.map((i) => (i.id === id ? fn({ ...i }) : i)) })); },
       visible(s = ref.current) {
-        return s.items.filter((i) => (s.filter === "todos" ? true : s.filter === "alerta" ? i.alerts.some((a) => !a.ack) : i.st === s.filter));
+        return s.items.filter((i) => (s.filter === "todos" ? true : s.filter === "alerta" ? i.alerts.some(alertaPendente) : i.st === s.filter));
       },
       step(d) {
         const v = api.visible();
@@ -248,7 +253,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         api.select(n.id);
       },
       setFilter(v) { setState({ filter: v }); },
-      pendingCount: (i) => i.alerts.filter((a) => !a.ack).length,
+      pendingCount: (i) => i.alerts.filter(alertaPendente).length,
 
       addDocs(list) {
         const base = Date.now();
@@ -408,9 +413,9 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         setState((s) => {
           const item = s.items.find((i) => i.id === id);
           if (!item) return {};
-          // Posições no cartão, que não mostra o "Sem contexto" (ele fica no lugar das fontes).
-          const noCartao = item.alerts.filter((a) => a.t !== "nocontext");
-          const atual = item.alerts.slice(0, idx).filter((a) => a.t !== "nocontext").length;
+          // Posições no cartão, que não mostra o "Sem contexto" nem a resposta manual (eles ficam no lugar das fontes).
+          const noCartao = item.alerts.filter((a) => a.t !== "nocontext" && a.t !== "manual");
+          const atual = item.alerts.slice(0, idx).filter((a) => a.t !== "nocontext" && a.t !== "manual").length;
           const pend = noCartao.map((a, k) => (a.ack ? -1 : k)).filter((k) => k >= 0);
           const next = pend.find((k) => k > atual) ?? pend[0];
           return next === undefined ? { alertAt: { id: null, i: 0 }, alertsOpen: null } : { alertAt: { id, i: next } };

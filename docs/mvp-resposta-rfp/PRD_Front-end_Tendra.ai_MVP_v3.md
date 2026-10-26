@@ -98,9 +98,9 @@ A interface segue seis princípios, todos derivados do discovery, e usa o design
 
 **Princípios de produto**
 
-1. **Fonte antes de texto.** Toda resposta mostra de onde veio antes de pedir aprovação. Sem fonte, o item só sai como resposta manual com alerta reconhecido (seção 6).
+1. **Fonte antes de texto.** Toda resposta mostra de onde veio antes de pedir aprovação. Sem fonte, o item só sai como resposta manual, com a autoria registrada e sinalizada na tela (seção 6).
 2. **A revisão é o produto.** Painel item a item em split view (itens à esquerda; resposta, alertas, fontes e ações à direita), nunca um chat.
-3. **Incerteza é explícita.** A tela nunca preenche uma lacuna com texto plausível. Baixa confiança, conflito, fonte antiga, termo crítico e resposta manual têm sinal próprio e exigem reconhecimento.
+3. **Incerteza é explícita.** A tela nunca preenche uma lacuna com texto plausível. Baixa confiança, conflito, fonte antiga e termo crítico têm sinal próprio e exigem reconhecimento; a resposta manual tem sinal próprio (etiqueta, autor e o cartão "Sem contexto" no lugar das fontes), sem reconhecimento (26/10/2026).
 4. **Aprovação é humana e identificada.** Cada resposta aprovada mostra quem aprovou e quando. Não existe caminho de envio ou aprovação automática.
 5. **Revisar rápido, editar pouco.** O caminho feliz é conferir a fonte e aprovar em poucos cliques; o editor existe para ajustes.
 6. **Sóbrio.** Swiss design, grid rigoroso, zero ornamento decorativo.
@@ -163,12 +163,12 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 
 | Tipo (código) | Gatilho (dado que o front recebe) | O que a tela mostra | O que a pessoa faz | Bloqueia revisar/aprovar |
 | --- | --- | --- | --- | --- |
-| Sem contexto (`nocontext`) | Item chega sem rascunho | Cartão "Sem contexto" no lugar das fontes, no cinza da fonte não escolhida, com "Fontes · Nenhuma fonte localizada" e o texto "Informação não localizada na base. Preenchimento manual obrigatório." (fora do cartão de alertas desde 26/10/2026), e o convite a escrever a resposta em "Editar resposta" | Escreve a resposta no próprio quadro de resposta (gravada no backend desde 24/10/2026; SPEC, cenário 61). Ao escrever num item sem fonte, o alerta vira "Resposta manual sem fonte" e o item ganha a etiqueta "Resposta manual" | Sim, até haver resposta escrita |
+| Sem contexto (`nocontext`) | Item chega sem rascunho | Cartão "Sem contexto" no lugar das fontes, no cinza da fonte não escolhida, com "Fontes · Nenhuma fonte localizada" e o texto "Informação não localizada na base. Preenchimento manual obrigatório." (fora do cartão de alertas desde 26/10/2026), e o convite a escrever a resposta em "Editar resposta" | Escreve a resposta no próprio quadro de resposta (gravada no backend desde 24/10/2026; SPEC, cenário 61). Ao escrever num item sem fonte, o item ganha a etiqueta "Resposta manual" e o cartão no lugar das fontes passa a dizer "A resposta foi escrita manualmente." | Sim, até haver resposta escrita |
 | Baixa confiança (`lowconf`) | Rascunho marcado como de baixa confiança | "Baixa confiança. Confira a fonte antes de aprovar." | "Reconhecer alerta" | Sim, até reconhecer |
 | Fontes conflitantes (`conflict`) | Duas ou mais fontes se contradizem | "Duas fontes se contradizem. Escolha qual vale." e as fontes em conflito marcadas no painel | "Usar esta fonte" em uma delas, ou "Nenhuma, vou escrever" (abre o editor) | Sim, até decidir |
 | Fonte antiga (`old`) | Alguma fonte com mais de 120 dias sem atualização | "Fonte sem atualização há [N] dias, acima do prazo de 120 dias." e o selo "Mais de 120 dias" na fonte | "Reconhecer alerta" | Sim, até reconhecer |
 | Termo crítico (`critical`) | Pergunta envolve responsabilização civil, multa ou garantia jurídica | "Termo crítico · nível alto" — "Requer validação do Jurídico. A pergunta envolve responsabilização civil, multa ou garantia jurídica." | "Reconhecer alerta"; o Aprovador decide | Sim; regra final em Q-01 |
-| Resposta manual sem fonte (`manual`) | Resposta escrita à mão, sem nenhuma fonte associada | "Resposta escrita à mão, sem fonte na base. Confirme o conteúdo antes de aprovar." e o rótulo "Resposta manual, sem fonte na base · escrita por [nome]" | "Reconhecer alerta" | Sim, até reconhecer |
+| Resposta manual sem fonte (`manual`) | Resposta escrita à mão, sem nenhuma fonte associada | Só registro de autoria (26/10/2026): etiqueta "Resposta manual", o rótulo "Resposta manual, sem fonte na base · escrita por [nome]" e o cartão "Sem contexto" no lugar das fontes; não aparece no cartão de alertas | Nenhuma | Não |
 
 **Regras de comportamento (como o front aplica)**
 
@@ -180,7 +180,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 - **Estados do item:** *Sem rascunho*, *Sugerida*, *Em revisão*, *Revisada*, *Aprovada*.
 - **Transições:**
   - Editar o texto de um item *Sugerida* o leva para *Em revisão*.
-  - Escrever num item *Sem rascunho* o leva para *Em revisão* e gera o alerta de resposta manual, com o autor.
+  - Escrever num item *Sem rascunho* o leva para *Em revisão* e registra a resposta manual, com o autor, sem alerta a reconhecer.
   - Apagar todo o texto de um item sem fonte o devolve para *Sem rascunho* e volta o alerta de sem contexto.
   - "Marcar como revisado" leva a *Revisada* (com nome e horário); disponível aos dois papéis.
   - "Aprovar resposta" leva a *Aprovada* (com nome e horário); só o Aprovador, direto de *Sugerida*, *Em revisão* ou *Revisada*.
@@ -441,7 +441,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
   - o trecho de origem destacado em limão no documento;
   - "Esc fecha e volta ao item" e o botão "Fechar". Ao fechar, a tela volta ao mesmo item.
 - **Documento indisponível:** selo "Documento indisponível", o texto "Este documento não está mais na base. Mostramos o nome e a página registrados." e o nome e a página registrados.
-- **Item sem fonte:** só sai como resposta manual, com o alerta "Resposta manual sem fonte" reconhecido e o autor registrado.
+- **Item sem fonte:** só sai como resposta manual, com o autor registrado e sinalizado na tela (sem alerta a reconhecer desde 26/10/2026).
 
 **F-20 · P0 · Edição da resposta** (MoSCoW: Must) — Parcial
 
@@ -551,7 +551,7 @@ Texto como está no front. A voz é direta, sem exclamação, sem emoji e sem a 
 | Fontes conflitantes | T6 | "Duas fontes se contradizem. Escolha qual vale." | Usar esta fonte; Nenhuma, vou escrever |
 | Fonte antiga | T6 | "Fonte sem atualização há [N] dias, acima do prazo de 120 dias." | Reconhecer alerta |
 | Termo crítico | T6 | "Requer validação do Jurídico. A pergunta envolve responsabilização civil, multa ou garantia jurídica." | Reconhecer alerta |
-| Resposta manual sem fonte | T6 | "Resposta escrita à mão, sem fonte na base. Confirme o conteúdo antes de aprovar." | Reconhecer alerta |
+| Resposta manual sem fonte | T6 | Cartão "Sem contexto" no lugar das fontes: "Informação não localizada na base. A resposta foi escrita manualmente." | Nenhuma (registro de autoria) |
 | Sem resposta | T6 | "Escreva a resposta antes de revisar ou aprovar." | Editar resposta |
 | Aprovação bloqueada | T6 | "Falta tratar 1 alerta antes de aprovar." | Tratar o alerta |
 | Revisor tentando aprovar | T6 | "Somente Aprovadores aprovam." | Nenhuma |
@@ -770,7 +770,7 @@ Esta seção lista o que o front já consome e dispara. Os nomes são descritivo
 | Setor público | PRD: fluxos de licitação fora do MVP. Site: plano "Setor público", rótulo "RFP & Licitações" e login "RFPs e editais" | O produto do MVP segue privado; o site anuncia o setor público como oferta comercial. Alinhar o texto do site ou o escopo (Q-24) |
 | Autenticação | Login do front: e-mail e senha. Plano Enterprise: "SSO SAML + SCIM" | E-mail e senha no MVP; SSO como requisito do plano Enterprise (Q-19) |
 | Números de marketing | v1: o produto não exibe números de horas como fato. Home: "4h 12m por edital de 200 itens", "83% de reaproveitamento", "3,2× mais RFPs", "100% com fonte" | Tratar como ilustrativos até haver dados do piloto; revisar antes do lançamento aberto |
-| Item sem fonte | Pitch: "sem fonte rastreável, o item não é entregável" | Pode ser aprovado como resposta manual, com alerta reconhecido e autoria registrada |
+| Item sem fonte | Pitch: "sem fonte rastreável, o item não é entregável" | Pode ser aprovado como resposta manual, com a autoria registrada e sinalizada (sem reconhecimento desde 26/10/2026) |
 | Integrações | Site: "00 · Conecte suas fontes: drives, intranet…". MoSCoW: integrações em Won't | No MVP, "conectar" é subir arquivos; conectores ficam para a Fase 3 |
 
 ## 18. Questões em aberto
@@ -802,7 +802,7 @@ Esta seção lista o que o front já consome e dispara. Os nomes são descritivo
 | Q-02 | Formatos aceitos. **Revisada na v3:** MVP com entrada de RFP só em `.xlsx` e base só em `.md`, enviada pela T2 ou por comando. Os demais (.doc, .docx, .xls, .pdf, .ppt, .pptx, .txt, .csv e arquivos do Google baixados) voltam na Fase 2 | F-02, F-09, seção 20 |
 | Q-03 | Alerta para fontes com mais de 120 dias sem atualização | Seção 6, F-04 |
 | Q-06 | Alertas usam o token danger (`#A8402E`, contraste medido) e a escala tipográfica de produto foi derivada no design system do front | Seções 4, 13 e 15 |
-| Q-09 | Resposta manual sem fonte pode ser aprovada, com alerta reconhecido e autoria | Seção 6 |
+| Q-09 | Resposta manual sem fonte pode ser aprovada, com a autoria registrada; o alerta de resposta manual deixou de exigir reconhecimento em 26/10/2026 | Seção 6 |
 | Q-11 | Sem número mínimo de documentos; aviso de base pequena com menos de 3 documentos prontos | F-01, F-09 |
 | Q-14 | Arquivos do Google entram por upload do arquivo baixado; sem conexão com o Drive no MVP. **v3:** no MVP, quem tiver outro formato converte para `.md` antes da carga | F-02 |
 | Q-25 | Limites de qualidade da IA: relevância da recuperação em 80% e fidelidade do conteúdo em 90% | Seção 20 |

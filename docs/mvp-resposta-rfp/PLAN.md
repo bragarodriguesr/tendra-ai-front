@@ -517,7 +517,16 @@ Pedida pelo grupo em 26/10/2026. SPEC, cenário 65.
 ### I2. Botão no editor
 - No editor da resposta de item sem rascunho, "Revisar com IA" (ícone de estrelas) no canto inferior direito: desabilitado com a contagem "N de 30 palavras"; habilitado com gradiente limão animado (parado com movimento reduzido). Durante a revisão, o editor fica só leitura. O texto revisado entra no editor e é gravado como qualquer edição; "Desfazer revisão" volta ao texto anterior.
 
-**Situação (26/10/2026): implementada.** Testes de integração (Haiku 5.5 com esforço `low`, instruções e texto no pedido, registro sem o texto, item intocado, recusas de 30 palavras, item com sugestão e item inexistente sem chamar a IA, recusa de número novo e de crescimento, resposta fora do formato) no PGlite e no Postgres; jornada de ponta a ponta (botão desabilitado, habilitado com 30 palavras, revisão no editor e desfazer); chamada real ao Haiku 5.5 com dois textos mal escritos: correções de gramática e tom ("a gente" virou "nós"), nenhum dado novo, e a instrução maliciosa embutida no texto tratada como conteúdo. Custo de cerca de 1.000 tokens de entrada e 130 de saída por revisão.
+**Situação (26/10/2026): implementada e conferida no ambiente publicado.** Testes de integração (Haiku 5.5 com esforço `low`, instruções e texto no pedido, registro sem o texto, item intocado, recusas de 30 palavras, item com sugestão e item inexistente sem chamar a IA, recusa de número novo e de crescimento, resposta fora do formato) no PGlite e no Postgres; jornada de ponta a ponta (botão desabilitado, habilitado com 30 palavras, revisão no editor e desfazer); chamada real ao Haiku 5.5 com dois textos mal escritos: correções de gramática e tom ("a gente" virou "nós"), nenhum dado novo, e a instrução maliciosa embutida no texto tratada como conteúdo. Custo de cerca de 1.000 tokens de entrada e 130 de saída por revisão.
+
+### Conferência da fase I no ambiente publicado (26/10/2026)
+
+Deploy no Render às 14:05 UTC. Testes do grupo, conferidos no registro de requisições do Supabase: quatro revisões no item 28 da RFP-02 entre 14:13 e 14:14, todas com o Haiku 5.5 e com sucesso, cerca de 970 tokens de entrada e 100 de saída cada uma, de 1,1 a 1,9 s; o registro guarda só modelo, item, tokens e tempo, sem o texto.
+
+### I3. Resposta manual sem alerta a reconhecer (ajuste de 26/10/2026)
+- No teste do grupo, escrever num item sem rascunho trocava o cartão "Sem contexto" (fase H) pelo alerta "Resposta manual sem fonte", que precisava ser reconhecido por quem acabou de escrever.
+- Agora a resposta manual é só registro de autoria: não aparece no cartão de alertas, não conta como alerta pendente (lista de itens, filtro "Alerta pendente", tarefa "Pronta", Dashboard) e não bloqueia revisar nem aprovar. No lugar das fontes continua o cartão "Sem contexto", com "A resposta foi escrita manualmente.". A etiqueta "Resposta manual" e "escrita por [nome]" continuam. Só front; o backend já não exigia o reconhecimento para aprovar.
+- **Situação (26/10/2026): implementada.** Jornada de ponta a ponta: depois de escrever e recarregar, o cartão "Sem contexto" no lugar das fontes, nenhum alerta de resposta manual e "Marcar como revisado" habilitado.
 
 ### Pendências registradas em 24/10/2026 (fora da fase E, por decisão do grupo)
 1. **Fase A:** taxa de aceitação; RFP-03 e variantes de borda com a API real.
