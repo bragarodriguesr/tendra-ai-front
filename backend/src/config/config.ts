@@ -14,6 +14,8 @@ export interface ConfiguracaoDaIa {
   modeloDeIdentificacao: string;
   /** Modelo da segunda chamada, que aponta conflitos entre as fontes citadas (cenário 22). */
   modeloDeConflito: string;
+  /** Modelo do "Revisar com IA" das respostas manuais (cenário 65). Sem ele, o Haiku 5.5. */
+  modeloDeRevisaoDeTexto?: string;
   esforco: NivelDeEsforco;
   /** Perguntas por requisição de geração. */
   tamanhoDoLote: number;
@@ -45,6 +47,7 @@ const PORTA_PADRAO = 3000;
 const MODELO_PADRAO = "claude-sonnet-5-5";
 const MODELO_DE_IDENTIFICACAO_PADRAO = "claude-haiku-5-5";
 const MODELO_DE_CONFLITO_PADRAO = "claude-sonnet-5-5";
+export const MODELO_DE_REVISAO_DE_TEXTO_PADRAO = "claude-haiku-5-5";
 const ESFORCO_PADRAO: NivelDeEsforco = "medium";
 const TAMANHO_DO_LOTE_PADRAO = 10;
 const TAMANHO_MAXIMO_DO_LOTE = 50;
@@ -68,6 +71,7 @@ function lerVariaveisDaIa(ambiente: NodeJS.ProcessEnv, problemas: string[]): Con
     modelo: ambiente.TENDRA_MODELO?.trim() || MODELO_PADRAO,
     modeloDeIdentificacao: ambiente.TENDRA_MODELO_IDENTIFICACAO?.trim() || MODELO_DE_IDENTIFICACAO_PADRAO,
     modeloDeConflito: ambiente.TENDRA_MODELO_CONFLITO?.trim() || MODELO_DE_CONFLITO_PADRAO,
+    modeloDeRevisaoDeTexto: ambiente.TENDRA_MODELO_REVISAO_TEXTO?.trim() || MODELO_DE_REVISAO_DE_TEXTO_PADRAO,
     esforco: esforco ?? ESFORCO_PADRAO,
     tamanhoDoLote,
   };

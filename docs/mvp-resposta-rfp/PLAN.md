@@ -492,7 +492,32 @@ Pedida pelo grupo em 26/10/2026. Só front; sem mudança no backend nem no banco
 ### H3. Download com a revisão não finalizada
 - Com a tarefa ainda não "Pronta", "Baixar planilha preenchida" (detalhe da tarefa e Exportação) pede confirmação: "Baixar mesmo assim" baixa; "Voltar para revisão" fecha sem baixar.
 
-**Situação (26/10/2026): implementada.** Jornada de ponta a ponta com o pop-up ("Voltar para revisão" sem baixar, "Baixar mesmo assim" baixando) e conferência no navegador com um backend de teste com login: item sem rascunho com o cartão no lugar das fontes e sem a avaliação; 16 alertas com a lista rolando dentro da tela; "X" mantido depois de recarregar e desfeito por um novo login; alerta tratado pela ação fora mesmo depois de um novo login; aviso de 6 dias fora do sino; cartão de Tarefas recolhido depois de recarregar; tarefa pronta baixando direto, sem pop-up.
+**Situação (26/10/2026): implementada e conferida no ambiente publicado.** Jornada de ponta a ponta com o pop-up ("Voltar para revisão" sem baixar, "Baixar mesmo assim" baixando) e conferência no navegador com um backend de teste com login: item sem rascunho com o cartão no lugar das fontes e sem a avaliação; 16 alertas com a lista rolando dentro da tela; "X" mantido depois de recarregar e desfeito por um novo login; alerta tratado pela ação fora mesmo depois de um novo login; aviso de 6 dias fora do sino; cartão de Tarefas recolhido depois de recarregar; tarefa pronta baixando direto, sem pop-up.
+
+### Conferência da fase H no ambiente publicado (26/10/2026)
+
+Publicada pela Vercel com o merge às 13:27 UTC (só front; sem deploy do backend). Testes do grupo:
+
+| Etapa | Situação |
+|---|---|
+| H1 Item sem rascunho | Conferido pelo grupo (teste manual): cartão "Sem contexto" no lugar das fontes, com "Nenhuma fonte localizada", e sem "Esta resposta ajudou?". |
+| H2 Alertas | Conferido pelo grupo (teste manual): cartão de Tarefas recolhido; sino com rolagem, "X" por alerta, alerta tratado pela ação fora da lista e avisos com validade de 5 dias. |
+| H3 Download | Conferido: pop-up antes do download de tarefa não pronta; as planilhas das tarefas RFP-04 e RFP-02 foram baixadas às 13:33, nos logs do Render. |
+
+## Fase I: "Revisar com IA" na resposta manual
+
+Pedida pelo grupo em 26/10/2026. SPEC, cenário 65.
+
+### I1. Rota e instruções
+- `POST /api/tarefas/:id/itens/:numero/revisar-texto` com `{ texto }`: só para item sem sugestão da IA e texto de 30 palavras ou mais (até 8.000 caracteres). Devolve `{ texto }` revisado, sem gravar no item.
+- Instruções `revisao-texto-v1` (`src/ia/instrucoes/`): revisa gramática, norma escrita, coerência, clareza e tom profissional; proíbe acrescentar, deduzir ou remover informação e manda manter números, nomes, siglas, parágrafos e o nível de compromisso. O texto vai entre `<texto>` como conteúdo, nunca como instrução. Saída estruturada `{ texto }`.
+- Modelo próprio: `TENDRA_MODELO_REVISAO_TEXTO`, padrão Haiku 5.5, esforço `low`. Os modelos da geração, da identificação e do conflito não mudam. A versão dessas instruções fica fora do registro de comportamento do processamento (cenário 38), porque a revisão acontece depois, na tela.
+- O código confere a revisão: número que não está no texto ou crescimento acima de 50% em palavras recusam a revisão (422). A requisição entra no registro da tarefa (etapa `revisao-texto`), sem o texto.
+
+### I2. Botão no editor
+- No editor da resposta de item sem rascunho, "Revisar com IA" (ícone de estrelas) no canto inferior direito: desabilitado com a contagem "N de 30 palavras"; habilitado com gradiente limão animado (parado com movimento reduzido). Durante a revisão, o editor fica só leitura. O texto revisado entra no editor e é gravado como qualquer edição; "Desfazer revisão" volta ao texto anterior.
+
+**Situação (26/10/2026): implementada.** Testes de integração (Haiku 5.5 com esforço `low`, instruções e texto no pedido, registro sem o texto, item intocado, recusas de 30 palavras, item com sugestão e item inexistente sem chamar a IA, recusa de número novo e de crescimento, resposta fora do formato) no PGlite e no Postgres; jornada de ponta a ponta (botão desabilitado, habilitado com 30 palavras, revisão no editor e desfazer); chamada real ao Haiku 5.5 com dois textos mal escritos: correções de gramática e tom ("a gente" virou "nós"), nenhum dado novo, e a instrução maliciosa embutida no texto tratada como conteúdo. Custo de cerca de 1.000 tokens de entrada e 130 de saída por revisão.
 
 ### Pendências registradas em 24/10/2026 (fora da fase E, por decisão do grupo)
 1. **Fase A:** taxa de aceitação; RFP-03 e variantes de borda com a API real.

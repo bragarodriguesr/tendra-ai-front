@@ -101,6 +101,14 @@ export function criarApiSimulada(): ApiDoClaude {
   return {
     async gerar(parametros) {
       const texto = textoDoPedido(parametros);
+      // "Revisar com IA": a simulada só tira espaços repetidos e põe maiúscula no início de cada parágrafo.
+      if (texto.startsWith("<texto>\n")) {
+        const revisado = texto.slice("<texto>\n".length, -"\n</texto>".length)
+          .split(/\n\s*\n/)
+          .map((paragrafo) => paragrafo.replace(/[ \t]+/g, " ").trim().replace(/^\p{Ll}/u, (letra) => letra.toUpperCase()))
+          .join("\n\n");
+        return mensagem(parametros.model, [textoDoBloco(JSON.stringify({ texto: revisado }))]);
+      }
       if (parametros.output_config?.format) {
         // Identificação de perguntas ou conflito: a simulada nunca aponta conflito.
         return mensagem(parametros.model, [textoDoBloco(texto.startsWith("<planilha>") ? identificar(texto) : JSON.stringify({ itens: [] }))]);

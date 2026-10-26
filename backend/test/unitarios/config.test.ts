@@ -56,11 +56,12 @@ describe("Cenário 27 · configuração do backend", () => {
 });
 
 describe("Cenário 38 · configuração da IA", () => {
-  it("usa os padrões: Sonnet 5.5 na geração (temporário), Haiku 5.5 na identificação, Sonnet 5.5 no conflito, esforço medium e lote de 10", () => {
+  it("usa os padrões: Sonnet 5.5 na geração (temporário), Haiku 5.5 na identificação e na revisão de texto, Sonnet 5.5 no conflito, esforço medium e lote de 10", () => {
     expect(carregarConfiguracao({ ANTHROPIC_API_KEY: CHAVE_FALSA }, PASTA_BASE).ia).toEqual({
       modelo: "claude-sonnet-5-5",
       modeloDeIdentificacao: "claude-haiku-5-5",
       modeloDeConflito: "claude-sonnet-5-5",
+      modeloDeRevisaoDeTexto: "claude-haiku-5-5",
       esforco: "medium",
       tamanhoDoLote: 10,
     });
@@ -73,6 +74,7 @@ describe("Cenário 38 · configuração da IA", () => {
         TENDRA_MODELO: "claude-sonnet-5-5",
         TENDRA_MODELO_IDENTIFICACAO: "claude-haiku-5-5",
         TENDRA_MODELO_CONFLITO: "claude-sonnet-5-5",
+        TENDRA_MODELO_REVISAO_TEXTO: "claude-sonnet-5-5",
         TENDRA_ESFORCO: "high",
         TENDRA_TAMANHO_LOTE: "5",
       },
@@ -82,6 +84,7 @@ describe("Cenário 38 · configuração da IA", () => {
       modelo: "claude-sonnet-5-5",
       modeloDeIdentificacao: "claude-haiku-5-5",
       modeloDeConflito: "claude-sonnet-5-5",
+      modeloDeRevisaoDeTexto: "claude-sonnet-5-5",
       esforco: "high",
       tamanhoDoLote: 5,
     });

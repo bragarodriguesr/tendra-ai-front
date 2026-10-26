@@ -131,7 +131,7 @@ A checagem é **determinística** e acontece em dois momentos.
 | | |
 |---|---|
 | **O que acontece** | Na tela de revisão, a pessoa edita, restaura a sugestão, reconhece alertas, escolhe a fonte num conflito, marca como revisado, aprova e avalia (polegar com motivo). O backend grava cada ação com **quem** e **quando** e mantém o texto original da sugestão (`orig`). Na tela Tarefas, a tarefa pode ser excluída com todos os registros e arquivos dela. |
-| **IA?** | Não. A IA não participa de nenhuma decisão de revisão. |
+| **IA?** | Não nas decisões: a IA não aprova, não revisa e não escolhe nada. Exceção de apoio (fase I, 26/10/2026): "Revisar com IA" no editor da resposta manual (item sem rascunho), que corrige só a redação (gramática, norma escrita, coerência, clareza) com um modelo próprio, o Haiku 5.5 (`TENDRA_MODELO_REVISAO_TEXTO`), sem mudar os modelos das outras etapas. O texto revisado volta para o editor e a pessoa decide se fica; o código recusa a revisão que traz número novo ou cresce mais de 50%. A requisição entra no registro da tarefa, sem o texto. |
 | **Quem age** | Nas fases A a C não há login. A pessoa é uma das pessoas sintéticas do front (Kadu Mendes, Marcelo Vieira), enviada em cada requisição e validada contra uma lista de configuração. Na fase D essa informação passa a vir da sessão. Ver exceção E1. |
 | **Eventos** | Uma tabela de eventos só de inclusão registra edição, restauração, aprovação, remoção de aprovação, avaliação, alerta reconhecido, fonte escolhida e revisão. Os eventos só são apagados junto com a tarefa excluída. |
 | **Taxa de aceitação** | Relatório por tarefa: itens com rascunho, aprovados sem nenhuma edição, porcentagem média de texto alterado, itens sem rascunho e avaliações positivas e negativas. Consulta por rota e por comando. |
@@ -171,6 +171,7 @@ A organização das pastas está no `PLAN.md`.
 | **C. Front conectado** | Seletor de arquivo real na Nova RFP, progresso, revisão com ações gravadas (a Base já sai conectada da fase A) | Jornada ponta a ponta, da planilha à taxa de aceitação |
 | **D. Publicação compartilhada** | Login real, sessão, hospedagem (Render e Supabase) e segurança de exposição, conforme a fase 1 de `docs/referencia/mvp-proposta-1/PLAN.md` | Demonstração no ambiente compartilhado; checklist daquela fase |
 | **E. Revisão persistida e tarefas** | Reconhecer alerta, escolher fonte e marcar como revisado gravados no backend; exclusão de tarefa; tela Base só com "Subir documentos" | Testes de integração e a jornada ponta a ponta com recarga da página e exclusão |
+| **I. Revisar com IA** | Botão "Revisar com IA" no editor da resposta manual, a partir de 30 palavras; revisão só da redação com o Haiku 5.5 | Testes de integração (modelo, conferências, registro), jornada de ponta a ponta e chamada real conferida |
 | **G. Responsável, empresa e contatos** | Responsável entre os usuários da plataforma; empresa e contatos da Nova RFP em tabelas próprias; "Ver detalhes" na tela da tarefa | Testes de integração, cópia das tarefas antigas conferida e jornada de ponta a ponta |
 
 A fase A sozinha mostra se a ideia funciona. Se a qualidade das respostas não atingir os critérios, o ajuste acontece antes de investir em servidor, tela ou hospedagem. A fase D só começa depois de A, B e C aceitas.

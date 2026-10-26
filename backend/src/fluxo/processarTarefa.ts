@@ -29,7 +29,8 @@ export interface ComportamentoDaTarefa {
   esforco: ConfiguracaoDaIa["esforco"];
   modeloDeIdentificacao: string;
   modeloDeConflito: string;
-  instrucoes: typeof VERSOES_DAS_INSTRUCOES;
+  /** Instruções do processamento. A revisão de texto (cenário 65) é pedida depois, na tela, e não entra aqui. */
+  instrucoes: Omit<typeof VERSOES_DAS_INSTRUCOES, "revisaoDeTexto">;
 }
 
 export interface ResultadoDaTarefa {
@@ -148,7 +149,7 @@ export async function processarTarefa(opcoes: OpcoesDaTarefa): Promise<Resultado
       esforco: opcoes.ia.esforco,
       modeloDeIdentificacao: opcoes.ia.modeloDeIdentificacao,
       modeloDeConflito: opcoes.ia.modeloDeConflito,
-      instrucoes: VERSOES_DAS_INSTRUCOES,
+      instrucoes: { geracao: VERSOES_DAS_INSTRUCOES.geracao, identificacao: VERSOES_DAS_INSTRUCOES.identificacao, conflito: VERSOES_DAS_INSTRUCOES.conflito },
     },
     etapas,
     planilhaPreenchida,

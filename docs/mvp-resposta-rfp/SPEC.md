@@ -491,6 +491,19 @@ Estes cenários vêm de `docs/referencia/mvp-proposta-1/SPEC.md` (30, 36, 38, 39
 - **Then** uma barra lateral mostra a empresa (nome, CNPJ, tipo, prazo, responsável e arquivo) e os contatos na ordem em que foram informados (`GET /api/tarefas/:id/empresa`)
 - **And** sem contatos, a barra diz "Nenhum contato informado na importação."
 
+#### Cenário 65: revisar com IA a resposta manual
+- **Given** um item sem sugestão da IA (sem rascunho) com o editor da resposta aberto
+- **When** o texto do editor tem menos de 30 palavras
+- **Then** o botão "Revisar com IA" (ícone de estrelas) aparece desabilitado no canto inferior direito do editor, com a contagem de palavras
+- **When** o texto atinge 30 palavras, digitado ou colado
+- **Then** o botão fica habilitado, com um gradiente limão em movimento
+- **When** a pessoa usa o botão
+- **Then** o texto vai a `POST /api/tarefas/:id/itens/:numero/revisar-texto`, que revisa só gramática, norma escrita, coerência e clareza com o modelo da revisão de texto (padrão: Haiku 5.5, `TENDRA_MODELO_REVISAO_TEXTO`), sem mudar os modelos das demais etapas
+- **And** o texto revisado substitui o do editor e é gravado como qualquer edição; "Desfazer revisão" volta ao texto anterior
+- **And** a revisão não acrescenta nem deduz informação: a que traz número que não está no texto, ou cresce mais de 50% em palavras, é recusada (422) e o texto fica como estava
+- **And** a rota recusa texto com menos de 30 palavras (400) e item com sugestão da IA (409), sem chamar a IA; falha da IA dá 502 com o motivo
+- **And** a requisição entra no registro da tarefa (cenário 29), sem o texto
+
 ### Avaliação da IA
 
 #### Cenário 26: relatório de avaliação contra o gabarito

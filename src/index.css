@@ -110,3 +110,14 @@ label:has(> [role="switch"]) * { box-sizing: border-box; }
 .tdr-alerts-action { justify-self: start; display: inline-flex; align-items: center; gap: 4px; padding: 0; background: none; border: 0; font: inherit; font-size: 13px; font-weight: 600; color: var(--n-700); cursor: pointer; }
 .tdr-alerts-action:hover { color: var(--n-900); text-decoration: underline; text-underline-offset: 3px; }
 
+
+/* "Revisar com IA" (cenário 65): desabilitado até 30 palavras; habilitado, gradiente limão em movimento. */
+.tdr-ai-btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--n-200); background: var(--n-100); color: var(--n-400); font: inherit; font-size: 13px; font-weight: 600; cursor: not-allowed; }
+.tdr-ai-btn:not(:disabled) { cursor: pointer; color: var(--brand-ink); border-color: #A9D62A; background: linear-gradient(110deg, #C8F73D 0%, #E6FF9A 25%, #B6EA1E 50%, #E6FF9A 75%, #C8F73D 100%); background-size: 300% 100%; animation: tdr-ai-flow 3s linear infinite; box-shadow: 0 0 0 0 rgba(200, 247, 61, .6); }
+.tdr-ai-btn:not(:disabled):hover { box-shadow: 0 0 0 3px rgba(200, 247, 61, .45); }
+.tdr-ai-btn:focus-visible { outline: 2px solid var(--brand-ink); outline-offset: 2px; }
+.tdr-ai-btn.is-loading { cursor: progress; color: var(--brand-ink); border-color: #A9D62A; background: linear-gradient(110deg, #C8F73D, #E6FF9A, #C8F73D); background-size: 300% 100%; animation: tdr-ai-flow 1.2s linear infinite; }
+.tdr-ai-btn.is-loading svg { animation: tdr-ai-spin 1s linear infinite; }
+@keyframes tdr-ai-flow { from { background-position: 0% 50%; } to { background-position: 300% 50%; } }
+@keyframes tdr-ai-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .tdr-ai-btn, .tdr-ai-btn.is-loading, .tdr-ai-btn.is-loading svg { animation: none; } }

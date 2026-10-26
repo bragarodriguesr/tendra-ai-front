@@ -1,5 +1,5 @@
 import { AL, ST, code, plural, ITEM_TASKS, TODAY_ISO, OWN } from "./data.js";
-import { hojeIso } from "../api.js";
+import { hojeIso, contarPalavras, MINIMO_DE_PALAVRAS_DA_REVISAO } from "../api.js";
 
 const DANGER = "#A8402E";
 
@@ -317,6 +317,11 @@ export function buildView(s, ws) {
       srcDeck, otherSrcs: srcDeck ? srcs.filter((x) => !it.srcs[x.k - 1].conflict) : srcs, noSource,
       // "Esta resposta ajudou?" avalia a sugestão da IA: item sem rascunho não tem o que avaliar.
       canRate: it.orig !== "",
+      // "Revisar com IA" no editor da resposta manual (cenário 65): habilita a partir de 30 palavras.
+      aiReview: it.orig === "" ? ((n) => ({
+        words: n, min: MINIMO_DE_PALAVRAS_DA_REVISAO, ready: n >= MINIMO_DE_PALAVRAS_DA_REVISAO && !s.revisandoIa, loading: s.revisandoIa,
+        canUndo: !!s.antesDaIa && s.antesDaIa.id === it.id
+      }))(contarPalavras(text)) : null,
       code: code(it), st: st.l, icon: st.i, tone: st.tone, srcs, paras, noText: !hasAnswer,
       edited: it.orig !== "" && text !== it.orig, text,
       hasManual: it.alerts.some((a) => a.t === "manual"), manualBy: it.manualBy || (it.alerts.find((a) => a.t === "manual") || {}).by, isApproved: it.st === "aprovada",

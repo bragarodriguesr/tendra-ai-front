@@ -119,6 +119,11 @@ export const avaliarItemNaApi = (id, numero, pessoa, valor, motivo) =>
 export const reconhecerAlertaNaApi = (id, numero, pessoa, tipo) => pedir(doItem(id, numero, `alertas/${tipo}/reconhecer`), { method: "POST", corpo: { pessoa } });
 export const escolherFonteNaApi = (id, numero, pessoa, fonte) => pedir(doItem(id, numero, "fonte"), { method: "POST", corpo: { pessoa, fonte } });
 export const revisarItemNaApi = (id, numero, pessoa) => pedir(doItem(id, numero, "revisar"), { method: "POST", corpo: { pessoa } });
+/** "Revisar com IA" (cenário 65): devolve `{ texto }` revisado, sem gravar no item. */
+export const revisarTextoComIa = (id, numero, texto) => pedir(doItem(id, numero, "revisar-texto"), { method: "POST", corpo: { texto } });
+/** Palavras mínimas para "Revisar com IA", as mesmas do backend. */
+export const MINIMO_DE_PALAVRAS_DA_REVISAO = 30;
+export const contarPalavras = (texto) => (texto.match(/[\p{L}\p{N}]+(?:[-'’][\p{L}\p{N}]+)*/gu) || []).length;
 
 const DIA = 24 * 60 * 60 * 1000;
 const p2 = (n) => String(n).padStart(2, "0");

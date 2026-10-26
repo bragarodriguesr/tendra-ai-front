@@ -63,7 +63,8 @@ export class ErroDaIa extends Error {
   }
 }
 
-export type EtapaDaIa = "identificacao" | "geracao" | "conflito" | "contagem";
+/** "revisao-texto" é o "Revisar com IA" de uma resposta manual, pedido na tela de revisão (cenário 65). */
+export type EtapaDaIa = "identificacao" | "geracao" | "conflito" | "contagem" | "revisao-texto";
 
 /** Uma linha do registro de requisições (cenário 29). Sem chave e sem conteúdo. */
 export interface EntradaDoRegistro {

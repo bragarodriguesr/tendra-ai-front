@@ -10,6 +10,7 @@ export const VERSOES_DAS_INSTRUCOES = {
   geracao: "geracao-v3",
   identificacao: "identificacao-v1",
   conflito: "conflito-v2",
+  revisaoDeTexto: "revisao-texto-v1",
 } as const;
 
 export type NomeDasInstrucoes = keyof typeof VERSOES_DAS_INSTRUCOES;

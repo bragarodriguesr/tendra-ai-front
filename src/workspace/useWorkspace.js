@@ -2,7 +2,7 @@ import React from "react";
 import { seedItems, seedDocs, genItems, nowStr, ITEM_TASKS, GENERATED, TASKS, TASK_IDS } from "./data.js";
 import {
   MENSAGEM_FORMATO_DA_RFP, aprovarItemNaApi, avaliarItemNaApi, criarTarefa, editarTextoDoItem, listarAvaliacoes, listarPessoas, restaurarItem, dataHoraDaTela, definirDocumentoAtivo, enderecoDaPlanilha, enviarDocumentosDaBase, hojeIso, listarDocumentosDaBase, listarItensDaTarefa,
-  listarTarefas, paraDocumentoDaTela, paraItemDaTela, reconhecerAlertaNaApi, escolherFonteNaApi, revisarItemNaApi, excluirTarefa, obterEmpresaDaTarefa, listarUsuarios
+  listarTarefas, paraDocumentoDaTela, paraItemDaTela, reconhecerAlertaNaApi, escolherFonteNaApi, revisarItemNaApi, revisarTextoComIa, excluirTarefa, obterEmpresaDaTarefa, listarUsuarios
 , entrar, obterSessao, quandoPerderASessao, sair} from "../api.js";
 
 let contactSeq = 0;
@@ -51,6 +51,8 @@ const initialState = ({ initialScreen, role }) => ({
   fb: {}, saved: 0, tick: 0, taskRetry: false, alertsRead: {}, alertsHidden: {}, alertsDone: {},
   // Cartão de alertas da tela de Tarefas recolhido, e tarefa à espera da confirmação do download.
   tAlertsCollapsed: recolhidosAntes(), confirmDownload: null,
+  // "Revisar com IA" em andamento e o texto de antes da revisão, para desfazer (cenário 65).
+  revisandoIa: false, antesDaIa: null,
   vw: typeof window !== "undefined" ? window.innerWidth : 1440, navOpen: false, sideCollapsed: false
 });
 
@@ -226,7 +228,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         }
         // No celular a Revisão tem duas etapas: abre na lista, ou direto no item quando ele vem escolhido.
         const reviewPane = screen === "review" && extra.sel ? "item" : "list";
-        setState({ screen, navOpen: false, drawer: null, detalhes: null, edit: false, showOrig: false, reviewPane, ...sw, ...extra });
+        setState({ screen, navOpen: false, drawer: null, detalhes: null, edit: false, showOrig: false, antesDaIa: null, reviewPane, ...sw, ...extra });
       },
       showView(view) { setState({ view }); window.scrollTo(0, 0); },
       toast(title, desc, tone = "success") {
@@ -344,10 +346,42 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         if (text.trim() === "" && atual && atual.orig !== "") { delete pendingSaves.current[key]; return; }
         pendingSaves.current[key] = { tid: s.itemsTask, id: s.sel, pessoa: api.person(s).id, text, timer: setTimeout(() => api.flushSaves(key), 800) };
       },
+      /**
+       * "Revisar com IA" (cenário 65): manda o texto do editor para a revisão de redação e põe o texto
+       * revisado no editor, gravado como qualquer edição. O texto de antes fica para "Desfazer revisão".
+       */
+      async reviseWithAi() {
+        const s = ref.current, tid = s.itemsTask, id = s.sel;
+        const item = s.items.find((i) => i.id === id);
+        if (!item || s.revisandoIa) return;
+        const texto = item.paras.map((p) => p.t).join("\n\n");
+        if (!api.isServerItem(s)) { api.toast("Revisão com IA indisponível", "Inicie o servidor para revisar o texto com IA.", "neutral"); return; }
+        setState({ revisandoIa: true });
+        try {
+          const { texto: revisado } = await revisarTextoComIa(tid, api.numberOf(id), texto);
+          const atual = ref.current;
+          setState({ revisandoIa: false });
+          // A pessoa pode ter trocado de item enquanto a IA revisava: o texto revisado não vai para outro item.
+          if (atual.itemsTask !== tid || atual.sel !== id) return;
+          setState({ antesDaIa: { id, texto } });
+          api.onDraft(revisado);
+          api.toast("Texto revisado com IA", "Só a redação mudou. Confira antes de aprovar.");
+        } catch (e) {
+          setState({ revisandoIa: false });
+          api.toast("Texto não revisado", e.message, "danger");
+        }
+      },
+      undoAiReview() {
+        const antes = ref.current.antesDaIa;
+        if (!antes || antes.id !== ref.current.sel) return;
+        setState({ antesDaIa: null });
+        api.onDraft(antes.texto);
+        api.toast("Revisão desfeita", "O texto voltou ao que você escreveu.", "neutral");
+      },
       /** Escolhe o item na Revisão, gravando antes o texto pendente. */
       select(id) {
         api.flushSaves();
-        setState({ sel: id, edit: false, showOrig: false });
+        setState({ sel: id, edit: false, showOrig: false, antesDaIa: null });
       },
       /**
        * Ação de revisão gravada no backend (cenários 57 a 59): grava antes o texto pendente do item
