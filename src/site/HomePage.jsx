@@ -7,7 +7,22 @@ const Section = ({ children, tone, style, id }) => (
   </section>
 );
 
+// Marca true quando o elemento entra na tela (uma vez); sem IntersectionObserver, já nasce visível.
+function useRevealOnScroll() {
+  const ref = React.useRef(null);
+  const [shown, setShown] = React.useState(typeof IntersectionObserver === "undefined");
+  React.useEffect(() => {
+    const el = ref.current;
+    if (shown || !el) return undefined;
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setShown(true); io.disconnect(); } }, { threshold: 0.25 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [shown]);
+  return [ref, shown];
+}
+
 export function HomePage({ onPage }) {
+  const [aiRef, aiShown] = useRevealOnScroll();
   return (
     <>
       <Section>
@@ -94,7 +109,7 @@ export function HomePage({ onPage }) {
           <div className="tdr-site-ai-head">
             <div style={{ display: "grid", gap: "var(--space-5)" }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--space-2)", color: "var(--brand-ink)" }}>
-                <span className="tdr-site-ai-star" aria-hidden="true"><Icon name="sparkles" size="lg" /></span>
+                <span style={{ display: "inline-flex" }} aria-hidden="true"><Icon name="sparkles" size="lg" /></span>
                 <MonoLabel style={{ color: "var(--brand-ink)" }}>Plataforma AI native</MonoLabel>
               </span>
               <h2 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: "var(--text-d2-size)", lineHeight: "var(--text-d2-lh)", letterSpacing: "var(--text-d2-ls)", color: "var(--brand-ink)", maxWidth: "20ch", textWrap: "pretty" }}>
@@ -106,7 +121,7 @@ export function HomePage({ onPage }) {
             </p>
           </div>
 
-          <div className="tdr-site-ai-steps">
+          <div ref={aiRef} className={"tdr-site-ai-steps" + (aiShown ? " is-in" : "")}>
             {[
               { t: "Entende o edital", d: "Lê a planilha e separa as perguntas item por item. Se a estrutura fugir do padrão, a IA localiza as perguntas e a sua equipe confirma a lista.", tag: "IA + regras" },
               { t: "Redige com a sua base", d: "O modelo cruza cada pergunta com a base aprovada e escreve a resposta citando o documento e o trecho. Citação que não existe no documento é descartada.", tag: "IA com citação" },

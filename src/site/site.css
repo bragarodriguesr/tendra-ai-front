@@ -82,15 +82,16 @@
 /* "IA nativa": campo Aurora Limão em movimento; os dados ficam em cards brancos por cima. */
 .tdr-site-ai-head { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: var(--space-12); align-items: end; }
 .tdr-site-ai-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gutter-grid); }
-.tdr-site-ai-card { animation: tdr-rise 600ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 90ms); }
+.tdr-site-ai-card { opacity: 0; transform: translateY(28px); }
+.tdr-site-ai-steps.is-in .tdr-site-ai-card { animation: tdr-ai-reveal 900ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 280ms); }
+@keyframes tdr-ai-reveal { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
 .tdr-site-ai-chip { width: 44px; height: 44px; border-radius: var(--radius-lg); background: var(--brand-lime); color: var(--brand-ink); display: flex; align-items: center; justify-content: center; }
-.tdr-site-ai-star { display: inline-flex; animation: tdr-ai-twinkle 3.2s ease-in-out infinite; }
-@keyframes tdr-ai-twinkle { 0%, 100% { transform: scale(1) rotate(0); opacity: 1; } 50% { transform: scale(.82) rotate(12deg); opacity: .7; } }
 @media (max-width: 900px) {
   .tdr-site-ai-head { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
   .tdr-site-ai-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 600px) { .tdr-site-ai-steps { grid-template-columns: minmax(0, 1fr); } }
 @media (prefers-reduced-motion: reduce) {
-  .tdr-site-ai-card, .tdr-site-ai-star { animation: none; }
+  .tdr-site-ai-card { opacity: 1; transform: none; }
+  .tdr-site-ai-steps.is-in .tdr-site-ai-card { animation: none; }
 }
