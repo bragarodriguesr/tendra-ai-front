@@ -126,7 +126,11 @@ export function buildView(s, ws) {
   const pend = s.items.filter((i) => i.st !== "revisada" && i.st !== "aprovada").length;
   const go = (sc) => (e) => { e && e.preventDefault && e.preventDefault(); ws.go(sc); };
   const navGroups = [
-    { label: "Início", items: [{ value: "dashboard", label: "Dashboard", icon: "layout-dashboard", onClick: go("dashboard") }] },
+    { label: "Início", items: [
+      // Base vazia: Primeiros passos fica em destaque, com o gradiente limão em movimento do "Revisar com IA".
+      { value: "onboarding", label: "Primeiros passos", icon: "play", onClick: go("onboarding"), ...(ws.baseVazia(s) ? { className: "tdr-nav-destaque" } : null) },
+      { value: "dashboard", label: "Dashboard", icon: "layout-dashboard", onClick: go("dashboard") }
+    ] },
     { label: "Trabalho", items: [
       { value: "tasks", label: "Tarefas", icon: "layout-grid", count: taskIds.length, onClick: go("tasks") },
       { value: "review", label: "Revisão", icon: "eye", count: pend, onClick: go("review") },
@@ -134,9 +138,7 @@ export function buildView(s, ws) {
       { value: "history", label: "Histórico", icon: "history", onClick: go("history") }
     ] },
     { label: "Base", items: [
-      { value: "base", label: "Base de conhecimento", icon: "database", count: s.docs.length, onClick: go("base") },
-      // Base vazia: Primeiros passos fica em destaque, com a borda limão em movimento do "Revisar com IA".
-      { value: "onboarding", label: "Primeiros passos", icon: "play", onClick: go("onboarding"), ...(ws.baseVazia(s) ? { className: "tdr-nav-destaque" } : null) }
+      { value: "base", label: "Base de conhecimento", icon: "database", count: s.docs.length, onClick: go("base") }
     ] }
   ];
   const navValue = s.screen === "task" ? "tasks" : s.screen;

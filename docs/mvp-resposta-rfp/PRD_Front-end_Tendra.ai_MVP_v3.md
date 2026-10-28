@@ -150,9 +150,9 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 
 **Menu lateral** (grupos e itens, na ordem):
 
-- **Início:** Dashboard.
+- **Início:** Primeiros passos (acima do Dashboard desde 28/10/2026), Dashboard.
 - **Trabalho:** Tarefas (contagem de tarefas), Revisão (contagem dos itens ainda a trabalhar na tarefa aberta: sem rascunho, sugeridos e em revisão, fora os revisados e aprovados; antes de 26/10/2026 contava os itens com alerta pendente), Exportação, Histórico.
-- **Base:** Base de conhecimento (contagem de documentos), Primeiros passos.
+- **Base:** Base de conhecimento (contagem de documentos).
 - **Painel de demo** no rodapé: "Aprovar todos os itens" — **Simulado**, não vai para produção.
 
 **Jornada.** (0) A pessoa conhece o produto no site e entra pelo login. (1) A abertura leva ao Dashboard. (2) Na primeira vez, sobe documentos em Primeiros passos. (3) Cria a tarefa importando as perguntas da RFP e cadastrando a empresa. (4) Acompanha o processamento. (5) Revisa item a item, com fonte e alertas. (6) O Aprovador aprova cada item. (7) Exporta quando 100% está aprovado. (8) As aprovações e revisões passam a fazer parte do histórico consultável. O único laço de volta continua saindo da conferência de 100%: enquanto houver item pendente, a exportação não abre.
