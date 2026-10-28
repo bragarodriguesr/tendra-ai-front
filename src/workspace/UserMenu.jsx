@@ -4,9 +4,10 @@ import { usePopover } from "./usePopover.js";
 
 /**
  * Nome do usuário na barra superior; abre um menu com o perfil e a troca de usuário da demo. Com
- * login (fase D), o papel vem da sessão e não há troca de usuário (`onSwitch` nulo).
+ * login (fase D), o papel vem da sessão e não há troca de usuário (`onSwitch` nulo); a organização
+ * da sessão (fase K) aparece acima do perfil.
  */
-export function UserMenu({ name, role, onSwitch, onLogout }) {
+export function UserMenu({ name, role, organization, onSwitch, onLogout }) {
   const { open, setOpen, root, focusTrigger } = usePopover();
   const menuId = "tdr-user-menu";
 
@@ -27,6 +28,12 @@ export function UserMenu({ name, role, onSwitch, onLogout }) {
       </Button>
       {open ? (
         <div id={menuId} className="tdr-popover tdr-user-menu" role="group" aria-label="Usuário">
+          {organization ? (
+            <div style={{ display: "grid", gap: 4 }}>
+              <MonoLabel>Organização</MonoLabel>
+              <span style={{ fontWeight: 600, color: "var(--n-900)" }}>{organization}</span>
+            </div>
+          ) : null}
           <div style={{ display: "grid", gap: 4 }}>
             <MonoLabel>Perfil</MonoLabel>
             <span style={{ fontWeight: 600, color: "var(--n-900)" }}>{role}</span>

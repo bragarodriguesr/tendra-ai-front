@@ -63,7 +63,7 @@ export function WorkspaceBarActions({ v, state, ws, onLogout }) {
   return (
     <>
       <AlertsMenu alerts={v.taskAlerts} unread={v.alertsUnread} onRead={ws.readAlert} onReadAll={() => ws.readAllAlerts(v.taskAlerts.map((a) => a.key))} />
-      <UserMenu name={v.userName} role={state.role} onSwitch={state.sessao ? null : ws.switchRole} onLogout={onLogout} />
+      <UserMenu name={v.userName} role={state.role} organization={state.sessao ? state.sessao.organizacao : null} onSwitch={state.sessao ? null : ws.switchRole} onLogout={onLogout} />
       <span className="tdr-bar-logout">
         <Button size="sm" variant="inverse-secondary" icon="log-out" onClick={onLogout}>Sair</Button>
       </span>

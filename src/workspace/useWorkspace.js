@@ -6,6 +6,7 @@ import {
 , entrar, obterSessao, quandoPerderASessao, sair} from "../api.js";
 
 let contactSeq = 0;
+// Estado dos alertas no navegador, por dono: com login, organização e pessoa da sessão (fase K, cenário 75).
 const chaveDosAlertasLidos = (pessoa) => "tendra.alertasLidos." + pessoa;
 // Alertas do sino fechados no "X" (voltam no próximo login) e tratados pelo botão de ação (não voltam).
 const chaveDosAlertasFechados = (pessoa) => "tendra.alertasFechados." + pessoa;
@@ -49,7 +50,7 @@ const initialState = ({ initialScreen, role }) => ({
   usuarios: [], detalhes: null,
   // Tarefa à espera da confirmação de exclusão e exclusão em andamento (cenário 60).
   deleting: null, excluindo: false,
-  // Fase D: "compartilhado" quando o backend tem login; a sessão traz nome e papel da pessoa.
+  // Fase D: "compartilhado" quando o backend tem login; a sessão traz nome e papel da pessoa e, na fase K, o nome da organização.
   modo: "local", sessao: null,
   exported: null, exported4: null, exported8: null, expanded: null,
   form: emptyForm(),
@@ -95,6 +96,26 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         return p || (s.role === "Aprovador" ? { id: "marcelo", nome: "Marcelo Vieira" } : { id: "kadu", nome: "Kadu Mendes" });
       },
       name() { return api.person().nome; },
+      /**
+       * Dono do estado dos alertas no navegador. Com login, organização e pessoa: duas organizações
+       * com pessoas de mesmo nome não dividem o estado (cenário 75). Sem login, o nome da pessoa.
+       */
+      alertOwner(s = ref.current) {
+        return s.sessao ? `${s.sessao.organizacao || ""}.${s.sessao.nome}` : api.person(s).nome;
+      },
+      /**
+       * Esquece tudo o que veio do servidor para a sessão anterior: tarefas, itens, base, revisão e
+       * alertas voltam ao estado inicial, para nada de uma conta (ou organização) aparecer na seguinte
+       * (cenário 75). Ficam só as preferências da tela.
+       */
+      forgetSessionData() {
+        setRaw((s) => {
+          const next = { ...initialState({ initialScreen: "dashboard", role: s.role }), view: s.view, modo: s.modo, vw: s.vw, sideCollapsed: s.sideCollapsed, tAlertsCollapsed: s.tAlertsCollapsed };
+          ref.current = next;
+          return next;
+        });
+        generated.current = {};
+      },
       /** Descobre o modo do backend e recupera a sessão aberta (fase D, D9). */
       async iniciarSessao() {
         const { modo, pessoa } = await obterSessao();
@@ -106,9 +127,10 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         // Um "Sair" ainda em andamento termina antes: a resposta dele apaga o cookie e não pode apagar o da nova sessão.
         await saindo.current;
         const { pessoa } = await entrar(email, senha);
+        api.forgetSessionData();
         setState({ sessao: pessoa, role: pessoa.papel, pessoas: [] });
         // Novo login: os alertas fechados no "X" voltam a aparecer.
-        try { localStorage.removeItem(chaveDosAlertasFechados(pessoa.nome)); } catch { /* sem armazenamento */ }
+        try { localStorage.removeItem(chaveDosAlertasFechados(api.alertOwner())); } catch { /* sem armazenamento */ }
         api.loadAlertsRead();
         api.loadBase();
         api.loadTasks();
@@ -123,6 +145,8 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         const gravando = api.flushSaves();
         setState({ sessao: null, fb: {}, pessoas: [] });
         if (!tinhaSessao) return;
+        // Com login, nada da sessão que saiu fica na memória da tela (cenário 75).
+        api.forgetSessionData();
         saindo.current = gravando.then(() => sair()).catch(() => {});
         await saindo.current;
       },
@@ -135,7 +159,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
       markAlerts(campo, chave, keys) {
         setState((s) => {
           const mapa = { ...s[campo], ...Object.fromEntries(keys.map((k) => [k, true])) };
-          gravar(chave(api.person(s).nome), JSON.stringify(mapa));
+          gravar(chave(api.alertOwner(s)), JSON.stringify(mapa));
           return { [campo]: mapa };
         });
       },
@@ -143,8 +167,8 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
       loadAlertsRead() {
         // Atualização por função: a pessoa é a do estado já com a sessão ou o papel novos.
         setState((s) => {
-          const nome = api.person(s).nome;
-          return { alertsRead: lerMapa(chaveDosAlertasLidos(nome)), alertsHidden: lerMapa(chaveDosAlertasFechados(nome)), alertsDone: lerMapa(chaveDosAlertasTratados(nome)) };
+          const dono = api.alertOwner(s);
+          return { alertsRead: lerMapa(chaveDosAlertasLidos(dono)), alertsHidden: lerMapa(chaveDosAlertasFechados(dono)), alertsDone: lerMapa(chaveDosAlertasTratados(dono)) };
         });
       },
       /** Recolhe ou abre o cartão de alertas da tela de Tarefas; a escolha fica no navegador. */
@@ -768,6 +792,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
     quandoPerderASessao(() => {
       if (!ws.s.sessao) return;
       ws.setState({ sessao: null, view: "login" });
+      ws.forgetSessionData();
       ws.toast("Sessão encerrada", "Entre novamente para continuar.", "danger");
     });
   }, [ws]);

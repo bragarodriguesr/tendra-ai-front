@@ -506,7 +506,7 @@ Estes cenários vêm de `docs/referencia/mvp-proposta-1/SPEC.md` (30, 36, 38, 39
 
 ### Organizações: isolamento entre clientes da Tendra.ai (fase K)
 
-Pedido do grupo em 28/10/2026. A Tendra.ai é um SaaS: cada **organização** (a empresa usuária, cliente da Tendra.ai) só vê e só altera os próprios dados. É a segregação lógica de um multi-tenant: um banco único, com cada registro identificado pela organização dona e com cada consulta limitada a ela.
+Pedido do grupo em 28/10/2026 e implementado no mesmo dia (decisões PK1 a PK5 do `PLAN.md`, validadas pelo grupo). A Tendra.ai é um SaaS: cada **organização** (a empresa usuária, cliente da Tendra.ai) só vê e só altera os próprios dados. É a segregação lógica de um multi-tenant: um banco único, com cada registro identificado pela organização dona e com cada consulta limitada a ela.
 
 **Termos desta seção:**
 - **organização** é a empresa usuária, cliente da Tendra.ai. O termo foi escolhido para não colidir com **empresa**, que no produto continua a ser a empresa que emitiu a RFP (cenário 63);
@@ -590,7 +590,7 @@ Pedido do grupo em 28/10/2026. A Tendra.ai é um SaaS: cada **organização** (a
 - **When** ela abre o Dashboard, o sino de alertas, o painel de tarefas ou o menu lateral
 - **Then** os números, alertas e prazos saem só das tarefas e da base de A
 - **And** ao sair e entrar com outra conta no mesmo navegador, nada da sessão anterior continua na tela
-- **And** o estado local dos alertas (lidos, fechados e tratados, fase H) é guardado por organização e perfil, nunca só pelo nome
+- **And** o estado local dos alertas (lidos, fechados e tratados, fase H) é guardado por organização e pessoa, nunca só pelo nome da pessoa
 
 #### Cenário 76: arquivos separados por organização
 - **Given** uma planilha enviada ou preenchida de uma tarefa de A
@@ -614,17 +614,17 @@ Pedido do grupo em 28/10/2026. A Tendra.ai é um SaaS: cada **organização** (a
 #### Cenário 78: dados atuais e modo local
 - **Given** o banco antes da fase K
 - **When** a migração roda
-- **Then** a migração cria a organização inicial, e todos os dados existentes passam a ela, sem perda:
+- **Then** a migração cria a organização inicial, **Pulse Benefícios** (PK3), com um id fixo no código, e todos os dados existentes passam a ela, sem perda:
   - perfis e documentos;
   - tarefas e empresas, com o que pende delas;
-- **And** no modo local (sem login), tudo pertence a uma organização local única, criada pela migração; os comandos de terminal usam essa organização, ou a informada em `--organizacao`
+- **And** no modo local (sem login), tudo pertence à organização inicial; os comandos `carregar-base` e `responder` usam a inicial ou a informada em `--organizacao`
 
 #### Cenário 79: isolamento comprovado por teste
 - **Given** um banco de teste com as organizações A e B, cada uma com usuários, base, tarefas, itens revisados, empresas e arquivos
 - **When** a suíte de isolamento roda na integração contínua (PGlite e Postgres)
 - **Then** cada rota do Workspace, chamada por uma pessoa de A com identificadores de B, responde 404 ou devolve só dados de A
 - **And** a suíte falha quando surge uma rota nova que ela não cobre, comparando a lista de rotas do servidor com a lista testada
-- **And** a jornada de ponta a ponta entra com uma conta de A e confere que nada de B aparece
+- **And** no navegador, com um backend de teste com duas organizações: a conta de B, depois da de A no mesmo navegador, não vê tarefas, base nem alertas de A, e o menu do usuário mostra a organização de cada uma (a jornada de ponta a ponta continua no modo local, sem login)
 
 ### Avaliação da IA
 

@@ -47,7 +47,7 @@ async function pedir(caminho, { method = "GET", corpo } = {}) {
 
 /**
  * Modo do backend (fase D, D9): `GET /api/auth/me` só existe no modo compartilhado. 200 traz a
- * pessoa da sessão; 401, sem sessão; sem a rota ou sem o servidor, é o modo local (sem login).
+ * pessoa da sessão, com o nome da organização (fase K); 401, sem sessão; sem a rota ou sem o servidor, é o modo local (sem login).
  */
 export async function obterSessao() {
   try {
@@ -55,14 +55,20 @@ export async function obterSessao() {
     if (resposta.status === 401) return { modo: "compartilhado", pessoa: null };
     if (!resposta.ok) return { modo: "local", pessoa: null };
     const json = await resposta.json();
-    return { modo: "compartilhado", pessoa: json.pessoa };
+    return { modo: "compartilhado", pessoa: { ...json.pessoa, organizacao: json.organizacao?.nome } };
   } catch {
     return { modo: "local", pessoa: null };
   }
 }
 
-/** Login do modo compartilhado. Devolve `{ pessoa: { nome, papel } }`; recusa com a mensagem do backend (401, 429, 503). */
-export const entrar = (email, senha) => pedir("/auth/login", { method: "POST", corpo: { email, senha } });
+/**
+ * Login do modo compartilhado. Devolve `{ pessoa: { nome, papel, organizacao } }`, com o nome da
+ * organização da sessão (fase K); recusa com a mensagem do backend (401, 429, 503).
+ */
+export const entrar = async (email, senha) => {
+  const { pessoa, organizacao } = await pedir("/auth/login", { method: "POST", corpo: { email, senha } });
+  return { pessoa: { ...pessoa, organizacao: organizacao?.nome } };
+};
 export const sair = () => pedir("/auth/logout", { method: "POST" });
 
 function emBase64(buffer) {
