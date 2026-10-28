@@ -747,6 +747,24 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
   - com um item revisado, o passo 3 é concluído;
   - o título do passo 1 volta a ele.
 
+### K9. CNPJ alfanumérico (ajuste de 28/10/2026)
+- **Regra:** o campo CNPJ da Nova RFP aceita o CNPJ alfanumérico da IN RFB nº 2.229/2024, além do numérico.
+  - Formato: 12 posições com letras maiúsculas ou números, mais 2 dígitos verificadores numéricos.
+  - Os dígitos verificadores usam o mesmo módulo 11, com cada caractere valendo o código ASCII menos 48. Por exemplo, 12.ABC.345/01DE-35 é válido.
+  - Os CNPJs só numéricos continuam válidos.
+- **Front** (`src/workspace/cnpj.js`):
+  - a máscara aceita letras e as passa para maiúsculas;
+  - a validação confere o formato e os dígitos verificadores.
+- **Backend:**
+  - `regras/cnpj.ts` normaliza o CNPJ (sem máscara, em maiúsculas) e confere o formato;
+  - a rota recusa com 400 o CNPJ fora do formato;
+  - a empresa é a mesma com ou sem máscara;
+  - a migração `009_cnpj_alfanumerico.sql` troca a restrição do banco para `^[0-9A-Z]{12}[0-9]{2}$`.
+- **Situação (28/10/2026): implementada.**
+  - 352 testes no PGlite e no Postgres, incluindo: o CNPJ alfanumérico gravado e reconhecido com e sem máscara; a recusa de letra nos dígitos verificadores e de tamanho errado; e os testes de unidade da normalização.
+  - Jornada de ponta a ponta verde.
+  - Máscara e validação do front conferidas com o exemplo oficial.
+
 ## Definição de pronto (proposta, P10)
 
 Uma etapa só é concluída quando:

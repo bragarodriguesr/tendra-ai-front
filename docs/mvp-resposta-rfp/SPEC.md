@@ -480,6 +480,11 @@ Estes cenários vêm de `docs/referencia/mvp-proposta-1/SPEC.md` (30, 36, 38, 39
 - **When** a tarefa é gravada
 - **Then** a empresa e os contatos ficam nas tabelas `empresas`, `contatos` e `tarefa_contatos`, ligados à tarefa, na mesma transação da criação
 - **And** a empresa é a mesma quando o CNPJ é igual ou, sem CNPJ, quando o nome é igual (sem diferenciar maiúsculas); o nome fica o mais recente
+- **And** o CNPJ pode ser numérico ou alfanumérico (IN RFB nº 2.229/2024, desde 28/10/2026):
+  - formato: 12 letras maiúsculas ou números e 2 dígitos verificadores numéricos;
+  - é gravado sem máscara e em maiúsculas, e com ou sem máscara é a mesma empresa;
+  - o backend recusa com 400 o CNPJ fora desse formato;
+  - os dígitos verificadores são conferidos pela tela Nova RFP.
 - **And** o contato com e-mail é o mesmo em todas as tarefas da empresa e fica com os dados mais recentes; contato sem nenhum campo preenchido é ignorado
 - **And** tarefa sem empresa não grava empresa; tarefas anteriores têm empresa e contatos copiados de `tarefas.dados` pela migração
 - **And** excluir a tarefa (cenário 60) apaga só a ligação com os contatos; empresa e contatos ficam para consulta

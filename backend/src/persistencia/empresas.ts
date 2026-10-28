@@ -1,3 +1,4 @@
+import { normalizarCnpj } from "../regras/cnpj.ts";
 import type { Banco } from "./banco.ts";
 import type { DadosDaTarefa } from "./tarefas.ts";
 
@@ -24,8 +25,8 @@ export async function gravarEmpresaDaTarefa(transacao: Transacao, tarefa: { tare
   const { tarefaId, organizacaoId } = tarefa;
   const nome = limpo(dados.empresa);
   if (nome === "") return;
-  const digitos = (dados.cnpj ?? "").replace(/\D/g, "");
-  const cnpj = digitos.length === 14 ? digitos : null;
+  // Numérico ou alfanumérico, sem máscara e em maiúsculas.
+  const cnpj = normalizarCnpj(dados.cnpj);
 
   const existente = await transacao.query<{ id: number }>(
     cnpj === null

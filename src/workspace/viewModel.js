@@ -1,20 +1,10 @@
 import { AL, ST, code, plural, ITEM_TASKS, TODAY_ISO, OWN } from "./data.js";
 import { hojeIso, contarPalavras, MINIMO_DE_PALAVRAS_DA_REVISAO } from "../api.js";
+import { cnpjSemMascara, cnpjValido } from "./cnpj.js";
 
 const DANGER = "#A8402E";
 
 // Camadas de "cartões sobrepostos" atrás do alerta visível (até duas bordas).
-/** Confere os dois dígitos verificadores do CNPJ (14 dígitos, sem máscara). */
-function cnpjValid(d) {
-  if (/^(\d)\1{13}$/.test(d)) return false;
-  const dv = (len) => {
-    let sum = 0, w = len - 7;
-    for (let i = 0; i < len; i++) { sum += +d[i] * w--; if (w < 2) w = 9; }
-    const r = sum % 11;
-    return r < 2 ? 0 : 11 - r;
-  };
-  return dv(12) === +d[12] && dv(13) === +d[13];
-}
 
 const MESES = [["Jan", "janeiro"], ["Fev", "fevereiro"], ["Mar", "março"], ["Abr", "abril"], ["Mai", "maio"], ["Jun", "junho"], ["Jul", "julho"], ["Ago", "agosto"], ["Set", "setembro"], ["Out", "outubro"], ["Nov", "novembro"], ["Dez", "dezembro"]];
 
@@ -480,8 +470,9 @@ export function buildView(s, ws) {
   // formulário de nova RFP
   const f = s.form, tried = f.tried, today = online ? hojeIso() : TODAY_ISO;
   const dueErr = tried && (!f.due ? "Informe o prazo de submissão." : f.due < today ? "O prazo não pode estar no passado." : null);
-  const cnpjDigits = f.cnpj.replace(/\D/g, "");
-  const errCnpj = !f.cnpj ? null : cnpjDigits.length < 14 ? "CNPJ incompleto." : !cnpjValid(cnpjDigits) ? "CNPJ inválido." : null;
+  // CNPJ numérico ou alfanumérico (IN RFB nº 2.229/2024).
+  const cnpjDigits = cnpjSemMascara(f.cnpj);
+  const errCnpj = !f.cnpj ? null : cnpjDigits.length < 14 ? "CNPJ incompleto." : !cnpjValido(cnpjDigits) ? "CNPJ inválido." : null;
   const contacts = f.contacts.map((ct) => ({
     ...ct,
     errEmail: ct.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ct.email) ? "E-mail inválido." : null,

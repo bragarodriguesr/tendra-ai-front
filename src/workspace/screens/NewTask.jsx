@@ -2,12 +2,9 @@ import React from "react";
 import { Badge, Button, Field, Icon, IconButton, Input, MonoLabel, Select } from "../../ds/index.js";
 import { ClickRow, DISPLAY, Page, card, h1Style, mono } from "../ui.jsx";
 import { newContact } from "../useWorkspace.js";
+import { mascararCnpj } from "../cnpj.js";
 
-// máscaras: 00.000.000/0000-00 e (00) 00000-0000
-const maskCnpj = (v) => {
-  const d = v.replace(/\D/g, "").slice(0, 14);
-  return d.replace(/^(\d{2})(\d)/, "$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3").replace(/\.(\d{3})(\d)/, ".$1/$2").replace(/(\d{4})(\d)/, "$1-$2");
-};
+// máscara do telefone: (00) 00000-0000; a do CNPJ, numérico ou alfanumérico, está em cnpj.js
 const maskPhone = (v) => {
   const d = v.replace(/\D/g, "").slice(0, 11);
   if (d.length <= 2) return d.length ? "(" + d : "";
@@ -74,7 +71,7 @@ export function NewTask({ v, ws, state, pad, isMobile }) {
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "1fr 1fr", gap: 20, alignItems: "start" }}>
             <Field label="Empresa" required error={f.errCompany} htmlFor="nt-company"><Input id="nt-company" value={f.company} placeholder="Empresa que enviou o edital" onChange={set("company")} invalid={!!f.errCompany} /></Field>
             <Field label="CNPJ" error={f.errCnpj} htmlFor="nt-cnpj">
-              <Input id="nt-cnpj" mono inputMode="numeric" value={f.cnpj} placeholder="00.000.000/0000-00" onChange={(e) => ws.setState((x) => ({ form: { ...x.form, cnpj: maskCnpj(e.target.value) } }))} invalid={!!f.errCnpj} />
+              <Input id="nt-cnpj" mono autoCapitalize="characters" autoComplete="off" spellCheck={false} value={f.cnpj} placeholder="00.000.000/0000-00" onChange={(e) => ws.setState((x) => ({ form: { ...x.form, cnpj: mascararCnpj(e.target.value) } }))} invalid={!!f.errCnpj} />
             </Field>
             <Field label="Tipo" required htmlFor="nt-type"><Select id="nt-type" options={["RFP", "RFI"]} value={f.type} onChange={set("type")} /></Field>
             <Field label="Prazo de submissão" required error={f.errDue} htmlFor="nt-due"><Input id="nt-due" type="date" value={f.due} onChange={set("due")} invalid={!!f.errDue} /></Field>
