@@ -660,7 +660,7 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
 #### K7. (opcional, PK2) Row Level Security por organização
 - Fora da fase K, por decisão do grupo (PK2). Fica descrita em PK2 para uma evolução.
 
-### Situação (28/10/2026): implementada; falta a conferência no publicado
+### Situação (28/10/2026): implementada e conferida no ambiente publicado
 
 **Implementado:**
 - **Banco:** migração `008_organizacoes.sql` e `src/persistencia/organizacoes.ts`, com a organização inicial Pulse Benefícios.
@@ -698,12 +698,22 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
 - 349 testes no PGlite e no Postgres; jornada de ponta a ponta verde.
 - No navegador, com um backend de teste de duas organizações: a conta de B, depois da de A no mesmo navegador, não vê tarefas, base nem alertas de A, e o menu mostra a organização de cada conta.
 
-**Para a conferência no publicado (K6), depois do merge:**
-1. O deploy do Render aplica a migração no Supabase.
-2. Conferir por consulta: tudo na Pulse Benefícios, nenhuma linha sem organização.
-3. O grupo cria no Supabase Auth a conta da organização B (Authentication → Add user, já confirmada).
-4. Rodar `cadastrar-organizacao "Organização de teste B"` e `cadastrar-perfil` com o id devolvido.
-5. Entrar com as duas contas e conferir o isolamento.
+### Conferência da fase K no ambiente publicado (28/10/2026)
+- **Deploy e migração:** o deploy no Render (13:47 UTC) aplicou a migração 008 no Supabase. Por consulta, tudo ficou na Pulse Benefícios e nenhuma linha ficou sem organização:
+  - 3 perfis, 16 documentos, 3 tarefas e 5 empresas;
+  - os 135 itens e os 5 contatos continuaram ligados às suas tarefas e empresas.
+- **Segunda organização:** em vez da "Organização de teste B", o grupo pediu a **Vereda Documental** (id `65635a84-867d-4068-9321-9db7bfbc1f03`).
+  - Foi criada pelo conector do Supabase, numa transação, com as mesmas regras dos comandos `cadastrar-organizacao` e `cadastrar-perfil`.
+  - Três contas já criadas no Supabase Auth: Antônio Carlos (Aprovador), José Fernando e Maria Clara (Revisores).
+- **Isolamento**, conferido pelo grupo no teste manual e no banco:
+  - José Fernando entrou na Vereda e subiu 16 documentos às 15:41 UTC. Nove deles têm o mesmo nome de arquivo de documentos da Pulse e ficaram como documentos separados.
+  - A base da Pulse não mudou: 16 documentos, o último de 24/10.
+  - As tarefas e empresas da Pulse seguem só na Pulse. A Vereda segue sem tarefas e sem empresas.
+- **Primeiros passos guiados (K8)** e o destaque do menu, conferidos pelo grupo com a Vereda ainda de base vazia:
+  - login em Primeiros passos;
+  - "Nova RFP/RFI" desabilitado;
+  - avanço para o passo 2 com o primeiro documento.
+  - O destaque em gradiente limão em movimento entrou com os PRs #70 e #71. O #71 corrigiu a animação, que estava parada: o `!important` do atalho `background` fixava a posição do fundo.
 
 ### Atualizações de documentos na implementação
 - `ARQUITETURA_MAPPING.md`: a exceção E2 sai, e a seção do isolamento entra.
@@ -726,7 +736,7 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
   - só front; os passos usam os dados que a tela já lê (base, tarefas e itens da organização);
   - o `SidebarNav` do DS passou a aceitar `className` por item;
   - a primeira tela depois do login é decidida com os documentos devolvidos pela leitura da base.
-- **Situação (28/10/2026): implementada.** Build e jornada de ponta a ponta verdes. No navegador, com um backend de teste e a conta de uma organização de base vazia, conferi:
+- **Situação (28/10/2026): implementada e conferida no ambiente publicado** (ver a conferência da fase K). Build e jornada de ponta a ponta verdes. No navegador, com um backend de teste e a conta de uma organização de base vazia, conferi:
   - o login abre Primeiros passos;
   - "Primeiros passos" aparece em destaque no menu;
   - os passos 2 e 3 estão bloqueados;
