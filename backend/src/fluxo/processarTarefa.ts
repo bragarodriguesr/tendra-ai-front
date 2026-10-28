@@ -94,7 +94,7 @@ export async function processarTarefa(opcoes: OpcoesDaTarefa): Promise<Resultado
   const perguntas = identificacao.perguntas.map((pergunta, posicao) => ({ numero: posicao + 1, texto: pergunta.texto }));
   await opcoes.aoProgredir?.(0, perguntas.length);
 
-  const fontes = await medir("contexto", () => buscarFontes({ banco: opcoes.banco, organizacaoId: opcoes.organizacaoId, cliente: opcoes.cliente, modelo: opcoes.ia.modelo }));
+  const fontes = await medir("contexto", () => buscarFontes({ banco: opcoes.banco, organizacaoId: opcoes.organizacaoId, cliente: opcoes.cliente, modelo: opcoes.ia.modelo, hoje: opcoes.hoje }));
 
   let checados: ItemChecado[];
   if (fontes.tipo === "vazia") {

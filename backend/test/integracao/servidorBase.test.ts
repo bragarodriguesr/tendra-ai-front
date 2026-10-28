@@ -6,6 +6,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { LIMITE_DO_ENVIO_EM_BYTES, criarServidor } from "../../src/http/servidor.ts";
 import { abrirBancoDeTeste } from "../apoio/banco.ts";
 import type { Banco } from "../../src/persistencia/banco.ts";
+import { listarDocumentosAtivos } from "../../src/persistencia/documentos.ts";
+import { ORGANIZACAO_INICIAL } from "../../src/persistencia/organizacoes.ts";
 
 /** Rotas da tela Base de conhecimento: listar, enviar `.md` e ativar ou desativar (cenários 7 a 9, 39 e 40). */
 const PULSE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../base-sintetica/pulse-beneficios");
@@ -133,5 +135,39 @@ describe("GET e PATCH /api/base/documentos · lista e cenário 40", () => {
 
     expect((await servidor.inject({ method: "PATCH", url: "/api/base/documentos/abc", payload: { ativo: false } })).statusCode).toBe(400);
     expect((await servidor.inject({ method: "PATCH", url: "/api/base/documentos/1", payload: { ativo: "não" } })).statusCode).toBe(400);
+  });
+});
+
+describe("Cenário 80 · validade do documento", () => {
+  const md = (nome: string, validade: string | null) => ({
+    nome,
+    conteudoBase64: Buffer.from(
+      `---\ntitulo: Documento ${nome}\ntipo: documento\natualizado_em: 2026-10-01\n${validade === null ? "" : `validade: ${validade}\n`}---\n\n# Seção\n\nTexto.\n`,
+    ).toString("base64"),
+  });
+
+  it("devolve a validade (ou null, Indefinido) e marca como vencido, inativo, o documento com validade atingida", async () => {
+    const resposta = await enviar({ arquivos: [md("sem-validade.md", null), md("valido.md", "2026-12-31"), md("vence-hoje.md", HOJE)] });
+    expect(resposta.json().resumo.avisos).toEqual([{ nome: "vence-hoje.md", mensagem: `validade ${HOJE} já atingida: o documento entra como Vencido e não vai para a geração.` }]);
+    const porNome = Object.fromEntries((resposta.json().documentos as { nome: string }[]).map((documento) => [documento.nome, documento]));
+    expect(porNome["sem-validade.md"]).toMatchObject({ validade: null, vencido: false, ativo: true });
+    expect(porNome["valido.md"]).toMatchObject({ validade: "2026-12-31", vencido: false, ativo: true });
+    expect(porNome["vence-hoje.md"]).toMatchObject({ validade: HOJE, vencido: true, ativo: false });
+  });
+
+  it("documento vencido não pode ser reativado; desativar continua possível", async () => {
+    await enviar({ arquivos: [md("vencido.md", "2026-10-10")] });
+    const reativar = await servidor.inject({ method: "PATCH", url: "/api/base/documentos/1", payload: { ativo: true } });
+    expect({ status: reativar.statusCode, erro: reativar.json().erro }).toEqual({ status: 409, erro: "Documento vencido não pode ser reativado. Envie uma versão com nova validade." });
+    const desativar = await servidor.inject({ method: "PATCH", url: "/api/base/documentos/1", payload: { ativo: false } });
+    expect(desativar.json().documento).toMatchObject({ vencido: true, ativo: false });
+  });
+
+  it("uma nova versão do arquivo com validade futura volta a valer, e o documento vencido fica fora da geração", async () => {
+    await enviar({ arquivos: [md("renovado.md", "2026-10-10")] });
+    expect(await listarDocumentosAtivos(banco, ORGANIZACAO_INICIAL, HOJE)).toEqual([]);
+    const renovado = await enviar({ arquivos: [md("renovado.md", "2027-10-10")] });
+    expect(renovado.json().documentos[0]).toMatchObject({ validade: "2027-10-10", vencido: false, ativo: true });
+    expect((await listarDocumentosAtivos(banco, ORGANIZACAO_INICIAL, HOJE)).map((documento) => documento.nome)).toEqual(["renovado.md"]);
   });
 });

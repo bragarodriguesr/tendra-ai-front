@@ -1,5 +1,6 @@
 import Fastify, { type FastifyBaseLogger, type FastifyError, type FastifyInstance } from "fastify";
 import { carregarArquivos, type ArquivoParaCarga } from "../base/carga.ts";
+import { estaVencido } from "../base/cabecalho.ts";
 import type { Banco } from "../persistencia/banco.ts";
 import { definirAtivo, listarDocumentos, type DocumentoGravado } from "../persistencia/documentos.ts";
 import { ErroDaRota } from "./erros.ts";
@@ -44,6 +45,11 @@ export interface DocumentoDaBase {
   tipo: DocumentoGravado["tipo"];
   atualizadoEm: string;
   versao: string | null;
+  /** Validade (AAAA-MM-DD) ou null ("Indefinido" na tela). */
+  validade: string | null;
+  /** Validade atingida (cenário 80): fora da geração e sem reativação. */
+  vencido: boolean;
+  /** Ativo de fato: ligado na chave e não vencido. */
   ativo: boolean;
   enviadoPor: string | null;
   carregadoEm: string;
@@ -55,17 +61,25 @@ interface CorpoDoEnvio {
 }
 
 
-const paraTela = (documento: DocumentoGravado): DocumentoDaBase => ({
-  id: documento.id,
-  nome: documento.nome,
-  titulo: documento.titulo,
-  tipo: documento.tipo,
-  atualizadoEm: documento.atualizadoEm,
-  versao: documento.versao,
-  ativo: documento.ativo,
-  enviadoPor: documento.enviadoPor,
-  carregadoEm: documento.carregadoEm,
-});
+export const MENSAGEM_DE_DOCUMENTO_VENCIDO = "Documento vencido não pode ser reativado. Envie uma versão com nova validade.";
+
+/** Documento como a tela o recebe, com o vencimento calculado pela data de hoje do backend. */
+const paraTela = (hoje: string) => (documento: DocumentoGravado): DocumentoDaBase => {
+  const vencido = estaVencido(documento.validade, hoje);
+  return {
+    id: documento.id,
+    nome: documento.nome,
+    titulo: documento.titulo,
+    tipo: documento.tipo,
+    atualizadoEm: documento.atualizadoEm,
+    versao: documento.versao,
+    validade: documento.validade,
+    vencido,
+    ativo: documento.ativo && !vencido,
+    enviadoPor: documento.enviadoPor,
+    carregadoEm: documento.carregadoEm,
+  };
+};
 
 /**
  * Servidor HTTP local do backend. Rotas da base de conhecimento (listar, enviar `.md` com a mesma
@@ -131,7 +145,7 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
   servidor.get("/api/saude", async () => ({ ok: true }));
 
   servidor.get("/api/base/documentos", async (pedido) => ({
-    documentos: (await listarDocumentos(banco, organizacaoDo(pedido))).map(paraTela),
+    documentos: (await listarDocumentos(banco, organizacaoDo(pedido))).map(paraTela(hoje())),
   }));
 
   servidor.post<{ Body: CorpoDoEnvio }>(
@@ -185,7 +199,7 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
         },
         "Envio para a base",
       );
-      return { resumo, documentos: (await listarDocumentos(banco, organizacaoId)).map(paraTela) };
+      return { resumo, documentos: (await listarDocumentos(banco, organizacaoId)).map(paraTela(hoje())) };
     },
   );
 
@@ -203,10 +217,17 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
       },
     },
     async (pedido) => {
+      const organizacaoId = organizacaoDo(pedido);
+      const id = Number(pedido.params.id);
+      // Documento vencido não volta a ser ativo pela chave (cenário 80): só uma versão com nova validade.
+      if (pedido.body.ativo) {
+        const atual = (await listarDocumentos(banco, organizacaoId)).find((documento) => documento.id === id);
+        if (atual !== undefined && estaVencido(atual.validade, hoje())) throw new ErroDaRota(409, MENSAGEM_DE_DOCUMENTO_VENCIDO);
+      }
       // Documento de outra organização: 404, igual ao inexistente (cenário 70).
-      const documento = await definirAtivo(banco, organizacaoDo(pedido), Number(pedido.params.id), pedido.body.ativo);
+      const documento = await definirAtivo(banco, organizacaoId, id, pedido.body.ativo);
       if (documento === null) throw new ErroDaRota(404, "Documento não encontrado na base.");
-      return { documento: paraTela(documento) };
+      return { documento: paraTela(hoje())(documento) };
     },
   );
 

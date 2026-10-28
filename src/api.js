@@ -174,6 +174,9 @@ export function paraDocumentoDaTela(d, hoje = new Date()) {
     st: "pronto",
     by: d.enviadoPor || "—",
     ver: d.versao || "",
+    // Validade do cabeçalho (cenário 80): "Indefinido" sem ela; vencido, o documento fica inativo de vez.
+    validity: d.validade ? d.validade.split("-").reverse().join("/") : "Indefinido",
+    expired: !!d.vencido,
     off: !d.ativo
   };
 }

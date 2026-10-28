@@ -2,9 +2,9 @@ import React from "react";
 import { Badge, Button, EmptyState, Icon, IconButton, MonoLabel, Select, Switch, Tooltip } from "../../ds/index.js";
 import { Page, card, h1Style, mono } from "../ui.jsx";
 
-const COLS = "minmax(0,2.2fr) 100px 110px 170px minmax(150px,1fr) 120px 110px";
+const COLS = "minmax(0,2fr) 96px 96px 100px 150px minmax(130px,1fr) 110px 90px";
 const rowGrid = { display: "grid", minWidth: 1040, gridTemplateColumns: COLS, gap: 16 };
-const SORT_OPTIONS = [{ value: "idade", label: "Ordenar por idade" }, { value: "nome", label: "Ordenar por nome" }, { value: "upload", label: "Ordenar por envio" }];
+const SORT_OPTIONS = [{ value: "idade", label: "Ordenar por idade" }, { value: "nome", label: "Ordenar por nome" }, { value: "upload", label: "Ordenar por envio" }, { value: "status", label: "Ordenar por status" }];
 
 function DocActions({ d }) {
   return (
@@ -15,7 +15,7 @@ function DocActions({ d }) {
         </Tooltip>
       ) : null}
       <Tooltip content={d.toggleLabel} placement="top">
-        <Switch checked={d.active} onChange={d.toggle} aria-label={d.toggleLabel} />
+        <Switch checked={d.active} disabled={d.toggleDisabled} onChange={d.toggle} aria-label={d.toggleLabel} />
       </Tooltip>
     </div>
   );
@@ -74,7 +74,7 @@ function DocCards({ docs }) {
             {d.old ? <Badge tone="danger" icon="clock">Mais de 120 dias</Badge> : null}
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-            <span style={mono(12, "var(--n-500)")}>Atualizado {d.upd} · {d.ageText}</span>
+            <span style={mono(12, "var(--n-500)")}>Atualizado {d.upd} · {d.ageText} · Validade {d.validity}</span>
             <DocActions d={d} />
           </div>
         </div>
@@ -111,7 +111,7 @@ export function Base({ v, ws, state, pad, isMobile }) {
         )}
       </div>
       <span style={{ fontSize: 13, color: "var(--n-500)" }}>
-        Aceita arquivos <b style={mono(13, "inherit")}>.md</b> com o cabeçalho de título, tipo e data de atualização, até 10 MB por envio. O tipo de cada arquivo (documento ou RFP passada) vem do cabeçalho. Enviar de novo um arquivo com o mesmo nome atualiza o documento.
+        Aceita arquivos <b style={mono(13, "inherit")}>.md</b> com o cabeçalho de título, tipo, data de atualização e, se houver, validade (<span style={mono(12, "inherit")}>validade: AAAA-MM-DD</span>), até 10 MB por envio. Na data da validade, o documento vence e fica inativo. O tipo de cada arquivo (documento ou RFP passada) vem do cabeçalho. Enviar de novo um arquivo com o mesmo nome atualiza o documento.
       </span>
       {state.baseOrigem === "exemplo" ? (
         <div role="note" style={card(12, { padding: "12px 16px", display: "flex", gap: 10, alignItems: "flex-start", background: "var(--n-050)" })}>
@@ -125,7 +125,7 @@ export function Base({ v, ws, state, pad, isMobile }) {
       ) : isMobile ? <DocCards docs={v.docs} /> : (
       <div style={card(14, { overflowX: "auto", overflowY: "hidden" })}>
         <div style={{ ...rowGrid, padding: "12px 20px", background: "var(--n-050)", borderBottom: "1px solid var(--n-200)", ...mono(11, "var(--n-400)"), letterSpacing: ".1em", textTransform: "uppercase" }}>
-          <span>Documento</span><span>Tipo</span><span>Atualizado</span><span>Idade</span><span>Status</span><span>Enviado por</span><span>Ações</span>
+          <span>Documento</span><span>Tipo</span><span>Atualizado</span><span>Validade</span><span>Idade</span><span>Status</span><span>Enviado por</span><span>Ações</span>
         </div>
         {v.docs.map((d) => (
           <div key={d.id} style={{ ...rowGrid, padding: "14px 20px", borderTop: "1px solid var(--n-100)", alignItems: "center" }}>
@@ -135,6 +135,7 @@ export function Base({ v, ws, state, pad, isMobile }) {
             </div>
             <span>{d.type}</span>
             <span style={mono(12, "inherit")}>{d.upd}</span>
+            <span style={mono(12, d.expired ? "var(--danger)" : "inherit")}>{d.validity}</span>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
               <span style={mono(13)}>{d.ageText}</span>
               {d.old ? <Badge tone="danger" icon="clock">Mais de 120 dias</Badge> : null}

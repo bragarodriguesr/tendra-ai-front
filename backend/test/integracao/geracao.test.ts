@@ -40,18 +40,18 @@ beforeEach(async () => {
 const carregar = () => carregarBase({ organizacaoId: ORGANIZACAO_INICIAL, pasta: path.join(PULSE, "base"), banco, hoje: "2026-10-21", enviadoPor: null });
 
 async function contexto(): Promise<ContextoDaBase> {
-  const fontes = await buscarFontes({ organizacaoId: ORGANIZACAO_INICIAL, banco, cliente, modelo: IA.modelo });
+  const fontes = await buscarFontes({ organizacaoId: ORGANIZACAO_INICIAL, banco, cliente, modelo: IA.modelo, hoje: "2026-10-21" });
   if (fontes.tipo !== "base") throw new Error("esperava base com documentos");
   return fontes.contexto;
 }
 
 describe("Cenário 10 · base vazia", () => {
   it("devolve base vazia sem nenhuma chamada à IA", async () => {
-    expect(await buscarFontes({ organizacaoId: ORGANIZACAO_INICIAL, banco, cliente, modelo: IA.modelo })).toEqual({ tipo: "vazia" });
+    expect(await buscarFontes({ organizacaoId: ORGANIZACAO_INICIAL, banco, cliente, modelo: IA.modelo, hoje: "2026-10-21" })).toEqual({ tipo: "vazia" });
     await carregar();
     for (const documento of await listarDocumentos(banco, ORGANIZACAO_INICIAL)) await definirAtivo(banco, ORGANIZACAO_INICIAL, documento.id, false);
 
-    expect(await buscarFontes({ organizacaoId: ORGANIZACAO_INICIAL, banco, cliente, modelo: IA.modelo })).toEqual({ tipo: "vazia" });
+    expect(await buscarFontes({ organizacaoId: ORGANIZACAO_INICIAL, banco, cliente, modelo: IA.modelo, hoje: "2026-10-21" })).toEqual({ tipo: "vazia" });
     expect(api.contagens).toHaveLength(0);
     expect(registro).toHaveLength(0);
   });
@@ -82,7 +82,7 @@ describe("Cenário 11 · base acima do teto", () => {
     await carregar();
     await banco.exec("UPDATE documentos SET tamanho_bytes = 2 * 1024 * 1024");
 
-    await expect(buscarFontes({ organizacaoId: ORGANIZACAO_INICIAL, banco, cliente, modelo: IA.modelo })).rejects.toThrow(
+    await expect(buscarFontes({ organizacaoId: ORGANIZACAO_INICIAL, banco, cliente, modelo: IA.modelo, hoje: "2026-10-21" })).rejects.toThrow(
       new ErroDeTeto("A base ativa tem 32 MB, acima do teto de 25 MB e 400 mil tokens. Desative documentos na tela da Base para continuar."),
     );
     expect(api.contagens).toHaveLength(0);
@@ -91,7 +91,7 @@ describe("Cenário 11 · base acima do teto", () => {
   it("falha acima de 400 mil tokens, contados pela API", async () => {
     await carregar();
     api.tokensContados = 400_001;
-    await expect(buscarFontes({ organizacaoId: ORGANIZACAO_INICIAL, banco, cliente, modelo: IA.modelo })).rejects.toThrow(/400\.001 tokens, acima do teto de 25 MB e 400 mil tokens/);
+    await expect(buscarFontes({ organizacaoId: ORGANIZACAO_INICIAL, banco, cliente, modelo: IA.modelo, hoje: "2026-10-21" })).rejects.toThrow(/400\.001 tokens, acima do teto de 25 MB e 400 mil tokens/);
   });
 });
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ErroDeArquivoMd, ehDataValida, lerArquivoMd } from "../../src/base/cabecalho.ts";
+import { ErroDeArquivoMd, ehDataValida, estaVencido, lerArquivoMd } from "../../src/base/cabecalho.ts";
 
 const HOJE = "2026-10-21";
 const codificar = (texto: string) => new TextEncoder().encode(texto);
@@ -34,6 +34,7 @@ describe("Cenário 7 · cabeçalho válido (FORMATO_BASE_MD.md, cenários 1 a 3)
       tipo: "documento",
       atualizadoEm: "2026-08-14",
       versao: "3.2",
+      validade: null,
     });
     expect(lido.inicioDoCorpo).toBe(6);
     expect(lido.avisos).toEqual([]);
@@ -97,6 +98,32 @@ describe("Cenário 9 · campo desconhecido gera aviso, não recusa", () => {
     const lido = ler(VALIDO.replace("tipo: documento", "tipo: documento\narea: juridico"));
     expect(lido.avisos).toEqual(['campo "area" ignorado.']);
     expect(lido.cabecalho.tipo).toBe("documento");
+  });
+});
+
+describe("Cenário 80 · validade do documento", () => {
+  const comValidade = (validade: string) => VALIDO.replace('versao: "3.2"\n', `versao: "3.2"\nvalidade: ${validade}\n`);
+
+  it("lê a validade opcional; sem ela, null", () => {
+    expect(ler(comValidade("2027-01-31")).cabecalho.validade).toBe("2027-01-31");
+    expect(ler(comValidade("2027-01-31")).avisos).toEqual([]);
+    expect(ler(VALIDO).cabecalho.validade).toBeNull();
+  });
+
+  it("aceita validade já atingida, com aviso de que o documento entra como Vencido", () => {
+    expect(ler(comValidade(HOJE)).avisos).toEqual([`validade ${HOJE} já atingida: o documento entra como Vencido e não vai para a geração.`]);
+  });
+
+  it("recusa validade fora do formato ou anterior a atualizado_em", () => {
+    expect(motivo(comValidade("31/01/2027"))).toBe('validade "31/01/2027" inválida. Use AAAA-MM-DD.');
+    expect(motivo(comValidade("2026-08-13"))).toBe("validade anterior a atualizado_em.");
+  });
+
+  it("vence na data da validade, inclusive; sem validade, nunca vence", () => {
+    expect(estaVencido("2026-10-22", HOJE)).toBe(false);
+    expect(estaVencido(HOJE, HOJE)).toBe(true);
+    expect(estaVencido("2026-10-20", HOJE)).toBe(true);
+    expect(estaVencido(null, HOJE)).toBe(false);
   });
 });
 
