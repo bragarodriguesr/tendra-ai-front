@@ -216,11 +216,11 @@ describe("Cenário 40 · ativar e desativar documento (parte do banco)", () => {
     const id = await idDe(nome);
 
     expect(await definirAtivo(banco, ORGANIZACAO_INICIAL, id, false)).toMatchObject({ nome, ativo: false });
-    expect((await listarDocumentosAtivos(banco, ORGANIZACAO_INICIAL)).map((documento) => documento.nome)).not.toContain(nome);
-    expect(await listarDocumentosAtivos(banco, ORGANIZACAO_INICIAL)).toHaveLength(15);
+    expect((await listarDocumentosAtivos(banco, ORGANIZACAO_INICIAL, "2026-10-21")).map((documento) => documento.nome)).not.toContain(nome);
+    expect(await listarDocumentosAtivos(banco, ORGANIZACAO_INICIAL, "2026-10-21")).toHaveLength(15);
 
     await definirAtivo(banco, ORGANIZACAO_INICIAL, id, true);
-    expect((await listarDocumentosAtivos(banco, ORGANIZACAO_INICIAL)).map((documento) => documento.nome)).toContain(nome);
+    expect((await listarDocumentosAtivos(banco, ORGANIZACAO_INICIAL, "2026-10-21")).map((documento) => documento.nome)).toContain(nome);
     expect(await definirAtivo(banco, ORGANIZACAO_INICIAL, 9999, false)).toBeNull();
   });
 });

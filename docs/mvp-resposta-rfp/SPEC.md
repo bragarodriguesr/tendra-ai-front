@@ -190,6 +190,17 @@ O formato do arquivo e as regras de validação do cabeçalho estão em `docs/mv
 - **Then** a tarefa fica em estado de falha com uma mensagem que informa o teto e o tamanho da base
 - **And** nenhuma resposta é gerada com só uma parte da base
 
+#### Cenário 80: validade do documento da base
+- **Given** um arquivo `.md` com o campo opcional `validade: AAAA-MM-DD` no cabeçalho (`FORMATO_BASE_MD.md`)
+- **When** ele é carregado pela tela ou pelo comando
+- **Then** a validade fica gravada no documento e aparece na coluna "Validade" da tela da Base; sem o campo, aparece "Indefinido" e o documento nunca vence
+- **And** a carga recusa a validade fora do formato ou anterior a `atualizado_em`. A validade já atingida é aceita, com um aviso, e o documento entra vencido
+- **When** a data de hoje do backend chega à validade, inclusive
+- **Then** o documento fica vencido: é devolvido como inativo, com o status "Vencido", e não entra no contexto da geração (cenários 10, 11 e 40)
+- **And** reativar o documento vencido pela chave é recusado com 409, e a chave aparece bloqueada; desativar continua possível
+- **And** enviar de novo o mesmo arquivo com validade futura substitui a versão e o documento volta a valer, com o estado da chave preservado (cenário 39)
+- **And** a tela da Base ordena por status: ativos, em processamento, com problema, inativos e, por último, vencidos
+
 ### Geração das respostas
 
 #### Cenário 12: pergunta com resposta na base

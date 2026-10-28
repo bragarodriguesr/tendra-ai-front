@@ -80,6 +80,10 @@ const DOC_STATUS = {
   formato: ["Formato não aceito", "danger", "triangle-alert"]
 };
 const FORMATS = ".doc, .docx, .xls, .xlsx, .md, .pdf, .ppt, .pptx, .txt, .csv";
+// Documento com a validade atingida (cenário 80): fora da geração e sem reativação.
+const DOC_VENCIDO = ["Vencido", "danger", "calendar"];
+const ORDEM_DOS_STATUS = ["pronto", "processando", "fila", "suporte", "erro", "formato"];
+const ordemDoStatus = (d) => (d.expired ? 8 : d.off ? 7 : Math.max(0, ORDEM_DOS_STATUS.indexOf(d.st)));
 
 // Tarefas por status no Dashboard. Cores de dataviz do design system (tokens/dataviz.css),
 // em ordem fixa: a cor acompanha o status, não a posição. A ordem separa as vizinhas
@@ -137,11 +141,16 @@ export function buildView(s, ws) {
   const docsSorted = [...s.docs];
   if (s.sort === "idade") docsSorted.sort((a, b) => b.age - a.age);
   else if (s.sort === "nome") docsSorted.sort((a, b) => a.name.localeCompare(b.name));
+  // Por status: ativos primeiro, depois em processamento, com problema, inativos e, por último, vencidos.
+  else if (s.sort === "status") docsSorted.sort((a, b) => ordemDoStatus(a) - ordemDoStatus(b) || a.name.localeCompare(b.name));
   else docsSorted.reverse();
   const docs = docsSorted.map((d) => {
-    const x = d.off ? ["Inativo", "neutral", "minus"] : DOC_STATUS[d.st];
+    const x = d.expired ? DOC_VENCIDO : d.off ? ["Inativo", "neutral", "minus"] : DOC_STATUS[d.st];
     return {
-      ...d, active: !d.off, toggleLabel: d.off ? "Ativar documento" : "Desativar documento", toggle: () => ws.toggleDoc(d),
+      ...d, active: !d.off, validity: d.validity || "Indefinido",
+      // Vencido não volta a ser ativo pela chave: só uma versão do arquivo com nova validade.
+      toggleDisabled: !!d.expired,
+      toggleLabel: d.expired ? "Documento vencido: envie uma versão com nova validade" : d.off ? "Ativar documento" : "Desativar documento", toggle: () => ws.toggleDoc(d),
       statusText: x[0], tone: x[1], icon: x[2], ageText: d.age === 0 ? "hoje" : d.age + " dias", old: d.age > 120,
       version: d.ver ? "Versão " + d.ver : "Sem versão", canRetry: d.st === "erro" && !d.off, retry: () => ws.retryDoc(d.id),
       note: d.st === "formato" ? `Formato não aceito. Formatos aceitos: ${FORMATS}.`

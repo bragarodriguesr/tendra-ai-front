@@ -19,7 +19,7 @@ describe(`D1 · banco atrás de uma interface (${URL_DO_POSTGRES_DE_TESTE === un
   it("aplica as migrações uma vez só", async () => {
     expect(await aplicarMigracoes(banco)).toEqual([]);
     const { rows } = await banco.query<{ nome: string }>("SELECT nome FROM migracoes_aplicadas ORDER BY nome");
-    expect(rows.map((linha) => linha.nome)).toEqual(["001_documentos_e_blocos.sql", "002_tarefas_itens_e_revisao.sql", "003_paras_originais.sql", "004_contas_e_sessoes.sql", "005_respostas_geradas.sql", "006_revisao_persistida.sql", "007_empresas_e_contatos.sql", "008_organizacoes.sql", "009_cnpj_alfanumerico.sql"]);
+    expect(rows.map((linha) => linha.nome)).toEqual(["001_documentos_e_blocos.sql", "002_tarefas_itens_e_revisao.sql", "003_paras_originais.sql", "004_contas_e_sessoes.sql", "005_respostas_geradas.sql", "006_revisao_persistida.sql", "007_empresas_e_contatos.sql", "008_organizacoes.sql", "009_cnpj_alfanumerico.sql", "010_validade_dos_documentos.sql"]);
   });
 
   it("devolve contagens como número, linhas afetadas e jsonb como objeto", async () => {

@@ -12,6 +12,11 @@ export interface Cabecalho {
   /** Data no formato AAAA-MM-DD. */
   atualizadoEm: string;
   versao: string | null;
+  /**
+   * Validade (AAAA-MM-DD), ou null quando o cabeçalho não traz o campo ("Indefinido" na tela). A partir
+   * dessa data o documento fica vencido: sai da geração e não pode ser reativado.
+   */
+  validade: string | null;
 }
 
 export interface ArquivoMdLido {
@@ -29,7 +34,7 @@ export class ErroDeArquivoMd extends Error {
   override name = "ErroDeArquivoMd";
 }
 
-const CAMPOS_CONHECIDOS = ["titulo", "tipo", "atualizado_em", "versao"];
+const CAMPOS_CONHECIDOS = ["titulo", "tipo", "atualizado_em", "versao", "validade"];
 const TITULO_MINIMO = 3;
 const TITULO_MAXIMO = 120;
 const VERSAO_MAXIMA = 20;
@@ -56,6 +61,9 @@ export function lerArquivoMd(conteudo: Uint8Array, hoje: string): ArquivoMdLido 
 
   const { campos, avisos } = lerCampos(linhas, fechamento);
   const cabecalho = validarCampos(campos, hoje);
+  if (cabecalho.validade !== null && estaVencido(cabecalho.validade, hoje)) {
+    avisos.push(`validade ${cabecalho.validade} já atingida: o documento entra como Vencido e não vai para a geração.`);
+  }
 
   const corpo = linhas.slice(fechamento + 1);
   if (corpo.every((linha) => linha.trim() === "")) {
@@ -138,7 +146,21 @@ function validarCampos(campos: Map<string, string>, hoje: string): Cabecalho {
     throw new ErroDeArquivoMd(`versao deve ter até ${VERSAO_MAXIMA} caracteres.`);
   }
 
-  return { titulo, tipo, atualizadoEm, versao: versaoInformada === "" ? null : versaoInformada };
+  // Validade opcional; já vencida, o documento entra na base como "Vencido".
+  const validadeInformada = (campos.get("validade") ?? "").trim();
+  if (validadeInformada !== "" && !ehDataValida(validadeInformada)) {
+    throw new ErroDeArquivoMd(`validade "${validadeInformada}" inválida. Use AAAA-MM-DD.`);
+  }
+  if (validadeInformada !== "" && validadeInformada < atualizadoEm) {
+    throw new ErroDeArquivoMd("validade anterior a atualizado_em.");
+  }
+
+  return { titulo, tipo, atualizadoEm, versao: versaoInformada === "" ? null : versaoInformada, validade: validadeInformada === "" ? null : validadeInformada };
+}
+
+/** Vencido a partir da data de validade, inclusive. Sem validade, nunca vence. */
+export function estaVencido(validade: string | null, hoje: string): boolean {
+  return validade !== null && validade <= hoje;
 }
 
 /** Data AAAA-MM-DD que existe no calendário (recusa, por exemplo, 2026-02-30). */

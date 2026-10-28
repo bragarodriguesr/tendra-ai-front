@@ -11,9 +11,12 @@ export interface DocumentoGravado {
   tipo: Cabecalho["tipo"];
   atualizadoEm: string;
   versao: string | null;
+  /** Validade (AAAA-MM-DD) ou null (sem validade, "Indefinido"). */
+  validade: string | null;
   hash: string;
   tamanhoBytes: number;
   tokensEstimados: number;
+  /** Estado gravado pela chave Ativar/Desativar; o vencimento é calculado pela validade. */
   ativo: boolean;
   enviadoPor: string | null;
   /** Data e hora da primeira carga, em ISO 8601. */
@@ -38,6 +41,7 @@ interface LinhaDeDocumento {
   tipo: Cabecalho["tipo"];
   atualizado_em: string;
   versao: string | null;
+  validade: string | null;
   hash: string;
   tamanho_bytes: number;
   tokens_estimados: number;
@@ -46,7 +50,8 @@ interface LinhaDeDocumento {
   carregado_em: Date;
 }
 
-const COLUNAS = `id, nome, titulo, tipo, to_char(atualizado_em, 'YYYY-MM-DD') AS atualizado_em, versao, hash,
+const COLUNAS = `id, nome, titulo, tipo, to_char(atualizado_em, 'YYYY-MM-DD') AS atualizado_em, versao,
+  to_char(validade, 'YYYY-MM-DD') AS validade, hash,
   tamanho_bytes, tokens_estimados, ativo, enviado_por, carregado_em`;
 
 function paraDocumento(linha: LinhaDeDocumento): DocumentoGravado {
@@ -57,6 +62,7 @@ function paraDocumento(linha: LinhaDeDocumento): DocumentoGravado {
     tipo: linha.tipo,
     atualizadoEm: linha.atualizado_em,
     versao: linha.versao,
+    validade: linha.validade,
     hash: linha.hash,
     tamanhoBytes: linha.tamanho_bytes,
     tokensEstimados: linha.tokens_estimados,
@@ -72,11 +78,14 @@ export async function listarDocumentos(banco: Banco, organizacaoId: string): Pro
   return rows.map(paraDocumento);
 }
 
-/** Só os documentos ativos da organização: os únicos que podem ser fontes de uma nova tarefa dela (cenários 40 e 71). */
-export async function listarDocumentosAtivos(banco: Banco, organizacaoId: string): Promise<DocumentoGravado[]> {
+/**
+ * Só os documentos ativos e não vencidos da organização: os únicos que podem ser fontes de uma nova
+ * tarefa dela (cenários 40, 71 e 80). Vencido é o documento cuja validade é hoje ou já passou.
+ */
+export async function listarDocumentosAtivos(banco: Banco, organizacaoId: string, hoje: string): Promise<DocumentoGravado[]> {
   const { rows } = await banco.query<LinhaDeDocumento>(
-    `SELECT ${COLUNAS} FROM documentos WHERE organizacao_id = $1 AND ativo ORDER BY id`,
-    [organizacaoId],
+    `SELECT ${COLUNAS} FROM documentos WHERE organizacao_id = $1 AND ativo AND (validade IS NULL OR validade > $2::date) ORDER BY id`,
+    [organizacaoId, hoje],
   );
   return rows.map(paraDocumento);
 }
@@ -98,8 +107,8 @@ export async function gravarDocumento(banco: Banco, organizacaoId: string, docum
     let id: number;
     if (idExistente === undefined) {
       const inserido = await transacao.query<{ id: number }>(
-        `INSERT INTO documentos (nome, titulo, tipo, atualizado_em, versao, hash, tamanho_bytes, tokens_estimados, enviado_por, organizacao_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
+        `INSERT INTO documentos (nome, titulo, tipo, atualizado_em, versao, hash, tamanho_bytes, tokens_estimados, enviado_por, organizacao_id, validade)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
         [
           documento.nome,
           cabecalho.titulo,
@@ -111,6 +120,7 @@ export async function gravarDocumento(banco: Banco, organizacaoId: string, docum
           documento.tokensEstimados,
           documento.enviadoPor,
           organizacaoId,
+          cabecalho.validade,
         ],
       );
       const novoId = inserido.rows[0]?.id;
@@ -120,7 +130,7 @@ export async function gravarDocumento(banco: Banco, organizacaoId: string, docum
       id = idExistente;
       await transacao.query(
         `UPDATE documentos SET titulo = $2, tipo = $3, atualizado_em = $4, versao = $5, hash = $6,
-           tamanho_bytes = $7, tokens_estimados = $8, enviado_por = COALESCE($9, enviado_por), substituido_em = now()
+           tamanho_bytes = $7, tokens_estimados = $8, enviado_por = COALESCE($9, enviado_por), validade = $10, substituido_em = now()
          WHERE id = $1`,
         [
           id,
@@ -132,6 +142,7 @@ export async function gravarDocumento(banco: Banco, organizacaoId: string, docum
           documento.tamanhoBytes,
           documento.tokensEstimados,
           documento.enviadoPor,
+          cabecalho.validade,
         ],
       );
       await transacao.query("DELETE FROM blocos WHERE documento_id = $1", [id]);

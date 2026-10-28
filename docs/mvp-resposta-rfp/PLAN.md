@@ -765,6 +765,26 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
   - Jornada de ponta a ponta verde.
   - Máscara e validação do front conferidas com o exemplo oficial.
 
+### K10. Validade dos documentos e ordenação por status (ajuste de 28/10/2026)
+- **Validade:** campo opcional `validade: AAAA-MM-DD` no cabeçalho do `.md` (SPEC, cenário 80; `FORMATO_BASE_MD.md`).
+  - Migração `010_validade_dos_documentos.sql`: coluna `documentos.validade`. Os documentos já carregados ficam sem validade, "Indefinido".
+  - A partir da data de validade, inclusive, o documento fica vencido. O cálculo usa a data de hoje do backend, sem tarefa agendada: o vencimento vale no primeiro pedido do dia.
+  - Documento vencido sai de `listarDocumentosAtivos`, e portanto da geração. A rota o devolve como inativo, com `vencido: true`, e recusa reativá-lo com 409.
+  - Uma nova versão do arquivo com validade futura volta a valer.
+- **Tela da Base:**
+  - nova coluna "Validade", com a data em vermelho quando vencida;
+  - status "Vencido" e chave bloqueada no documento vencido;
+  - orientação sobre o campo;
+  - opção "Ordenar por status": ativos, em processamento, com problema, inativos e vencidos;
+  - colunas ajustadas para a tabela caber em 1440 px.
+- **Situação (28/10/2026): implementada.**
+  - 359 testes no PGlite e no Postgres. Entre eles: leitura e recusas do campo, vencimento na data inclusive, rota com validade e "Indefinido", recusa de reativar, documento vencido fora da geração e renovação por nova versão.
+  - Jornada de ponta a ponta verde.
+  - No navegador, com um backend de teste, conferi:
+    - coluna Validade com "Indefinido", data futura e data vencida;
+    - status Vencido e chave bloqueada;
+    - ordenação por status com o vencido por último.
+
 ## Definição de pronto (proposta, P10)
 
 Uma etapa só é concluída quando:

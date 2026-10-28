@@ -297,16 +297,18 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 
 **F-04 · P0 · Lista da base com aging** (MoSCoW: Must) — Parcial
 
-- **Cabeçalho:** "[N] documentos na base" e "Prazo de aging em vigor: 120 dias sem atualização.". Ao lado, o seletor de ordenação ("Ordenar por idade", "por nome", "por envio") e o botão "Subir documentos" (o único desde 24/10/2026).
+- **Cabeçalho:** "[N] documentos na base" e "Prazo de aging em vigor: 120 dias sem atualização.". Ao lado, o seletor de ordenação ("Ordenar por idade", "por nome", "por envio" e, desde 28/10/2026, "por status": ativos, em processamento, com problema, inativos e, por último, vencidos) e o botão "Subir documentos" (o único desde 24/10/2026).
 - Abaixo do cabeçalho, a orientação "Aceita arquivos .md com o cabeçalho de título, tipo e data de atualização, até 10 MB por envio. O tipo de cada arquivo (documento ou RFP passada) vem do cabeçalho. Enviar de novo um arquivo com o mesmo nome atualiza o documento." (v3, 22/10; frase do tipo em 24/10)
 - **Colunas da tabela:**
   - Documento: o título do cabeçalho, com a versão ou "Sem versão" e o nome do arquivo abaixo;
   - Tipo (Documento ou RFP passada);
   - Atualizado (data);
+  - Validade (28/10/2026): a data do campo `validade` do cabeçalho, ou "Indefinido" sem ele. A data fica em vermelho quando vencida;
   - Idade ("N dias" ou "hoje"; acima de 120 dias, também o selo "Mais de 120 dias");
   - Status;
   - Enviado por;
-  - Ações: "Tentar novamente" quando houver erro, e a chave Ativar/Desativar.
+  - Ações: "Tentar novamente" quando houver erro, e a chave Ativar/Desativar. No documento vencido, a chave fica desligada e bloqueada.
+- **Documento vencido (28/10/2026):** a partir da data da validade, inclusive, o documento fica inativo, com o status "Vencido" (selo vermelho com calendário), e não vai para a geração. A chave não o reativa. Só uma nova versão do arquivo, com validade futura, volta a valer.
 - No celular, cada documento vira um cartão com as mesmas informações.
 - **Estado vazio** (v3, 22/10): com o servidor conectado e nenhum documento, "Base vazia", "Sua base ainda não tem documentos. Suba propostas anteriores e documentos técnicos para gerar rascunhos." e o botão "Subir documentos". Desde 28/10/2026, a base vazia mostra só esse botão, no centro. A ordenação e o "Subir documentos" do canto superior voltam com o primeiro documento.
 
