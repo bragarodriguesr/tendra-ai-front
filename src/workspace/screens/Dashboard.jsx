@@ -1,6 +1,7 @@
 import React from "react";
 import { Badge, Button, Icon, MonoLabel, Tooltip } from "../../ds/index.js";
 import { ClickRow, Page, SegmentBar, PageHeader, bigNumber, card, legendDot, mono } from "../ui.jsx";
+import { NewRfpButton } from "../NewRfpButton.jsx";
 
 function Kpi({ icon, label, value, sub, compact }) {
   return (
@@ -45,7 +46,7 @@ export function Dashboard({ v, ws, pad, isMobile }) {
   const { dash } = v;
   return (
     <Page pad={pad}>
-      <PageHeader eyebrow={dash.eyebrow} title="Visão geral do uso" action={<Button icon="plus" onClick={() => ws.go("new")}>Nova RFP/RFI</Button>} />
+      <PageHeader eyebrow={dash.eyebrow} title="Visão geral do uso" action={<NewRfpButton v={v} ws={ws} />} />
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,minmax(0,1fr))" : "repeat(auto-fit,minmax(240px,1fr))", gap: isMobile ? 12 : 20 }}>
         <Kpi icon="layout-grid" label="RFPs e RFIs trabalhadas" value={dash.worked} sub={dash.workedSub} compact={isMobile} />
         <Kpi icon="circle-alert" label="Itens em aberto" value={dash.open} sub={dash.openSub} compact={isMobile} />

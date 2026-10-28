@@ -8,6 +8,8 @@ export interface SidebarNavItem {
   count?: number;
   href?: string;
   onClick?: (e: React.MouseEvent) => void;
+  /** Classe extra do item (por exemplo, um destaque). */
+  className?: string;
 }
 
 export interface SidebarNavGroup {

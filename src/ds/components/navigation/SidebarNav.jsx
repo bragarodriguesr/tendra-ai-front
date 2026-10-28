@@ -8,6 +8,7 @@ function Item({ item, active, inverse, collapsed }) {
   return (
     <a
       href={item.href || "#"}
+      className={item.className}
       onClick={item.onClick}
       aria-current={on ? "page" : undefined}
       aria-label={collapsed ? item.label + (item.count != null ? ` (${item.count})` : "") : undefined}

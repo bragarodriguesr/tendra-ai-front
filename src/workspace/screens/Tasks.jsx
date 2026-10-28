@@ -1,6 +1,7 @@
 import React from "react";
 import { Badge, Button, Icon, IconButton, ProgressBar, Tooltip } from "../../ds/index.js";
 import { AlertDeck, ClickRow, Page, PageHeader, card, mono } from "../ui.jsx";
+import { NewRfpButton } from "../NewRfpButton.jsx";
 
 const COLS = "minmax(0,2.2fr) 64px minmax(0,1.7fr) 150px 130px 130px 56px";
 const rowGrid = { display: "grid", minWidth: 1010, gridTemplateColumns: COLS, gap: 16 };
@@ -53,7 +54,7 @@ export function TaskAlerts({ v, ws }) {
 export function Tasks({ v, ws, pad, isMobile }) {
   return (
     <Page pad={pad}>
-      <PageHeader eyebrow="Painel de tarefas" title={`${v.tasks.length} RFPs e RFIs em andamento`} action={<Button icon="plus" onClick={() => ws.go("new")}>Nova RFP/RFI</Button>} />
+      <PageHeader eyebrow="Painel de tarefas" title={`${v.tasks.length} RFPs e RFIs em andamento`} action={<NewRfpButton v={v} ws={ws} />} />
       {v.tDeck.count > 0 ? <TaskAlerts v={v} ws={ws} /> : null}
       {!isMobile ? (
         <div role="table" aria-label="Tarefas" style={card(14, { overflowX: "auto", overflowY: "hidden" })}>

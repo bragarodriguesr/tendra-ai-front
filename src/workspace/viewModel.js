@@ -135,7 +135,8 @@ export function buildView(s, ws) {
     ] },
     { label: "Base", items: [
       { value: "base", label: "Base de conhecimento", icon: "database", count: s.docs.length, onClick: go("base") },
-      { value: "onboarding", label: "Primeiros passos", icon: "play", onClick: go("onboarding") }
+      // Base vazia: Primeiros passos fica em destaque, com a borda limão em movimento do "Revisar com IA".
+      { value: "onboarding", label: "Primeiros passos", icon: "play", onClick: go("onboarding"), ...(ws.baseVazia(s) ? { className: "tdr-nav-destaque" } : null) }
     ] }
   ];
   const navValue = s.screen === "task" ? "tasks" : s.screen;
@@ -170,6 +171,20 @@ export function buildView(s, ws) {
       ready: onbSent.filter((d) => d.st === "pronto" && !d.off).length,
       done: onbSent.filter((d) => ["pronto", "erro", "suporte"].includes(d.st)).length
     };
+
+  // Passos de Primeiros passos: 1 com algum documento ativo na base; 2 com alguma tarefa criada; 3 com
+  // algum item revisado ou aprovado. Cada passo só abre depois do anterior. Sem o servidor, só o passo 1.
+  const tarefasDoServidor = s.tarefasOrigem === "servidor" ? s.tarefas : [];
+  const passosFeitos = [
+    onb.ready > 0,
+    onb.online === true && tarefasDoServidor.length > 0,
+    onb.online === true && tarefasDoServidor.some((t) => ws.itemsOf(t.id, s).some((i) => i.st === "revisada" || i.st === "aprovada"))
+  ];
+  const passoAtual = passosFeitos[0] ? passosFeitos[1] ? passosFeitos[2] ? 4 : 3 : 2 : 1;
+  onb.steps = passosFeitos.map((feito, i) => ({ n: i + 1, done: feito && i + 1 < passoAtual, open: i + 1 <= passoAtual }));
+  onb.current = passoAtual;
+  onb.shown = Math.min(s.onbStep && s.onbStep <= passoAtual ? s.onbStep : passoAtual, 3);
+  onb.allDone = passoAtual === 4;
 
   // tarefas
   const tasks = taskIds.map((id) => {
@@ -488,6 +503,8 @@ export function buildView(s, ws) {
 
   return {
     isA, online, podeExportar, userName: ws.name(), navGroups, navValue,
+    // Nova RFP/RFI só com algum documento carregado na base.
+    canCreate: !ws.baseVazia(s),
     deletingTask: s.deleting ? tasks.find((t) => t.id === s.deleting) || null : null,
     downloadTask: s.confirmDownload ? tasks.find((t) => t.id === s.confirmDownload) || null : null,
     detalhes: s.detalhes ? { ...s.detalhes, task: tasks.find((t) => t.id === s.detalhes.id) || ws.taskInfo(s.detalhes.id, s) || {} } : null,

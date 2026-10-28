@@ -258,16 +258,22 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 > **v3, 22/10:** no MVP a base entra pela T2 ("Subir documentos", F-02). O passo 1 e a área de envio desta tela ainda são protótipo, sem ligação com o backend; ligá-los à mesma rota é a etapa C4 do plano. "Criar primeira RFP" passa a depender de haver ao menos um documento ativo na base.
 
 - **Cabeçalho:** "Primeiro uso · Banco de conhecimento", o título "Suba os documentos que sustentam suas respostas" e um texto de apoio.
-- **Três passos:**
-  1. Subir documentos — "N enviados · N processados" ou "Nenhum documento enviado".
-  2. Criar a primeira RFP.
-  3. Revisar e aprovar.
+- **Três passos, um por vez (28/10/2026):**
+  1. Subir documentos ("N documentos na base · N ativos" ou "Nenhum documento na base"). Concluído com ao menos um documento ativo na base.
+  2. Criar a primeira RFP. Concluído com ao menos uma tarefa criada na organização.
+  3. Revisar e aprovar. Concluído com ao menos um item revisado ou aprovado.
 
-  A linha de cada passo muda de cor: o passo em andamento fica em Tinta e o concluído em Sálvia.
+  Os títulos dos passos navegam entre eles, sem aparência de botão. Um passo só abre depois que o anterior é concluído, e o passo concluído ganha a linha e a marca de "concluído" em limão. A tela abre no primeiro passo ainda não concluído. Ao concluir um passo, ela segue sozinha para o seguinte: por exemplo, quando o primeiro documento entra na base, o passo 1 fica concluído e a tela passa ao passo 2.
+- **Conteúdo de cada passo:**
+  - **Passo 1:** área de envio, resultado do envio, lista de documentos e cartão de dicas.
+  - **Passo 2:** a instrução e os botões "Criar primeira RFP" e "Fazer depois". Os botões só aparecem neste passo.
+  - **Passo 3:** só a instrução de revisar e aprovar.
+
+  Num passo já concluído, um aviso limão diz o que foi feito.
 - Área de envio com arrastar e soltar, "Subir documentos" e "Usar arquivos de exemplo" (Simulado). Abaixo, a lista do que foi enviado nesta tela, com o estado de cada arquivo (F-02).
-- **"Criar primeira RFP"** só fica disponível quando ao menos um documento enviado está pronto. Antes disso: "Disponível quando ao menos um documento estiver pronto." Ao lado, "Fazer depois" leva ao painel de tarefas.
+- **"Criar primeira RFP"** abre a Nova RFP; ao lado, "Fazer depois" leva ao painel de tarefas.
 - Cartão "O que costuma dar mais contexto": whitepaper e políticas de segurança; RFPs e RFIs já respondidas; contrato padrão e anexos de SLA; certificados e relatórios de auditoria. Mais o texto "Não há número mínimo de documentos…".
-- **Pendente:** abrir esta tela automaticamente no primeiro acesso de uma empresa sem documentos. Hoje o login leva ao Dashboard e Primeiros passos fica no menu lateral.
+- **Primeiro acesso (28/10/2026):** enquanto a base da organização não tem nenhum documento, o login leva a Primeiros passos, e não ao Dashboard. No menu lateral, "Primeiros passos" fica com uma borda limão em movimento, o mesmo efeito do "Revisar com IA", parada com movimento reduzido. Com o primeiro documento, o login volta a abrir no Dashboard e a borda sai.
 
 **F-02 · P0 · Subir documentos para a base** (MoSCoW: Must) — **Implementado e ligado ao backend na T2, só para `.md` (v3, 22/10)**
 
@@ -302,7 +308,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
   - Enviado por;
   - Ações: "Tentar novamente" quando houver erro, e a chave Ativar/Desativar.
 - No celular, cada documento vira um cartão com as mesmas informações.
-- **Estado vazio** (v3, 22/10): com o servidor conectado e nenhum documento, "Base vazia", "Sua base ainda não tem documentos. Suba propostas anteriores e documentos técnicos para gerar rascunhos." e o botão "Subir documentos".
+- **Estado vazio** (v3, 22/10): com o servidor conectado e nenhum documento, "Base vazia", "Sua base ainda não tem documentos. Suba propostas anteriores e documentos técnicos para gerar rascunhos." e o botão "Subir documentos". Desde 28/10/2026, a base vazia mostra só esse botão, no centro. A ordenação e o "Subir documentos" do canto superior voltam com o primeiro documento.
 
 **F-05 · P1 · Personalizar o prazo de aging** por RFP ou empresa (MoSCoW: Should) — Pendente. A T2 já mostra o prazo em vigor (120 dias).
 
@@ -537,7 +543,8 @@ Texto como está no front. A voz é direta, sem exclamação, sem emoji e sem a 
 | Base vazia | T2 | "Sua base ainda não tem documentos. Suba propostas anteriores e documentos técnicos para gerar rascunhos." | Subir documentos |
 | Servidor da base desconectado | T2 | "Servidor da base desconectado: a lista abaixo é de exemplo. Para subir documentos, inicie o servidor com npm run servidor, na pasta backend." | — |
 | Envio com recusas | T2 | Quadro "Resultado do envio" com o motivo de cada arquivo recusado ou ignorado | Fechar o quadro; corrigir o arquivo e enviar de novo |
-| Primeiros passos sem documento pronto | T1 | "Disponível quando ao menos um documento estiver pronto." | Subir documentos; Fazer depois |
+| Primeiros passos sem documento | T1 | Passos 2 e 3 bloqueados até o passo 1 ser concluído | Subir documentos |
+| Base vazia | D1, T3 | "Nova RFP/RFI" desabilitado, com a dica "Suba ao menos um documento na Base de conhecimento para criar uma RFP." | Subir documentos (Primeiros passos ou Base) |
 | Base pequena | T4 | "Sua base ainda é pequena. Os itens tendem a ficar sem contexto, mas você pode continuar." | Continuar |
 | Processando | T3, T5 | "Processando: 42 de 180 perguntas." / "Você pode sair desta tela. Avisaremos aqui quando terminar." | Sair e voltar depois |
 | Falha no processamento | T5 | "Não foi possível carregar este arquivo. Tente de novo ou fale com o suporte." + causa | Tentar de novo; Importar novo arquivo |
@@ -742,7 +749,7 @@ Esta seção lista o que o front já consome e dispara. Os nomes são descritivo
 | Tema | Decisão | Onde |
 | --- | --- | --- |
 | Escopo do front | Inclui site público, login e abertura | Seção 7 |
-| Tela inicial do Workspace | Dashboard, não Primeiros passos | F-39, F-01 |
+| Tela inicial do Workspace | Dashboard; Primeiros passos enquanto a base da organização está vazia (28/10/2026) | F-39, F-01 |
 | Ação primária | Tinta, não Sálvia; Sálvia fica com foco e marca | Seção 4 |
 | Filtros | `FilterMenu` é o padrão do design system para listas e tabelas | Seções 4 e 13 |
 | Histórico | Registra aprovações e revisões | F-27 |
@@ -814,7 +821,7 @@ Esta seção lista o que o front já consome e dispara. Os nomes são descritivo
 2. **Fase 1, piloto fechado (meses 1 a 3, 3 a 5 clientes).**
    - **Backend:** construir o contrato da seção 16 e substituir tudo o que está marcado como Simulado. A base entra em `.md`, pela T2 ou por comando, e a RFP só em `.xlsx` (seção 20).
    - **Front:** fechar os P0 parciais e pendentes:
-     - F-01 (abrir Primeiros passos no primeiro acesso);
+     - F-01 (abrir Primeiros passos no primeiro acesso: feito em 28/10/2026);
      - F-04 (estado vazio);
      - F-10 (edição de prazo e responsável; estado vazio);
      - F-20 (formatação e falha ao salvar);

@@ -69,18 +69,56 @@ function UploadList({ list }) {
   );
 }
 
-function Step({ n, title, meta, state }) {
+const STEPS = [
+  { title: "Subir documentos" },
+  { title: "Criar a primeira RFP", meta: "Importe a lista de perguntas" },
+  { title: "Revisar e aprovar", meta: "Item a item, com a fonte ao lado" }
+];
+
+/**
+ * Título de um passo: navega para ele, sem aparência de botão. Concluído, ganha a marca limão; o passo
+ * seguinte ao atual fica bloqueado até o atual ser concluído.
+ */
+function Step({ n, title, meta, done, open, shown, onOpen }) {
+  const state = done ? "done" : shown ? "on" : open ? null : "locked";
   return (
-    <div className={"tdr-onb-step" + (state ? " is-" + state : "")} aria-current={state === "on" ? "step" : undefined}>
-      <MonoLabel>Passo {n}</MonoLabel>
-      <span style={{ fontWeight: 600, color: "var(--n-900)" }}>{title}</span>
+    <button
+      type="button"
+      className={"tdr-onb-step" + (state ? " is-" + state : "") + (shown ? " is-shown" : "")}
+      aria-current={shown ? "step" : undefined}
+      aria-disabled={open ? undefined : true}
+      disabled={!open}
+      onClick={onOpen}
+    >
+      <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {done ? <span className="tdr-onb-check" aria-hidden="true"><Icon name="check" size={12} /></span> : null}
+        <MonoLabel>Passo {n}{done ? " · concluído" : ""}</MonoLabel>
+      </span>
+      <span style={{ fontWeight: 600, color: open ? "var(--n-900)" : "var(--n-400)" }}>{title}</span>
       <span style={{ fontSize: 13, color: "var(--n-400)" }}>{meta}</span>
+    </button>
+  );
+}
+
+/** Aviso de passo concluído, no topo do passo aberto. */
+function DoneNote({ children }) {
+  return (
+    <div className="tdr-onb-done-note" role="status">
+      <span className="tdr-onb-check" aria-hidden="true"><Icon name="check" size={12} /></span>
+      <span>{children}</span>
     </div>
   );
 }
 
 export function Onboarding({ v, ws, state, pad, isMobile }) {
-  const { list, sent, ready, done, online } = v.onb;
+  const { list, sent, ready, done, online, steps, shown, current, allDone } = v.onb;
+  // Passo concluído: a tela segue para o próximo (o passo aberto volta a ser o atual).
+  const anterior = React.useRef(current);
+  React.useEffect(() => {
+    if (current > anterior.current) ws.setState({ onbStep: null });
+    anterior.current = current;
+  }, [ws, current]);
+  const meta1 = online ? (sent ? `${plural(sent, "documento", "documentos")} na base · ${ready} ${ready === 1 ? "ativo" : "ativos"}` : "Nenhum documento na base") : sent ? `${plural(sent, "enviado", "enviados")} · ${done} processados` : "Nenhum documento enviado";
   return (
     <Page pad={pad} gap={32}>
       <div style={{ display: "grid", gap: 8 }}>
@@ -89,43 +127,63 @@ export function Onboarding({ v, ws, state, pad, isMobile }) {
         <p style={{ margin: 0, maxWidth: "66ch", fontSize: 15, lineHeight: 1.6, color: "var(--n-700)", textWrap: "pretty" }}>Cada rascunho da Tendra.ai cita o documento de onde veio. Propostas anteriores, políticas, contratos padrão e certificados dão contexto às próximas RFPs. Mais documentos, rascunhos melhores.</p>
       </div>
 
-      <div className="tdr-onb-steps">
-        <Step n={1} title="Subir documentos" state={ready ? "done" : "on"} meta={online ? (sent ? `${plural(sent, "documento", "documentos")} na base · ${ready} ${ready === 1 ? "ativo" : "ativos"}` : "Nenhum documento na base") : sent ? `${plural(sent, "enviado", "enviados")} · ${done} processados` : "Nenhum documento enviado"} />
-        <Step n={2} title="Criar a primeira RFP" state={ready ? "on" : null} meta="Importe a lista de perguntas" />
-        <Step n={3} title="Revisar e aprovar" meta="Item a item, com a fonte ao lado" />
-      </div>
+      <nav className="tdr-onb-steps" aria-label="Passos">
+        {steps.map((p, i) => (
+          <Step key={p.n} n={p.n} title={STEPS[i].title} meta={i === 0 ? meta1 : STEPS[i].meta} done={p.done} open={p.open} shown={shown === p.n} onOpen={() => ws.setState({ onbStep: p.n })} />
+        ))}
+      </nav>
 
-      <div className="tdr-onb-two">
-        <div style={{ display: "grid", gap: 16, minWidth: 0 }}>
-          <Uploader ws={ws} online={online} sending={state.enviando} />
-          {online && state.envio ? <SendResult result={state.envio} onClose={ws.closeSendResult} /> : null}
-          <UploadList list={list} />
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
-            <Button iconEnd="arrow-right" disabled={!ready} onClick={() => ws.go("new")}>Criar primeira RFP</Button>
-            <Button variant="ghost" onClick={() => ws.go("tasks")}>Fazer depois</Button>
-            {ready
-              ? <span style={{ fontSize: 13, color: "var(--n-400)" }}>{plural(ready, online ? "documento ativo" : "documento pronto", online ? "documentos ativos" : "documentos prontos")}</span>
-              : <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--n-700)" }}><Icon name="info" size={14} />{online ? "Disponível quando houver ao menos um documento ativo na base." : "Disponível quando ao menos um documento estiver pronto."}</span>}
+      {shown === 1 ? (
+        <div className="tdr-onb-two">
+          <div style={{ display: "grid", gap: 16, minWidth: 0 }}>
+            {steps[0].done ? <DoneNote>{plural(ready, online ? "documento ativo" : "documento pronto", online ? "documentos ativos" : "documentos prontos")} na base. Você pode subir mais quando quiser.</DoneNote> : null}
+            <Uploader ws={ws} online={online} sending={state.enviando} />
+            {online && state.envio ? <SendResult result={state.envio} onClose={ws.closeSendResult} /> : null}
+            <UploadList list={list} />
           </div>
-        </div>
 
+          <Card padding="lg">
+            <div style={{ display: "grid", gap: 16 }}>
+              <MonoLabel>O que costuma dar mais contexto</MonoLabel>
+              {CONTEXT_TIPS.map(([icon, t, d]) => (
+                <div key={t} style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                  <span style={{ display: "flex", paddingTop: 2, color: "var(--brand-sage)" }}><Icon name={icon} size={18} /></span>
+                  <span style={{ display: "grid", gap: 2 }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: "var(--n-900)" }}>{t}</span>
+                    <span style={{ fontSize: 13, color: "var(--n-400)" }}>{d}</span>
+                  </span>
+                </div>
+              ))}
+              <Divider tone="subtle" />
+              <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: "var(--n-400)" }}>Não há número mínimo de documentos. Com a base pequena, parte dos itens chega sem rascunho e pede preenchimento manual.</p>
+            </div>
+          </Card>
+        </div>
+      ) : null}
+
+      {shown === 2 ? (
         <Card padding="lg">
-          <div style={{ display: "grid", gap: 16 }}>
-            <MonoLabel>O que costuma dar mais contexto</MonoLabel>
-            {CONTEXT_TIPS.map(([icon, t, d]) => (
-              <div key={t} style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                <span style={{ display: "flex", paddingTop: 2, color: "var(--brand-sage)" }}><Icon name={icon} size={18} /></span>
-                <span style={{ display: "grid", gap: 2 }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: "var(--n-900)" }}>{t}</span>
-                  <span style={{ fontSize: 13, color: "var(--n-400)" }}>{d}</span>
-                </span>
-              </div>
-            ))}
-            <Divider tone="subtle" />
-            <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: "var(--n-400)" }}>Não há número mínimo de documentos. Com a base pequena, parte dos itens chega sem rascunho e pede preenchimento manual.</p>
+          <div style={{ display: "grid", gap: 16, maxWidth: "66ch" }}>
+            {steps[1].done ? <DoneNote>Primeira RFP criada. Ela está no painel de tarefas.</DoneNote> : null}
+            <MonoLabel>Passo 2 · Criar a primeira RFP</MonoLabel>
+            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: "var(--n-700)" }}>Importe a planilha <b>.xlsx</b> com as perguntas da RFP ou RFI e informe a empresa, o prazo e o responsável. A Tendra.ai identifica as perguntas e prepara um rascunho para cada uma, com a fonte na base.</p>
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
+              <Button iconEnd="arrow-right" onClick={() => ws.go("new")}>Criar primeira RFP</Button>
+              <Button variant="ghost" onClick={() => ws.go("tasks")}>Fazer depois</Button>
+            </div>
           </div>
         </Card>
-      </div>
+      ) : null}
+
+      {shown === 3 ? (
+        <Card padding="lg">
+          <div style={{ display: "grid", gap: 16, maxWidth: "66ch" }}>
+            {steps[2].done ? <DoneNote>{allDone ? "Tudo pronto: você já revisou ou aprovou respostas na Tendra.ai." : "Passo concluído."}</DoneNote> : null}
+            <MonoLabel>Passo 3 · Revisar e aprovar</MonoLabel>
+            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: "var(--n-700)" }}>Quando a tarefa terminar de processar, abra a Revisão. Em cada item, confira o rascunho com a fonte ao lado, edite o que for preciso e marque como revisado. Quem tem o perfil Aprovador aprova a resposta final. Este passo é concluído quando ao menos um item for revisado ou aprovado.</p>
+          </div>
+        </Card>
+      ) : null}
     </Page>
   );
 }

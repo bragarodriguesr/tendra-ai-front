@@ -711,6 +711,32 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
 - PRD: menu do usuário com a organização.
 - `README` do backend: os comandos novos.
 
+### K8. Primeiros passos guiados e base vazia (ajuste de 28/10/2026)
+- **Base vazia:**
+  - na Base de conhecimento, aparece só o "Subir documentos" do centro; a ordenação e o botão do canto superior voltam com o primeiro documento;
+  - "Nova RFP/RFI" (Dashboard e painel de tarefas) fica desabilitado, com a dica de subir um documento;
+  - o login leva a Primeiros passos;
+  - no menu lateral, "Primeiros passos" ganha a borda limão em movimento do "Revisar com IA".
+- **Primeiros passos, um passo por vez:**
+  - os títulos navegam entre os passos, e um passo só abre com o anterior concluído;
+  - o passo concluído ganha a marca limão, e a tela segue sozinha para o próximo;
+  - critérios de conclusão: passo 1 com um documento ativo; passo 2 com uma tarefa criada; passo 3 com um item revisado ou aprovado;
+  - "Criar primeira RFP" e "Fazer depois" só aparecem no passo 2; o passo 3 traz só a instrução.
+- **Detalhes de implementação:**
+  - só front; os passos usam os dados que a tela já lê (base, tarefas e itens da organização);
+  - o `SidebarNav` do DS passou a aceitar `className` por item;
+  - a primeira tela depois do login é decidida com os documentos devolvidos pela leitura da base.
+- **Situação (28/10/2026): implementada.** Build e jornada de ponta a ponta verdes. No navegador, com um backend de teste e a conta de uma organização de base vazia, conferi:
+  - o login abre Primeiros passos;
+  - "Primeiros passos" aparece em destaque no menu;
+  - os passos 2 e 3 estão bloqueados;
+  - a Base mostra um só "Subir documentos";
+  - "Nova RFP/RFI" está desabilitado nas duas telas;
+  - ao subir um `.md`, o passo 1 é concluído, a tela vai ao passo 2 com os dois botões e o destaque sai;
+  - depois de criar a RFP, o passo 2 é concluído e o passo 3 mostra só a instrução;
+  - com um item revisado, o passo 3 é concluído;
+  - o título do passo 1 volta a ele.
+
 ## Definição de pronto (proposta, P10)
 
 Uma etapa só é concluída quando:
