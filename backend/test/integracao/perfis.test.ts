@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { ErroDeCadastro, gravarPerfil, idDaContaNoSupabase } from "../../src/autenticacao/perfis.ts";
 import type { Banco } from "../../src/persistencia/banco.ts";
+import { ORGANIZACAO_INICIAL } from "../../src/persistencia/organizacoes.ts";
 import { abrirBancoDeTeste } from "../apoio/banco.ts";
 
 /** Etapa D4 (PD2) · cadastro de perfis para contas do Supabase Auth. */
@@ -26,9 +27,9 @@ describe("D4 · cadastrar perfil", () => {
   it("acha a conta pelo e-mail, sem diferenciar maiúsculas, e grava o perfil ativo; rodar de novo atualiza", async () => {
     const id = await idDaContaNoSupabase({ supabaseUrl: "https://p.supabase.co", chaveDeServico: "sb_secret_falsa", email: "marcelo.aprovador@tendra.test", fetch: contasFalsas });
     expect(id).toBe(ID);
-    await gravarPerfil(banco, { id, email: "marcelo.aprovador@tendra.test", nome: " Marcelo Vieira ", papel: "Revisor" });
+    await gravarPerfil(banco, { organizacaoId: ORGANIZACAO_INICIAL, id, email: "marcelo.aprovador@tendra.test", nome: " Marcelo Vieira ", papel: "Revisor" });
     await banco.query("UPDATE perfis SET ativo = false");
-    await gravarPerfil(banco, { id, email: "marcelo.aprovador@tendra.test", nome: "Marcelo Vieira", papel: "Aprovador" });
+    await gravarPerfil(banco, { organizacaoId: ORGANIZACAO_INICIAL, id, email: "marcelo.aprovador@tendra.test", nome: "Marcelo Vieira", papel: "Aprovador" });
     const { rows } = await banco.query("SELECT nome, papel, ativo FROM perfis");
     expect(rows).toEqual([{ nome: "Marcelo Vieira", papel: "Aprovador", ativo: true }]);
   });
@@ -36,6 +37,6 @@ describe("D4 · cadastrar perfil", () => {
   it("recusa conta inexistente, chave errada e papel inválido", async () => {
     await expect(idDaContaNoSupabase({ supabaseUrl: "https://p.supabase.co", chaveDeServico: "sb_secret_falsa", email: "ninguem@tendra.test", fetch: contasFalsas })).rejects.toThrow(/Nenhuma conta/);
     await expect(idDaContaNoSupabase({ supabaseUrl: "https://p.supabase.co", chaveDeServico: "errada", email: "x@tendra.test", fetch: contasFalsas })).rejects.toThrow("(401)");
-    await expect(gravarPerfil(banco, { id: ID, email: "x@tendra.test", nome: "X", papel: "Administrador" })).rejects.toBeInstanceOf(ErroDeCadastro);
+    await expect(gravarPerfil(banco, { organizacaoId: ORGANIZACAO_INICIAL, id: ID, email: "x@tendra.test", nome: "X", papel: "Administrador" })).rejects.toBeInstanceOf(ErroDeCadastro);
   });
 });

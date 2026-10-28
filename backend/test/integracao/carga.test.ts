@@ -6,6 +6,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { carregarArquivos, carregarBase, MOTIVO_FORMATO_NAO_ACEITO } from "../../src/base/carga.ts";
 import { abrirBancoDeTeste } from "../apoio/banco.ts";
 import { aplicarMigracoes, type Banco } from "../../src/persistencia/banco.ts";
+import { ORGANIZACAO_INICIAL } from "../../src/persistencia/organizacoes.ts";
 import {
   definirAtivo,
   listarBlocos,
@@ -40,11 +41,11 @@ afterEach(async () => {
 });
 
 const carregar = (pasta: string, enviadoPor: string | null = null) =>
-  carregarBase({ pasta, banco, hoje: HOJE, enviadoPor });
+  carregarBase({ organizacaoId: ORGANIZACAO_INICIAL, pasta, banco, hoje: HOJE, enviadoPor });
 
 /** Id do documento com esse nome de arquivo. */
 async function idDe(nome: string): Promise<number> {
-  const documento = (await listarDocumentos(banco)).find((candidato) => candidato.nome === nome);
+  const documento = (await listarDocumentos(banco, ORGANIZACAO_INICIAL)).find((candidato) => candidato.nome === nome);
   if (documento === undefined) throw new Error(`${nome} não está na base`);
   return documento.id;
 }
@@ -66,7 +67,7 @@ describe("Cenário 7 · carga da base sintética", () => {
     expect(resumo.ignorados).toEqual([]);
     expect(resumo.orfaos).toEqual([]);
 
-    const documentos = await listarDocumentos(banco);
+    const documentos = await listarDocumentos(banco, ORGANIZACAO_INICIAL);
     expect(documentos.find((documento) => documento.nome === "politica-seguranca-informacao.md")).toMatchObject({
       titulo: "Política de Segurança da Informação",
       tipo: "documento",
@@ -85,7 +86,7 @@ describe("Cenário 7 · carga da base sintética", () => {
     const linhasDoArquivo = (await readFile(path.join(BASE, caminho), "utf8")).split("\n");
     const linhaEsperada = linhasDoArquivo.findIndex((linha) => linha.startsWith("Os registros de acesso e de auditoria")) + 1;
 
-    const bloco = (await listarBlocos(banco, "norma-registro-e-monitoramento.md")).find((candidato) => candidato.texto.includes("12 meses"));
+    const bloco = (await listarBlocos(banco, ORGANIZACAO_INICIAL, "norma-registro-e-monitoramento.md")).find((candidato) => candidato.texto.includes("12 meses"));
 
     expect(bloco).toMatchObject({ secao: "2. Retenção dos registros", linhaInicial: linhaEsperada });
     expect(bloco?.caminhoDeSecoes).toEqual(["Norma de Registro e Monitoramento de Eventos", "2. Retenção dos registros"]);
@@ -112,7 +113,7 @@ describe("Cenários 8 e 9 · casos de carga", () => {
     });
     expect(resumo.avisos).toEqual([{ nome: "campo-desconhecido.md", mensagem: 'campo "area" ignorado.' }]);
     expect(resumo.ignorados).toEqual([{ nome: "outro-formato.txt", motivo: MOTIVO_FORMATO_NAO_ACEITO }]);
-    expect((await listarDocumentos(banco)).find((documento) => documento.nome === "versao-numerica.md")?.versao).toBe("3.2");
+    expect((await listarDocumentos(banco, ORGANIZACAO_INICIAL)).find((documento) => documento.nome === "versao-numerica.md")?.versao).toBe("3.2");
   });
 });
 
@@ -126,7 +127,7 @@ describe("Cenário 39 · recarga da base", () => {
 
   it("substitui a versão do mesmo nome e mantém o documento desativado", async () => {
     await carregar(BASE);
-    await definirAtivo(banco, await idDe("politica-seguranca-informacao.md"), false);
+    await definirAtivo(banco, ORGANIZACAO_INICIAL, await idDe("politica-seguranca-informacao.md"), false);
 
     const pasta = await copiaDaBase();
     await cp(path.join(PULSE, "atualizacao"), pasta, { recursive: true });
@@ -136,9 +137,9 @@ describe("Cenário 39 · recarga da base", () => {
     expect(resumo.semMudanca).toHaveLength(14);
     expect(resumo.orfaos).toEqual([]);
 
-    const politica = (await listarDocumentos(banco)).find((documento) => documento.nome === "politica-seguranca-informacao.md");
+    const politica = (await listarDocumentos(banco, ORGANIZACAO_INICIAL)).find((documento) => documento.nome === "politica-seguranca-informacao.md");
     expect(politica).toMatchObject({ versao: "4.0", atualizadoEm: "2026-08-20", ativo: false });
-    const blocos = await listarBlocos(banco, "politica-seguranca-informacao.md");
+    const blocos = await listarBlocos(banco, ORGANIZACAO_INICIAL, "politica-seguranca-informacao.md");
     expect(blocos.some((bloco) => bloco.texto.includes("24 meses"))).toBe(true);
     expect(blocos.some((bloco) => bloco.texto.includes("6 meses"))).toBe(false);
   });
@@ -152,7 +153,7 @@ describe("Cenário 39 · recarga da base", () => {
 
     expect(resumo.carregados).toEqual(["aplicativo.md"]);
     expect(resumo.orfaos).toEqual(["app-mobile-funcionalidades.md"]);
-    expect(await listarDocumentos(banco)).toHaveLength(17);
+    expect(await listarDocumentos(banco, ORGANIZACAO_INICIAL)).toHaveLength(17);
   });
 
   it("mover o arquivo para outra subpasta não muda a identidade: o nome do arquivo é o mesmo", async () => {
@@ -188,7 +189,7 @@ describe("Cenário 39 · recarga da base", () => {
       },
     ]);
     expect(resumo.orfaos).toEqual([]);
-    expect(await listarBlocos(banco, "app-mobile-funcionalidades.md")).not.toHaveLength(0);
+    expect(await listarBlocos(banco, ORGANIZACAO_INICIAL, "app-mobile-funcionalidades.md")).not.toHaveLength(0);
   });
 
   it("mantém a versão anterior quando a nova é recusada", async () => {
@@ -202,7 +203,7 @@ describe("Cenário 39 · recarga da base", () => {
 
     expect(resumo.recusados.map((recusado) => recusado.nome)).toEqual(["app-mobile-funcionalidades.md"]);
     expect(resumo.orfaos).toEqual([]);
-    const blocos = await listarBlocos(banco, "app-mobile-funcionalidades.md");
+    const blocos = await listarBlocos(banco, ORGANIZACAO_INICIAL, "app-mobile-funcionalidades.md");
     expect(blocos.length).toBeGreaterThan(0);
     expect(original).toContain(blocos[0]?.texto ?? "?");
   });
@@ -214,13 +215,13 @@ describe("Cenário 40 · ativar e desativar documento (parte do banco)", () => {
     const nome = "certificado-iso27001-ciclo-anterior.md";
     const id = await idDe(nome);
 
-    expect(await definirAtivo(banco, id, false)).toMatchObject({ nome, ativo: false });
-    expect((await listarDocumentosAtivos(banco)).map((documento) => documento.nome)).not.toContain(nome);
-    expect(await listarDocumentosAtivos(banco)).toHaveLength(15);
+    expect(await definirAtivo(banco, ORGANIZACAO_INICIAL, id, false)).toMatchObject({ nome, ativo: false });
+    expect((await listarDocumentosAtivos(banco, ORGANIZACAO_INICIAL)).map((documento) => documento.nome)).not.toContain(nome);
+    expect(await listarDocumentosAtivos(banco, ORGANIZACAO_INICIAL)).toHaveLength(15);
 
-    await definirAtivo(banco, id, true);
-    expect((await listarDocumentosAtivos(banco)).map((documento) => documento.nome)).toContain(nome);
-    expect(await definirAtivo(banco, 9999, false)).toBeNull();
+    await definirAtivo(banco, ORGANIZACAO_INICIAL, id, true);
+    expect((await listarDocumentosAtivos(banco, ORGANIZACAO_INICIAL)).map((documento) => documento.nome)).toContain(nome);
+    expect(await definirAtivo(banco, ORGANIZACAO_INICIAL, 9999, false)).toBeNull();
   });
 });
 
@@ -231,7 +232,7 @@ describe("Envio pela tela · mesma carga do comando", () => {
   });
 
   it("usa só o nome do arquivo como identidade, mesmo quando o navegador manda um caminho", async () => {
-    const resumo = await carregarArquivos({
+    const resumo = await carregarArquivos({ organizacaoId: ORGANIZACAO_INICIAL, 
       banco,
       hoje: HOJE,
       enviadoPor: "Paula Rocha",
@@ -239,12 +240,12 @@ describe("Envio pela tela · mesma carga do comando", () => {
     });
 
     expect(resumo.carregados).toEqual(["app-mobile-funcionalidades.md"]);
-    expect(await listarDocumentos(banco)).toMatchObject([{ nome: "app-mobile-funcionalidades.md", enviadoPor: "Paula Rocha" }]);
+    expect(await listarDocumentos(banco, ORGANIZACAO_INICIAL)).toMatchObject([{ nome: "app-mobile-funcionalidades.md", enviadoPor: "Paula Rocha" }]);
   });
 
   it("um arquivo enviado pela tela atualiza o documento carregado pelo comando", async () => {
     await carregar(BASE);
-    const resumo = await carregarArquivos({
+    const resumo = await carregarArquivos({ organizacaoId: ORGANIZACAO_INICIAL, 
       banco,
       hoje: HOJE,
       enviadoPor: null,
@@ -252,11 +253,11 @@ describe("Envio pela tela · mesma carga do comando", () => {
     });
 
     expect(resumo.atualizados).toEqual(["politica-seguranca-informacao.md"]);
-    expect(await listarDocumentos(banco)).toHaveLength(16);
+    expect(await listarDocumentos(banco, ORGANIZACAO_INICIAL)).toHaveLength(16);
   });
 
   it("recusa arquivo sem nome e ignora outros formatos, sem impedir os demais", async () => {
-    const resumo = await carregarArquivos({
+    const resumo = await carregarArquivos({ organizacaoId: ORGANIZACAO_INICIAL, 
       banco,
       hoje: HOJE,
       enviadoPor: null,

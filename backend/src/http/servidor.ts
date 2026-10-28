@@ -3,6 +3,7 @@ import { carregarArquivos, type ArquivoParaCarga } from "../base/carga.ts";
 import type { Banco } from "../persistencia/banco.ts";
 import { definirAtivo, listarDocumentos, type DocumentoGravado } from "../persistencia/documentos.ts";
 import { ErroDaRota } from "./erros.ts";
+import { organizacaoDo, registrarOrganizacao } from "./organizacao.ts";
 import { registrarAutenticacao, type OpcoesDaAutenticacao } from "./rotasDeAutenticacao.ts";
 import { ErroDeRevisao } from "../revisao/revisao.ts";
 import { registrarRotasDeRevisao } from "./rotasDeRevisao.ts";
@@ -105,6 +106,7 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
   });
 
   servidor.decorateRequest("pessoaDaSessao", null);
+  servidor.decorateRequest("organizacaoDaSessao", null);
   // Respostas da API nunca ficam em cache (navegador ou proxy): sessão e dados mudam a cada ação.
   servidor.addHook("onSend", async (pedido, resposta) => {
     if (pedido.url.startsWith("/api/")) resposta.header("cache-control", "no-store");
@@ -123,11 +125,13 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
       }
     });
   }
+  // Antes das rotas: a organização do pedido e a conferência do dono das tarefas (fase K).
+  registrarOrganizacao(servidor, { banco, comLogin: opcoes.autenticacao !== undefined });
   if (opcoes.autenticacao !== undefined) registrarAutenticacao(servidor, { banco, autenticacao: opcoes.autenticacao });
   servidor.get("/api/saude", async () => ({ ok: true }));
 
-  servidor.get("/api/base/documentos", async () => ({
-    documentos: (await listarDocumentos(banco)).map(paraTela),
+  servidor.get("/api/base/documentos", async (pedido) => ({
+    documentos: (await listarDocumentos(banco, organizacaoDo(pedido))).map(paraTela),
   }));
 
   servidor.post<{ Body: CorpoDoEnvio }>(
@@ -168,7 +172,8 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
 
       // Com login, quem envia é a pessoa da sessão, nunca o valor do corpo (cenário D4).
       const quem = pedido.pessoaDaSessao?.nome ?? (enviadoPor?.trim().slice(0, TAMANHO_MAXIMO_DE_QUEM_ENVIA) || null);
-      const resumo = await emFila(() => carregarArquivos({ banco, arquivos, hoje: hoje(), enviadoPor: quem }));
+      const organizacaoId = organizacaoDo(pedido);
+      const resumo = await emFila(() => carregarArquivos({ banco, organizacaoId, arquivos, hoje: hoje(), enviadoPor: quem }));
       pedido.log.info(
         {
           arquivos: arquivos.length,
@@ -180,7 +185,7 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
         },
         "Envio para a base",
       );
-      return { resumo, documentos: (await listarDocumentos(banco)).map(paraTela) };
+      return { resumo, documentos: (await listarDocumentos(banco, organizacaoId)).map(paraTela) };
     },
   );
 
@@ -198,7 +203,8 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
       },
     },
     async (pedido) => {
-      const documento = await definirAtivo(banco, Number(pedido.params.id), pedido.body.ativo);
+      // Documento de outra organização: 404, igual ao inexistente (cenário 70).
+      const documento = await definirAtivo(banco, organizacaoDo(pedido), Number(pedido.params.id), pedido.body.ativo);
       if (documento === null) throw new ErroDaRota(404, "Documento não encontrado na base.");
       return { documento: paraTela(documento) };
     },

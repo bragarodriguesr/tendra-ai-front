@@ -13,6 +13,7 @@ import { criarTarefaComPlanilha, executarTarefa, type AmbienteDaTarefa } from ".
 import { carregarPrecos } from "../../src/observabilidade/metricas.ts";
 import { abrirBancoDeTeste } from "../apoio/banco.ts";
 import { abrirBanco, type Banco } from "../../src/persistencia/banco.ts";
+import { ORGANIZACAO_INICIAL } from "../../src/persistencia/organizacoes.ts";
 import { listarItens, listarRequisicoes, marcarInterrompidas, MOTIVO_DE_INTERRUPCAO, obterTarefa } from "../../src/persistencia/tarefas.ts";
 import { ApiSimulada } from "../apoio/apiSimulada.ts";
 import { respondeImparesCitando } from "../apoio/respostasSimuladas.ts";
@@ -42,7 +43,7 @@ async function ambiente(): Promise<AmbienteDaTarefa> {
 
 async function novaTarefa(arquivo = RFP) {
   const contexto = await ambiente();
-  const tarefa = await criarTarefaComPlanilha(contexto, {
+  const tarefa = await criarTarefaComPlanilha(contexto, { organizacaoId: ORGANIZACAO_INICIAL, 
     arquivo: path.basename(arquivo),
     planilha: new Uint8Array(await readFile(arquivo)),
     dados: { nome: "RFP Alfa", empresa: "Rede Varejo Alfa", cnpj: CNPJ, contatos: [{ nome: "Ana Souza", email: "ana@alfa.example" }] },
@@ -52,7 +53,7 @@ async function novaTarefa(arquivo = RFP) {
 
 beforeAll(async () => {
   banco = await abrirBancoDeTeste();
-  await carregarBase({ pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
+  await carregarBase({ organizacaoId: ORGANIZACAO_INICIAL, pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
 }, 60_000);
 
 afterAll(async () => {
@@ -74,11 +75,11 @@ describe("B1 · tarefa processada e gravada", () => {
     api.respostas = [respondeImparesCitando];
     const { contexto, tarefa } = await novaTarefa();
     expect(tarefa).toMatchObject({ estado: "processando", arquivo: "RFP-01-Rede-Varejo-Alfa.xlsx", processadas: 0 });
-    expect(tarefa.caminhoDaPlanilha).toMatch(/^rfps\/[0-9a-f-]{36}\.xlsx$/);
+    expect(tarefa.caminhoDaPlanilha).toMatch(new RegExp(`^${ORGANIZACAO_INICIAL}/rfps/[0-9a-f-]{36}\\.xlsx$`));
 
     await executarTarefa(contexto, tarefa);
 
-    const pronta = await obterTarefa(banco, tarefa.id);
+    const pronta = await obterTarefa(banco, ORGANIZACAO_INICIAL, tarefa.id);
     expect(pronta).toMatchObject({ estado: "pronta", total: 46, processadas: 46, motivo: null });
     expect(pronta?.comportamento).toMatchObject({ modelo: "claude-opus-5-5", versaoDasInstrucoes: "geracao-v3", tamanhoDoLote: 10 });
     expect(pronta?.metricas).toMatchObject({ itens: 46, itensPorEstado: { sugerida: 23, "sem-rascunho": 23 } });
@@ -90,7 +91,7 @@ describe("B1 · tarefa processada e gravada", () => {
     expect(itens.every((item) => item.by === undefined && item.at === undefined)).toBe(true);
 
     const preenchida = new ExcelJS.Workbook();
-    await preenchida.xlsx.load((await contexto.armazenamento.ler(pronta?.caminhoDaPlanilhaPreenchida ?? "")) as unknown as ExcelJS.Buffer);
+    await preenchida.xlsx.load((await contexto.armazenamento.ler(ORGANIZACAO_INICIAL, pronta?.caminhoDaPlanilhaPreenchida ?? "")) as unknown as ExcelJS.Buffer);
     expect(preenchida.worksheets.length).toBeGreaterThan(0);
 
     const registro = await listarRequisicoes(banco, tarefa.id);
@@ -102,7 +103,7 @@ describe("B1 · tarefa processada e gravada", () => {
     const { contexto, tarefa } = await novaTarefa();
     await executarTarefa(contexto, tarefa);
 
-    expect((await obterTarefa(banco, tarefa.id))?.dados.cnpj).toBe(CNPJ);
+    expect((await obterTarefa(banco, ORGANIZACAO_INICIAL, tarefa.id))?.dados.cnpj).toBe(CNPJ);
     const enviado = JSON.stringify([api.geracoes, api.contagens, await listarRequisicoes(banco, tarefa.id)]);
     for (const dado of [CNPJ, "98765432000110", "Ana Souza", "ana@alfa.example", "Rede Varejo Alfa"]) expect(enviado).not.toContain(dado);
   });
@@ -113,7 +114,7 @@ describe("B1 · tarefa processada e gravada", () => {
 
     await executarTarefa(contexto, tarefa);
 
-    expect(await obterTarefa(banco, tarefa.id)).toMatchObject({ estado: "falha", motivo: "Chave da API recusada.", total: 46, processadas: 10, caminhoDaPlanilhaPreenchida: null });
+    expect(await obterTarefa(banco, ORGANIZACAO_INICIAL, tarefa.id)).toMatchObject({ estado: "falha", motivo: "Chave da API recusada.", total: 46, processadas: 10, caminhoDaPlanilhaPreenchida: null });
     expect(await listarItens(banco, tarefa.id)).toEqual([]);
     expect((await listarRequisicoes(banco, tarefa.id)).map((entrada) => entrada.resultado)).toEqual(["sucesso", "sucesso", "erro"]);
   });
@@ -121,7 +122,7 @@ describe("B1 · tarefa processada e gravada", () => {
   it("Cenário 5 · planilha sem perguntas termina em falha com a mensagem do SPEC", async () => {
     const { contexto, tarefa } = await novaTarefa(path.join(RAIZ, "rfps/variantes/RFP-sem-perguntas.xlsx"));
     await executarTarefa(contexto, tarefa);
-    expect(await obterTarefa(banco, tarefa.id)).toMatchObject({ estado: "falha", motivo: "Nenhuma pergunta encontrada na planilha" });
+    expect(await obterTarefa(banco, ORGANIZACAO_INICIAL, tarefa.id)).toMatchObject({ estado: "falha", motivo: "Nenhuma pergunta encontrada na planilha" });
   });
 
   it("erro inesperado do backend vira falha genérica, sem detalhes internos", async () => {
@@ -129,7 +130,7 @@ describe("B1 · tarefa processada e gravada", () => {
     const { contexto, tarefa } = await novaTarefa();
     const inesperados: unknown[] = [];
     await executarTarefa({ ...contexto, aoFalharInesperadamente: (erro) => inesperados.push(erro) }, tarefa);
-    expect(await obterTarefa(banco, tarefa.id)).toMatchObject({ estado: "falha", motivo: "Erro interno no processamento. Tente novamente." });
+    expect(await obterTarefa(banco, ORGANIZACAO_INICIAL, tarefa.id)).toMatchObject({ estado: "falha", motivo: "Erro interno no processamento. Tente novamente." });
     expect(inesperados).toHaveLength(1);
   });
 });
@@ -143,8 +144,8 @@ describe("Cenário 32 · tarefa interrompida por reinício", () => {
 
     expect(await marcarInterrompidas(banco)).toBe(1);
 
-    expect(await obterTarefa(banco, interrompida.id)).toMatchObject({ estado: "falha", motivo: MOTIVO_DE_INTERRUPCAO });
-    expect((await obterTarefa(banco, pronta.id))?.estado).toBe("pronta");
+    expect(await obterTarefa(banco, ORGANIZACAO_INICIAL, interrompida.id)).toMatchObject({ estado: "falha", motivo: MOTIVO_DE_INTERRUPCAO });
+    expect((await obterTarefa(banco, ORGANIZACAO_INICIAL, pronta.id))?.estado).toBe("pronta");
     expect(await marcarInterrompidas(banco)).toBe(0);
   });
 });
@@ -154,17 +155,17 @@ describe("Cenário 47 · persistência após reiniciar", () => {
     const pasta = await mkdtemp(path.join(tmpdir(), "tendra-banco-"));
     try {
       let emDisco = await abrirBanco(path.join(pasta, "banco"));
-      await carregarBase({ pasta: path.join(RAIZ, "pulse-beneficios/base"), banco: emDisco, hoje: "2026-10-21", enviadoPor: null });
+      await carregarBase({ organizacaoId: ORGANIZACAO_INICIAL, pasta: path.join(RAIZ, "pulse-beneficios/base"), banco: emDisco, hoje: "2026-10-21", enviadoPor: null });
       api.respostas = [respondeImparesCitando];
       const contexto = { ...(await ambiente()), banco: emDisco };
-      const tarefa = await criarTarefaComPlanilha(contexto, { arquivo: "RFP-01-Rede-Varejo-Alfa.xlsx", planilha: new Uint8Array(await readFile(RFP)), dados: {} });
+      const tarefa = await criarTarefaComPlanilha(contexto, { organizacaoId: ORGANIZACAO_INICIAL, arquivo: "RFP-01-Rede-Varejo-Alfa.xlsx", planilha: new Uint8Array(await readFile(RFP)), dados: {} });
       await executarTarefa(contexto, tarefa);
-      const antes = { tarefa: await obterTarefa(emDisco, tarefa.id), itens: await listarItens(emDisco, tarefa.id) };
+      const antes = { tarefa: await obterTarefa(emDisco, ORGANIZACAO_INICIAL, tarefa.id), itens: await listarItens(emDisco, tarefa.id) };
       await emDisco.close();
 
       emDisco = await abrirBanco(path.join(pasta, "banco"));
       expect(await marcarInterrompidas(emDisco)).toBe(0);
-      expect({ tarefa: await obterTarefa(emDisco, tarefa.id), itens: await listarItens(emDisco, tarefa.id) }).toEqual(antes);
+      expect({ tarefa: await obterTarefa(emDisco, ORGANIZACAO_INICIAL, tarefa.id), itens: await listarItens(emDisco, tarefa.id) }).toEqual(antes);
       await emDisco.close();
     } finally {
       await rm(pasta, { recursive: true, force: true });

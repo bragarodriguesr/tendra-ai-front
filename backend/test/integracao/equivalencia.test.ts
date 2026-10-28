@@ -18,6 +18,7 @@ import { carregarPrecos } from "../../src/observabilidade/metricas.ts";
 import { abrirBancoDeTeste } from "../apoio/banco.ts";
 import type { Banco } from "../../src/persistencia/banco.ts";
 import { definirAtivo, listarDocumentos } from "../../src/persistencia/documentos.ts";
+import { ORGANIZACAO_INICIAL } from "../../src/persistencia/organizacoes.ts";
 import { ApiSimulada } from "../apoio/apiSimulada.ts";
 import { respondeImparesCitando } from "../apoio/respostasSimuladas.ts";
 
@@ -40,7 +41,7 @@ let avisarFim: () => void;
 
 beforeAll(async () => {
   banco = await abrirBancoDeTeste();
-  await carregarBase({ pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
+  await carregarBase({ organizacaoId: ORGANIZACAO_INICIAL, pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
 }, 60_000);
 
 afterAll(async () => {
@@ -85,7 +86,7 @@ async function pelaRota() {
 }
 
 async function peloComando() {
-  return processarTarefa({
+  return processarTarefa({ organizacaoId: ORGANIZACAO_INICIAL, 
     banco,
     cliente: new ClienteDaIa(api, () => {}),
     ia: IA,
@@ -110,7 +111,7 @@ describe("B6 · cenário 25: comando e backend são equivalentes", () => {
 
 describe("B3 · cenário 40: documento desativado não é citado em nova tarefa", () => {
   it("desativado pela rota, o documento não vai à IA e nenhuma fonte aponta para ele; reativado, volta", async () => {
-    const [primeiro] = await listarDocumentos(banco);
+    const [primeiro] = await listarDocumentos(banco, ORGANIZACAO_INICIAL);
     if (primeiro === undefined) throw new Error("base vazia");
     expect((await servidor.inject({ method: "PATCH", url: `/api/base/documentos/${primeiro.id}`, payload: { ativo: false } })).statusCode).toBe(200);
 
@@ -122,7 +123,7 @@ describe("B3 · cenário 40: documento desativado não é citado em nova tarefa"
     const registro = (await servidor.inject({ method: "GET", url: `/api/tarefas/${id}/registro` })).json().requisicoes;
     expect(registro.every((entrada: { documentos: string[] }) => !entrada.documentos.includes(primeiro.nome))).toBe(true);
 
-    await definirAtivo(banco, primeiro.id, true);
+    await definirAtivo(banco, ORGANIZACAO_INICIAL, primeiro.id, true);
     const reativado = await peloComando();
     expect(reativado.documentos).toContain(primeiro.nome);
   });

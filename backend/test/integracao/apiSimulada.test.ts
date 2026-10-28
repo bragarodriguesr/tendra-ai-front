@@ -11,6 +11,7 @@ import { criarApiSimulada } from "../../src/ia/apiSimulada.ts";
 import { ClienteDaIa } from "../../src/ia/cliente.ts";
 import { abrirBancoDeTeste } from "../apoio/banco.ts";
 import type { Banco } from "../../src/persistencia/banco.ts";
+import { ORGANIZACAO_INICIAL } from "../../src/persistencia/organizacoes.ts";
 
 /**
  * API simulada do servidor (TENDRA_API_SIMULADA=1), usada até a A1. Não mede a IA: só garante
@@ -22,14 +23,14 @@ const IA = { modelo: "claude-opus-5-5", modeloDeIdentificacao: "claude-haiku-5-5
 let banco: Banco;
 beforeAll(async () => {
   banco = await abrirBancoDeTeste();
-  await carregarBase({ pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
+  await carregarBase({ organizacaoId: ORGANIZACAO_INICIAL, pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
 }, 60_000);
 afterAll(async () => {
   await banco.close();
 });
 
 const processar = async (arquivo: string) =>
-  processarTarefa({
+  processarTarefa({ organizacaoId: ORGANIZACAO_INICIAL, 
     banco,
     cliente: new ClienteDaIa(criarApiSimulada(), () => {}),
     ia: IA,

@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { apagarSessao, criarSessao, perfilAtivo, pessoaDaSessao } from "../autenticacao/sessoes.ts";
+import { apagarSessao, criarSessao, perfilAtivo, sessaoValida, type OrganizacaoDaSessao } from "../autenticacao/sessoes.ts";
 import { JANELA_EM_MINUTOS, registrarTentativa, tentativasEsgotadas } from "../autenticacao/tentativas.ts";
 import { ErroDoProvedorDeLogin, type VerificadorDeSenha } from "../autenticacao/verificadorSupabase.ts";
 import type { Pessoa } from "../config/pessoas.ts";
@@ -23,6 +23,8 @@ declare module "fastify" {
   interface FastifyRequest {
     /** Pessoa da sessão; null sem a autenticação ligada (modo local). */
     pessoaDaSessao: Pessoa | null;
+    /** Organização da sessão; null sem a autenticação ligada (modo local, cenário 78). */
+    organizacaoDaSessao: OrganizacaoDaSessao | null;
   }
 }
 
@@ -62,9 +64,11 @@ export function registrarAutenticacao(servidor: FastifyInstance, opcoes: { banco
     const caminho = pedido.url.split("?")[0] ?? "";
     if (!caminho.startsWith("/api/") || ROTAS_SEM_SESSAO.has(caminho)) return;
     const identificador = identificadorDoPedido(pedido.headers.cookie);
-    const pessoa = identificador === null ? null : await pessoaDaSessao(banco, identificador, autenticacao.horasSemUso);
-    if (pessoa === null) return apagarCookie(resposta).status(401).send({ erro: MENSAGEM_DE_SESSAO_INVALIDA });
-    pedido.pessoaDaSessao = pessoa;
+    const sessao = identificador === null ? null : await sessaoValida(banco, identificador, autenticacao.horasSemUso);
+    if (sessao === null) return apagarCookie(resposta).status(401).send({ erro: MENSAGEM_DE_SESSAO_INVALIDA });
+    pedido.pessoaDaSessao = sessao.pessoa;
+    pedido.organizacaoDaSessao = sessao.organizacao;
+    pedido.organizacaoId = sessao.organizacao.id;
   });
 
   servidor.post<{ Body: { email: string; senha: string } }>(
@@ -97,11 +101,14 @@ export function registrarAutenticacao(servidor: FastifyInstance, opcoes: { banco
 
       const identificador = await criarSessao(banco, perfil.id);
       resposta.header("set-cookie", `${COOKIE_DA_SESSAO}=${identificador}; ${atributos}`);
-      return { pessoa: { nome: perfil.nome, papel: perfil.papel } };
+      return { pessoa: { nome: perfil.nome, papel: perfil.papel }, organizacao: { nome: perfil.organizacao.nome } };
     },
   );
 
-  servidor.get("/api/auth/me", async (pedido) => ({ pessoa: { nome: pedido.pessoaDaSessao?.nome, papel: pedido.pessoaDaSessao?.papel } }));
+  servidor.get("/api/auth/me", async (pedido) => ({
+    pessoa: { nome: pedido.pessoaDaSessao?.nome, papel: pedido.pessoaDaSessao?.papel },
+    organizacao: { nome: pedido.organizacaoDaSessao?.nome },
+  }));
 
   servidor.post("/api/auth/logout", async (pedido, resposta) => {
     const identificador = identificadorDoPedido(pedido.headers.cookie);

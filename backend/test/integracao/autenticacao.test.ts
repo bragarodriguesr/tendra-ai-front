@@ -15,6 +15,7 @@ import { MENSAGEM_DE_LOGIN_RECUSADO, MENSAGEM_DE_TENTATIVAS_ESGOTADAS } from "..
 import { criarServidor } from "../../src/http/servidor.ts";
 import { carregarPrecos } from "../../src/observabilidade/metricas.ts";
 import type { Banco } from "../../src/persistencia/banco.ts";
+import { ORGANIZACAO_INICIAL } from "../../src/persistencia/organizacoes.ts";
 import { listarItens } from "../../src/persistencia/tarefas.ts";
 import { listarEventos } from "../../src/revisao/revisao.ts";
 import { ApiSimulada } from "../apoio/apiSimulada.ts";
@@ -51,9 +52,9 @@ const verificador: VerificadorDeSenha = {
 beforeAll(async () => {
   banco = await abrirBancoDeTeste();
   pastaDados = await mkdtemp(path.join(tmpdir(), "tendra-autenticacao-"));
-  await carregarBase({ pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
+  await carregarBase({ organizacaoId: ORGANIZACAO_INICIAL, pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
   for (const perfil of [APROVADOR, REVISOR]) {
-    await banco.query("INSERT INTO perfis (id, email, nome, papel) VALUES ($1, $2, $3, $4)", [perfil.id, perfil.email, perfil.nome, perfil.papel]);
+    await banco.query("INSERT INTO perfis (id, email, nome, papel, organizacao_id) VALUES ($1, $2, $3, $4, $5)", [perfil.id, perfil.email, perfil.nome, perfil.papel, ORGANIZACAO_INICIAL]);
   }
   const api = new ApiSimulada();
   api.respostas = [respondeImparesCitando];
@@ -68,7 +69,7 @@ beforeAll(async () => {
     pessoas: await carregarPessoas(),
     hoje: () => "2026-10-21",
   };
-  const tarefa = await criarTarefaComPlanilha(tarefas, { arquivo: "RFP-01.xlsx", planilha: new Uint8Array(await readFile(path.join(RAIZ, "rfps/RFP-01-Rede-Varejo-Alfa.xlsx"))), dados: {} });
+  const tarefa = await criarTarefaComPlanilha(tarefas, { organizacaoId: ORGANIZACAO_INICIAL, arquivo: "RFP-01.xlsx", planilha: new Uint8Array(await readFile(path.join(RAIZ, "rfps/RFP-01-Rede-Varejo-Alfa.xlsx"))), dados: {} });
   await executarTarefa(tarefas, tarefa);
   tarefaId = tarefa.id;
   servidor = criarServidor({ banco, tarefas, autenticacao: { verificador, horasSemUso: 8, cookieSeguro: true } });
@@ -105,7 +106,7 @@ describe("Cenário D1 · login com credenciais válidas", () => {
   it("cria a sessão, grava o cookie seguro e devolve nome e papel; o e-mail é normalizado", async () => {
     const resposta = await entrar("  Marcelo.Aprovador@Tendra.test ", "senha-do-aprovador");
     expect(resposta.statusCode).toBe(200);
-    expect(resposta.json()).toEqual({ pessoa: { nome: "Marcelo Vieira", papel: "Aprovador" } });
+    expect(resposta.json()).toEqual({ pessoa: { nome: "Marcelo Vieira", papel: "Aprovador" }, organizacao: { nome: "Pulse Benefícios" } });
     const cookie = String(resposta.headers["set-cookie"]);
     expect(cookie).toMatch(/^tendra_sessao=[A-Za-z0-9_-]{43}; Path=\/; HttpOnly; SameSite=Lax; Secure$/);
     const { rows } = await banco.query<{ id_hash: string }>("SELECT id_hash FROM sessoes");
@@ -177,7 +178,7 @@ describe("Cenário D4 · autor definido pela sessão", () => {
   it("/api/auth/me e /api/pessoas devolvem só a pessoa da sessão", async () => {
     const cookie = await cookieDe(APROVADOR.email, "senha-do-aprovador");
     const sessao = await pedir("/api/auth/me", cookie);
-    expect(sessao.json()).toEqual({ pessoa: { nome: "Marcelo Vieira", papel: "Aprovador" } });
+    expect(sessao.json()).toEqual({ pessoa: { nome: "Marcelo Vieira", papel: "Aprovador" }, organizacao: { nome: "Pulse Benefícios" } });
     // Sem cache: depois de sair, o navegador nunca reaproveita a sessão anterior.
     expect(sessao.headers["cache-control"]).toBe("no-store");
     expect((await pedir("/api/pessoas", cookie)).json()).toEqual({ pessoas: [{ id: APROVADOR.id, nome: "Marcelo Vieira", papel: "Aprovador" }] });

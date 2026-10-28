@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Banco } from "../../src/persistencia/banco.ts";
 import { aplicarMigracoes } from "../../src/persistencia/banco.ts";
+import { ORGANIZACAO_INICIAL } from "../../src/persistencia/organizacoes.ts";
 import { abrirBancoDeTeste, URL_DO_POSTGRES_DE_TESTE } from "../apoio/banco.ts";
 
 /** Contrato da interface Banco (etapa D1): o mesmo comportamento no PGlite e no Postgres. */
@@ -18,11 +19,11 @@ describe(`D1 · banco atrás de uma interface (${URL_DO_POSTGRES_DE_TESTE === un
   it("aplica as migrações uma vez só", async () => {
     expect(await aplicarMigracoes(banco)).toEqual([]);
     const { rows } = await banco.query<{ nome: string }>("SELECT nome FROM migracoes_aplicadas ORDER BY nome");
-    expect(rows.map((linha) => linha.nome)).toEqual(["001_documentos_e_blocos.sql", "002_tarefas_itens_e_revisao.sql", "003_paras_originais.sql", "004_contas_e_sessoes.sql", "005_respostas_geradas.sql", "006_revisao_persistida.sql", "007_empresas_e_contatos.sql"]);
+    expect(rows.map((linha) => linha.nome)).toEqual(["001_documentos_e_blocos.sql", "002_tarefas_itens_e_revisao.sql", "003_paras_originais.sql", "004_contas_e_sessoes.sql", "005_respostas_geradas.sql", "006_revisao_persistida.sql", "007_empresas_e_contatos.sql", "008_organizacoes.sql"]);
   });
 
   it("devolve contagens como número, linhas afetadas e jsonb como objeto", async () => {
-    await banco.query("INSERT INTO tarefas (id, estado, arquivo, caminho_da_planilha, dados) VALUES ($1, $2, $3, $4, $5)", ["t1", "processando", "a.xlsx", "rfps/a.xlsx", JSON.stringify({ nome: "A" })]);
+    await banco.query("INSERT INTO tarefas (id, estado, arquivo, caminho_da_planilha, dados, organizacao_id) VALUES ($1, $2, $3, $4, $5, $6)", ["t1", "processando", "a.xlsx", "rfps/a.xlsx", JSON.stringify({ nome: "A" }), ORGANIZACAO_INICIAL]);
     const { rows } = await banco.query<{ total: number; dados: { nome: string } }>("SELECT count(*) AS total, max(dados::text)::jsonb AS dados FROM tarefas");
     expect(rows).toEqual([{ total: 1, dados: { nome: "A" } }]);
     const atualizacao = await banco.query("UPDATE tarefas SET arquivo = $1 WHERE id = $2", ["b.xlsx", "t1"]);

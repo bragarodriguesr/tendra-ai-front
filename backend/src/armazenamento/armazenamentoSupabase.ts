@@ -1,11 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { ErroDeArmazenamento, type Armazenamento } from "./armazenamento.ts";
+import { conferirDono, ErroDeArmazenamento, pastaDaOrganizacao, type Armazenamento } from "./armazenamento.ts";
 
 /** Bucket privado das planilhas (enviadas e preenchidas) no modo compartilhado (etapa D3). */
 export const BUCKET_DAS_PLANILHAS = "rfps";
 
 const EXTENSAO_VALIDA = /^[a-z0-9]{1,10}$/;
-const CAMINHO_GERADO = /^(rfps|resultados)\/[0-9a-f-]{36}\.[a-z0-9]{1,10}$/;
 const TIPOS: Record<string, string> = { xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" };
 
 /**
@@ -32,9 +31,9 @@ export function criarArmazenamentoSupabase(opcoes: { supabaseUrl: string; chaveD
   }
 
   return {
-    async salvar(subpasta, conteudo, extensao) {
+    async salvar(organizacaoId, subpasta, conteudo, extensao) {
       if (!EXTENSAO_VALIDA.test(extensao)) throw new ErroDeArmazenamento(`Extensão de arquivo inválida: ${extensao}`);
-      const caminho = `${subpasta}/${randomUUID()}.${extensao}`;
+      const caminho = `${pastaDaOrganizacao(organizacaoId, subpasta)}/${randomUUID()}.${extensao}`;
       await pedir(caminho, {
         method: "POST",
         headers: { "Content-Type": TIPOS[extensao] ?? "application/octet-stream", "x-upsert": "false" },
@@ -43,14 +42,14 @@ export function criarArmazenamentoSupabase(opcoes: { supabaseUrl: string; chaveD
       return caminho;
     },
 
-    async ler(caminho) {
-      if (!CAMINHO_GERADO.test(caminho)) throw new ErroDeArmazenamento("Caminho fora da pasta de dados.");
+    async ler(organizacaoId, caminho) {
+      conferirDono(organizacaoId, caminho);
       const resposta = await pedir(caminho, { method: "GET" });
       return Buffer.from(await resposta.arrayBuffer());
     },
 
-    async apagar(caminho) {
-      if (!CAMINHO_GERADO.test(caminho)) throw new ErroDeArmazenamento("Caminho fora da pasta de dados.");
+    async apagar(organizacaoId, caminho) {
+      conferirDono(organizacaoId, caminho);
       // Objeto que já não existe: o Storage responde 400 ou 404, e o resultado é o mesmo.
       await pedir(caminho, { method: "DELETE" }, (status) => status === 400 || status === 404);
     },

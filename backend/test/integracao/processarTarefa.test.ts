@@ -12,6 +12,7 @@ import { processarTarefa } from "../../src/fluxo/processarTarefa.ts";
 import { ClienteDaIa, ErroDaIa, type MensagemDaIa, type ParametrosDaGeracao } from "../../src/ia/cliente.ts";
 import { abrirBancoDeTeste } from "../apoio/banco.ts";
 import type { Banco } from "../../src/persistencia/banco.ts";
+import { ORGANIZACAO_INICIAL } from "../../src/persistencia/organizacoes.ts";
 import { ApiSimulada, mensagem, texto } from "../apoio/apiSimulada.ts";
 import { respondeImparesCitando } from "../apoio/respostasSimuladas.ts";
 
@@ -37,7 +38,7 @@ beforeEach(async () => {
 });
 
 async function processar() {
-  return processarTarefa({
+  return processarTarefa({ organizacaoId: ORGANIZACAO_INICIAL, 
     banco,
     cliente: new ClienteDaIa(api, () => {}),
     ia: IA,
@@ -65,11 +66,11 @@ async function celulas(conteudo: Uint8Array): Promise<Map<string, string>> {
 
 describe("Processamento da RFP-01 com a base da Pulse", () => {
   it("gera os itens no formato de data.js e a planilha preenchida, sem alterar as células originais", async () => {
-    await carregarBase({ pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
+    await carregarBase({ organizacaoId: ORGANIZACAO_INICIAL, pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
     api.respostas = [respondeImparesCitando];
     const progresso: number[] = [];
 
-    const resultado = await processarTarefa({
+    const resultado = await processarTarefa({ organizacaoId: ORGANIZACAO_INICIAL, 
       banco,
       cliente: new ClienteDaIa(api, () => {}),
       ia: IA,
@@ -123,7 +124,7 @@ describe("Processamento da RFP-01 com a base da Pulse", () => {
   });
 
   it("Cenário 22 · item com fontes de dois documentos passa pela chamada de conflito", async () => {
-    await carregarBase({ pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
+    await carregarBase({ organizacaoId: ORGANIZACAO_INICIAL, pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
     // Pergunta 1 cita o 2º bloco dos documentos 0 e 1; a chamada de conflito aponta as duas fontes.
     api.respostas = [
       (parametros) => {
@@ -160,7 +161,7 @@ describe("Processamento da RFP-01 com a base da Pulse", () => {
   });
 
   it("Cenário 17 · falha da IA no meio interrompe a tarefa sem resultado", async () => {
-    await carregarBase({ pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
+    await carregarBase({ organizacaoId: ORGANIZACAO_INICIAL, pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
     api.respostas = [respondeImparesCitando, new Anthropic.AuthenticationError(401, undefined, "invalid", new Headers())];
     await expect(processar()).rejects.toEqual(new ErroDaIa("chave_recusada"));
   });

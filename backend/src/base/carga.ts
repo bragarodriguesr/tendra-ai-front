@@ -33,6 +33,8 @@ export interface ResumoDaCarga extends ResumoDoEnvio {
 
 export interface OpcoesDoEnvio {
   banco: Banco;
+  /** Organização dona da base: a da sessão, na rota; a informada ou a inicial, no comando (cenário 70). */
+  organizacaoId: string;
   arquivos: ArquivoParaCarga[];
   /** Data de hoje (AAAA-MM-DD), usada para recusar `atualizado_em` no futuro. */
   hoje: string;
@@ -63,7 +65,7 @@ export function nomeDoArquivo(nomeRecebido: string): string {
  */
 export async function carregarArquivos(opcoes: OpcoesDoEnvio): Promise<ResumoDoEnvio> {
   const resumo: ResumoDoEnvio = { carregados: [], atualizados: [], semMudanca: [], recusados: [], avisos: [], ignorados: [] };
-  const gravados = new Map((await listarDocumentos(opcoes.banco)).map((documento) => [documento.nome, documento]));
+  const gravados = new Map((await listarDocumentos(opcoes.banco, opcoes.organizacaoId)).map((documento) => [documento.nome, documento]));
 
   const arquivos = opcoes.arquivos.map((arquivo) => ({ ...arquivo, nome: nomeDoArquivo(arquivo.nome) }));
   const repetidos = caminhosDosNomesRepetidos(arquivos);
@@ -99,7 +101,7 @@ export async function carregarArquivos(opcoes: OpcoesDoEnvio): Promise<ResumoDoE
       const blocos = dividirEmBlocos(lido.linhas, lido.inicioDoCorpo);
       if (blocos.length === 0) throw new ErroDeArquivoMd("o arquivo não tem conteúdo.");
 
-      const resultado = await gravarDocumento(opcoes.banco, {
+      const resultado = await gravarDocumento(opcoes.banco, opcoes.organizacaoId, {
         nome,
         cabecalho: lido.cabecalho,
         hash,
@@ -131,7 +133,7 @@ export async function carregarBase(opcoes: OpcoesDaCarga): Promise<ResumoDaCarga
       conteudo: new Uint8Array(await readFile(path.join(opcoes.pasta, caminho))),
     })),
   );
-  const nomesAntes = (await listarDocumentos(opcoes.banco)).map((documento) => documento.nome);
+  const nomesAntes = (await listarDocumentos(opcoes.banco, opcoes.organizacaoId)).map((documento) => documento.nome);
   const resumo = await carregarArquivos({ ...opcoes, arquivos });
 
   const encontrados = new Set(arquivos.map((arquivo) => arquivo.nome));

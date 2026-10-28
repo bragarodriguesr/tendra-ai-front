@@ -7,6 +7,7 @@ import { ErroDePlanilha, identificarPerguntas, lerPlanilha, validarArquivoDePlan
 import { gerarRespostas } from "../geracao/gerarRespostas.ts";
 import { criarIdentificadorComIA } from "../geracao/identificarComIA.ts";
 import { ClienteDaIa, criarApiDoClaude, ErroDaIa, type ApiDoClaude, type EntradaDoRegistro, type MensagemDaIa } from "../ia/cliente.ts";
+import { ORGANIZACAO_INICIAL } from "../persistencia/organizacoes.ts";
 import { abrirBancoConfigurado, ErroDeBancoEmUso } from "../persistencia/banco.ts";
 import { buscarFontes, ErroDeTeto, type DocumentoDoContexto } from "../recuperacao/buscarFontes.ts";
 
@@ -58,7 +59,7 @@ async function executar(): Promise<number> {
     const perguntas = identificacao.perguntas.slice(0, limite).map((pergunta, posicao) => ({ numero: posicao + 1, texto: pergunta.texto }));
     console.log(`${identificacao.perguntas.length} perguntas identificadas (${identificacao.origem}); gerando para ${perguntas.length}.`);
 
-    const fontes = await buscarFontes({ banco, cliente, modelo: configuracao.ia.modelo });
+    const fontes = await buscarFontes({ banco, organizacaoId: ORGANIZACAO_INICIAL, cliente, modelo: configuracao.ia.modelo });
     if (fontes.tipo === "vazia") {
       console.log("Base sem documento ativo: todas as perguntas ficam sem rascunho, sem chamar a geração.");
       return 0;

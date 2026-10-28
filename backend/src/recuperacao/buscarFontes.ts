@@ -64,8 +64,9 @@ export function paraBlocosDeDocumento(contexto: Pick<ContextoDaBase, "documentos
  * (cenário 10). Acima de 25 MB, falha antes de qualquer chamada; abaixo, conta os tokens pela
  * API e falha acima de 400 mil (cenário 11).
  */
-export async function buscarFontes(opcoes: { banco: Banco; cliente: ClienteDaIa; modelo: string }): Promise<Fontes> {
-  const ativos = await listarDocumentosAtivos(opcoes.banco);
+export async function buscarFontes(opcoes: { banco: Banco; organizacaoId: string; cliente: ClienteDaIa; modelo: string }): Promise<Fontes> {
+  // Só a base da organização da tarefa (cenário 71): teto e base vazia também contam só ela.
+  const ativos = await listarDocumentosAtivos(opcoes.banco, opcoes.organizacaoId);
   if (ativos.length === 0) return { tipo: "vazia" };
 
   const bytes = ativos.reduce((soma, documento) => soma + documento.tamanhoBytes, 0);
@@ -80,7 +81,7 @@ export async function buscarFontes(opcoes: { banco: Banco; cliente: ClienteDaIa;
       atualizadoEm: documento.atualizadoEm,
       versao: documento.versao,
       tamanhoBytes: documento.tamanhoBytes,
-      blocos: await listarBlocos(opcoes.banco, documento.nome),
+      blocos: await listarBlocos(opcoes.banco, opcoes.organizacaoId, documento.nome),
     });
   }
 

@@ -15,6 +15,7 @@ import { criarServidor } from "../../src/http/servidor.ts";
 import { carregarPrecos } from "../../src/observabilidade/metricas.ts";
 import { abrirBancoDeTeste } from "../apoio/banco.ts";
 import { abrirBanco, type Banco } from "../../src/persistencia/banco.ts";
+import { ORGANIZACAO_INICIAL } from "../../src/persistencia/organizacoes.ts";
 import { listarItens, obterTarefa } from "../../src/persistencia/tarefas.ts";
 import { aprovarItem, avaliarItem, editarTexto, listarEventos, relatorioDeAceitacao } from "../../src/revisao/revisao.ts";
 import { ApiSimulada } from "../apoio/apiSimulada.ts";
@@ -48,14 +49,14 @@ async function ambiente(comBanco: Banco) {
 
 async function tarefaPronta(comBanco: Banco): Promise<string> {
   const contexto = await ambiente(comBanco);
-  const tarefa = await criarTarefaComPlanilha(contexto, { arquivo: "RFP-01-Rede-Varejo-Alfa.xlsx", planilha: new Uint8Array(await readFile(RFP)), dados: {} });
+  const tarefa = await criarTarefaComPlanilha(contexto, { organizacaoId: ORGANIZACAO_INICIAL, arquivo: "RFP-01-Rede-Varejo-Alfa.xlsx", planilha: new Uint8Array(await readFile(RFP)), dados: {} });
   await executarTarefa(contexto, tarefa);
   return tarefa.id;
 }
 
 beforeAll(async () => {
   banco = await abrirBancoDeTeste();
-  await carregarBase({ pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
+  await carregarBase({ organizacaoId: ORGANIZACAO_INICIAL, pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
 }, 60_000);
 
 afterAll(async () => {
@@ -220,18 +221,18 @@ describe("Cenário 47 · persistência da revisão após reiniciar", () => {
     const pasta = await mkdtemp(path.join(tmpdir(), "tendra-banco-revisao-"));
     try {
       let emDisco = await abrirBanco(path.join(pasta, "banco"));
-      await carregarBase({ pasta: path.join(RAIZ, "pulse-beneficios/base"), banco: emDisco, hoje: "2026-10-21", enviadoPor: null });
+      await carregarBase({ organizacaoId: ORGANIZACAO_INICIAL, pasta: path.join(RAIZ, "pulse-beneficios/base"), banco: emDisco, hoje: "2026-10-21", enviadoPor: null });
       const id = await tarefaPronta(emDisco);
       const [kadu, marcelo] = await carregarPessoas();
       if (kadu === undefined || marcelo === undefined) throw new Error("pessoas ausentes");
       await editarTexto(emDisco, { tarefaId: id, numero: 1, pessoa: kadu, texto: "Texto editado." });
       await aprovarItem(emDisco, { tarefaId: id, numero: 1, pessoa: marcelo });
       await avaliarItem(emDisco, { tarefaId: id, numero: 1, pessoa: kadu, valor: "positiva" });
-      const antes = { tarefa: await obterTarefa(emDisco, id), itens: await listarItens(emDisco, id), eventos: await listarEventos(emDisco, id), aceitacao: await relatorioDeAceitacao(emDisco, id) };
+      const antes = { tarefa: await obterTarefa(emDisco, ORGANIZACAO_INICIAL, id), itens: await listarItens(emDisco, id), eventos: await listarEventos(emDisco, id), aceitacao: await relatorioDeAceitacao(emDisco, id) };
       await emDisco.close();
 
       emDisco = await abrirBanco(path.join(pasta, "banco"));
-      expect({ tarefa: await obterTarefa(emDisco, id), itens: await listarItens(emDisco, id), eventos: await listarEventos(emDisco, id), aceitacao: await relatorioDeAceitacao(emDisco, id) }).toEqual(antes);
+      expect({ tarefa: await obterTarefa(emDisco, ORGANIZACAO_INICIAL, id), itens: await listarItens(emDisco, id), eventos: await listarEventos(emDisco, id), aceitacao: await relatorioDeAceitacao(emDisco, id) }).toEqual(antes);
       expect(antes.itens[0]).toMatchObject({ st: "aprovada", by: "Marcelo Vieira", paras: [{ t: "Texto editado.", s: [1] }] });
       await emDisco.close();
     } finally {
@@ -355,7 +356,7 @@ describe("Cenário 60 · excluir tarefa", () => {
     await acao("POST", "3/revisar", { pessoa: "kadu" });
     await acao("PUT", "1/avaliacao", { pessoa: "kadu", valor: "positiva" });
     await servidor.inject({ method: "POST", url: `/api/tarefas/${outra}/itens/1/aprovar`, payload: { pessoa: "marcelo" } });
-    const tarefa = await obterTarefa(banco, tarefaId);
+    const tarefa = await obterTarefa(banco, ORGANIZACAO_INICIAL, tarefaId);
     const arquivos = [tarefa?.caminhoDaPlanilha ?? "", tarefa?.caminhoDaPlanilhaPreenchida ?? ""];
     expect(await Promise.all(arquivos.map(existe))).toEqual([true, true]);
 
