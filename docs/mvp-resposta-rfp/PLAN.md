@@ -716,7 +716,7 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
   - na Base de conhecimento, aparece só o "Subir documentos" do centro; a ordenação e o botão do canto superior voltam com o primeiro documento;
   - "Nova RFP/RFI" (Dashboard e painel de tarefas) fica desabilitado, com a dica de subir um documento;
   - o login leva a Primeiros passos;
-  - no menu lateral, "Primeiros passos" ganha a borda limão em movimento do "Revisar com IA".
+  - no menu lateral, "Primeiros passos" ganha o estilo do "Revisar com IA", com o fundo em gradiente limão em movimento, selecionado ou não (ajustado no mesmo dia: antes era só a borda). Com o primeiro documento, ele volta ao estilo normal do menu.
 - **Primeiros passos, um passo por vez:**
   - os títulos navegam entre os passos, e um passo só abre com o anterior concluído;
   - o passo concluído ganha a marca limão, e a tela segue sozinha para o próximo;
