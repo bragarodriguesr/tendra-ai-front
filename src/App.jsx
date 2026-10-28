@@ -21,7 +21,7 @@ export function App() {
   const logout = () => { ws.sair(); setSiteKey((k) => k + 1); ws.setState({ navOpen: false }); ws.showView("site"); };
   // Com a sessão já aberta (fase D), "Entrar" no site vai direto ao Workspace.
   const login = () => {
-    if (state.sessao) { ws.go("dashboard"); ws.showView("splash"); } else ws.showView("login");
+    if (state.sessao) { ws.go(ws.initialScreen()); ws.showView("splash"); } else ws.showView("login");
   };
   return (
     <>
@@ -29,7 +29,7 @@ export function App() {
         <WebsiteApp key={siteKey} onLogin={login} />
       </div>
       {view === "login" ? (
-        <LoginPage ws={ws} onSite={() => ws.showView("site")} onEnter={() => { ws.go("dashboard"); ws.showView("splash"); }} />
+        <LoginPage ws={ws} onSite={() => ws.showView("site")} onEnter={() => { ws.go(ws.initialScreen()); ws.showView("splash"); }} />
       ) : null}
       {view === "splash" ? (
         <Splash

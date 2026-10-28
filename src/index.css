@@ -69,9 +69,21 @@ label:has(> [role="switch"]) * { box-sizing: border-box; }
 /* Primeiros passos: etapas, área de envio e lista de arquivos */
 .tdr-onb-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 @media (max-width: 700px) { .tdr-onb-steps { grid-template-columns: minmax(0, 1fr); } }
-.tdr-onb-step { border-top: 2px solid var(--border-default); padding-top: 12px; display: grid; gap: 4px; }
-.tdr-onb-step.is-on { border-top-color: var(--brand-ink); }
-.tdr-onb-step.is-done { border-top-color: var(--brand-sage); }
+/* Passos de Primeiros passos: títulos que navegam entre os passos, sem aparência de botão. */
+.tdr-onb-step { appearance: none; background: none; border: 0; border-top: 2px solid var(--border-default); border-radius: 0; padding: 12px 0 0; margin: 0; display: grid; gap: 4px; justify-items: start; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.tdr-onb-step:disabled { cursor: not-allowed; }
+.tdr-onb-step:focus-visible { outline: 2px solid var(--brand-ink); outline-offset: 4px; }
+.tdr-onb-step.is-on, .tdr-onb-step.is-shown { border-top-color: var(--brand-ink); }
+/* Concluído: a marca limão do "Revisar com IA". Aberto, a borda escurece por baixo. */
+.tdr-onb-step.is-done { border-top-color: #B6EA1E; }
+.tdr-onb-step.is-done.is-shown { box-shadow: inset 0 2px 0 var(--brand-ink); }
+.tdr-onb-check { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; flex: none; border-radius: 999px; background: #C8F73D; color: var(--brand-ink); }
+.tdr-onb-done-note { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); border: 1px solid #A9D62A; background: #F4FFD6; color: var(--brand-ink); font-size: 14px; }
+/* Base vazia: "Primeiros passos" no menu lateral com a borda limão em movimento do "Revisar com IA". */
+.tdr-nav-destaque { border: 2px solid transparent; background: linear-gradient(var(--surface-card), var(--surface-card)) padding-box, linear-gradient(110deg, #C8F73D 0%, #E6FF9A 25%, #B6EA1E 50%, #E6FF9A 75%, #C8F73D 100%) border-box !important; background-size: 100% 100%, 300% 100% !important; animation: tdr-borda-flow 3s linear infinite; }
+.tdr-nav-destaque[aria-current="page"] { background: linear-gradient(var(--surface-sunken), var(--surface-sunken)) padding-box, linear-gradient(110deg, #C8F73D 0%, #E6FF9A 25%, #B6EA1E 50%, #E6FF9A 75%, #C8F73D 100%) border-box !important; }
+@keyframes tdr-borda-flow { from { background-position: 0 0, 0% 50%; } to { background-position: 0 0, 300% 50%; } }
+@media (prefers-reduced-motion: reduce) { .tdr-nav-destaque { animation: none; } }
 .tdr-onb-two { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; align-items: start; }
 @media (max-width: 1100px) { .tdr-onb-two { grid-template-columns: minmax(0, 1fr); } }
 .tdr-dropzone { border: 1px dashed var(--border-strong); border-radius: var(--radius-xl); background: var(--surface-card); padding: 28px 24px; display: grid; justify-items: start; gap: 12px; transition: border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out); }

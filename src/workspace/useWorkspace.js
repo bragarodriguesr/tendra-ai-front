@@ -59,6 +59,8 @@ const initialState = ({ initialScreen, role }) => ({
   tAlertsCollapsed: recolhidosAntes(), confirmDownload: null,
   // "Revisar com IA" em andamento e o texto de antes da revisão, para desfazer (cenário 65).
   revisandoIa: false, antesDaIa: null,
+  // Passo aberto em Primeiros passos; null mostra o passo atual (o primeiro ainda não concluído).
+  onbStep: null,
   vw: typeof window !== "undefined" ? window.innerWidth : 1440, navOpen: false, sideCollapsed: false
 });
 
@@ -74,6 +76,8 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
   // Textos editados ainda não gravados, por "tarefa/item": gravados 800 ms depois da última tecla.
   const pendingSaves = React.useRef({});
   const toastTimer = React.useRef(null);
+  // Base vazia lida no login: decide a primeira tela antes do render seguinte.
+  const baseVaziaNoLogin = React.useRef(null);
   // Logout em andamento (fase D): o login seguinte espera ele terminar.
   const saindo = React.useRef(Promise.resolve());
 
@@ -132,8 +136,19 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         // Novo login: os alertas fechados no "X" voltam a aparecer.
         try { localStorage.removeItem(chaveDosAlertasFechados(api.alertOwner())); } catch { /* sem armazenamento */ }
         api.loadAlertsRead();
-        api.loadBase();
+        // A base decide a primeira tela (Dashboard ou Primeiros passos): é lida antes de entrar. O estado
+        // só muda no próximo render, então a decisão usa os documentos devolvidos pela leitura.
+        const documentos = await api.loadBase();
+        baseVaziaNoLogin.current = documentos !== null && documentos.length === 0;
         api.loadTasks();
+      },
+      /** Sem nenhum documento carregado na base da organização (só com o servidor). */
+      baseVazia(s = ref.current) { return s.baseOrigem === "servidor" && s.docs.length === 0; },
+      /** Primeira tela ao entrar: Primeiros passos enquanto a base está vazia; depois, o Dashboard. */
+      initialScreen() {
+        const vazia = baseVaziaNoLogin.current ?? api.baseVazia();
+        baseVaziaNoLogin.current = null;
+        return vazia ? "onboarding" : "dashboard";
       },
       /**
        * Sai: esquece a pessoa na hora, antes da resposta do backend, para que "Entrar" logo em
@@ -303,12 +318,15 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         ].map((d) => ({ type: "Documento", origin: "onb", ...d })));
       },
       /** Lê a base do servidor. Sem servidor, a tela segue com a lista de exemplo. */
+      /** Lê a base do servidor. Devolve os documentos lidos, ou null sem o servidor. */
       async loadBase() {
         try {
           const { documentos } = await listarDocumentosDaBase();
           setState({ docs: documentos.map((d) => paraDocumentoDaTela(d)), baseOrigem: "servidor" });
+          return documentos;
         } catch {
           setState({ baseOrigem: "exemplo" });
+          return null;
         }
       },
       /** "Subir documentos": envia os .md escolhidos no computador para a mesma carga do comando carregar-base. */
@@ -798,7 +816,8 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
   }, [ws]);
   React.useEffect(() => { if (state.screen === "base" || state.screen === "onboarding") ws.loadBase(); }, [ws, state.screen]);
   // Tarefas: lê ao abrir e ao entrar nas telas que as mostram; enquanto alguma processa, consulta o estado a cada 2 segundos.
-  React.useEffect(() => { if (["dashboard", "tasks", "task", "export", "review"].includes(state.screen)) ws.loadTasks(); }, [ws, state.screen]);
+  // Primeiros passos também: os passos 2 e 3 dependem das tarefas e dos itens revisados.
+  React.useEffect(() => { if (["dashboard", "tasks", "task", "export", "review", "onboarding"].includes(state.screen)) ws.loadTasks(); }, [ws, state.screen]);
   React.useEffect(() => { if (state.screen === "new") ws.loadUsers(); }, [ws, state.screen, state.sessao]);
   const processing = state.tarefas.some((t) => t.estado === "processando");
   React.useEffect(() => {
