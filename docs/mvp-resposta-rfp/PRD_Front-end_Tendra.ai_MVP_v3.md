@@ -273,7 +273,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 - Área de envio com arrastar e soltar, "Subir documentos" e "Usar arquivos de exemplo" (Simulado). Abaixo, a lista do que foi enviado nesta tela, com o estado de cada arquivo (F-02).
 - **"Criar primeira RFP"** abre a Nova RFP; ao lado, "Fazer depois" leva ao painel de tarefas.
 - Cartão "O que costuma dar mais contexto": whitepaper e políticas de segurança; RFPs e RFIs já respondidas; contrato padrão e anexos de SLA; certificados e relatórios de auditoria. Mais o texto "Não há número mínimo de documentos…".
-- **Primeiro acesso (28/10/2026):** enquanto a base da organização não tem nenhum documento, o login leva a Primeiros passos, e não ao Dashboard. No menu lateral, "Primeiros passos" fica com uma borda limão em movimento, o mesmo efeito do "Revisar com IA", parada com movimento reduzido. Com o primeiro documento, o login volta a abrir no Dashboard e a borda sai.
+- **Primeiro acesso (28/10/2026):** enquanto a base da organização não tem nenhum documento, o login leva a Primeiros passos, e não ao Dashboard. No menu lateral, "Primeiros passos" ganha o estilo do botão "Revisar com IA": fundo em gradiente limão em movimento, selecionado ou não, parado com movimento reduzido. Com o primeiro documento, o login volta a abrir no Dashboard e o item volta ao estilo normal do menu.
 
 **F-02 · P0 · Subir documentos para a base** (MoSCoW: Must) — **Implementado e ligado ao backend na T2, só para `.md` (v3, 22/10)**
 
