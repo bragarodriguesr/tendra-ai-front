@@ -13,6 +13,7 @@ import { criarServidor } from "../../src/http/servidor.ts";
 import type { MensagemDaIa, ParametrosDaGeracao } from "../../src/ia/cliente.ts";
 import { carregarPrecos } from "../../src/observabilidade/metricas.ts";
 import type { Banco } from "../../src/persistencia/banco.ts";
+import { ORGANIZACAO_INICIAL } from "../../src/persistencia/organizacoes.ts";
 import { lerRespostasGeradas, listarItens, listarRequisicoes, marcarInterrompidas, obterTarefa } from "../../src/persistencia/tarefas.ts";
 import { ApiSimulada } from "../apoio/apiSimulada.ts";
 import { abrirBancoDeTeste } from "../apoio/banco.ts";
@@ -60,7 +61,7 @@ async function ambiente(api: ApiSimulada) {
 }
 
 async function novaTarefa(api: ApiSimulada) {
-  return criarTarefaComPlanilha(await ambiente(api), { arquivo: "RFP-01.xlsx", planilha: new Uint8Array(await readFile(RFP)), dados: {} });
+  return criarTarefaComPlanilha(await ambiente(api), { organizacaoId: ORGANIZACAO_INICIAL, arquivo: "RFP-01.xlsx", planilha: new Uint8Array(await readFile(RFP)), dados: {} });
 }
 
 /** Começa a tarefa e espera ela travar no 3º lote, com 2 lotes (20 perguntas) gravados. */
@@ -75,7 +76,7 @@ async function tarefaInterrompida() {
 beforeAll(async () => {
   banco = await abrirBancoDeTeste();
   pastaDados = await mkdtemp(path.join(tmpdir(), "tendra-retomada-"));
-  await carregarBase({ pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
+  await carregarBase({ organizacaoId: ORGANIZACAO_INICIAL, pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
 }, 60_000);
 
 afterAll(async () => {
@@ -86,7 +87,7 @@ afterAll(async () => {
 describe("Cenário D15 · retomada após reinício", () => {
   it("retoma do lote que faltava, sem gerar de novo os lotes gravados nem duplicar itens", async () => {
     const { tarefa } = await tarefaInterrompida();
-    const antes = await obterTarefa(banco, tarefa.id);
+    const antes = await obterTarefa(banco, ORGANIZACAO_INICIAL, tarefa.id);
     expect(antes).toMatchObject({ estado: "processando", processadas: 20, total: 46 });
     const requisicoesAntes = await listarRequisicoes(banco, tarefa.id);
     expect(requisicoesAntes.map((entrada) => entrada.etapa)).toEqual(["contagem", "geracao", "geracao"]);
@@ -101,7 +102,7 @@ describe("Cenário D15 · retomada após reinício", () => {
     await fim;
     await servidor.close();
 
-    const depois = await obterTarefa(banco, tarefa.id);
+    const depois = await obterTarefa(banco, ORGANIZACAO_INICIAL, tarefa.id);
     expect(depois).toMatchObject({ estado: "pronta", processadas: 46, total: 46 });
     const lotesGerados = api.geracoes.map(numerosDoPedido).filter((numeros) => numeros.length > 0);
     expect(lotesGerados[0]?.[0]).toBe(21);
@@ -127,7 +128,7 @@ describe("Cenário D15 · retomada após reinício", () => {
   it("no modo local (cenário 32), a tarefa interrompida vira falha e as respostas gravadas são descartadas", async () => {
     const { tarefa } = await tarefaInterrompida();
     expect(await marcarInterrompidas(banco)).toBe(1);
-    expect(await obterTarefa(banco, tarefa.id)).toMatchObject({ estado: "falha" });
+    expect(await obterTarefa(banco, ORGANIZACAO_INICIAL, tarefa.id)).toMatchObject({ estado: "falha" });
     expect(await lerRespostasGeradas(banco, tarefa.id)).toEqual([]);
   }, 60_000);
 });

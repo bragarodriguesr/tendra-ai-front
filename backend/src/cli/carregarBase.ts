@@ -4,15 +4,17 @@ import { parseArgs } from "node:util";
 import { carregarBase, type ResumoDaCarga } from "../base/carga.ts";
 import { carregarConfiguracaoSemChave, ErroDeConfiguracao } from "../config/config.ts";
 import { abrirBancoConfigurado, ErroDeBancoEmUso } from "../persistencia/banco.ts";
+import { ErroDeOrganizacao, ORGANIZACAO_INICIAL, organizacaoAtiva } from "../persistencia/organizacoes.ts";
 
 /**
- * Comando `npm run carregar-base -- <pasta> [--enviado-por <nome>]`.
- * Carrega os `.md` da pasta no banco local e imprime o resumo (FORMATO_BASE_MD.md, seção 5).
+ * Comando `npm run carregar-base -- <pasta> [--enviado-por <nome>] [--organizacao <id>]`.
+ * Carrega os `.md` da pasta na base da organização (padrão: a inicial, cenário 78) e imprime o
+ * resumo (FORMATO_BASE_MD.md, seção 5).
  * É a mesma carga do botão "Subir documentos" da tela Base de conhecimento, para quem prefere
  * carregar uma pasta inteira. Termina com código de saída 1 se algum arquivo for recusado.
  * Não usa a chave da API e não roda com o servidor aberto sobre o mesmo banco.
  */
-const USO = "Uso: npm run carregar-base -- <pasta> [--enviado-por <nome>]";
+const USO = "Uso: npm run carregar-base -- <pasta> [--enviado-por <nome>] [--organizacao <id>]";
 
 function imprimir(resumo: ResumoDaCarga): void {
   const secoes: [string, string[]][] = [
@@ -33,7 +35,7 @@ function imprimir(resumo: ResumoDaCarga): void {
 async function executar(): Promise<number> {
   const { values, positionals } = parseArgs({
     allowPositionals: true,
-    options: { "enviado-por": { type: "string" } },
+    options: { "enviado-por": { type: "string" }, organizacao: { type: "string" } },
   });
   const pastaInformada = positionals[0];
   if (pastaInformada === undefined || positionals.length > 1) {
@@ -50,13 +52,15 @@ async function executar(): Promise<number> {
   const configuracao = carregarConfiguracaoSemChave();
   const banco = await abrirBancoConfigurado(configuracao);
   try {
+    const organizacao = await organizacaoAtiva(banco, values.organizacao?.trim() || ORGANIZACAO_INICIAL);
     const resumo = await carregarBase({
       pasta,
       banco,
+      organizacaoId: organizacao.id,
       hoje: new Date().toISOString().slice(0, 10),
       enviadoPor: values["enviado-por"]?.trim() || null,
     });
-    console.log(`Carga da base: ${pastaInformada}`);
+    console.log(`Carga da base: ${pastaInformada} (organização ${organizacao.nome})`);
     imprimir(resumo);
     return resumo.recusados.length > 0 ? 1 : 0;
   } finally {
@@ -67,7 +71,7 @@ async function executar(): Promise<number> {
 try {
   process.exitCode = await executar();
 } catch (erro) {
-  if (!(erro instanceof ErroDeConfiguracao || erro instanceof ErroDeBancoEmUso)) throw erro;
+  if (!(erro instanceof ErroDeConfiguracao || erro instanceof ErroDeBancoEmUso || erro instanceof ErroDeOrganizacao)) throw erro;
   console.error(erro.message);
   process.exitCode = 1;
 }

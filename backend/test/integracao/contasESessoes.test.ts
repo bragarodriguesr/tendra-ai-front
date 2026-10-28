@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Banco } from "../../src/persistencia/banco.ts";
+import { ORGANIZACAO_INICIAL } from "../../src/persistencia/organizacoes.ts";
 import { abrirBancoDeTeste } from "../apoio/banco.ts";
 
 /** Etapa D2 · tabelas de contas, sessões e tentativas de login (migração 004). */
@@ -15,7 +16,7 @@ afterAll(async () => {
 });
 
 const inserirPerfil = (email: string, papel: string, id = ID) =>
-  banco.query("INSERT INTO perfis (id, email, nome, papel) VALUES ($1, $2, $3, $4)", [id, email, "Marcelo Vieira", papel]);
+  banco.query("INSERT INTO perfis (id, email, nome, papel, organizacao_id) VALUES ($1, $2, $3, $4, $5)", [id, email, "Marcelo Vieira", papel, ORGANIZACAO_INICIAL]);
 
 describe("D2 · contas e sessões", () => {
   it("aceita só os papéis Revisor e Aprovador e e-mail em minúsculas", async () => {
@@ -43,7 +44,7 @@ describe("D2 · contas e sessões", () => {
     const { rows } = await banco.query<{ tabela: string; rls: boolean }>(
       "SELECT relname AS tabela, relrowsecurity AS rls FROM pg_class WHERE relkind = 'r' AND relnamespace = to_regnamespace(current_schema())::oid ORDER BY relname",
     );
-    expect(rows.length).toBe(15);
+    expect(rows.length).toBe(16);
     expect(rows.filter((linha) => !linha.rls)).toEqual([]);
   });
 });

@@ -14,6 +14,7 @@
     "avaliar": "node src/cli/avaliar.ts",
     "aceitacao": "node --env-file-if-exists=.env src/cli/aceitacao.ts",
     "servidor": "node --env-file-if-exists=.env src/cli/servidor.ts",
+    "cadastrar-organizacao": "node --env-file-if-exists=.env src/cli/cadastrarOrganizacao.ts",
     "cadastrar-perfil": "node --env-file-if-exists=.env src/cli/cadastrarPerfil.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"

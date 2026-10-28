@@ -8,6 +8,7 @@ import { lerInstrucoes } from "../../src/ia/instrucoes.ts";
 import { abrirBancoDeTeste } from "../apoio/banco.ts";
 import type { Banco } from "../../src/persistencia/banco.ts";
 import { definirAtivo, listarDocumentos } from "../../src/persistencia/documentos.ts";
+import { ORGANIZACAO_INICIAL } from "../../src/persistencia/organizacoes.ts";
 import { buscarFontes, ErroDeTeto, type ContextoDaBase } from "../../src/recuperacao/buscarFontes.ts";
 import Anthropic from "@anthropic-ai/sdk";
 import { ApiSimulada, mensagem, texto } from "../apoio/apiSimulada.ts";
@@ -36,21 +37,21 @@ beforeEach(async () => {
   cliente = new ClienteDaIa(api, (entrada) => registro.push(entrada));
 });
 
-const carregar = () => carregarBase({ pasta: path.join(PULSE, "base"), banco, hoje: "2026-10-21", enviadoPor: null });
+const carregar = () => carregarBase({ organizacaoId: ORGANIZACAO_INICIAL, pasta: path.join(PULSE, "base"), banco, hoje: "2026-10-21", enviadoPor: null });
 
 async function contexto(): Promise<ContextoDaBase> {
-  const fontes = await buscarFontes({ banco, cliente, modelo: IA.modelo });
+  const fontes = await buscarFontes({ organizacaoId: ORGANIZACAO_INICIAL, banco, cliente, modelo: IA.modelo });
   if (fontes.tipo !== "base") throw new Error("esperava base com documentos");
   return fontes.contexto;
 }
 
 describe("Cenário 10 · base vazia", () => {
   it("devolve base vazia sem nenhuma chamada à IA", async () => {
-    expect(await buscarFontes({ banco, cliente, modelo: IA.modelo })).toEqual({ tipo: "vazia" });
+    expect(await buscarFontes({ organizacaoId: ORGANIZACAO_INICIAL, banco, cliente, modelo: IA.modelo })).toEqual({ tipo: "vazia" });
     await carregar();
-    for (const documento of await listarDocumentos(banco)) await definirAtivo(banco, documento.id, false);
+    for (const documento of await listarDocumentos(banco, ORGANIZACAO_INICIAL)) await definirAtivo(banco, ORGANIZACAO_INICIAL, documento.id, false);
 
-    expect(await buscarFontes({ banco, cliente, modelo: IA.modelo })).toEqual({ tipo: "vazia" });
+    expect(await buscarFontes({ organizacaoId: ORGANIZACAO_INICIAL, banco, cliente, modelo: IA.modelo })).toEqual({ tipo: "vazia" });
     expect(api.contagens).toHaveLength(0);
     expect(registro).toHaveLength(0);
   });
@@ -59,8 +60,8 @@ describe("Cenário 10 · base vazia", () => {
 describe("Cenários 35 e 40 · só a base ativa e carregada vai à IA", () => {
   it("monta o contexto só com os documentos ativos, inteiros e nos blocos da carga", async () => {
     await carregar();
-    const desativado = (await listarDocumentos(banco)).find((documento) => documento.nome === "certificado-iso27001-ciclo-anterior.md");
-    await definirAtivo(banco, desativado?.id ?? 0, false);
+    const desativado = (await listarDocumentos(banco, ORGANIZACAO_INICIAL)).find((documento) => documento.nome === "certificado-iso27001-ciclo-anterior.md");
+    await definirAtivo(banco, ORGANIZACAO_INICIAL, desativado?.id ?? 0, false);
 
     const { documentos, tokens } = await contexto();
 
@@ -81,7 +82,7 @@ describe("Cenário 11 · base acima do teto", () => {
     await carregar();
     await banco.exec("UPDATE documentos SET tamanho_bytes = 2 * 1024 * 1024");
 
-    await expect(buscarFontes({ banco, cliente, modelo: IA.modelo })).rejects.toThrow(
+    await expect(buscarFontes({ organizacaoId: ORGANIZACAO_INICIAL, banco, cliente, modelo: IA.modelo })).rejects.toThrow(
       new ErroDeTeto("A base ativa tem 32 MB, acima do teto de 25 MB e 400 mil tokens. Desative documentos na tela da Base para continuar."),
     );
     expect(api.contagens).toHaveLength(0);
@@ -90,7 +91,7 @@ describe("Cenário 11 · base acima do teto", () => {
   it("falha acima de 400 mil tokens, contados pela API", async () => {
     await carregar();
     api.tokensContados = 400_001;
-    await expect(buscarFontes({ banco, cliente, modelo: IA.modelo })).rejects.toThrow(/400\.001 tokens, acima do teto de 25 MB e 400 mil tokens/);
+    await expect(buscarFontes({ organizacaoId: ORGANIZACAO_INICIAL, banco, cliente, modelo: IA.modelo })).rejects.toThrow(/400\.001 tokens, acima do teto de 25 MB e 400 mil tokens/);
   });
 });
 

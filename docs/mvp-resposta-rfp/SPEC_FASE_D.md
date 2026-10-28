@@ -40,7 +40,7 @@ O modo é escolhido por variável de ambiente (`TENDRA_MODO=local|compartilhado`
 #### Cenário D1: login com credenciais válidas
 - **Given** uma conta pré-cadastrada com e-mail, senha, nome e papel (Revisor ou Aprovador) de uma pessoa sintética
 - **When** a pessoa envia e-mail e senha corretos para `POST /api/auth/login`
-- **Then** o backend cria uma sessão, grava o cookie de sessão e devolve `nome` e `papel`
+- **Then** o backend cria uma sessão, grava o cookie de sessão e devolve `nome` e `papel` e, desde a fase K, o nome da organização da pessoa (`SPEC.md`, cenário 68)
 - **And** as rotas do Workspace passam a responder para essa sessão
 
 #### Cenário D2: login com credenciais inválidas
@@ -53,6 +53,7 @@ O modo é escolhido por variável de ambiente (`TENDRA_MODO=local|compartilhado`
 - **When** qualquer rota do Workspace é chamada (base, tarefas, itens, planilha, revisão, aceitação, eventos, registro e métricas)
 - **Then** a resposta é 401 e nenhum dado é devolvido
 - **And** só `POST /api/auth/login` e `GET /api/saude` respondem sem sessão
+- **And** com sessão, cada rota só responde com dados da organização da pessoa; a tarefa ou o documento de outra organização dá 404 (fase K, `SPEC.md`, cenários 70 a 72)
 
 #### Cenário D4: autor definido pela sessão
 - **Given** uma pessoa autenticada

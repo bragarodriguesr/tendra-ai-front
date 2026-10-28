@@ -49,13 +49,16 @@ export interface AmbienteDaTarefa {
 
 export const MOTIVO_DE_ERRO_INTERNO = "Erro interno no processamento. Tente novamente.";
 
-/** Cria a tarefa (a planilha já validada) e devolve-a em `processando`. O processamento é à parte. */
+/**
+ * Cria a tarefa na organização (a planilha já validada) e devolve-a em `processando`. O processamento
+ * é à parte.
+ */
 export async function criarTarefaComPlanilha(
   ambiente: Pick<AmbienteDaTarefa, "banco" | "armazenamento">,
-  entrada: { arquivo: string; planilha: Uint8Array; dados: DadosDaTarefa },
+  entrada: { organizacaoId: string; arquivo: string; planilha: Uint8Array; dados: DadosDaTarefa },
 ): Promise<Tarefa> {
-  const caminhoDaPlanilha = await ambiente.armazenamento.salvar("rfps", entrada.planilha, "xlsx");
-  return criarTarefa(ambiente.banco, { id: randomUUID(), arquivo: entrada.arquivo, caminhoDaPlanilha, dados: entrada.dados });
+  const caminhoDaPlanilha = await ambiente.armazenamento.salvar(entrada.organizacaoId, "rfps", entrada.planilha, "xlsx");
+  return criarTarefa(ambiente.banco, { id: randomUUID(), organizacaoId: entrada.organizacaoId, arquivo: entrada.arquivo, caminhoDaPlanilha, dados: entrada.dados });
 }
 
 /** Processa uma tarefa já criada. Nunca lança: o resultado fica gravado na própria tarefa. */
@@ -70,9 +73,10 @@ export async function executarTarefa(ambiente: AmbienteDaTarefa, tarefa: Tarefa)
   try {
     // Na retomada, as requisições de antes do reinício entram nas métricas.
     registro.unshift(...(await listarRequisicoes(ambiente.banco, tarefa.id)));
-    const planilha = new Uint8Array(await ambiente.armazenamento.ler(tarefa.caminhoDaPlanilha));
+    const planilha = new Uint8Array(await ambiente.armazenamento.ler(tarefa.organizacaoId, tarefa.caminhoDaPlanilha));
     const resultado = await processarTarefa({
       banco: ambiente.banco,
+      organizacaoId: tarefa.organizacaoId,
       cliente,
       ia: ambiente.ia,
       nomesDeCabecalho: ambiente.nomesDeCabecalho,
@@ -87,7 +91,7 @@ export async function executarTarefa(ambiente: AmbienteDaTarefa, tarefa: Tarefa)
         await gravarRespostasGeradas(ambiente.banco, tarefa.id, respostas);
       },
     });
-    const caminhoDaPlanilhaPreenchida = await ambiente.armazenamento.salvar("resultados", resultado.planilhaPreenchida, "xlsx");
+    const caminhoDaPlanilhaPreenchida = await ambiente.armazenamento.salvar(tarefa.organizacaoId, "resultados", resultado.planilhaPreenchida, "xlsx");
     await gravacoes;
     await concluirTarefa(ambiente.banco, tarefa.id, {
       itens: resultado.itens.map((item, posicao) => ({ ...item, aba: resultado.perguntas[posicao]?.aba ?? "", linha: resultado.perguntas[posicao]?.linha ?? 0 })),

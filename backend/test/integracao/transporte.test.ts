@@ -3,6 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { VerificadorDeSenha } from "../../src/autenticacao/verificadorSupabase.ts";
 import { criarServidor } from "../../src/http/servidor.ts";
 import type { Banco } from "../../src/persistencia/banco.ts";
+import { ORGANIZACAO_INICIAL } from "../../src/persistencia/organizacoes.ts";
 import { abrirBancoDeTeste } from "../apoio/banco.ts";
 
 /** Cenário D10 · HTTPS, cookie e origem no modo compartilhado (etapa D6), e o IP vindo do proxy (D7). */
@@ -15,7 +16,7 @@ let servidor: FastifyInstance;
 
 beforeAll(async () => {
   banco = await abrirBancoDeTeste();
-  await banco.query("INSERT INTO perfis (id, email, nome, papel) VALUES ($1, $2, $3, $4)", [PERFIL.id, PERFIL.email, "Marcelo Vieira", "Aprovador"]);
+  await banco.query("INSERT INTO perfis (id, email, nome, papel, organizacao_id) VALUES ($1, $2, $3, $4, $5)", [PERFIL.id, PERFIL.email, "Marcelo Vieira", "Aprovador", ORGANIZACAO_INICIAL]);
   servidor = criarServidor({ banco, autenticacao: { verificador, horasSemUso: 8, cookieSeguro: true }, transporte: { origemDoFront: FRONT } });
   await servidor.ready();
 });

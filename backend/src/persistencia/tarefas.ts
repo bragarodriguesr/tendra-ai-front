@@ -29,6 +29,8 @@ export interface DadosDaTarefa {
 
 export interface Tarefa {
   id: string;
+  /** Organização dona da tarefa (cenário 72). */
+  organizacaoId: string;
   estado: EstadoDaTarefa;
   motivo: string | null;
   arquivo: string;
@@ -62,6 +64,7 @@ export interface ItemGravado extends Omit<ItemDaRevisao, "st"> {
 
 interface LinhaDeTarefa {
   id: string;
+  organizacao_id: string;
   estado: EstadoDaTarefa;
   motivo: string | null;
   arquivo: string;
@@ -78,6 +81,7 @@ interface LinhaDeTarefa {
 
 const paraTarefa = (linha: LinhaDeTarefa): Tarefa => ({
   id: linha.id,
+  organizacaoId: linha.organizacao_id,
   estado: linha.estado,
   motivo: linha.motivo,
   arquivo: linha.arquivo,
@@ -92,43 +96,47 @@ const paraTarefa = (linha: LinhaDeTarefa): Tarefa => ({
   concluidaEm: linha.concluida_em?.toISOString() ?? null,
 });
 
-/** Cria a tarefa e, na mesma transação, grava a empresa e os contatos informados (cenário 63). */
+/**
+ * Cria a tarefa na organização e, na mesma transação, grava a empresa e os contatos informados
+ * (cenários 63 e 73).
+ */
 export async function criarTarefa(
   banco: Banco,
-  tarefa: { id: string; arquivo: string; caminhoDaPlanilha: string; dados: DadosDaTarefa },
+  tarefa: { id: string; organizacaoId: string; arquivo: string; caminhoDaPlanilha: string; dados: DadosDaTarefa },
 ): Promise<Tarefa> {
   return banco.transaction(async (transacao) => {
     const { rows } = await transacao.query<LinhaDeTarefa>(
-      `INSERT INTO tarefas (id, estado, arquivo, caminho_da_planilha, dados) VALUES ($1, 'processando', $2, $3, $4) RETURNING *`,
-      [tarefa.id, tarefa.arquivo, tarefa.caminhoDaPlanilha, JSON.stringify(tarefa.dados)],
+      `INSERT INTO tarefas (id, organizacao_id, estado, arquivo, caminho_da_planilha, dados) VALUES ($1, $2, 'processando', $3, $4, $5) RETURNING *`,
+      [tarefa.id, tarefa.organizacaoId, tarefa.arquivo, tarefa.caminhoDaPlanilha, JSON.stringify(tarefa.dados)],
     );
     const linha = rows[0];
     if (linha === undefined) throw new Error("Falha ao criar a tarefa.");
-    await gravarEmpresaDaTarefa(transacao, tarefa.id, tarefa.dados);
+    await gravarEmpresaDaTarefa(transacao, { tarefaId: tarefa.id, organizacaoId: tarefa.organizacaoId }, tarefa.dados);
     return paraTarefa(linha);
   });
 }
 
-export async function obterTarefa(banco: Banco, id: string): Promise<Tarefa | null> {
-  const { rows } = await banco.query<LinhaDeTarefa>("SELECT * FROM tarefas WHERE id = $1", [id]);
+/** Tarefa da organização, ou null: a de outra organização é tratada como inexistente (cenário 72). */
+export async function obterTarefa(banco: Banco, organizacaoId: string, id: string): Promise<Tarefa | null> {
+  const { rows } = await banco.query<LinhaDeTarefa>("SELECT * FROM tarefas WHERE id = $1 AND organizacao_id = $2", [id, organizacaoId]);
   const linha = rows[0];
   return linha === undefined ? null : paraTarefa(linha);
 }
 
-/** Tarefas da mais nova para a mais antiga. */
-export async function listarTarefas(banco: Banco): Promise<Tarefa[]> {
-  const { rows } = await banco.query<LinhaDeTarefa>("SELECT * FROM tarefas ORDER BY criada_em DESC, id");
+/** Tarefas da organização, da mais nova para a mais antiga. */
+export async function listarTarefas(banco: Banco, organizacaoId: string): Promise<Tarefa[]> {
+  const { rows } = await banco.query<LinhaDeTarefa>("SELECT * FROM tarefas WHERE organizacao_id = $1 ORDER BY criada_em DESC, id", [organizacaoId]);
   return rows.map(paraTarefa);
 }
 
 /**
- * Apaga a tarefa e, em cascata, itens, eventos, avaliações, requisições e respostas gravadas
- * (cenário 60). Devolve os caminhos dos arquivos dela, que o chamador apaga do armazenamento.
+ * Apaga a tarefa da organização e, em cascata, itens, eventos, avaliações, requisições e respostas
+ * gravadas (cenário 60). Devolve os caminhos dos arquivos dela, que o chamador apaga do armazenamento.
  */
-export async function excluirTarefa(banco: Banco, id: string): Promise<string[]> {
+export async function excluirTarefa(banco: Banco, organizacaoId: string, id: string): Promise<string[]> {
   const { rows } = await banco.query<{ caminho_da_planilha: string; caminho_da_planilha_preenchida: string | null }>(
-    "DELETE FROM tarefas WHERE id = $1 RETURNING caminho_da_planilha, caminho_da_planilha_preenchida",
-    [id],
+    "DELETE FROM tarefas WHERE id = $1 AND organizacao_id = $2 RETURNING caminho_da_planilha, caminho_da_planilha_preenchida",
+    [id, organizacaoId],
   );
   return rows.flatMap((linha) => [linha.caminho_da_planilha, ...(linha.caminho_da_planilha_preenchida === null ? [] : [linha.caminho_da_planilha_preenchida])]);
 }

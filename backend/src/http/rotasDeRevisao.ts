@@ -2,6 +2,8 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import type { Pessoa } from "../config/pessoas.ts";
 import type { Banco } from "../persistencia/banco.ts";
 import { exigirAprovador } from "./rotasDeAutenticacao.ts";
+import { listarUsuarios } from "../autenticacao/perfis.ts";
+import { organizacaoDo } from "./organizacao.ts";
 import {
   aprovarItem,
   avaliarItem,
@@ -52,12 +54,11 @@ export function registrarRotasDeRevisao(servidor: FastifyInstance, opcoes: { ban
 
   servidor.get("/api/pessoas", async (pedido) => ({ pessoas: pedido.pessoaDaSessao === null ? pessoas : [pedido.pessoaDaSessao] }));
 
-  // Usuários da plataforma para o campo "Responsável" da Nova RFP (cenário 62): com login, os perfis
-  // ativos; sem login, a lista de configuração. Só nome e papel, nunca o e-mail.
+  // Usuários da plataforma para o campo "Responsável" da Nova RFP (cenários 62 e 74): com login, os
+  // perfis ativos da organização da sessão; sem login, a lista de configuração. Só nome e papel.
   servidor.get("/api/usuarios", async (pedido) => {
     if (pedido.pessoaDaSessao === null) return { usuarios: pessoas.map(({ nome, papel }) => ({ nome, papel })) };
-    const { rows } = await banco.query<{ nome: string; papel: string }>("SELECT nome, papel FROM perfis WHERE ativo ORDER BY nome");
-    return { usuarios: rows };
+    return { usuarios: await listarUsuarios(banco, organizacaoDo(pedido)) };
   });
 
   servidor.put<{ Params: Parametros; Body: ComPessoa & { texto: string } }>(

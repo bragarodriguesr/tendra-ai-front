@@ -10,20 +10,21 @@ import { processarTarefa } from "../fluxo/processarTarefa.ts";
 import { ClienteDaIa, criarApiDoClaude, ErroDaIa, type EntradaDoRegistro } from "../ia/cliente.ts";
 import { calcularMetricas, carregarPrecos } from "../observabilidade/metricas.ts";
 import { abrirBancoConfigurado, ErroDeBancoEmUso } from "../persistencia/banco.ts";
+import { ErroDeOrganizacao, ORGANIZACAO_INICIAL, organizacaoAtiva } from "../persistencia/organizacoes.ts";
 import { ErroDeTeto } from "../recuperacao/buscarFontes.ts";
 
 /**
- * Comando `npm run responder -- <planilha.xlsx>` (cenário 25): processa a planilha com a base ativa
- * do banco, sem servidor nem front. Grava em dados/resultados/<id>/ os itens no formato de data.js
+ * Comando `npm run responder -- <planilha.xlsx> [--organizacao <id>]` (cenário 25): processa a
+ * planilha com a base ativa da organização (padrão: a inicial, cenário 78), sem servidor nem front. Grava em dados/resultados/<id>/ os itens no formato de data.js
  * (itens.json), a planilha preenchida, os dados da tarefa (cenário 38), as métricas (cenário 37)
  * e o registro de requisições (cenário 29). Em falha, grava só a tarefa com o motivo e o registro:
  * nenhum resultado parcial (cenário 17). O resultado pode ser avaliado com `npm run avaliar`.
  * Chama a API real: exige ANTHROPIC_API_KEY e tem custo.
  */
-const USO = "Uso: npm run responder -- <planilha.xlsx>";
+const USO = "Uso: npm run responder -- <planilha.xlsx> [--organizacao <id>]";
 
 async function executar(): Promise<number> {
-  const { positionals } = parseArgs({ allowPositionals: true });
+  const { values, positionals } = parseArgs({ allowPositionals: true, options: { organizacao: { type: "string" } } });
   const arquivo = positionals[0];
   if (arquivo === undefined || positionals.length > 1) {
     console.error(USO);
@@ -45,8 +46,10 @@ async function executar(): Promise<number> {
 
   const banco = await abrirBancoConfigurado(configuracao);
   try {
+    const organizacao = await organizacaoAtiva(banco, values.organizacao?.trim() || ORGANIZACAO_INICIAL);
     const resultado = await processarTarefa({
       banco,
+      organizacaoId: organizacao.id,
       cliente,
       ia: configuracao.ia,
       nomesDeCabecalho: await carregarCabecalhos(),
@@ -111,7 +114,7 @@ async function gravarRegistro(pasta: string, registro: EntradaDoRegistro[]): Pro
 try {
   process.exitCode = await executar();
 } catch (erro) {
-  if (!(erro instanceof ErroDeConfiguracao || erro instanceof ErroDeBancoEmUso)) throw erro;
+  if (!(erro instanceof ErroDeConfiguracao || erro instanceof ErroDeBancoEmUso || erro instanceof ErroDeOrganizacao)) throw erro;
   console.error(erro.message);
   process.exitCode = 1;
 }

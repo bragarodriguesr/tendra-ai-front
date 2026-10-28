@@ -66,28 +66,31 @@ function paraDocumento(linha: LinhaDeDocumento): DocumentoGravado {
   };
 }
 
-/** Todos os documentos da base, ativos ou não, na ordem em que entraram. */
-export async function listarDocumentos(banco: Banco): Promise<DocumentoGravado[]> {
-  const { rows } = await banco.query<LinhaDeDocumento>(`SELECT ${COLUNAS} FROM documentos ORDER BY id`);
+/** Todos os documentos da base da organização, ativos ou não, na ordem em que entraram. */
+export async function listarDocumentos(banco: Banco, organizacaoId: string): Promise<DocumentoGravado[]> {
+  const { rows } = await banco.query<LinhaDeDocumento>(`SELECT ${COLUNAS} FROM documentos WHERE organizacao_id = $1 ORDER BY id`, [organizacaoId]);
   return rows.map(paraDocumento);
 }
 
-/** Só os documentos ativos: os únicos que podem ser fontes de uma nova tarefa (cenário 40). */
-export async function listarDocumentosAtivos(banco: Banco): Promise<DocumentoGravado[]> {
+/** Só os documentos ativos da organização: os únicos que podem ser fontes de uma nova tarefa dela (cenários 40 e 71). */
+export async function listarDocumentosAtivos(banco: Banco, organizacaoId: string): Promise<DocumentoGravado[]> {
   const { rows } = await banco.query<LinhaDeDocumento>(
-    `SELECT ${COLUNAS} FROM documentos WHERE ativo ORDER BY id`,
+    `SELECT ${COLUNAS} FROM documentos WHERE organizacao_id = $1 AND ativo ORDER BY id`,
+    [organizacaoId],
   );
   return rows.map(paraDocumento);
 }
 
 /**
- * Grava um documento novo ou substitui a versão anterior do mesmo nome, com os blocos,
- * numa única transação. A substituição mantém o estado ativo ou inativo (cenário 39).
+ * Grava um documento novo ou substitui a versão anterior do mesmo nome na mesma organização, com os
+ * blocos, numa única transação. A substituição mantém o estado ativo ou inativo (cenário 39); o mesmo
+ * nome em outra organização é outro documento (cenário 70).
  */
-export async function gravarDocumento(banco: Banco, documento: DocumentoParaGravar): Promise<"novo" | "substituido"> {
+export async function gravarDocumento(banco: Banco, organizacaoId: string, documento: DocumentoParaGravar): Promise<"novo" | "substituido"> {
   return banco.transaction(async (transacao) => {
     const { cabecalho } = documento;
-    const existente = await transacao.query<{ id: number }>("SELECT id FROM documentos WHERE nome = $1", [
+    const existente = await transacao.query<{ id: number }>("SELECT id FROM documentos WHERE organizacao_id = $1 AND nome = $2", [
+      organizacaoId,
       documento.nome,
     ]);
     const idExistente = existente.rows[0]?.id;
@@ -95,8 +98,8 @@ export async function gravarDocumento(banco: Banco, documento: DocumentoParaGrav
     let id: number;
     if (idExistente === undefined) {
       const inserido = await transacao.query<{ id: number }>(
-        `INSERT INTO documentos (nome, titulo, tipo, atualizado_em, versao, hash, tamanho_bytes, tokens_estimados, enviado_por)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+        `INSERT INTO documentos (nome, titulo, tipo, atualizado_em, versao, hash, tamanho_bytes, tokens_estimados, enviado_por, organizacao_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
         [
           documento.nome,
           cabecalho.titulo,
@@ -107,6 +110,7 @@ export async function gravarDocumento(banco: Banco, documento: DocumentoParaGrav
           documento.tamanhoBytes,
           documento.tokensEstimados,
           documento.enviadoPor,
+          organizacaoId,
         ],
       );
       const novoId = inserido.rows[0]?.id;
@@ -144,18 +148,21 @@ export async function gravarDocumento(banco: Banco, documento: DocumentoParaGrav
   });
 }
 
-/** Ativa ou desativa um documento (cenário 40). Devolve o documento, ou null se o id não existe na base. */
-export async function definirAtivo(banco: Banco, id: number, ativo: boolean): Promise<DocumentoGravado | null> {
+/**
+ * Ativa ou desativa um documento (cenário 40). Devolve o documento, ou null se o id não existe na base
+ * da organização, igual para um documento de outra organização (cenário 70).
+ */
+export async function definirAtivo(banco: Banco, organizacaoId: string, id: number, ativo: boolean): Promise<DocumentoGravado | null> {
   const { rows } = await banco.query<LinhaDeDocumento>(
-    `UPDATE documentos SET ativo = $2 WHERE id = $1 RETURNING ${COLUNAS}`,
-    [id, ativo],
+    `UPDATE documentos SET ativo = $3 WHERE id = $2 AND organizacao_id = $1 RETURNING ${COLUNAS}`,
+    [organizacaoId, id, ativo],
   );
   const linha = rows[0];
   return linha === undefined ? null : paraDocumento(linha);
 }
 
-/** Blocos de um documento, na ordem do arquivo. */
-export async function listarBlocos(banco: Banco, nome: string): Promise<Bloco[]> {
+/** Blocos de um documento da organização, na ordem do arquivo. */
+export async function listarBlocos(banco: Banco, organizacaoId: string, nome: string): Promise<Bloco[]> {
   const { rows } = await banco.query<{
     ordem: number;
     secao: string;
@@ -166,8 +173,8 @@ export async function listarBlocos(banco: Banco, nome: string): Promise<Bloco[]>
   }>(
     `SELECT b.ordem, b.secao, b.caminho_de_secoes, b.linha_inicial, b.linha_final, b.texto
        FROM blocos b JOIN documentos d ON d.id = b.documento_id
-      WHERE d.nome = $1 ORDER BY b.ordem`,
-    [nome],
+      WHERE d.organizacao_id = $1 AND d.nome = $2 ORDER BY b.ordem`,
+    [organizacaoId, nome],
   );
   return rows.map((linha) => ({
     ordem: linha.ordem,

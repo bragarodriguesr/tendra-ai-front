@@ -14,6 +14,7 @@ import { processarTarefa } from "../../src/fluxo/processarTarefa.ts";
 import { ClienteDaIa, type MensagemDaIa, type ParametrosDaGeracao } from "../../src/ia/cliente.ts";
 import { abrirBancoDeTeste } from "../apoio/banco.ts";
 import type { Banco } from "../../src/persistencia/banco.ts";
+import { ORGANIZACAO_INICIAL } from "../../src/persistencia/organizacoes.ts";
 import { ApiSimulada, mensagem, texto } from "../apoio/apiSimulada.ts";
 
 /** Comando avaliar (etapa A10, cenários 26 e 36) sobre execuções com a API simulada. */
@@ -31,7 +32,7 @@ let base: Map<string, string[]>;
 
 beforeAll(async () => {
   banco = await abrirBancoDeTeste();
-  await carregarBase({ pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
+  await carregarBase({ organizacaoId: ORGANIZACAO_INICIAL, pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
   gabarito = await carregarGabarito(path.join(RAIZ, "rfps/gabarito-rfps-pulse.json"), "base");
   const encontrada = rfpDoGabarito(gabarito, RFP_01);
   const encontrada02 = rfpDoGabarito(gabarito, RFP_02);
@@ -101,7 +102,7 @@ function simularModelo(gabaritoDaRfp: GabaritoDaRfp, errar: "nada" | "inventar")
 async function executar(nome: string, arquivo = RFP_01, errar: "nada" | "inventar" = "nada"): Promise<ExecucaoAvaliada> {
   const api = new ApiSimulada();
   api.respostas = [simularModelo(arquivo === RFP_01 ? rfp : rfp02, errar)];
-  const resultado = await processarTarefa({
+  const resultado = await processarTarefa({ organizacaoId: ORGANIZACAO_INICIAL, 
     banco,
     cliente: new ClienteDaIa(api, () => {}),
     ia: IA,

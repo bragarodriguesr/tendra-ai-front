@@ -16,20 +16,26 @@ export interface EmpresaDaTarefa {
 
 const limpo = (valor: string | undefined) => (valor ?? "").trim();
 
-/** Grava (ou atualiza) a empresa e os contatos informados e liga-os à tarefa. */
-export async function gravarEmpresaDaTarefa(transacao: Transacao, tarefaId: string, dados: DadosDaTarefa): Promise<void> {
+/**
+ * Grava (ou atualiza) a empresa e os contatos informados e liga-os à tarefa. A empresa é procurada só
+ * na organização da tarefa: o mesmo CNPJ em outra organização é outra empresa (cenário 73).
+ */
+export async function gravarEmpresaDaTarefa(transacao: Transacao, tarefa: { tarefaId: string; organizacaoId: string }, dados: DadosDaTarefa): Promise<void> {
+  const { tarefaId, organizacaoId } = tarefa;
   const nome = limpo(dados.empresa);
   if (nome === "") return;
   const digitos = (dados.cnpj ?? "").replace(/\D/g, "");
   const cnpj = digitos.length === 14 ? digitos : null;
 
   const existente = await transacao.query<{ id: number }>(
-    cnpj === null ? "SELECT id FROM empresas WHERE cnpj IS NULL AND lower(trim(nome)) = lower($1)" : "SELECT id FROM empresas WHERE cnpj = $1",
-    [cnpj ?? nome],
+    cnpj === null
+      ? "SELECT id FROM empresas WHERE organizacao_id = $1 AND cnpj IS NULL AND lower(trim(nome)) = lower($2)"
+      : "SELECT id FROM empresas WHERE organizacao_id = $1 AND cnpj = $2",
+    [organizacaoId, cnpj ?? nome],
   );
   let empresaId = existente.rows[0]?.id;
   if (empresaId === undefined) {
-    const nova = await transacao.query<{ id: number }>("INSERT INTO empresas (nome, cnpj) VALUES ($1, $2) RETURNING id", [nome, cnpj]);
+    const nova = await transacao.query<{ id: number }>("INSERT INTO empresas (nome, cnpj, organizacao_id) VALUES ($1, $2, $3) RETURNING id", [nome, cnpj, organizacaoId]);
     empresaId = nova.rows[0]?.id;
     if (empresaId === undefined) throw new Error("Falha ao gravar a empresa.");
   } else {

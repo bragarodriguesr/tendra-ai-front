@@ -49,6 +49,8 @@ export interface ResultadoDaTarefa {
 
 export interface OpcoesDaTarefa {
   banco: Banco;
+  /** Organização da tarefa: só a base dela vai à IA (cenário 71). */
+  organizacaoId: string;
   cliente: ClienteDaIa;
   ia: ConfiguracaoDaIa;
   nomesDeCabecalho: NomesDeCabecalho;
@@ -92,7 +94,7 @@ export async function processarTarefa(opcoes: OpcoesDaTarefa): Promise<Resultado
   const perguntas = identificacao.perguntas.map((pergunta, posicao) => ({ numero: posicao + 1, texto: pergunta.texto }));
   await opcoes.aoProgredir?.(0, perguntas.length);
 
-  const fontes = await medir("contexto", () => buscarFontes({ banco: opcoes.banco, cliente: opcoes.cliente, modelo: opcoes.ia.modelo }));
+  const fontes = await medir("contexto", () => buscarFontes({ banco: opcoes.banco, organizacaoId: opcoes.organizacaoId, cliente: opcoes.cliente, modelo: opcoes.ia.modelo }));
 
   let checados: ItemChecado[];
   if (fontes.tipo === "vazia") {

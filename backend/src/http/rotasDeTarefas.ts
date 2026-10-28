@@ -1,10 +1,12 @@
 import path from "node:path";
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyRequest } from "fastify";
 import type { Pessoa } from "../config/pessoas.ts";
 import { ErroDePlanilha, lerPlanilha, validarArquivoDePlanilha } from "../documentos/planilha.ts";
 import { criarTarefaComPlanilha, executarTarefa, type AmbienteDaTarefa } from "../fluxo/executarTarefa.ts";
 import { ErroDaRota } from "./erros.ts";
 import { exigirAprovador } from "./rotasDeAutenticacao.ts";
+import { listarUsuarios } from "../autenticacao/perfis.ts";
+import { MENSAGEM_DE_TAREFA_NAO_ENCONTRADA, organizacaoDo } from "./organizacao.ts";
 import { gerarPlanilhaDaRevisao } from "../revisao/planilhaDaRevisao.ts";
 import { obterEmpresaDaTarefa } from "../persistencia/empresas.ts";
 import { ClienteDaIa, ErroDaIa } from "../ia/cliente.ts";
@@ -20,6 +22,7 @@ import { excluirTarefa, listarItens, listarRequisicoes, registrarRequisicao, lis
  */
 
 /** Tarefa como o front a recebe: sem caminhos de arquivo nem métricas. */
+/** Tarefa como o front a recebe: sem caminhos de arquivo, métricas nem organização. */
 export function tarefaPublica(tarefa: Tarefa) {
   return {
     id: tarefa.id,
@@ -83,13 +86,15 @@ export function registrarRotasDeTarefas(servidor: FastifyInstance, opcoes: Opcoe
     });
   }
 
-  const tarefaExistente = async (id: string) => {
-    const tarefa = await obterTarefa(banco, id);
-    if (tarefa === null) throw new ErroDaRota(404, "Tarefa não encontrada.");
+  // A conferência central do dono (organizacao.ts) já recusou a tarefa de outra organização; aqui a
+  // consulta também filtra pela organização do pedido.
+  const tarefaExistente = async (pedido: FastifyRequest, id: string) => {
+    const tarefa = await obterTarefa(banco, organizacaoDo(pedido), id);
+    if (tarefa === null) throw new ErroDaRota(404, MENSAGEM_DE_TAREFA_NAO_ENCONTRADA);
     return tarefa;
   };
-  const tarefaPronta = async (id: string) => {
-    const tarefa = await tarefaExistente(id);
+  const tarefaPronta = async (pedido: FastifyRequest, id: string) => {
+    const tarefa = await tarefaExistente(pedido, id);
     if (tarefa.estado === "processando") throw new ErroDaRota(409, "A tarefa ainda está em processamento.");
     if (tarefa.estado === "falha") throw new ErroDaRota(409, `A tarefa falhou: ${tarefa.motivo ?? "sem motivo registrado"}`);
     return tarefa;
@@ -141,6 +146,13 @@ export function registrarRotasDeTarefas(servidor: FastifyInstance, opcoes: Opcoe
       if (dados.cnpj !== undefined && dados.cnpj.trim() !== "" && dados.cnpj.replace(/\D/g, "").length !== 14) {
         throw new ErroDaRota(400, "CNPJ inválido: informe os 14 dígitos.");
       }
+      const organizacaoId = organizacaoDo(pedido);
+      // Responsável só entre os usuários da organização (cenário 74); sem login, os da lista de configuração.
+      const responsavel = dados.responsavel?.trim() ?? "";
+      if (responsavel !== "") {
+        const usuarios = pedido.pessoaDaSessao === null ? opcoes.pessoas : await listarUsuarios(banco, organizacaoId);
+        if (!usuarios.some((usuario) => usuario.nome === responsavel)) throw new ErroDaRota(400, "Responsável inválido: escolha um usuário da organização.");
+      }
       const nome = path.basename(arquivo.nome.replace(/\\/g, "/"));
       const planilha = new Uint8Array(Buffer.from(arquivo.conteudoBase64, "base64"));
       try {
@@ -152,45 +164,45 @@ export function registrarRotasDeTarefas(servidor: FastifyInstance, opcoes: Opcoe
         throw erro;
       }
 
-      const tarefa = await criarTarefaComPlanilha(opcoes, { arquivo: nome, planilha, dados });
+      const tarefa = await criarTarefaComPlanilha(opcoes, { organizacaoId, arquivo: nome, planilha, dados });
       enfileirar(tarefa);
       pedido.log.info({ tarefa: tarefa.id }, "Tarefa criada");
       return resposta.status(202).send({ tarefa: tarefaPublica(tarefa) });
     },
   );
 
-  servidor.get("/api/tarefas", async () => ({ tarefas: (await listarTarefas(banco)).map(tarefaPublica) }));
+  servidor.get("/api/tarefas", async (pedido) => ({ tarefas: (await listarTarefas(banco, organizacaoDo(pedido))).map(tarefaPublica) }));
 
   servidor.get<{ Params: { id: string } }>("/api/tarefas/:id", { schema: { params: ID } }, async (pedido) => ({
-    tarefa: tarefaPublica(await tarefaExistente(pedido.params.id)),
+    tarefa: tarefaPublica(await tarefaExistente(pedido, pedido.params.id)),
   }));
 
   servidor.delete<{ Params: { id: string } }>("/api/tarefas/:id", { schema: { params: ID } }, async (pedido) => {
     exigirAprovador(pedido, "Só o Aprovador pode excluir tarefas.");
-    const tarefa = await tarefaExistente(pedido.params.id);
+    const tarefa = await tarefaExistente(pedido, pedido.params.id);
     // A tarefa em processamento ainda grava itens e arquivos: excluir só depois que ela terminar.
     if (tarefa.estado === "processando") throw new ErroDaRota(409, "A tarefa ainda está em processamento. Exclua depois que ela terminar.");
-    const caminhos = await excluirTarefa(banco, tarefa.id);
+    const caminhos = await excluirTarefa(banco, tarefa.organizacaoId, tarefa.id);
     // Os registros já saíram; um arquivo que falhe ao apagar fica só no log, sem tarefa que aponte para ele.
     for (const caminho of caminhos) {
-      await opcoes.armazenamento.apagar(caminho).catch((erro: unknown) => pedido.log.warn({ tarefa: tarefa.id, caminho, erro: (erro as Error).message }, "Arquivo da tarefa excluída não foi apagado"));
+      await opcoes.armazenamento.apagar(tarefa.organizacaoId, caminho).catch((erro: unknown) => pedido.log.warn({ tarefa: tarefa.id, caminho, erro: (erro as Error).message }, "Arquivo da tarefa excluída não foi apagado"));
     }
     pedido.log.info({ tarefa: tarefa.id, pessoa: pedido.pessoaDaSessao?.nome }, "Tarefa excluída");
     return { excluida: true };
   });
 
   servidor.get<{ Params: { id: string } }>("/api/tarefas/:id/itens", { schema: { params: ID } }, async (pedido) => {
-    await tarefaPronta(pedido.params.id);
-    return { itens: await listarItens(banco, pedido.params.id) };
+    const tarefa = await tarefaPronta(pedido, pedido.params.id);
+    return { itens: await listarItens(banco, tarefa.id) };
   });
 
   servidor.get<{ Params: { id: string } }>("/api/tarefas/:id/planilha", { schema: { params: ID } }, async (pedido, resposta) => {
-    const tarefa = await tarefaPronta(pedido.params.id);
+    const tarefa = await tarefaPronta(pedido, pedido.params.id);
     const itens = await listarItens(banco, tarefa.id);
     // Cenário D9 (revisto em 26/10/2026): o Revisor baixa só a planilha da tarefa concluída; o Aprovador, em qualquer estado.
     if (!revisaoConcluida(itens)) exigirAprovador(pedido, "O Revisor só baixa a planilha de tarefas prontas: todos os itens aprovados e nenhum alerta pendente.");
     // Gerada a cada pedido, com o estado atual da revisão (edições, respostas manuais, aprovações), sem chamar a IA.
-    const original = new Uint8Array(await opcoes.armazenamento.ler(tarefa.caminhoDaPlanilha));
+    const original = new Uint8Array(await opcoes.armazenamento.ler(tarefa.organizacaoId, tarefa.caminhoDaPlanilha));
     const conteudo = Buffer.from(await gerarPlanilhaDaRevisao(original, itens));
     const nome = `${tarefa.arquivo.replace(/\.xlsx$/i, "")}-preenchida.xlsx`;
     return resposta
@@ -201,8 +213,8 @@ export function registrarRotasDeTarefas(servidor: FastifyInstance, opcoes: Opcoe
 
   // Dados da empresa e contatos informados na Nova RFP (cenários 63 e 64), em qualquer estado da tarefa.
   servidor.get<{ Params: { id: string } }>("/api/tarefas/:id/empresa", { schema: { params: ID } }, async (pedido) => {
-    await tarefaExistente(pedido.params.id);
-    return await obterEmpresaDaTarefa(banco, pedido.params.id);
+    const tarefa = await tarefaExistente(pedido, pedido.params.id);
+    return await obterEmpresaDaTarefa(banco, tarefa.id);
   });
 
   // "Revisar com IA" (cenário 65): só a redação de uma resposta manual (item sem sugestão da IA), com o
@@ -219,7 +231,7 @@ export function registrarRotasDeTarefas(servidor: FastifyInstance, opcoes: Opcoe
     async (pedido) => {
       const { id } = pedido.params;
       const numero = Number(pedido.params.numero);
-      const tarefa = await tarefaPronta(id);
+      const tarefa = await tarefaPronta(pedido, id);
       const { rows } = await banco.query<{ orig: string }>("SELECT orig FROM itens WHERE tarefa_id = $1 AND numero = $2", [tarefa.id, numero]);
       if (rows[0] === undefined) throw new ErroDaRota(404, "Item não encontrado.");
       if (rows[0].orig !== "") throw new ErroDaRota(409, "A revisão com IA é só para respostas escritas em itens sem rascunho.");
@@ -241,12 +253,12 @@ export function registrarRotasDeTarefas(servidor: FastifyInstance, opcoes: Opcoe
   );
 
   servidor.get<{ Params: { id: string } }>("/api/tarefas/:id/registro", { schema: { params: ID } }, async (pedido) => {
-    await tarefaExistente(pedido.params.id);
-    return { requisicoes: await listarRequisicoes(banco, pedido.params.id) };
+    const tarefa = await tarefaExistente(pedido, pedido.params.id);
+    return { requisicoes: await listarRequisicoes(banco, tarefa.id) };
   });
 
   servidor.get<{ Params: { id: string } }>("/api/tarefas/:id/metricas", { schema: { params: ID } }, async (pedido) => {
-    const tarefa = await tarefaExistente(pedido.params.id);
+    const tarefa = await tarefaExistente(pedido, pedido.params.id);
     return { metricas: tarefa.metricas };
   });
 }

@@ -218,7 +218,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 **F-35 · P0 · Barra superior do Workspace** — Implementado
 
 - Em Tinta, com 64 px de altura. Da esquerda para a direita: botão de menu (☰), logo (volta ao site), sino de alertas (F-37), menu do usuário e "Sair" (volta à home do site).
-- Menu do usuário: o botão mostra o nome. O menu abre com o perfil (Revisor ou Aprovador) e "Trocar usuário" (Simulado, seção 3). Fecha com Esc, clique fora ou após a troca.
+- Menu do usuário: o botão mostra o nome. O menu abre com o perfil (Revisor ou Aprovador) e "Trocar usuário" (Simulado, seção 3). Com login, mostra também a organização da pessoa, acima do perfil, e não tem "Trocar usuário" (fase K, 28/10/2026: cada organização, a empresa usuária cliente da Tendra.ai, só vê os próprios dados). Fecha com Esc, clique fora ou após a troca.
 - No celular (até 600 px), o botão mostra as iniciais e o "Sair" passa para dentro do menu do usuário.
 
 **F-36 · P1 · Menu lateral recolhível** — Implementado

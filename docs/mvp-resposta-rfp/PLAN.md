@@ -20,6 +20,7 @@ Chegar a um backend que **prove a hipótese central do MVP** (a pessoa aceita as
 | **B. Backend local com revisão** | As etapas atrás de rotas HTTP, com tarefas, progresso, revisão persistida e relatório de aceitação | 4, 16, 17, 23, 24, 28, 30, 31, 32, 40 a 49 |
 | **C. Front conectado** | Nova RFP com arquivo real, progresso e revisão com ações gravadas (a Base já sai conectada da A4) | 6, 16, 23, 24, 33, 40, 42 a 46 |
 | **D. Publicação compartilhada** | Login, sessão, hospedagem e segurança de exposição (fase 1 de `docs/referencia/mvp-proposta-1/PLAN.md`) | Cenários de `docs/referencia/mvp-proposta-1/SPEC.md`; spec próprio quando a fase começar |
+| **K. Organizações** | Segregação lógica dos dados por empresa usuária (multi-tenant): base, tarefas, revisão, métricas, usuários e arquivos de cada organização | 66 a 79 |
 
 > **Situação da fase A (23/10/2026):** A1 feita e execuções reais da A5 a A10 concluídas (`gerar-amostra`, `responder` e `avaliar` com Sonnet 5.5 e Opus 5.5). Com as instruções `geracao-v3` e `conflito-v2` e a checagem por parágrafo (cenário 18 revisto), o Opus 5.5 atinge todos os critérios medidos pelo código na RFP-01 e na RFP-02 (3 execuções). Falta só a lista de fidelidade preenchida por uma pessoa para fechar o portão e registrar o modelo em P8.
 
@@ -558,6 +559,158 @@ Pedida pelo grupo em 26/10/2026. SPEC_FASE_D, cenários D8 e D9 revistos.
 3. **Valor sugerido nas RFPs com valores permitidos** (cenários 50 a 56, P12): decidir o formato antes de implementar.
 4. **Decisões e configuração do grupo:** certificado do banco em `TENDRA_BANCO_CA` no Render; a função `public.rls_auto_enable()` do Supabase, apontada pelo advisor de segurança; proteção da `main` (P7); definição de pronto (P10); plano gratuito da Vercel (PD7); região Brasil para o produto (PD8).
 
+## Fase K: organizações (isolamento entre clientes da Tendra.ai)
+
+Pedida pelo grupo em 28/10/2026. Proposta validada no mesmo dia, com as decisões abaixo, e implementada (etapas K1 a K6). O comportamento esperado está no SPEC, cenários 66 a 79.
+
+**Objetivo:** cada empresa usuária (a **organização**) vê e altera só os próprios dados. O isolamento cobre:
+- base de conhecimento;
+- tarefas, itens e revisão;
+- planilhas;
+- Dashboard e métricas;
+- alertas;
+- usuários;
+- empresas emitentes e contatos.
+
+Na arquitetura, é um multi-tenant com segregação lógica: um banco único, cada registro marcado com a organização dona, e a organização vinda sempre da sessão.
+
+**Dentro do MVP e dos planos gratuitos:** não entra nenhum serviço novo. O isolamento usa o que já existe:
+- Postgres do Supabase (500 MB no plano gratuito; os dados de hoje são 3 perfis, 16 documentos e 3 tarefas);
+- Supabase Auth;
+- Supabase Storage (bucket privado);
+- backend no Render;
+- front na Vercel.
+
+Também não entram uma dependência nova, um banco por cliente ou uma chave de API por cliente.
+
+**Encerra a exceção E2** (base e organização únicas) da constitution (princípio VI, isolamento entre organizações e bases).
+
+### Como o isolamento funciona (proposta)
+
+| Camada | O que garante |
+|---|---|
+| **Identidade** | Tabela `organizacoes` (id UUID, nome, ativa). Cada perfil pertence a uma organização. A organização da sessão é lida do perfil no banco a cada pedido, junto com a pessoa (como o papel hoje), e nunca vem do corpo, da URL, de cabeçalho ou do cookie. |
+| **Dono de cada registro** | `organizacao_id` obrigatório nas tabelas raiz: `perfis`, `documentos`, `tarefas` e `empresas`. As tabelas filhas herdam o dono pela chave estrangeira que já têm. Unicidades passam a valer por organização: nome do documento, CNPJ e nome da empresa emitente. O e-mail do perfil segue único na plataforma. |
+| **Referências cruzadas** | Chave estrangeira composta: `tarefas (empresa_id, organizacao_id)` → `empresas (id, organizacao_id)`. Uma tarefa de A nunca aponta para uma empresa de B, mesmo com um erro no código. |
+| **Consultas** | Toda função de persistência que lê ou altera dado de organização recebe `organizacaoId` como parâmetro obrigatório, tipado, e filtra por ele. Nas rotas com `:id` de tarefa, um único ponto confere o dono antes de qualquer outra consulta (`tarefaDaOrganizacao`). Tarefa de outra organização dá 404, igual a inexistente. |
+| **IA** | `buscarFontes` recebe a organização da tarefa: só a base dela vai ao Claude. O cache de prompt da Anthropic só reaproveita um prefixo idêntico, e as bases diferem, então nada passa de uma organização a outra. O registro de requisições continua por tarefa, sem conteúdo. |
+| **Arquivos** | Caminho no armazenamento prefixado pela organização (`<org>/rfps/<uuid>.xlsx`), conferido na leitura e na exclusão. |
+| **Front** | Mostra a organização no menu do usuário. Limpa todo o estado ao sair e ao entrar. Guarda o estado local dos alertas por organização e perfil. O isolamento real é do backend; o front só não mistura a tela. |
+| **Prova** | Suíte de isolamento com duas organizações, cobrindo todas as rotas (cenário 79). Falha quando aparece uma rota não coberta. |
+
+### Decisões (validadas pelo grupo em 28/10/2026)
+
+| # | Decisão | Sugestão |
+|---|---|---|
+| PK1 | Nome do conceito | **Decidido: "Organização"** no código, no banco e na interface (menu do usuário: "Organização: [nome]"). "Empresa" continua sendo a emitente da RFP, como já está na Nova RFP, no detalhe da tarefa e na tabela `empresas`. |
+| PK2 | Segunda camada no banco: Row Level Security por organização | **Decidido: fase K sem ela.** O filtro no backend, as chaves compostas e a suíte de isolamento já cobrem o MVP, com dados sintéticos. Se o grupo quiser defesa em profundidade, ela entra como etapa K7, depois do resto. Na K7, o backend passa a abrir cada pedido numa transação com `SET LOCAL tendra.organizacao`, com políticas `FORCE ROW LEVEL SECURITY` comparando `organizacao_id`. O custo: a coluna também nas tabelas filhas, toda consulta dentro de transação (servidor, processamento em segundo plano e comandos) e mais um ponto a manter no PGlite. Cabe no plano gratuito. |
+| PK3 | Organização dos dados atuais | **Decidido: "Pulse Benefícios"** recebe tudo o que existe hoje (3 perfis, 16 documentos, 3 tarefas, 5 empresas, com itens, eventos, contatos e arquivos). É a organização inicial, com id fixo (`ORGANIZACAO_INICIAL`), e também a do modo local. Para a conferência no publicado: uma segunda organização, **"Organização de teste B"**, com uma conta Aprovador nova, criada pelo grupo no Supabase Auth. |
+| PK4 | Cadastro de organizações e usuários | **Decidido.** Por comando (`cadastrar-organizacao` e `cadastrar-perfil` com a organização), rodado pela equipe com as variáveis do Render, como o `cadastrar-perfil` de hoje (D4, PD2). Sem tela de administração no MVP. |
+| PK5 | Troca de organização | **Decidido.** Não existe. Uma conta pertence a uma organização para sempre. Quem precisa de outra usa outra conta. Assim a sessão, o histórico e o estado local nunca carregam dados de uma organização para outra. |
+
+### Etapas
+
+#### K1. Esquema e migração `008_organizacoes.sql`
+- Tabela `organizacoes` (id `uuid` com `gen_random_uuid()`, nome, ativa, criada_em), com RLS ligado e sem regra (D11).
+- `organizacao_id uuid NOT NULL REFERENCES organizacoes` em `perfis`, `documentos`, `tarefas` e `empresas`, com índices.
+- Unicidades por organização:
+  - `documentos (organizacao_id, nome)`;
+  - `empresas (organizacao_id, cnpj)`;
+  - nome da empresa sem CNPJ, por organização.
+- Chave composta tarefa → empresa (cenário 77).
+- A migração cria a organização inicial (PK3) e liga a ela todos os dados existentes. No banco novo do modo local, cria a organização local.
+- **Testes:** migração sobre um banco com dados da fase J (nada perdido, tudo na organização inicial); unicidades por organização; a chave composta recusa tarefa com empresa de outra organização. PGlite e Postgres.
+
+#### K2. Contas, sessão e comandos
+- `cadastrar-organizacao <nome>`; `cadastrar-perfil` passa a exigir a organização e recusa mudar a de um e-mail existente.
+- Pessoa da sessão ganha `organizacaoId` (lida do perfil e da organização ativa a cada pedido); `GET /api/auth/me` devolve o nome da organização; organização inativa bloqueia login e sessões.
+- **Testes:** cenários 66 a 69.
+
+#### K3. Base de conhecimento e geração
+- Persistência da base com `organizacaoId` obrigatório: listar, carregar, ativar e listar os ativos.
+- `buscarFontes` recebe a organização da tarefa.
+- `carregar-base` aceita `--organizacao` (padrão: a local).
+- **Testes:** cenários 70 e 71; documentos de mesmo nome em A e B; base de B não entra na geração de A, nem na retomada.
+
+#### K4. Tarefas, revisão, empresas, arquivos e métricas
+- `tarefaDaOrganizacao` em todas as rotas com `:id`, antes de qualquer outra consulta.
+- Criação grava a organização da sessão.
+- Lista filtrada.
+- Empresas e contatos por organização.
+- Responsável validado entre os usuários da organização.
+- Caminho dos arquivos com prefixo.
+- Comandos (`responder`, `aceitacao`) com `--organizacao`.
+- **Testes:** cenários 72 a 74 e 76.
+
+#### K5. Front
+- Organização no menu do usuário.
+- Estado do Workspace zerado ao sair e entrar.
+- Chaves do estado local dos alertas com organização e perfil, no lugar do nome.
+- **Testes:** cenário 75 na jornada de ponta a ponta, com troca de conta no mesmo navegador.
+
+#### K6. Suíte de isolamento e conferência no publicado
+- Suíte do cenário 79, na integração contínua, com a lista de rotas do servidor comparada à lista testada.
+- No publicado:
+  1. migração no Supabase (conferida por consulta: nenhuma linha sem organização);
+  2. criação da organização B e de uma conta nela;
+  3. com essa conta, conferir que nenhum documento, tarefa, alerta ou número da organização inicial aparece;
+  4. a base de B vazia gera "sem rascunho" mesmo com a base inicial cheia;
+  5. de volta à conta inicial, tudo continua igual.
+
+#### K7. (opcional, PK2) Row Level Security por organização
+- Fora da fase K, por decisão do grupo (PK2). Fica descrita em PK2 para uma evolução.
+
+### Situação (28/10/2026): implementada; falta a conferência no publicado
+
+**Implementado:**
+- **Banco:** migração `008_organizacoes.sql` e `src/persistencia/organizacoes.ts`, com a organização inicial Pulse Benefícios.
+- **Persistência e IA:** recebem a organização como parâmetro obrigatório:
+  - base (listar, gravar, ativar, blocos);
+  - geração (`buscarFontes`, `processarTarefa`);
+  - tarefas (criar, obter, listar, excluir);
+  - empresas emitentes;
+  - usuários (`listarUsuarios`).
+- **Rotas:** `src/http/organizacao.ts` define a organização do pedido (da sessão ou, sem login, a inicial). Ele também confere o dono em toda rota `/api/tarefas/:id…`, num único ponto que vale para as rotas novas.
+- **Sessão:** `sessaoValida` lê pessoa e organização do banco a cada pedido. Organização desativada derruba o login e as sessões. Login e `/api/auth/me` trazem o nome da organização.
+- **Arquivos:** caminho `<organização>/rfps|resultados/<uuid>.xlsx`, com o dono conferido em `ler` e `apagar`. Os caminhos antigos, sem a organização, valem só para a inicial.
+- **Comandos:**
+  - `cadastrar-organizacao <nome>` (novo);
+  - `cadastrar-perfil <e-mail> <nome> <papel> <id-da-organização>`, que recusa mudar a organização de um perfil;
+  - `--organizacao` em `carregar-base` e `responder`;
+  - `gerar-amostra` usa a inicial.
+- **Front:**
+  - organização no menu do usuário;
+  - estado do Workspace zerado ao sair, ao entrar e ao perder a sessão;
+  - chaves locais dos alertas com organização e pessoa. Os alertas lidos, fechados ou tratados antes da fase K voltam a aparecer uma vez.
+
+**Testes:**
+- Suíte de isolamento `test/integracao/organizacoes.test.ts` (14 testes), com duas organizações:
+  - toda rota com o id de uma tarefa de A responde 404 para B, sem alterar nada de A;
+  - a lista de rotas do servidor é comparada à lista testada;
+  - base com o mesmo nome de arquivo em A e B;
+  - geração só com a base de B, e base vazia sem chamar a IA;
+  - mesmo CNPJ e mesmo e-mail de contato em A e B como registros separados;
+  - usuários e responsável da organização;
+  - organização desativada;
+  - arquivos de outra organização recusados;
+  - chave composta tarefa → empresa.
+- Teste da migração sobre um banco da fase J (`migracaoOrganizacoes.test.ts`).
+- 349 testes no PGlite e no Postgres; jornada de ponta a ponta verde.
+- No navegador, com um backend de teste de duas organizações: a conta de B, depois da de A no mesmo navegador, não vê tarefas, base nem alertas de A, e o menu mostra a organização de cada conta.
+
+**Para a conferência no publicado (K6), depois do merge:**
+1. O deploy do Render aplica a migração no Supabase.
+2. Conferir por consulta: tudo na Pulse Benefícios, nenhuma linha sem organização.
+3. O grupo cria no Supabase Auth a conta da organização B (Authentication → Add user, já confirmada).
+4. Rodar `cadastrar-organizacao "Organização de teste B"` e `cadastrar-perfil` com o id devolvido.
+5. Entrar com as duas contas e conferir o isolamento.
+
+### Atualizações de documentos na implementação
+- `ARQUITETURA_MAPPING.md`: a exceção E2 sai, e a seção do isolamento entra.
+- `SPEC_FASE_D.md`: D1, D3 e D11 citam a organização.
+- PRD: menu do usuário com a organização.
+- `README` do backend: os comandos novos.
+
 ## Definição de pronto (proposta, P10)
 
 Uma etapa só é concluída quando:
@@ -591,6 +744,7 @@ Uma etapa só é concluída quando:
 | 41 a 46 | Pela tela: editar, restaurar, aprovar, tentar aprovar item sem rascunho e avaliar; tentar uma ação sem pessoa válida |
 | 47 | Reiniciar o backend e conferir que edições, aprovações e avaliações continuam |
 | 48 e 49 | Consultar o relatório de aceitação e os eventos de uma tarefa revisada e conferir os números |
+| 66 a 79 | Com duas organizações (inicial e B), entrar com uma conta de cada e conferir que base, tarefas, Dashboard, alertas, usuários e empresas de uma nunca aparecem na outra; tentar abrir pela URL uma tarefa da outra (404); rodar a suíte de isolamento |
 
 ## Fora deste plano
 

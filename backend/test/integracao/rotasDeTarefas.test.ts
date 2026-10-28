@@ -16,6 +16,7 @@ import type { ApiDoClaude, MensagemDaIa, ParametrosDaGeracao } from "../../src/i
 import { carregarPrecos } from "../../src/observabilidade/metricas.ts";
 import { abrirBancoDeTeste } from "../apoio/banco.ts";
 import type { Banco } from "../../src/persistencia/banco.ts";
+import { ORGANIZACAO_INICIAL } from "../../src/persistencia/organizacoes.ts";
 import { ApiSimulada } from "../apoio/apiSimulada.ts";
 import { respondeImparesCitando } from "../apoio/respostasSimuladas.ts";
 
@@ -32,7 +33,7 @@ let aguardando: Map<string, Promise<void>>;
 
 beforeAll(async () => {
   banco = await abrirBancoDeTeste();
-  await carregarBase({ pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
+  await carregarBase({ organizacaoId: ORGANIZACAO_INICIAL, pasta: path.join(RAIZ, "pulse-beneficios/base"), banco, hoje: "2026-10-21", enviadoPor: null });
 }, 60_000);
 
 afterAll(async () => {

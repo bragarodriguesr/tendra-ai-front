@@ -55,7 +55,7 @@ constitution: 1.0.0
 
 ### Exceções aceitas nesta versão (princípio XII)
 
-As exceções E1 a E5 estão descritas e justificadas na seção 9.2 de `ARQUITETURA_MAPPING.md`: ausência de login, com a pessoa que age vinda de uma lista de configuração (E1), base única (E2), sem criptografia própria em repouso (E3), HTTP só dentro da máquina (E4) e observabilidade só local (E5). Todas valem apenas para as fases A a C, com dados sintéticos, e terminam com a fase D.
+As exceções E1 a E5 estão descritas e justificadas na seção 9.2 de `ARQUITETURA_MAPPING.md`: ausência de login, com a pessoa que age vinda de uma lista de configuração (E1), base única (E2), sem criptografia própria em repouso (E3), HTTP só dentro da máquina (E4) e observabilidade só local (E5). Todas valem apenas para as fases A a C, com dados sintéticos, e terminam com a fase D. A exceção E2 (base e organização únicas) termina com a fase K (cenários 66 a 79), que separa os dados por organização.
 
 ## Dependências de infraestrutura
 
@@ -504,6 +504,128 @@ Estes cenários vêm de `docs/referencia/mvp-proposta-1/SPEC.md` (30, 36, 38, 39
 - **And** a rota recusa texto com menos de 30 palavras (400) e item com sugestão da IA (409), sem chamar a IA; falha da IA dá 502 com o motivo
 - **And** a requisição entra no registro da tarefa (cenário 29), sem o texto
 
+### Organizações: isolamento entre clientes da Tendra.ai (fase K)
+
+Pedido do grupo em 28/10/2026 e implementado no mesmo dia (decisões PK1 a PK5 do `PLAN.md`, validadas pelo grupo). A Tendra.ai é um SaaS: cada **organização** (a empresa usuária, cliente da Tendra.ai) só vê e só altera os próprios dados. É a segregação lógica de um multi-tenant: um banco único, com cada registro identificado pela organização dona e com cada consulta limitada a ela.
+
+**Termos desta seção:**
+- **organização** é a empresa usuária, cliente da Tendra.ai. O termo foi escolhido para não colidir com **empresa**, que no produto continua a ser a empresa que emitiu a RFP (cenário 63);
+- **dado da organização** é tudo o que nasce do uso dela:
+  - documentos e blocos da base;
+  - tarefas e itens;
+  - planilhas enviadas e preenchidas;
+  - eventos, avaliações, aprovações, registro de requisições e métricas;
+  - empresas emitentes e contatos;
+  - usuários (perfis);
+- **organização da sessão** é a organização do perfil que entrou. É a única fonte da organização em qualquer pedido.
+
+#### Cenário 66: organização cadastrada com identificador forte
+- **Given** a equipe da Tendra.ai cadastrando um novo cliente
+- **When** ela roda `npm run cadastrar-organizacao -- <nome>`
+- **Then** a organização é gravada com um identificador UUID gerado pelo backend, o nome e o estado ativa
+- **And** o comando mostra o identificador, que é o usado no cadastro dos usuários
+- **And** não há tela de cadastro de organização nem auto cadastro no MVP
+
+#### Cenário 67: usuário pertence a exatamente uma organização
+- **Given** uma organização ativa e uma conta criada no Supabase Auth
+- **When** a equipe roda `npm run cadastrar-perfil -- <e-mail> <nome> <papel> <organização>`
+- **Then** o perfil fica ligado a essa organização, e só a ela
+- **And** o comando recusa, com mensagem, uma organização inexistente ou inativa
+- **And** o comando recusa mudar de organização um e-mail já ligado a outra (para isso, uma conta nova), para que nenhum dado acompanhe a pessoa de uma organização para outra
+- **And** o e-mail continua único na plataforma inteira: a mesma pessoa em dois clientes usa duas contas
+
+#### Cenário 68: sessão carrega a organização
+- **Given** uma pessoa que entra com credenciais válidas (cenário D1)
+- **When** a sessão é criada e usada
+- **Then** a organização da sessão é a do perfil, lida do banco a cada pedido e nunca do cookie ou do navegador
+- **And** `GET /api/auth/me` devolve, além de nome e papel, o nome da organização, que o Workspace mostra no menu do usuário
+- **When** a organização é desativada
+- **Then** o login dos seus usuários é recusado com a mesma mensagem do cenário D2, e as sessões abertas passam a receber 401 (cenário D3)
+
+#### Cenário 69: organização vem só da sessão
+- **Given** uma pessoa autenticada da organização A
+- **When** ela envia um pedido que informa outra organização no corpo, na URL ou num cabeçalho
+- **Then** campo desconhecido no corpo é recusado com 400, como hoje
+- **And** nenhum valor do pedido muda a organização: o backend usa sempre a da sessão
+
+#### Cenário 70: base de conhecimento isolada
+- **Given** as organizações A e B com documentos na base
+- **When** uma pessoa de A lista, envia, ativa ou desativa documentos
+- **Then** ela vê e altera só os documentos de A
+- **And** o mesmo nome de arquivo pode existir em A e em B como documentos diferentes; enviar o arquivo em A nunca substitui o de B (a identidade é organização + nome)
+- **And** o identificador de um documento de B, usado por uma pessoa de A, responde 404, igual a um documento inexistente
+
+#### Cenário 71: geração usa só a base da organização da tarefa
+- **Given** uma tarefa da organização A
+- **When** ela é processada, inclusive na retomada depois de um reinício (cenário D15)
+- **Then** só os documentos ativos de A vão à IA, e as fontes e citações só apontam para documentos de A
+- **And** a base vazia e o teto da base (cenários 10 e 11) são calculados só com os documentos de A
+- **And** a revisão com IA da resposta manual (cenário 65) recebe só o texto do item de A
+
+#### Cenário 72: tarefas, revisão e exportação isoladas
+- **Given** as organizações A e B com tarefas
+- **When** uma pessoa de A usa o painel de tarefas, a Nova RFP, a revisão ou a exportação
+- **Then** ela vê só as tarefas de A, e a tarefa que cria pertence a A
+- **And** toda rota que recebe o identificador de uma tarefa responde 404 quando a tarefa é de B, igual a uma tarefa inexistente, sem revelar que ela existe. Isso vale para:
+  - itens, planilha e empresa;
+  - revisão, avaliação e aprovação;
+  - eventos, aceitação, registro de requisições e métricas;
+  - exclusão;
+- **And** o identificador de tarefa continua um UUID gerado pelo backend
+
+#### Cenário 73: empresas emitentes e contatos por organização
+- **Given** uma tarefa criada em A com uma empresa e contatos (cenário 63)
+- **When** B cria uma tarefa com o mesmo CNPJ ou o mesmo nome de empresa
+- **Then** B ganha a própria empresa e os próprios contatos; nada é compartilhado nem atualizado entre A e B
+- **And** a regra "mesma empresa quando o CNPJ é igual" do cenário 63 passa a valer dentro de cada organização
+
+#### Cenário 74: usuários e responsável da organização
+- **Given** uma pessoa de A
+- **When** ela abre a lista de usuários (`GET /api/usuarios`) ou escolhe o responsável na Nova RFP (cenário 62)
+- **Then** a lista traz só os perfis ativos de A
+- **And** a tarefa com um responsável que não é usuário de A é recusada (400)
+
+#### Cenário 75: Dashboard, alertas e contadores da organização
+- **Given** uma pessoa de A no Workspace
+- **When** ela abre o Dashboard, o sino de alertas, o painel de tarefas ou o menu lateral
+- **Then** os números, alertas e prazos saem só das tarefas e da base de A
+- **And** ao sair e entrar com outra conta no mesmo navegador, nada da sessão anterior continua na tela
+- **And** o estado local dos alertas (lidos, fechados e tratados, fase H) é guardado por organização e pessoa, nunca só pelo nome da pessoa
+
+#### Cenário 76: arquivos separados por organização
+- **Given** uma planilha enviada ou preenchida de uma tarefa de A
+- **When** o arquivo é gravado no armazenamento (disco local ou Supabase Storage)
+- **Then** o caminho começa pelo identificador de A (`<organização>/rfps/…` e `<organização>/resultados/…`), com o nome do arquivo ainda gerado pelo backend (cenário 31)
+- **And** o backend só lê ou apaga um arquivo cujo caminho começa pela organização da tarefa; os arquivos gravados antes da fase K são lidos pelo caminho guardado na tarefa
+
+#### Cenário 77: dono gravado no banco e referências da mesma organização
+- **Given** o esquema do banco
+- **When** um registro é gravado
+- **Then** as tabelas raiz guardam a organização dona em `organizacao_id`, obrigatório e com chave estrangeira para `organizacoes`:
+  - `perfis` e `documentos`;
+  - `tarefas` e `empresas`;
+- **And** as tabelas filhas pertencem à organização da tabela raiz, pela chave estrangeira que já existe:
+  - `blocos` (do documento);
+  - `itens`, `requisicoes`, `eventos`, `avaliacoes`, `respostas_geradas` e `tarefa_contatos` (da tarefa);
+  - `contatos` (da empresa);
+- **And** uma tarefa só referencia uma empresa da mesma organização. A chave estrangeira composta por `empresa_id` e `organizacao_id` garante isso no próprio banco, e não só no código
+- **And** as tabelas novas seguem com Row Level Security ligado e sem regra de acesso, fechadas para a API pública do Supabase (cenário D11)
+
+#### Cenário 78: dados atuais e modo local
+- **Given** o banco antes da fase K
+- **When** a migração roda
+- **Then** a migração cria a organização inicial, **Pulse Benefícios** (PK3), com um id fixo no código, e todos os dados existentes passam a ela, sem perda:
+  - perfis e documentos;
+  - tarefas e empresas, com o que pende delas;
+- **And** no modo local (sem login), tudo pertence à organização inicial; os comandos `carregar-base` e `responder` usam a inicial ou a informada em `--organizacao`
+
+#### Cenário 79: isolamento comprovado por teste
+- **Given** um banco de teste com as organizações A e B, cada uma com usuários, base, tarefas, itens revisados, empresas e arquivos
+- **When** a suíte de isolamento roda na integração contínua (PGlite e Postgres)
+- **Then** cada rota do Workspace, chamada por uma pessoa de A com identificadores de B, responde 404 ou devolve só dados de A
+- **And** a suíte falha quando surge uma rota nova que ela não cobre, comparando a lista de rotas do servidor com a lista testada
+- **And** no navegador, com um backend de teste com duas organizações: a conta de B, depois da de A no mesmo navegador, não vê tarefas, base nem alertas de A, e o menu do usuário mostra a organização de cada uma (a jornada de ponta a ponta continua no modo local, sem login)
+
 ### Avaliação da IA
 
 #### Cenário 26: relatório de avaliação contra o gabarito
@@ -568,7 +690,7 @@ Exigidos pela constitution (IV). São medidos pelo comando de avaliação (cená
 | Relevância da recuperação | Proporção das perguntas com resposta no gabarito cuja fonte inclui o documento esperado | 80% (decidido em 21/10/2026) |
 | Comportamento com contexto insuficiente | Proporção das perguntas sem resposta no gabarito que ficaram sem rascunho | 100%: nenhuma resposta onde o gabarito indica ausência |
 | Comportamento com fontes conflitantes | Proporção dos casos de conflito do gabarito marcados com o alerta `conflict` | 100% dos casos embutidos na base sintética |
-| Isolamento da base | Citações de documentos fora da base autorizada | Nenhuma |
+| Isolamento da base | Citações de documentos fora da base autorizada, incluindo documentos de outra organização (cenário 71) | Nenhuma |
 | Consistência dos guardrails | Execuções em que a instrução maliciosa e a pergunta de compromisso não sustentado foram tratadas corretamente | 3 de 3 execuções |
 | Fidelidade do conteúdo | Proporção das respostas cujo texto diz o mesmo que os trechos citados | 90% (decidido em 21/10/2026) |
 | Acerto do valor sugerido | Nas RFPs com valores permitidos, proporção das perguntas com resposta no gabarito cujo valor sugerido é o valor esperado | `[DECISÃO PENDENTE: limite; o gabarito precisa trazer o valor esperado de cada pergunta]` |
@@ -576,6 +698,14 @@ Exigidos pela constitution (IV). São medidos pelo comando de avaliação (cená
 
 ## Fora de escopo
 
+- **Organizações (fase K):** os itens abaixo ficam fora do MVP. A organização é cadastrada por comando (cenário 66):
+  - tela de cadastro de organizações, auto cadastro e convite por e-mail;
+  - painel de administração da Tendra.ai;
+  - pessoa em mais de uma organização com a mesma conta, e troca de organização;
+  - cobrança e planos por organização;
+  - cota de uso da IA por organização;
+  - banco, chave de criptografia ou chave da API separados por organização (isolamento físico);
+  - Row Level Security por organização no Postgres, se o grupo não escolher a segunda camada (PK2 do `PLAN.md`).
 - Login, sessão, hospedagem, banco gerenciado, armazenamento de arquivos em nuvem e qualquer acesso pela rede: **fase D**, com cenários de `docs/referencia/mvp-proposta-1/SPEC.md` (1 a 4, 37, 44, 50 a 52 e 54). Os cuidados de preparação estão na seção 8 de `ARQUITETURA_MAPPING.md`.
 - Qualquer formato de base que não seja `.md`, conversão de outros formatos e exclusão de documentos. A base entra pela tela ou pelo comando, sempre em `.md`.
 - RFP em formato diferente de `.xlsx`.

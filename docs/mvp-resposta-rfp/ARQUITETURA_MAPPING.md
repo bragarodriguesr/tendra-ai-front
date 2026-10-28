@@ -285,10 +285,25 @@ Cada exceção vale **só para as fases A a C, com dados sintéticos**, e termin
 | # | Princípio | Exceção | Justificativa | Mitigação | Termina quando |
 |---|---|---|---|---|---|
 | E1 | VI: autenticação, autorização e controle por papéis | Não há login. A pessoa que age é uma das pessoas sintéticas, enviada em cada requisição e validada contra uma lista de configuração. O papel é gravado, mas não restringe a aprovação. | Uso só na própria máquina, com dados sintéticos; a revisão persistida precisa saber quem agiu | O backend aceita só conexões de `127.0.0.1`; pessoa fora da lista é recusada | Qualquer acesso fora da máquina local (fase D) |
-| E2 | VI: isolamento entre organizações e bases | Uma única base, de uma única empresa fictícia | Não há segundo cliente | Só os documentos ativos do banco são fontes; teste garante que um `.md` fora do banco nunca é usado | Existir uma segunda base ou organização |
+| E2 | VI: isolamento entre organizações e bases | Uma única base, de uma única empresa fictícia | Não há segundo cliente | Só os documentos ativos do banco são fontes; teste garante que um `.md` fora do banco nunca é usado | **Encerrada pela fase K (28/10/2026)**: dados separados por organização, ver 9.3 |
 | E3 | VI: proteção em repouso | Banco e arquivos locais sem criptografia própria | Dados sintéticos, na máquina de desenvolvimento | Dados fora do repositório; nenhum dado real | Uso de dados reais ou hospedagem |
 | E4 | VI: proteção em trânsito | Front e backend se comunicam por HTTP dentro da máquina | O tráfego não sai da máquina | A chamada à API da Anthropic usa HTTPS | Acesso por rede (fase D) |
 | E5 | IX: observabilidade em produção | Não há produção | Execução só local | Registro de requisições e métricas por tarefa | Publicação (fase D) |
+
+### 9.3 Isolamento entre organizações (fase K)
+
+Cada empresa usuária, cliente da Tendra.ai, é uma **organização**. É um multi-tenant com segregação lógica: um banco único, em que cada registro pertence a uma organização (SPEC, cenários 66 a 79; PLAN, fase K).
+
+| Camada | Onde fica |
+|---|---|
+| Dono de cada registro | `organizacao_id` obrigatório em `perfis`, `documentos`, `tarefas` e `empresas`; as tabelas filhas herdam pela chave estrangeira; unicidades por organização; chave composta tarefa → empresa (migração 008) |
+| Organização do pedido | `src/http/organizacao.ts`: da sessão (lida do perfil a cada pedido) ou, sem login, a inicial; nunca do pedido |
+| Conferência do dono | O mesmo módulo, antes de toda rota `/api/tarefas/:id…` (404 para outra organização); as funções de persistência recebem a organização e filtram por ela |
+| IA | `buscarFontes` só com a base da organização da tarefa |
+| Arquivos | Caminho com o id da organização, conferido em `ler` e `apagar` |
+| Prova | Suíte `test/integracao/organizacoes.test.ts`, com a lista de rotas do servidor comparada à testada |
+
+Row Level Security por organização no Postgres fica fora (PK2): as tabelas seguem com RLS ligado e sem regra, fechadas para a API pública do Supabase.
 
 A exceção E5 da versão anterior deste documento (edição e aprovação não persistidas) **deixa de existir**: a revisão passa a ser gravada. A antiga E6 (observabilidade) ocupa o lugar de E5.
 

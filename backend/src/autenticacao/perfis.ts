@@ -28,14 +28,30 @@ export async function idDaContaNoSupabase(opcoes: { supabaseUrl: string; chaveDe
   throw new ErroDeCadastro(`Nenhuma conta com o e-mail ${opcoes.email} no Supabase Auth. Crie-a antes no painel (Authentication → Add user).`);
 }
 
-/** Cria ou atualiza o perfil da conta, sempre ativo. */
-export async function gravarPerfil(banco: Banco, perfil: { id: string; email: string; nome: string; papel: string }): Promise<void> {
+/**
+ * Cria ou atualiza o perfil da conta, sempre ativo, na organização informada (cenário 67). Um perfil
+ * nunca muda de organização (PK5): a conta já ligada a outra é recusada, e a pessoa usa outra conta.
+ */
+export async function gravarPerfil(banco: Banco, perfil: { id: string; email: string; nome: string; papel: string; organizacaoId: string }): Promise<void> {
   if (!PAPEIS.some((papel) => papel === perfil.papel)) throw new ErroDeCadastro(`Papel inválido "${perfil.papel}". Use ${PAPEIS.join(" ou ")}.`);
   const nome = perfil.nome.trim();
   if (nome === "") throw new ErroDeCadastro("Informe o nome da pessoa.");
+  const { rows } = await banco.query<{ organizacao_id: string }>("SELECT organizacao_id FROM perfis WHERE id = $1 OR email = $2", [perfil.id, perfil.email]);
+  if (rows.some((linha) => linha.organizacao_id !== perfil.organizacaoId)) {
+    throw new ErroDeCadastro(`A conta ${perfil.email} já pertence a outra organização. Um perfil não muda de organização: crie outra conta para esta.`);
+  }
   await banco.query(
-    `INSERT INTO perfis (id, email, nome, papel) VALUES ($1, $2, $3, $4)
+    `INSERT INTO perfis (id, email, nome, papel, organizacao_id) VALUES ($1, $2, $3, $4, $5)
      ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email, nome = EXCLUDED.nome, papel = EXCLUDED.papel, ativo = true`,
-    [perfil.id, perfil.email, nome, perfil.papel],
+    [perfil.id, perfil.email, nome, perfil.papel, perfil.organizacaoId],
   );
+}
+
+/**
+ * Usuários ativos da organização, só nome e papel, nunca o e-mail (cenários 62 e 74). Base do campo
+ * "Responsável" da Nova RFP e da validação dele.
+ */
+export async function listarUsuarios(banco: Banco, organizacaoId: string): Promise<{ nome: string; papel: string }[]> {
+  const { rows } = await banco.query<{ nome: string; papel: string }>("SELECT nome, papel FROM perfis WHERE ativo AND organizacao_id = $1 ORDER BY nome", [organizacaoId]);
+  return rows;
 }
