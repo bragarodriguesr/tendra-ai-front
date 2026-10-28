@@ -168,8 +168,12 @@ describe("Cenários 4 e 31 · validação da planilha no envio", () => {
     expect(resposta.json()).toEqual({ erro: "A planilha passa do limite de 10 MB" });
   });
 
-  it("recusa CNPJ sem 14 dígitos e campos desconhecidos", async () => {
-    expect((await enviar(RFP_01, { cnpj: "123" })).resposta.json()).toEqual({ erro: "CNPJ inválido: informe os 14 dígitos." });
+  it("recusa CNPJ fora do formato e campos desconhecidos", async () => {
+    const erro = { erro: "CNPJ inválido: informe os 14 caracteres (12 letras ou números e 2 dígitos verificadores)." };
+    expect((await enviar(RFP_01, { cnpj: "123" })).resposta.json()).toEqual(erro);
+    // Letra nos dígitos verificadores e caractere a mais.
+    expect((await enviar(RFP_01, { cnpj: "12.ABC.345/01DE-3A" })).resposta.json()).toEqual(erro);
+    expect((await enviar(RFP_01, { cnpj: "12.ABC.345/01DE-351" })).resposta.json()).toEqual(erro);
     expect((await enviar(RFP_01, { senha: "x" })).resposta.statusCode).toBe(400);
   });
 
@@ -236,6 +240,17 @@ describe("Cenários 62 a 64 · responsável, empresa e contatos", () => {
       { nome: "banco horizonte", tarefas: 2, contatos: 0 },
       { nome: "Rede Varejo Alfa S.A.", tarefas: 2, contatos: 1 },
     ]);
+  });
+
+  it("aceita o CNPJ alfanumérico: grava sem máscara e em maiúsculas e reconhece a mesma empresa", async () => {
+    const a = await enviar(RFP_01, { empresa: "Vereda Logística", cnpj: "12.ABC.345/01DE-35" });
+    const b = await enviar(RFP_01, { empresa: "Vereda Logística S.A.", cnpj: "12abc34501de35" });
+    expect(a.resposta.statusCode).toBe(202);
+    expect(b.resposta.statusCode).toBe(202);
+    await Promise.all([a, b].map((x) => x.terminou()));
+    expect((await obter(`/api/tarefas/${a.id}/empresa`)).json().empresa).toEqual({ nome: "Vereda Logística S.A.", cnpj: "12ABC34501DE35" });
+    const { rows } = await banco.query<{ tarefas: number }>("SELECT (SELECT count(*)::int FROM tarefas t WHERE t.empresa_id = e.id) AS tarefas FROM empresas e WHERE cnpj = '12ABC34501DE35'");
+    expect(rows).toEqual([{ tarefas: 2 }]);
   });
 
   it("tarefa sem empresa não grava empresa; excluir a tarefa mantém empresa e contatos para consulta", async () => {

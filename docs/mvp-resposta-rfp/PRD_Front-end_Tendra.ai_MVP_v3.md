@@ -348,6 +348,10 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
   - **Prazo de submissão** — obrigatório; não pode estar no passado.
   - **Responsável** — obrigatório; escolhido entre os usuários da plataforma (com login, os perfis ativos; sem login, as pessoas de exemplo), lidos de `GET /api/usuarios` desde 24/10/2026 (SPEC, cenário 62).
 - **CNPJ (novo):** máscara 00.000.000/0000-00 e conferência dos dígitos verificadores, com os erros "CNPJ incompleto." e "CNPJ inválido.".
+  - Desde 28/10/2026, aceita também o CNPJ alfanumérico (IN RFB nº 2.229/2024): letras ou números nas 12 primeiras posições e 2 dígitos verificadores numéricos.
+  - As letras viram maiúsculas na digitação.
+  - O dígito verificador usa o mesmo módulo 11, com cada caractere valendo o código ASCII menos 48.
+  - Os CNPJs só numéricos continuam válidos.
 - **Contatos da empresa (novo):**
   - Bloco no fim do formulário: "Quem acompanha esta proposta do lado do cliente. Opcional."
   - Cada contato tem Nome, Cargo, Telefone (máscara (00) 00000-0000; erro "Telefone incompleto.") e E-mail (erro "E-mail inválido.").

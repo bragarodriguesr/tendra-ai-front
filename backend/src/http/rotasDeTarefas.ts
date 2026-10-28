@@ -6,6 +6,7 @@ import { criarTarefaComPlanilha, executarTarefa, type AmbienteDaTarefa } from ".
 import { ErroDaRota } from "./erros.ts";
 import { exigirAprovador } from "./rotasDeAutenticacao.ts";
 import { listarUsuarios } from "../autenticacao/perfis.ts";
+import { normalizarCnpj } from "../regras/cnpj.ts";
 import { MENSAGEM_DE_TAREFA_NAO_ENCONTRADA, organizacaoDo } from "./organizacao.ts";
 import { gerarPlanilhaDaRevisao } from "../revisao/planilhaDaRevisao.ts";
 import { obterEmpresaDaTarefa } from "../persistencia/empresas.ts";
@@ -45,6 +46,8 @@ export function tarefaPublica(tarefa: Tarefa) {
 function revisaoConcluida(itens: Awaited<ReturnType<typeof listarItens>>): boolean {
   return itens.length > 0 && itens.every((item) => item.st === "aprovada" && item.alerts.every((alerta) => alerta.ack !== undefined || alerta.t === "manual"));
 }
+
+export const MENSAGEM_DE_CNPJ_INVALIDO = "CNPJ inválido: informe os 14 caracteres (12 letras ou números e 2 dígitos verificadores).";
 
 const ID = { type: "object", properties: { id: { type: "string", pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" } } } as const;
 const TEXTO_CURTO = { type: "string", maxLength: 200 } as const;
@@ -143,8 +146,9 @@ export function registrarRotasDeTarefas(servidor: FastifyInstance, opcoes: Opcoe
     async (pedido, resposta) => {
       const { arquivo, dados = {} } = pedido.body;
       if (!BASE64.test(arquivo.conteudoBase64)) throw new ErroDaRota(400, "Pedido inválido: conteúdo de arquivo mal codificado.");
-      if (dados.cnpj !== undefined && dados.cnpj.trim() !== "" && dados.cnpj.replace(/\D/g, "").length !== 14) {
-        throw new ErroDaRota(400, "CNPJ inválido: informe os 14 dígitos.");
+      // CNPJ numérico ou alfanumérico (IN RFB nº 2.229/2024).
+      if (dados.cnpj !== undefined && dados.cnpj.trim() !== "" && normalizarCnpj(dados.cnpj) === null) {
+        throw new ErroDaRota(400, MENSAGEM_DE_CNPJ_INVALIDO);
       }
       const organizacaoId = organizacaoDo(pedido);
       // Responsável só entre os usuários da organização (cenário 74); sem login, os da lista de configuração.
