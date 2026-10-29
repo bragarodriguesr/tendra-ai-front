@@ -180,4 +180,4 @@ Adicionar US3 (mobile acessível), US2 (recolhimento/dicas/atalho) e US4 (acabam
 ## Acabamento e revisão do time
 
 - [X] T030 Remover a borda vertical externa em `src/ds/components/navigation/Sidebar.css` para unificar a faixa superior e testar ausência da borda em `e2e/sidebar.spec.js`.
-- [ ] T031 Validar o acabamento e abrir pull request da branch `001-atualizar-sidebar` para revisão do time, sem merge ou deploy; registrar em `specs/001-atualizar-sidebar/validation.md`.
+- [X] T031 Validar o acabamento e abrir pull request da branch `001-atualizar-sidebar` para revisão do time, sem merge ou deploy; registrar em `specs/001-atualizar-sidebar/validation.md`.

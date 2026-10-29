@@ -71,3 +71,5 @@ Removida a borda vertical externa do sidebar, eliminando a linha clara na junç�
 Validação final: `npm run build` PASS; `npm run e2e -- --workers 3` PASS, 14/14 testes em 50.5s (13 cenários de sidebar e 1 jornada completa). `git diff --check` PASS. O relatório do inspector taste-review registra a revisão visual anterior a esta remoção de borda; as capturas PNG do sidebar refletem o acabamento final.
 
 A branch será enviada para revisão por pull request; merge e deploy permanecem dependentes da aprovação do time. Skills e configurações locais em .agents/ e .specify/ não fazem parte da alteração proposta.
+
+Pull request aberto para revisão: https://github.com/bragarodriguesr/tendra-ai-front/pull/77. Base: main; head: 001-atualizar-sidebar. Revisão solicitada a bragarodriguesr. Sem merge ou deploy.
