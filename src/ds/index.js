@@ -29,3 +29,5 @@ export { FilterMenu } from "./components/navigation/FilterMenu.jsx";
 export { SidebarNav } from "./components/navigation/SidebarNav.jsx";
 export { Tabs } from "./components/navigation/Tabs.jsx";
 export { TopBar } from "./components/navigation/TopBar.jsx";
+
+export { SidebarProvider, useSidebar, Sidebar, SidebarTrigger, SidebarHeader, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuBadge, SidebarTooltip } from "./components/navigation/Sidebar.jsx";

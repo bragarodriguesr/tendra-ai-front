@@ -1,0 +1,1955 @@
+{
+ "url": "http://127.0.0.1:4173",
+ "at": "2026-10-29T16:29:15.306Z",
+ "allow": [
+  "mono",
+  "micro-label",
+  "no-title"
+ ],
+ "viewports": [
+  {
+   "width": 1440,
+   "height": 900,
+   "load": "load",
+   "screens": 1,
+   "filled": [
+    0.8
+   ],
+   "motion": {
+    "elements": 4,
+    "css": 3,
+    "transitions": 0,
+    "scripted": 1,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "page": {
+     "height": 900,
+     "screens": 1,
+     "words": 190,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 42,
+     "sections": 5,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "26",
+     "words": 1,
+     "chars": 2,
+     "lines": 1,
+     "size": 48,
+     "vw": 3.3,
+     "font": "Space Grotesk",
+     "weight": 600,
+     "tracking": -0.03,
+     "leading": 1,
+     "top": 244,
+     "tag": "span",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "h1": null,
+    "headings": [
+     {
+      "text": "Visão geral do uso",
+      "words": 4,
+      "chars": 18,
+      "lines": 1,
+      "size": 32,
+      "vw": 2.2,
+      "font": "Space Grotesk",
+      "weight": 600,
+      "tracking": -0.025,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.19,
+      "top": 127,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "26",
+      "words": 1,
+      "chars": 2,
+      "lines": 1,
+      "size": 48,
+      "vw": 3.3,
+      "font": "Space Grotesk",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.14,
+      "top": 244,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "253",
+      "words": 1,
+      "chars": 3,
+      "lines": 1,
+      "size": 48,
+      "vw": 3.3,
+      "font": "Space Grotesk",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.14,
+      "top": 244,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "2,4 dias",
+      "words": 2,
+      "chars": 8,
+      "lines": 1,
+      "size": 48,
+      "vw": 3.3,
+      "font": "Space Grotesk",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.14,
+      "top": 244,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "1.491",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 48,
+      "vw": 3.3,
+      "font": "Space Grotesk",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.14,
+      "top": 244,
+      "tag": "span",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 5,
+     "maxLines": 1,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 0,
+     "medianWords": 4,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "IBM Plex Sans",
+       "share": 0.65,
+       "mono": false
+      },
+      {
+       "family": "IBM Plex Mono",
+       "share": 0.31,
+       "mono": true
+      },
+      {
+       "family": "Space Grotesk",
+       "share": 0.04,
+       "mono": false
+      }
+     ],
+     "familyCount": 3,
+     "sizes": [
+      11,
+      12,
+      13,
+      14,
+      15,
+      21,
+      32,
+      48
+     ],
+     "sizeCount": 8,
+     "notLoaded": [],
+     "body": null,
+     "measureChars": null,
+     "max": {
+      "size": 48,
+      "vw": 3.3,
+      "font": "Space Grotesk",
+      "text": "26"
+     },
+     "monoShare": 0.31,
+     "monoProseShare": 0.31,
+     "monoFamilies": [
+      "IBM Plex Mono"
+     ],
+     "monoSamples": [
+      "Início",
+      "Trabalho",
+      "8",
+      "9",
+      "Base",
+      "7"
+     ],
+     "microLabels": 9,
+     "microLabelShare": 0.171,
+     "microSamples": [
+      "Painel de demo",
+      "Dashboard · últimos 90 dias",
+      "RFPs e RFIs trabalhadas",
+      "Itens em aberto",
+      "Tempo médio por RFP",
+      "Itens aprovados"
+     ],
+     "upperShare": 0.22,
+     "centerShare": 0.09,
+     "smallText": 9
+    },
+    "eyebrows": [
+     {
+      "text": "Dashboard · últimos 90 dias",
+      "above": "Visão geral do uso",
+      "upper": true,
+      "tracked": true,
+      "mono": true,
+      "pill": false,
+      "size": 11,
+      "top": 104
+     },
+     {
+      "text": "RFPs e RFIs trabalhadas",
+      "above": "26",
+      "upper": true,
+      "tracked": true,
+      "mono": true,
+      "pill": false,
+      "size": 11,
+      "top": 217
+     },
+     {
+      "text": "Itens em aberto",
+      "above": "253",
+      "upper": true,
+      "tracked": true,
+      "mono": true,
+      "pill": false,
+      "size": 11,
+      "top": 217
+     },
+     {
+      "text": "Tempo médio por RFP",
+      "above": "2,4 dias",
+      "upper": true,
+      "tracked": true,
+      "mono": true,
+      "pill": false,
+      "size": 11,
+      "top": 217
+     },
+     {
+      "text": "Itens aprovados",
+      "above": "1.491",
+      "upper": true,
+      "tracked": true,
+      "mono": true,
+      "pill": false,
+      "size": 11,
+      "top": 217
+     }
+    ],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#f5f6f1",
+     "bodyBgHsl": {
+      "h": 72,
+      "s": 0.22,
+      "l": 0.95
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#f5f6f1",
+       "top": 64,
+       "hsl": {
+        "h": 72,
+        "s": 0.22,
+        "l": 0.95
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#4b5046",
+       "share": 0.34
+      },
+      {
+       "color": "#12140f",
+       "share": 0.24
+      },
+      {
+       "color": "#5d6157",
+       "share": 0.21
+      },
+      {
+       "color": "#3e4238",
+       "share": 0.17
+      },
+      {
+       "color": "#f5f6f1",
+       "share": 0.02
+      }
+     ],
+     "button": {
+      "bg": "#edefe7",
+      "hsl": {
+       "h": 75,
+       "s": 0.2,
+       "l": 0.92
+      },
+      "fg": "#12140f"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 12,
+     "inHero": 12,
+     "radius": 8,
+     "height": 44,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Primeiros passos",
+      "Dashboard",
+      "Tarefas 8",
+      "Revisão 9",
+      "Exportação"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 9,
+     "hairlineSamples": [
+      "aside#tdr-sidebar.tdr-sidebar 288px",
+      "div 287px",
+      "div 287px",
+      "header.tdr-workspace-header 1152px",
+      "div 476px"
+     ],
+     "outlinedBoxes": 8,
+     "dashed": 1,
+     "blurred": 0,
+     "roundedBoxes": 8,
+     "boxRadius": 14,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 4,
+       "iconTopped": true,
+       "rounded": true,
+       "top": 191
+      }
+     ]
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 0,
+     "fixed": true,
+     "height": 0,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "ibm plex mono",
+     "ibm plex sans",
+     "space grotesk"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "pageH": 900,
+    "margins": {
+     "left": 20,
+     "right": 40
+    },
+    "sections": [
+     {
+      "sel": "div",
+      "tag": "div",
+      "top": 191,
+      "height": 177,
+      "words": 48,
+      "media": 0,
+      "middle": 91,
+      "heading": {
+       "text": "26",
+       "size": 48,
+       "tag": "span"
+      },
+      "left": 353,
+      "right": 78,
+      "textLeft": 353,
+      "textRight": 78,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div",
+      "tag": "div",
+      "top": 392,
+      "height": 239,
+      "words": 26,
+      "media": 0,
+      "middle": 307,
+      "heading": null,
+      "left": 353,
+      "right": 90,
+      "textLeft": 353,
+      "textRight": 90,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div",
+      "tag": "div",
+      "top": 656,
+      "height": 342,
+      "words": 41,
+      "media": 0,
+      "middle": 0,
+      "heading": null,
+      "left": 329,
+      "right": 41,
+      "textLeft": 353,
+      "textRight": 65,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "Visão geral do uso",
+      "size": 32,
+      "top": 127,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 328,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 1,
+    "bodySize": 13,
+    "stage": false,
+    "explains": false,
+    "slivers": [],
+    "voidShare": 0.07,
+    "voidBox": {
+     "x": 540,
+     "y": 360,
+     "w": 240,
+     "h": 360
+    }
+   },
+   "app": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "dark": false,
+    "ground": "#f5f6f1",
+    "sidebar": {
+     "w": 288,
+     "tag": "aside",
+     "links": 9,
+     "share": 0.2
+    },
+    "topbar": {
+     "h": 64
+    },
+    "canvas": {
+     "left": 36,
+     "right": 39
+    },
+    "hero": {
+     "text": "26",
+     "words": 1,
+     "chars": 2,
+     "lines": 1,
+     "size": 48,
+     "vw": 3.3,
+     "font": "Space Grotesk",
+     "weight": 600,
+     "tracking": -0.03,
+     "leading": 1,
+     "top": 244,
+     "tag": "span",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "charts": 0,
+    "layout": {
+     "panels": 8,
+     "firstScreen": 8,
+     "ragged": [],
+     "voids": []
+    },
+    "tiles": 0,
+    "panels": {
+     "count": 10,
+     "radii": [
+      [
+       14,
+       7
+      ],
+      [
+       0,
+       2
+      ],
+      [
+       12,
+       1
+      ]
+     ],
+     "heavyBorders": 1,
+     "borderSamples": [
+      "#c6cbbc on #ffffff (1.66:1)"
+     ],
+     "heavyShadows": 0,
+     "softShadows": 0,
+     "shadowSamples": [],
+     "glass": 0
+    },
+    "chips": {
+     "count": 0,
+     "hues": 0,
+     "samples": []
+    },
+    "numbers": {
+     "cells": 10,
+     "leftAligned": 5,
+     "figures": 8,
+     "tabularShare": 0.63,
+     "kpiMax": 48
+    },
+    "rows": {
+     "count": 5,
+     "median": 18
+    },
+    "chartHues": 0,
+    "placeholders": [],
+    "type": {
+     "under13": 0.15,
+     "tiny": 0,
+     "tinySamples": [],
+     "sizes": [
+      11,
+      12,
+      13,
+      14,
+      15,
+      17,
+      19,
+      20,
+      21,
+      30,
+      32,
+      40,
+      48,
+      56
+     ]
+    },
+    "title": null,
+    "colourShare": 0.02
+   },
+   "consoleErrors": []
+  },
+  {
+   "width": 768,
+   "height": 1024,
+   "load": "load",
+   "screens": 1,
+   "filled": [
+    0.89
+   ],
+   "motion": {
+    "elements": 4,
+    "css": 3,
+    "transitions": 0,
+    "scripted": 1,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "page": {
+     "height": 1024,
+     "screens": 1,
+     "words": 166,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 34,
+     "sections": 5,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Visão geral do uso",
+     "words": 4,
+     "chars": 18,
+     "lines": 1,
+     "size": 32,
+     "vw": 4.2,
+     "font": "Space Grotesk",
+     "weight": 600,
+     "tracking": -0.02,
+     "leading": 1.2,
+     "top": 107,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "h1": null,
+    "headings": [
+     {
+      "text": "Visão geral do uso",
+      "words": 4,
+      "chars": 18,
+      "lines": 1,
+      "size": 32,
+      "vw": 4.2,
+      "font": "Space Grotesk",
+      "weight": 600,
+      "tracking": -0.025,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.35,
+      "top": 107,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "26",
+      "words": 1,
+      "chars": 2,
+      "lines": 1,
+      "size": 32,
+      "vw": 4.2,
+      "font": "Space Grotesk",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.43,
+      "top": 212,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "253",
+      "words": 1,
+      "chars": 3,
+      "lines": 1,
+      "size": 32,
+      "vw": 4.2,
+      "font": "Space Grotesk",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.43,
+      "top": 212,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "2,4 dias",
+      "words": 2,
+      "chars": 8,
+      "lines": 1,
+      "size": 32,
+      "vw": 4.2,
+      "font": "Space Grotesk",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.43,
+      "top": 342,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "1.491",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 32,
+      "vw": 4.2,
+      "font": "Space Grotesk",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.43,
+      "top": 342,
+      "tag": "span",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 5,
+     "maxLines": 1,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 0,
+     "medianWords": 1,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "IBM Plex Sans",
+       "share": 0.64,
+       "mono": false
+      },
+      {
+       "family": "IBM Plex Mono",
+       "share": 0.32,
+       "mono": true
+      },
+      {
+       "family": "Space Grotesk",
+       "share": 0.04,
+       "mono": false
+      }
+     ],
+     "familyCount": 3,
+     "sizes": [
+      11,
+      12,
+      13,
+      14,
+      15,
+      32
+     ],
+     "sizeCount": 6,
+     "notLoaded": [],
+     "body": null,
+     "measureChars": null,
+     "max": {
+      "size": 32,
+      "vw": 4.2,
+      "font": "Space Grotesk",
+      "text": "Visão geral do uso"
+     },
+     "monoShare": 0.32,
+     "monoProseShare": 0.32,
+     "monoFamilies": [
+      "IBM Plex Mono"
+     ],
+     "monoSamples": [
+      "Dashboard · últimos 90 dias",
+      "RFPs e RFIs trabalhadas",
+      "Itens em aberto",
+      "Tempo médio por RFP",
+      "Itens aprovados",
+      "Tarefas por status"
+     ],
+     "microLabels": 8,
+     "microLabelShare": 0.183,
+     "microSamples": [
+      "Dashboard · últimos 90 dias",
+      "RFPs e RFIs trabalhadas",
+      "Itens em aberto",
+      "Tempo médio por RFP",
+      "Itens aprovados",
+      "Tarefas por status"
+     ],
+     "upperShare": 0.22,
+     "centerShare": 0.08,
+     "smallText": 8
+    },
+    "eyebrows": [
+     {
+      "text": "Dashboard · últimos 90 dias",
+      "above": "Visão geral do uso",
+      "upper": true,
+      "tracked": true,
+      "mono": true,
+      "pill": false,
+      "size": 11,
+      "top": 84
+     },
+     {
+      "text": "RFPs e RFIs trabalhadas",
+      "above": "26",
+      "upper": true,
+      "tracked": true,
+      "mono": true,
+      "pill": false,
+      "size": 11,
+      "top": 188
+     },
+     {
+      "text": "Itens em aberto",
+      "above": "253",
+      "upper": true,
+      "tracked": true,
+      "mono": true,
+      "pill": false,
+      "size": 11,
+      "top": 188
+     },
+     {
+      "text": "Tempo médio por RFP",
+      "above": "2,4 dias",
+      "upper": true,
+      "tracked": true,
+      "mono": true,
+      "pill": false,
+      "size": 11,
+      "top": 318
+     },
+     {
+      "text": "Itens aprovados",
+      "above": "1.491",
+      "upper": true,
+      "tracked": true,
+      "mono": true,
+      "pill": false,
+      "size": 11,
+      "top": 318
+     }
+    ],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#f5f6f1",
+     "bodyBgHsl": {
+      "h": 72,
+      "s": 0.22,
+      "l": 0.95
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#f5f6f1",
+       "top": 64,
+       "hsl": {
+        "h": 72,
+        "s": 0.22,
+        "l": 0.95
+       }
+      },
+      {
+       "color": "#ffffff",
+       "top": 964,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#4b5046",
+       "share": 0.39
+      },
+      {
+       "color": "#12140f",
+       "share": 0.24
+      },
+      {
+       "color": "#5d6157",
+       "share": 0.2
+      },
+      {
+       "color": "#3e4238",
+       "share": 0.12
+      },
+      {
+       "color": "#c8cebd",
+       "share": 0.02
+      }
+     ],
+     "button": {
+      "bg": "#12140f",
+      "hsl": {
+       "h": 84,
+       "s": 0.14,
+       "l": 0.07
+      },
+      "fg": "#f5f6f1"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 8,
+     "inHero": 4,
+     "radius": 9,
+     "height": 66,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Marcelo Vieira",
+      "Sair",
+      "Nova RFP/RFI",
+      "Ver todas as tarefas"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 6,
+     "hairlineSamples": [
+      "header.tdr-workspace-header 768px",
+      "div 686px",
+      "div.tdr-hover 734px",
+      "div.tdr-hover 734px",
+      "div.tdr-hover 734px"
+     ],
+     "outlinedBoxes": 7,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 7,
+     "boxRadius": 14,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 4,
+       "iconTopped": true,
+       "rounded": true,
+       "top": 171
+      }
+     ]
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 0,
+     "fixed": true,
+     "height": 0,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "ibm plex mono",
+     "ibm plex sans",
+     "space grotesk"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "pageH": 1024,
+    "margins": {
+     "left": 16,
+     "right": 17
+    },
+    "sections": [
+     {
+      "sel": "div",
+      "tag": "div",
+      "top": 171,
+      "height": 247,
+      "words": 48,
+      "media": 0,
+      "middle": 120,
+      "heading": {
+       "text": "26",
+       "size": 32,
+       "tag": "span"
+      },
+      "left": 33,
+      "right": 37,
+      "textLeft": 33,
+      "textRight": 37,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div",
+      "tag": "div",
+      "top": 442,
+      "height": 498,
+      "words": 26,
+      "media": 0,
+      "middle": 97,
+      "heading": null,
+      "left": 41,
+      "right": 48,
+      "textLeft": 41,
+      "textRight": 48,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div",
+      "tag": "div",
+      "top": 964,
+      "height": 342,
+      "words": 7,
+      "media": 0,
+      "middle": 0,
+      "heading": null,
+      "left": 17,
+      "right": 17,
+      "textLeft": 41,
+      "textRight": 76,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "Visão geral do uso",
+      "size": 32,
+      "top": 107,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 16,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 1,
+    "bodySize": 13,
+    "stage": false,
+    "explains": false,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "dark": false,
+    "ground": "#f5f6f1",
+    "sidebar": null,
+    "topbar": {
+     "h": 64
+    },
+    "canvas": {
+     "left": 16,
+     "right": 24
+    },
+    "hero": {
+     "text": "Visão geral do uso",
+     "words": 4,
+     "chars": 18,
+     "lines": 1,
+     "size": 32,
+     "vw": 4.2,
+     "font": "Space Grotesk",
+     "weight": 600,
+     "tracking": -0.02,
+     "leading": 1.2,
+     "top": 107,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "charts": 0,
+    "layout": {
+     "panels": 7,
+     "firstScreen": 7,
+     "ragged": [],
+     "voids": []
+    },
+    "tiles": 0,
+    "panels": {
+     "count": 7,
+     "radii": [
+      [
+       14,
+       7
+      ]
+     ],
+     "heavyBorders": 0,
+     "borderSamples": [],
+     "heavyShadows": 0,
+     "softShadows": 0,
+     "shadowSamples": [],
+     "glass": 0
+    },
+    "chips": {
+     "count": 0,
+     "hues": 0,
+     "samples": []
+    },
+    "numbers": {
+     "cells": 10,
+     "leftAligned": 5,
+     "figures": 8,
+     "tabularShare": 0.63,
+     "kpiMax": 32
+    },
+    "rows": {
+     "count": 5,
+     "median": 18
+    },
+    "chartHues": 0,
+    "placeholders": [],
+    "type": {
+     "under13": 0.15,
+     "tiny": 0,
+     "tinySamples": [],
+     "sizes": [
+      11,
+      12,
+      13,
+      14,
+      15,
+      17,
+      19,
+      20,
+      21,
+      30,
+      32,
+      34,
+      44
+     ]
+    },
+    "title": null,
+    "colourShare": 0.035
+   },
+   "consoleErrors": []
+  },
+  {
+   "width": 390,
+   "height": 844,
+   "load": "load",
+   "screens": 1,
+   "filled": [
+    0.83
+   ],
+   "motion": {
+    "elements": 4,
+    "css": 3,
+    "transitions": 0,
+    "scripted": 1,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "page": {
+     "height": 844,
+     "screens": 1,
+     "words": 164,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 34,
+     "sections": 5,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Visão geral do uso",
+     "words": 4,
+     "chars": 18,
+     "lines": 1,
+     "size": 32,
+     "vw": 8.2,
+     "font": "Space Grotesk",
+     "weight": 600,
+     "tracking": -0.02,
+     "leading": 1.2,
+     "top": 107,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "h1": null,
+    "headings": [
+     {
+      "text": "Visão geral do uso",
+      "words": 4,
+      "chars": 18,
+      "lines": 1,
+      "size": 32,
+      "vw": 8.2,
+      "font": "Space Grotesk",
+      "weight": 600,
+      "tracking": -0.025,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.68,
+      "top": 107,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "26",
+      "words": 1,
+      "chars": 2,
+      "lines": 1,
+      "size": 32,
+      "vw": 8.2,
+      "font": "Space Grotesk",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.36,
+      "top": 295,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "253",
+      "words": 1,
+      "chars": 3,
+      "lines": 1,
+      "size": 32,
+      "vw": 8.2,
+      "font": "Space Grotesk",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.36,
+      "top": 295,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "2,4 dias",
+      "words": 2,
+      "chars": 8,
+      "lines": 1,
+      "size": 32,
+      "vw": 8.2,
+      "font": "Space Grotesk",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.36,
+      "top": 478,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "1.491",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 32,
+      "vw": 8.2,
+      "font": "Space Grotesk",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.36,
+      "top": 478,
+      "tag": "span",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 5,
+     "maxLines": 1,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 0,
+     "medianWords": 1,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "IBM Plex Sans",
+       "share": 0.63,
+       "mono": false
+      },
+      {
+       "family": "IBM Plex Mono",
+       "share": 0.33,
+       "mono": true
+      },
+      {
+       "family": "Space Grotesk",
+       "share": 0.04,
+       "mono": false
+      }
+     ],
+     "familyCount": 3,
+     "sizes": [
+      11,
+      12,
+      13,
+      14,
+      15,
+      32
+     ],
+     "sizeCount": 6,
+     "notLoaded": [],
+     "body": null,
+     "measureChars": null,
+     "max": {
+      "size": 32,
+      "vw": 8.2,
+      "font": "Space Grotesk",
+      "text": "Visão geral do uso"
+     },
+     "monoShare": 0.33,
+     "monoProseShare": 0.33,
+     "monoFamilies": [
+      "IBM Plex Mono"
+     ],
+     "monoSamples": [
+      "Dashboard · últimos 90 dias",
+      "RFPs e RFIs trabalhadas",
+      "Itens em aberto",
+      "Tempo médio por RFP",
+      "Itens aprovados",
+      "Tarefas por status"
+     ],
+     "microLabels": 8,
+     "microLabelShare": 0.187,
+     "microSamples": [
+      "Dashboard · últimos 90 dias",
+      "RFPs e RFIs trabalhadas",
+      "Itens em aberto",
+      "Tempo médio por RFP",
+      "Itens aprovados",
+      "Tarefas por status"
+     ],
+     "upperShare": 0.23,
+     "centerShare": 0.06,
+     "smallText": 8
+    },
+    "eyebrows": [
+     {
+      "text": "Dashboard · últimos 90 dias",
+      "above": "Visão geral do uso",
+      "upper": true,
+      "tracked": true,
+      "mono": true,
+      "pill": false,
+      "size": 11,
+      "top": 84
+     },
+     {
+      "text": "RFPs e RFIs trabalhadas",
+      "above": "26",
+      "upper": true,
+      "tracked": true,
+      "mono": true,
+      "pill": false,
+      "size": 11,
+      "top": 256
+     },
+     {
+      "text": "Itens em aberto",
+      "above": "253",
+      "upper": true,
+      "tracked": true,
+      "mono": true,
+      "pill": false,
+      "size": 11,
+      "top": 256
+     },
+     {
+      "text": "Tempo médio por RFP",
+      "above": "2,4 dias",
+      "upper": true,
+      "tracked": true,
+      "mono": true,
+      "pill": false,
+      "size": 11,
+      "top": 440
+     },
+     {
+      "text": "Itens aprovados",
+      "above": "1.491",
+      "upper": true,
+      "tracked": true,
+      "mono": true,
+      "pill": false,
+      "size": 11,
+      "top": 440
+     }
+    ],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#f5f6f1",
+     "bodyBgHsl": {
+      "h": 72,
+      "s": 0.22,
+      "l": 0.95
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#f5f6f1",
+       "top": 64,
+       "hsl": {
+        "h": 72,
+        "s": 0.22,
+        "l": 0.95
+       }
+      },
+      {
+       "color": "#ffffff",
+       "top": 1140,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#4b5046",
+       "share": 0.4
+      },
+      {
+       "color": "#12140f",
+       "share": 0.25
+      },
+      {
+       "color": "#5d6157",
+       "share": 0.2
+      },
+      {
+       "color": "#3e4238",
+       "share": 0.12
+      },
+      {
+       "color": "#a8402e",
+       "share": 0.02
+      }
+     ],
+     "button": {
+      "bg": "#12140f",
+      "hsl": {
+       "h": 84,
+       "s": 0.14,
+       "l": 0.07
+      },
+      "fg": "#f5f6f1"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 3,
+     "inHero": 2,
+     "radius": 9,
+     "height": 36,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "MV",
+      "Nova RFP/RFI"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 6,
+     "hairlineSamples": [
+      "header.tdr-workspace-header 390px",
+      "div 308px",
+      "div.tdr-hover 356px",
+      "div.tdr-hover 356px",
+      "div.tdr-hover 356px"
+     ],
+     "outlinedBoxes": 7,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 7,
+     "boxRadius": 14,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 4,
+       "iconTopped": true,
+       "rounded": true,
+       "top": 239
+      }
+     ]
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 0,
+     "fixed": true,
+     "height": 0,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "ibm plex mono",
+     "ibm plex sans",
+     "space grotesk"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "pageH": 844,
+    "margins": {
+     "left": 16,
+     "right": 17
+    },
+    "sections": [
+     {
+      "sel": "div",
+      "tag": "div",
+      "top": 84,
+      "height": 131,
+      "words": 11,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Visão geral do uso",
+       "size": 32,
+       "tag": "h1"
+      },
+      "left": 16,
+      "right": 107,
+      "textLeft": 16,
+      "textRight": 107,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div",
+      "tag": "div",
+      "top": 239,
+      "height": 355,
+      "words": 48,
+      "media": 0,
+      "middle": 60,
+      "heading": {
+       "text": "26",
+       "size": 32,
+       "tag": "span"
+      },
+      "left": 33,
+      "right": 41,
+      "textLeft": 33,
+      "textRight": 41,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div",
+      "tag": "div",
+      "top": 618,
+      "height": 498,
+      "words": 16,
+      "media": 0,
+      "middle": 139,
+      "heading": null,
+      "left": 41,
+      "right": 48,
+      "textLeft": 41,
+      "textRight": 48,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div",
+      "tag": "div",
+      "top": 1140,
+      "height": 527,
+      "words": 0,
+      "media": 0,
+      "middle": 0,
+      "heading": null,
+      "left": 17,
+      "right": 17,
+      "textLeft": null,
+      "textRight": null,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "Visão geral do uso",
+      "size": 32,
+      "top": 107,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 16,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 1,
+    "bodySize": 13,
+    "stage": false,
+    "explains": false,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "dark": false,
+    "ground": "#f5f6f1",
+    "sidebar": null,
+    "topbar": {
+     "h": 64
+    },
+    "canvas": {
+     "left": 16,
+     "right": 39
+    },
+    "hero": {
+     "text": "Visão geral do uso",
+     "words": 4,
+     "chars": 18,
+     "lines": 1,
+     "size": 32,
+     "vw": 8.2,
+     "font": "Space Grotesk",
+     "weight": 600,
+     "tracking": -0.02,
+     "leading": 1.2,
+     "top": 107,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "charts": 0,
+    "layout": {
+     "panels": 7,
+     "firstScreen": 5,
+     "ragged": [],
+     "voids": []
+    },
+    "tiles": 0,
+    "panels": {
+     "count": 11,
+     "radii": [
+      [
+       14,
+       7
+      ],
+      [
+       0,
+       4
+      ]
+     ],
+     "heavyBorders": 0,
+     "borderSamples": [],
+     "heavyShadows": 0,
+     "softShadows": 0,
+     "shadowSamples": [],
+     "glass": 0
+    },
+    "chips": {
+     "count": 0,
+     "hues": 0,
+     "samples": []
+    },
+    "numbers": {
+     "cells": 10,
+     "leftAligned": 5,
+     "figures": 8,
+     "tabularShare": 0.63,
+     "kpiMax": 32
+    },
+    "rows": {
+     "count": 5,
+     "median": 18
+    },
+    "chartHues": 0,
+    "placeholders": [],
+    "type": {
+     "under13": 0.15,
+     "tiny": 0,
+     "tinySamples": [],
+     "sizes": [
+      11,
+      12,
+      13,
+      14,
+      15,
+      17,
+      20,
+      21,
+      28,
+      30,
+      32,
+      36
+     ]
+    },
+    "title": null,
+    "colourShare": 0.009
+   },
+   "consoleErrors": []
+  }
+ ],
+ "findings": [
+  {
+   "level": "WARN",
+   "id": "font-count",
+   "width": 1440,
+   "message": "3 typefaces in use (IBM Plex Sans, IBM Plex Mono, Space Grotesk).",
+   "fix": "Two at most.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "numeric-align",
+   "width": 1440,
+   "message": "5 of 10 numeric table cells are left-aligned.",
+   "fix": "Right-align numbers, amounts and percentages (and their column headers) so the digits line up.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "kpi-size",
+   "width": 1440,
+   "message": "A figure is set at 48px.",
+   "fix": "Figures run 16-40px on app screens; none of the studied screens reaches 48px. Size and isolation make a number loud, not display type."
+  }
+ ],
+ "images": [
+  {
+   "viewport": "desktop",
+   "width": 1440,
+   "fold": "/Users/evertonsantos/Documents/tendra-ai-front/specs/001-atualizar-sidebar/evidence/taste-review/desktop-fold.jpg",
+   "pages": [
+    "/Users/evertonsantos/Documents/tendra-ai-front/specs/001-atualizar-sidebar/evidence/taste-review/desktop-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "tablet",
+   "width": 768,
+   "fold": "/Users/evertonsantos/Documents/tendra-ai-front/specs/001-atualizar-sidebar/evidence/taste-review/tablet-fold.jpg",
+   "pages": [
+    "/Users/evertonsantos/Documents/tendra-ai-front/specs/001-atualizar-sidebar/evidence/taste-review/tablet-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "mobile",
+   "width": 390,
+   "fold": "/Users/evertonsantos/Documents/tendra-ai-front/specs/001-atualizar-sidebar/evidence/taste-review/mobile-fold.jpg",
+   "pages": [
+    "/Users/evertonsantos/Documents/tendra-ai-front/specs/001-atualizar-sidebar/evidence/taste-review/mobile-page-01.jpg"
+   ],
+   "film": []
+  }
+ ]
+}

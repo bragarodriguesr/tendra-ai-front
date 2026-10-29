@@ -26,8 +26,8 @@ export interface SidebarNavProps extends React.HTMLAttributes<HTMLElement> {
   tone?: "paper" | "ink";
   header?: React.ReactNode;
   footer?: React.ReactNode;
-  width?: number;
-  /** Só os ícones; o rótulo (texto) vira aria-label e title, e os títulos de grupo viram um traço */
+  width?: number | string;
+  /** Só os ícones; o rótulo (texto) vira aria-label e tooltip, e os títulos de grupo ficam ocultos, preservando altura */
   collapsed?: boolean;
 }
 

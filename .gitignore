@@ -9,3 +9,13 @@ dados/
 # Teste de ponta a ponta (npm run e2e)
 test-results/
 playwright-report/
+
+# Artefatos e configurações locais
+build/
+*.log
+.env*
+!.env.example
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
