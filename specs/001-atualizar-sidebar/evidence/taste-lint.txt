@@ -1,0 +1,12 @@
+TASTESKILL · LINT   4 file(s)
+
+WARN
+  [mono] Monospace type. Only literal code may be monospace.  (2×)
+      src/ds/components/navigation/Sidebar.css:42  font-family: var(--font-mono
+      src/ds/components/navigation/Sidebar.css:86  font-mono
+  [shadow] Shadow. Elements at rest carry none; only real overlays (menu, dialog, sticky bar) may.  (2×)
+      src/ds/components/navigation/Sidebar.css:108  box-shadow:
+      src/ds/components/navigation/Sidebar.css:111  box-shadow:
+
+RESULT: 0 FAIL, 4 WARN
+Interface fragments marked data-ui keep their own borders and shadows. Any other line that must keep a flagged pattern for a real reason can carry the comment taste-skill-ignore.

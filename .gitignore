@@ -13,6 +13,9 @@ playwright-report/
 # Artefatos e configurações locais
 build/
 *.log
-.env.*
+.env*
 !.env.example
 .DS_Store
+Thumbs.db
+*.tmp
+*.swp

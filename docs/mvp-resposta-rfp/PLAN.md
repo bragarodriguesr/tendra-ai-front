@@ -794,6 +794,10 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
 - Botões "Editar resposta" e "Adicionar conhecimento". Este envia `.md` para a base pela mesma rota da tela da Base, sem sair do item e sem perder o texto em edição; o resultado (ou o erro) aparece no quadro. O item atual não é gerado de novo.
 - Só front.
 - **Situação (30/10/2026): implementada.** Jornada de ponta a ponta atualizada (quadro "Resposta sem fonte" com "Adicionar conhecimento" depois de escrever e recarregar) e teste novo do envio pela revisão, com sucesso e com falha, preservando o texto em edição.
+### K13. Menu lateral com Base UI (ajuste de 30/10/2026)
+- Menu lateral refeito com as primitivas de Sidebar do Base UI (`@base-ui/react`) e os tokens do DS: recolhe a ícones no desktop, abre como painel no mobile (abaixo de 900 px), atalho ⌘B/Ctrl+B, dicas nos ícones e o logo no topo do menu.
+- Grupos, itens, contagens e regras do menu continuam vindo do viewModel; "Primeiros passos" mantém o gradiente limão em movimento enquanto a base está vazia.
+- **Situação (30/10/2026): implementada.** Teste de ponta a ponta do menu (desktop, recolhido, mobile, teclado) e jornada verde.
 
 ## Definição de pronto (proposta, P10)
 

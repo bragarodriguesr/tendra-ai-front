@@ -7,3 +7,5 @@
 @import "./tokens/motion.css";
 @import "./tokens/dataviz.css";
 @import "./tokens/gradients.css";
+
+@import "./components/navigation/Sidebar.css";

@@ -145,7 +145,7 @@ O logo existe em vetor (`assets/logo/`, quatro lockups + quatro app icons) e em 
 import { Button, Card, Icon } from "../ds";
 ```
 
-Depois use os tokens diretamente (`var(--brand-ink)`, `var(--space-6)`) e monte a interface com os componentes. Nenhum componente depende de npm: só React e as custom properties.
+Depois use os tokens diretamente (`var(--brand-ink)`, `var(--space-6)`) e monte a interface com os componentes. Os componentes usam React e custom properties; a navegação Sidebar usa também `@base-ui/react` para composição, modal e dicas.
 
 ---
 
@@ -191,3 +191,13 @@ import { Aurora } from "../ds";
 // somente mediante pedido explícito
 <Aurora variant="lime" padding="lg"><h1>…</h1></Aurora>
 ```
+
+### Sidebar Base UI
+
+O Workspace usa `SidebarProvider`, `Sidebar`, `SidebarTrigger`, `SidebarContent`, `SidebarFooter` e os grupos/itens exportados em `src/ds/index.js`. A lógica é adaptada do shadcn/ui Base UI; a aparência usa os tokens Tendra.ai em `components/navigation/Sidebar.css`. Origem, revisão e licença: [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md).
+
+`SidebarProvider` é controlado: `open/onOpenChange`, `openMobile/onOpenMobileChange` e `isMobile`. No Workspace os valores vêm de `useWorkspace`, sem cookie novo. Abaixo de 900px, `Sidebar` usa Dialog Base UI em portal; desktop recolhe a ícones. `useSidebar` fornece toggle, refs do trigger/main e motivo de fechamento para foco. Atalho ⌘B/Ctrl+B ignora campos editáveis.
+
+`SidebarNav` preserva sua API anterior e funciona isolado sem provider. Grupos/itens vêm do viewModel; contagens e ações não são recalculadas. O padrão aberto é 288px (4 × space-18) e recolhido 64px (space-16), itens >=44px, ícones 20px, foco sálvia. Rodapé fica fora da região rolável. Tooltips são específicos do sidebar, em portal, sem alteração do Tooltip global. O destaque de Primeiros passos (base vazia) usa o gradiente limão em movimento do "Revisar com IA", selecionado ou não, por pedido explícito. Movimento reduzido desativa transições.
+
+O shell do Workspace contém o sidebar integral com `SidebarHeader` e Logo horizontal (símbolo recolhido). O controle fica no header da coluna de conteúdo, junto à borda da navegação; a marca não depende da BrandBar global. No mobile, o logo aparece no header do painel.

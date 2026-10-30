@@ -12,13 +12,6 @@ input, textarea, select { box-sizing: border-box; }
 /* Switch no tamanho exato do sistema (trilho 44×26). */
 label:has(> [role="switch"]) * { box-sizing: border-box; }
 
-/* Menu lateral do Workspace: itens de 36px, mais próximos, sem rolagem. */
-.tdr-sidebar nav { box-sizing: border-box; background: var(--n-000) !important; border-right: 0 !important; padding: 20px 12px 4px !important; gap: 12px !important; }
-.tdr-sidebar nav > div { gap: 12px !important; }
-.tdr-sidebar nav > div > div { gap: 2px !important; }
-.tdr-sidebar nav > div, .tdr-sidebar nav > div > div { grid-template-columns: minmax(0, 1fr); }
-.tdr-sidebar nav a { box-sizing: border-box !important; min-height: 36px !important; padding: 6px 12px !important; }
-
 .tdr-logo-link, .tdr-logo-link:hover { text-decoration: none; }
 .tdr-hover:hover { background: var(--n-050) !important; }
 
@@ -79,13 +72,6 @@ label:has(> [role="switch"]) * { box-sizing: border-box; }
 .tdr-onb-step.is-done.is-shown { box-shadow: inset 0 2px 0 var(--brand-ink); }
 .tdr-onb-check { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; flex: none; border-radius: 999px; background: #C8F73D; color: var(--brand-ink); }
 .tdr-onb-done-note { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-md); border: 1px solid #A9D62A; background: #F4FFD6; color: var(--brand-ink); font-size: 14px; }
-/* Base vazia: "Primeiros passos" no menu lateral com o estilo do "Revisar com IA" (gradiente limão em
-   movimento), selecionado ou não. Os estilos do item são inline, por isso o !important; a posição do
-   fundo fica sem ele, porque uma declaração !important vence a animação e o gradiente pararia. */
-.tdr-nav-destaque { color: var(--brand-ink) !important; font-weight: 600 !important; box-shadow: inset 0 0 0 1px #A9D62A !important; background-image: linear-gradient(110deg, #C8F73D 0%, #E6FF9A 25%, #B6EA1E 50%, #E6FF9A 75%, #C8F73D 100%) !important; background-size: 300% 100% !important; animation: tdr-ai-flow 3s linear infinite; }
-.tdr-nav-destaque:hover { box-shadow: inset 0 0 0 1px #A9D62A, 0 0 0 3px rgba(200, 247, 61, .45) !important; }
-.tdr-nav-destaque[aria-current="page"] { box-shadow: inset 2px 0 0 var(--brand-ink), inset 0 0 0 1px #A9D62A !important; }
-@media (prefers-reduced-motion: reduce) { .tdr-nav-destaque { animation: none; } }
 .tdr-onb-two { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; align-items: start; }
 @media (max-width: 1100px) { .tdr-onb-two { grid-template-columns: minmax(0, 1fr); } }
 .tdr-dropzone { border: 1px dashed var(--border-strong); border-radius: var(--radius-xl); background: var(--surface-card); padding: 28px 24px; display: grid; justify-items: start; gap: 12px; transition: border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out); }
