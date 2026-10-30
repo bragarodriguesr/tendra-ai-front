@@ -1,6 +1,7 @@
 import React from "react";
 import { Badge, Button, EmptyState, Icon, IconButton, MonoLabel, Select, Textarea, FilterMenu } from "../../ds/index.js";
-import { AlertDeck, ClickRow, DISPLAY, card, eyebrow, mono } from "../ui.jsx";
+import { AlertDeck, ClickRow, DISPLAY, card, mono } from "../ui.jsx";
+import { SendResult } from "./Base.jsx";
 
 const FB_REASONS = ["Fonte incorreta", "Texto impreciso", "Informação desatualizada", "Outro"];
 const fbStyle = (on) => ({
@@ -110,10 +111,13 @@ function ManualEditor({ cur, ws }) {
 
 function Answer({ v, ws, state, cur }) {
   const startEdit = () => (cur.isApproved ? ws.setState({ dialog: true }) : ws.setState({ edit: true }));
+  const editAction = !cur.canEdit ? null : state.edit
+    ? <Button size="sm" variant="secondary" icon="check" onClick={() => { ws.flushSaves(); ws.setState({ edit: false }); }}>Concluir edição</Button>
+    : <Button size="sm" variant="secondary" icon="pencil" onClick={startEdit}>Editar resposta</Button>;
   return (
     <div style={card(16, { padding: 24, display: "flex", flexDirection: "column", gap: 16 })}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <MonoLabel>Resposta</MonoLabel>
+        <MonoLabel>{cur.noSource ? "Resposta sem fonte" : "Resposta"}</MonoLabel>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <span style={mono(12, "var(--n-400)")}>{v.savedText}</span>
           {cur.edited ? (
@@ -122,9 +126,7 @@ function Answer({ v, ws, state, cur }) {
               <Button size="sm" variant="ghost" icon="refresh-cw" onClick={() => ws.restore(cur.id)}>Restaurar sugestão</Button>
             </>
           ) : null}
-          {!cur.canEdit ? null : state.edit
-            ? <Button size="sm" variant="secondary" icon="check" onClick={() => { ws.flushSaves(); ws.setState({ edit: false }); }}>Concluir edição</Button>
-            : <Button size="sm" variant="secondary" icon="pencil" onClick={startEdit}>Editar resposta</Button>}
+          {cur.noSource ? null : editAction}
         </div>
       </div>
       {state.showOrig ? (
@@ -139,7 +141,7 @@ function Answer({ v, ws, state, cur }) {
         )
       ) : (
         <>
-          {cur.noText ? <div style={{ color: "var(--n-400)", lineHeight: 1.6 }}>Nenhum rascunho: a base não tem informação para esta pergunta. Use "Editar resposta" para escrever a resposta; ela fica marcada como resposta manual.</div> : null}
+          {cur.noText ? <div style={{ color: "var(--n-400)", lineHeight: 1.6 }}>Não encontramos informação na base para esta pergunta. Adicione conhecimento ou escreva a resposta manualmente.</div> : null}
           {cur.paras.map((p, n) => (
             <div key={n} style={{ display: "flex", gap: 12, alignItems: "flex-start", fontSize: 16, lineHeight: 1.65, color: "var(--n-700)" }}>
               <span style={{ flex: 1 }}>{p.t}</span>
@@ -152,6 +154,7 @@ function Answer({ v, ws, state, cur }) {
           ))}
         </>
       )}
+      {cur.noSource ? <AddKnowledge key={cur.id} ws={ws} state={state} editAction={editAction} /> : null}
       {cur.hasManual ? (
         <div style={{ ...mono(12, "var(--n-500)"), display: "flex", alignItems: "center", gap: 6 }}>
           <Icon name="pencil" size="sm" />Resposta manual, sem fonte na base · escrita por {cur.manualBy}
@@ -219,16 +222,30 @@ function ConflictSources({ cur, ws }) {
   );
 }
 
-/** Item sem rascunho: o aviso "Sem contexto" no lugar das fontes, no cinza da fonte não escolhida. */
-function NoSourceCard({ ns }) {
+/** Envio de conhecimento sem sair da resposta em edição. */
+function AddKnowledge({ ws, state, editAction }) {
+  const picker = React.useRef(null);
+  const [upload, setUpload] = React.useState(null);
+  const [sending, setSending] = React.useState(false);
+  const send = async (e) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (!files.length || state.enviando) return;
+    setUpload(null);
+    setSending(true);
+    const result = await ws.sendDocs(files);
+    setSending(false);
+    setUpload(result);
+  };
   return (
-    <div role="note" style={card(14, { display: "flex", flexDirection: "column", gap: 12, padding: 16, background: "var(--n-100)", color: "var(--n-400)" })}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, ...eyebrow, fontWeight: 500, color: "var(--n-500)" }}>
-        <Icon name={ns.icon} size="md" />
-        {ns.label}
-        {ns.pending ? <span>· pendente</span> : null}
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <input ref={picker} type="file" accept=".md,text/markdown" multiple hidden onChange={send} aria-label="Documentos para a base de conhecimento" />
+      <div role="group" aria-label="Ações da resposta sem fonte" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        {editAction}
+        <Button size="sm" variant="secondary" icon="upload" loading={sending} disabled={state.enviando && !sending} onClick={() => picker.current.click()}>Adicionar conhecimento</Button>
       </div>
-      <div style={{ lineHeight: 1.5 }}>{ns.text}</div>
+      {upload?.erro ? <div role="alert" style={{ color: "var(--danger)", lineHeight: 1.5 }}>{upload.erro}</div> : null}
+      {upload?.resumo ? <SendResult result={upload.resumo} onClose={() => setUpload(null)} /> : null}
     </div>
   );
 }
@@ -245,7 +262,6 @@ function Sources({ cur, ws }) {
           {cur.otherSrcs.map((s) => <SourceCard key={s.k} s={s} />)}
         </div>
       ) : null}
-      {cur.noSource ? <div style={SOURCE_GRID}><NoSourceCard ns={cur.noSource} /></div> : null}
     </div>
   );
 }
@@ -293,7 +309,7 @@ export function Review({ v, ws, state, height, isMobile }) {
               <h2 style={{ margin: 0, fontFamily: DISPLAY, fontWeight: 600, fontSize: isMobile ? 22 : 26, letterSpacing: "-.02em", lineHeight: 1.25, color: "var(--n-900)", maxWidth: "40ch", textWrap: "pretty" }}>{cur.q}</h2>
               {cur.alerts.length > 0 ? <ItemAlerts cur={cur} ws={ws} /> : null}
               <Answer v={v} ws={ws} state={state} cur={cur} />
-              {cur.srcs.length > 0 || cur.noSource ? <Sources cur={cur} ws={ws} /> : null}
+              {cur.srcs.length > 0 ? <Sources cur={cur} ws={ws} /> : null}
               {cur.canRate ? <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", color: "var(--n-700)" }}>
                 <span style={{ fontSize: 13 }}>Esta resposta ajudou?</span>
                 <button type="button" onClick={() => ws.rate("up")} aria-label="Positivo" aria-pressed={cur.fbUp} style={fbStyle(cur.fbUp)}><Icon name="thumbs-up" size="md" /></button>
