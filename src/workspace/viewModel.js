@@ -1,3 +1,4 @@
+import { formatarTempoSalvamento } from "./tempoSalvamento.js";
 import { AL, ST, code, plural, ITEM_TASKS, TODAY_ISO, OWN } from "./data.js";
 import { hojeIso, contarPalavras, MINIMO_DE_PALAVRAS_DA_REVISAO } from "../api.js";
 import { cnpjSemMascara, cnpjValido } from "./cnpj.js";
@@ -357,8 +358,7 @@ export function buildView(s, ws) {
       stateHint: it.st === "aprovada" ? "Editar remove a aprovação." : "Pronta para aprovação."
     };
   }
-  const secs = s.saved ? Math.max(0, Math.round(((s.tick || Date.now()) - s.saved) / 1000)) : 0;
-  const savedText = s.saved ? `Salvo há ${secs <= 1 ? "1 segundo" : secs + " segundos"}` : "Salvamento automático";
+  const savedText = formatarTempoSalvamento(s.saved);
 
   // visualizador de fonte
   let drawer = null;

@@ -458,7 +458,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 **F-20 · P0 · Edição da resposta** (MoSCoW: Must) — Parcial
 
 - "Editar resposta" abre o editor e "Concluir edição" fecha. Parágrafos são separados por uma linha em branco e cada parágrafo mantém seus marcadores de fonte.
-- O salvamento é automático, com o indicador "Salvamento automático" ou "Salvo há N segundos".
+- O salvamento é automático, com o indicador "Salvamento automático" antes do primeiro salvamento; depois, "Salvo agora" no primeiro minuto, "Salvo há N minuto(s)" até 59 minutos e "Salvo há N hora(s)" a partir de 1 hora (30/10/2026).
 - Texto alterado ganha o selo "Editado" e os botões "Ver sugestão original" / "Ocultar sugestão original" e "Restaurar sugestão".
 - Editar um item aprovado pede confirmação antes ("Editar e remover aprovação" / "Cancelar").
 - **Pendente:**
