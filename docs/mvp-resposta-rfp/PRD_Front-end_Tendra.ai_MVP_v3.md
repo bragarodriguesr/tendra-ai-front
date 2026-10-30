@@ -100,7 +100,7 @@ A interface segue seis princípios, todos derivados do discovery, e usa o design
 
 1. **Fonte antes de texto.** Toda resposta mostra de onde veio antes de pedir aprovação. Sem fonte, o item só sai como resposta manual, com a autoria registrada e sinalizada na tela (seção 6).
 2. **A revisão é o produto.** Painel item a item em split view (itens à esquerda; resposta, alertas, fontes e ações à direita), nunca um chat.
-3. **Incerteza é explícita.** A tela nunca preenche uma lacuna com texto plausível. Baixa confiança, conflito, fonte antiga e termo crítico têm sinal próprio e exigem reconhecimento; a resposta manual tem sinal próprio (etiqueta, autor e o cartão "Sem contexto" no lugar das fontes), sem reconhecimento (26/10/2026).
+3. **Incerteza é explícita.** A tela nunca preenche uma lacuna com texto plausível. Baixa confiança, conflito, fonte antiga e termo crítico têm sinal próprio e exigem reconhecimento; a resposta manual tem sinal próprio (etiqueta, autor e o quadro "Resposta sem fonte"), sem reconhecimento (26/10/2026; quadro desde 30/10/2026).
 4. **Aprovação é humana e identificada.** Cada resposta aprovada mostra quem aprovou e quando. Não existe caminho de envio ou aprovação automática.
 5. **Revisar rápido, editar pouco.** O caminho feliz é conferir a fonte e aprovar em poucos cliques; o editor existe para ajustes.
 6. **Sóbrio.** Swiss design, grid rigoroso, zero ornamento decorativo.
@@ -163,12 +163,12 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 
 | Tipo (código) | Gatilho (dado que o front recebe) | O que a tela mostra | O que a pessoa faz | Bloqueia revisar/aprovar |
 | --- | --- | --- | --- | --- |
-| Sem contexto (`nocontext`) | Item chega sem rascunho | Cartão "Sem contexto" no lugar das fontes, no cinza da fonte não escolhida, com "Fontes · Nenhuma fonte localizada" e o texto "Informação não localizada na base. Preenchimento manual obrigatório." (fora do cartão de alertas desde 26/10/2026), e o convite a escrever a resposta em "Editar resposta" | Escreve a resposta no próprio quadro de resposta (gravada no backend desde 24/10/2026; SPEC, cenário 61). Ao escrever num item sem fonte, o item ganha a etiqueta "Resposta manual" e o cartão no lugar das fontes passa a dizer "A resposta foi escrita manualmente." | Sim, até haver resposta escrita |
+| Sem contexto (`nocontext`) | Item chega sem rascunho | Desde 30/10/2026, um só quadro "Resposta sem fonte", sem o cartão no lugar das fontes: o texto "Não encontramos informação na base para esta pergunta. Adicione conhecimento ou escreva a resposta manualmente." e os botões "Editar resposta" e "Adicionar conhecimento" (envia `.md` para a base sem sair do item nem perder o texto em edição; o resultado do envio aparece no próprio quadro). Fora do cartão de alertas desde 26/10/2026 | Escreve a resposta no próprio quadro (gravada no backend desde 24/10/2026; SPEC, cenário 61) ou adiciona conhecimento à base. Ao escrever, o item ganha a etiqueta "Resposta manual"; o quadro continua "Resposta sem fonte". O documento enviado vale para as próximas gerações; o item atual não é gerado de novo | Sim, até haver resposta escrita |
 | Baixa confiança (`lowconf`) | Rascunho marcado como de baixa confiança | "Baixa confiança. Confira a fonte antes de aprovar." | "Reconhecer alerta" | Sim, até reconhecer |
 | Fontes conflitantes (`conflict`) | Duas ou mais fontes se contradizem | "Duas fontes se contradizem. Escolha qual vale." e as fontes em conflito marcadas no painel | "Usar esta fonte" em uma delas, ou "Nenhuma, vou escrever" (abre o editor) | Sim, até decidir |
 | Fonte antiga (`old`) | Alguma fonte com mais de 120 dias sem atualização | "Fonte sem atualização há [N] dias, acima do prazo de 120 dias." e o selo "Mais de 120 dias" na fonte | "Reconhecer alerta" | Sim, até reconhecer |
 | Termo crítico (`critical`) | Pergunta envolve responsabilização civil, multa ou garantia jurídica | "Termo crítico · nível alto" — "Requer validação do Jurídico. A pergunta envolve responsabilização civil, multa ou garantia jurídica." | "Reconhecer alerta"; o Aprovador decide | Sim; regra final em Q-01 |
-| Resposta manual sem fonte (`manual`) | Resposta escrita à mão, sem nenhuma fonte associada | Só registro de autoria (26/10/2026): etiqueta "Resposta manual", o rótulo "Resposta manual, sem fonte na base · escrita por [nome]" e o cartão "Sem contexto" no lugar das fontes; não aparece no cartão de alertas | Nenhuma | Não |
+| Resposta manual sem fonte (`manual`) | Resposta escrita à mão, sem nenhuma fonte associada | Só registro de autoria (26/10/2026): etiqueta "Resposta manual", o rótulo "Resposta manual, sem fonte na base · escrita por [nome]" e o quadro "Resposta sem fonte" (desde 30/10/2026; antes, o cartão "Sem contexto" no lugar das fontes); não aparece no cartão de alertas | Nenhuma | Não |
 
 **Regras de comportamento (como o front aplica)**
 
@@ -559,12 +559,12 @@ Texto como está no front. A voz é direta, sem exclamação, sem emoji e sem a 
 | Arquivo em tratamento manual | T1, T2 | "Este arquivo precisa de tratamento pelo suporte. Avisaremos aqui quando estiver pronto." | Nenhuma |
 | Documento desativado | T2 | "[documento] não será usado em novas respostas." | Ativar |
 | CNPJ / contato inválido | T4 | "CNPJ incompleto." · "CNPJ inválido." · "Telefone incompleto." · "E-mail inválido." | Corrigir |
-| Sem contexto | T6 | "Informação não localizada na base. Preenchimento manual obrigatório." | Escrever a resposta |
+| Sem contexto | T6 | Quadro "Resposta sem fonte": "Não encontramos informação na base para esta pergunta. Adicione conhecimento ou escreva a resposta manualmente." | Escrever a resposta ou adicionar conhecimento |
 | Baixa confiança | T6 | "Baixa confiança. Confira a fonte antes de aprovar." | Reconhecer alerta |
 | Fontes conflitantes | T6 | "Duas fontes se contradizem. Escolha qual vale." | Usar esta fonte; Nenhuma, vou escrever |
 | Fonte antiga | T6 | "Fonte sem atualização há [N] dias, acima do prazo de 120 dias." | Reconhecer alerta |
 | Termo crítico | T6 | "Requer validação do Jurídico. A pergunta envolve responsabilização civil, multa ou garantia jurídica." | Reconhecer alerta |
-| Resposta manual sem fonte | T6 | Cartão "Sem contexto" no lugar das fontes: "Informação não localizada na base. A resposta foi escrita manualmente." | Nenhuma (registro de autoria) |
+| Resposta manual sem fonte | T6 | Quadro "Resposta sem fonte", com "Resposta manual, sem fonte na base · escrita por [nome]" | Nenhuma (registro de autoria) |
 | Sem resposta | T6 | "Escreva a resposta antes de revisar ou aprovar." | Editar resposta |
 | Aprovação bloqueada | T6 | "Falta tratar 1 alerta antes de aprovar." | Tratar o alerta |
 | Revisor tentando aprovar | T6 | Botão "Aprovar resposta" não aparece para o Revisor (26/10/2026) | Nenhuma |

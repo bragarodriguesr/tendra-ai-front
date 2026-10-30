@@ -788,6 +788,12 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
 ### K11. Indicador de salvamento em minutos e horas (ajuste de 30/10/2026)
 - "Salvo agora" no primeiro minuto, "Salvo há N minuto(s)" até 59 minutos e "Salvo há N hora(s)" a partir de 1 hora, no lugar de "Salvo há N segundos". Só front.
 - **Situação (30/10/2026): implementada.** Teste de ponta a ponta com os limites (59 s, 1 min, 59 min, 1 h, 2 h, 24 h).
+### K12. Resposta sem fonte e "Adicionar conhecimento" (ajuste de 30/10/2026)
+- O item sem rascunho e a resposta manual ficam num só quadro, "Resposta sem fonte", sem o cartão "Sem contexto" no lugar das fontes.
+- Texto: "Não encontramos informação na base para esta pergunta. Adicione conhecimento ou escreva a resposta manualmente."
+- Botões "Editar resposta" e "Adicionar conhecimento". Este envia `.md` para a base pela mesma rota da tela da Base, sem sair do item e sem perder o texto em edição; o resultado (ou o erro) aparece no quadro. O item atual não é gerado de novo.
+- Só front.
+- **Situação (30/10/2026): implementada.** Jornada de ponta a ponta atualizada (quadro "Resposta sem fonte" com "Adicionar conhecimento" depois de escrever e recarregar) e teste novo do envio pela revisão, com sucesso e com falha, preservando o texto em edição.
 
 ## Definição de pronto (proposta, P10)
 

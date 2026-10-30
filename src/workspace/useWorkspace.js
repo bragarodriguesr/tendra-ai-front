@@ -341,9 +341,11 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
           api.toast(falhas ? "Envio concluído com recusas" : "Envio concluído",
             `${ok} de ${files.length} arquivo${files.length > 1 ? "s" : ""} na base.${falhas ? " Veja os motivos na tela." : ""}`,
             falhas ? "warning" : "success");
+          return { resumo };
         } catch (e) {
           setState({ enviando: false, ultimoEnvio: { erro: e.message, em: dataHoraDaTela(new Date().toISOString()), emMs: Date.now() } });
           api.toast("Envio não concluído", e.message, "danger");
+          return { erro: e.message };
         }
       },
       closeSendResult() { setState({ envio: null }); },
