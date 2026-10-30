@@ -138,7 +138,7 @@ test("US2: pendência e falha não antecipam sucesso", async ({ page }) => {
 });
 
 for (const width of [360, 768, 1440]) {
-  test(`US2: indicador e controles legíveis em ${width}px`, async ({ page }) => {
+  test(`US2: indicador e controles legíveis em ${width}px`, async ({ page }, testInfo) => {
     await abrir(page);
     await editar(page, "Resposta para validação visual.");
     await page.getByRole("button", { name: "Concluir edição", exact: true }).click();
@@ -160,7 +160,7 @@ for (const width of [360, 768, 1440]) {
         const b = await control.boundingBox();
         expect(b.x >= box.x + box.width || box.x >= b.x + b.width || b.y >= box.y + box.height || box.y >= b.y + b.height).toBe(true);
       }
-      await page.screenshot({ path: `specs/002-tempo-salvamento/evidence/${width}-${unidade}.png` });
+      await page.screenshot({ path: testInfo.outputPath(`${width}-${unidade}.png`) });
     }
   });
 }

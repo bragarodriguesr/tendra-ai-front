@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 for (const failure of [false, true]) {
-  test(`upload na revisão preserva resposta: ${failure ? "falha" : "sucesso"}`, async ({ page }) => {
+  test(`upload na revisão preserva resposta: ${failure ? "falha" : "sucesso"}`, async ({ page }, testInfo) => {
     await page.route("**/api/**", async (route) => {
       if (route.request().method() === "POST" && route.request().url().includes("/base/documentos")) {
         return route.fulfill(failure
@@ -32,6 +32,6 @@ for (const failure of [false, true]) {
     await expect(page.getByText(failure ? "Servidor indisponível para envio." : "Carregados: 1", { exact: true }).first()).toBeVisible();
     await expect(answer).toHaveValue("Texto em andamento que precisa ser preservado.");
     await expect(page.getByRole("heading", { name: "Onde os dados ficam hospedados e quais sub-processadores têm acesso?" })).toBeVisible();
-    if (!failure) await page.screenshot({ path: "/tmp/tendra-upload-revisao.png", fullPage: true });
+    if (!failure) await page.screenshot({ path: testInfo.outputPath("upload-revisao.png"), fullPage: true });
   });
 }
