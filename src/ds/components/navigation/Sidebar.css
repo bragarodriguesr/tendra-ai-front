@@ -98,7 +98,16 @@
 .tdr-sidebar-icon-button:hover { background: var(--surface-sunken); color: var(--text-strong); }
 .tdr-sidebar-trigger { border-color: transparent; color: var(--text-on-inverse-body); }
 .tdr-sidebar-trigger:hover { background: var(--paper-wash); color: var(--text-on-inverse); }
-.tdr-sidebar-nav .tdr-nav-destaque:not([data-active]) { background: var(--lime-wash); color: var(--brand-ink); border-color: var(--border-strong); font-weight: var(--weight-semibold); }
+/* Base vazia: "Primeiros passos" com o gradiente limão em movimento do "Revisar com IA" (pedido explícito),
+   selecionado ou não. Usa background-image e a animação tdr-ai-flow de src/index.css. */
+.tdr-sidebar-nav .tdr-nav-destaque, .tdr-sidebar-nav a.tdr-nav-destaque:hover, .tdr-sidebar-nav .tdr-nav-destaque[data-active] {
+  color: var(--brand-ink); font-weight: var(--weight-semibold); border-color: #A9D62A;
+  background-color: transparent;
+  background-image: linear-gradient(110deg, #C8F73D 0%, #E6FF9A 25%, #B6EA1E 50%, #E6FF9A 75%, #C8F73D 100%);
+  background-size: 300% 100%; animation: tdr-ai-flow 3s linear infinite;
+}
+.tdr-sidebar-nav a.tdr-nav-destaque:hover { box-shadow: 0 0 0 3px rgba(200, 247, 61, .45); }
+.tdr-sidebar-nav .tdr-nav-destaque[data-active]::before { background: var(--brand-ink); }
 .tdr-sidebar-tooltip-positioner { z-index: 101; }
 .tdr-sidebar-tooltip {
   max-width: calc(4 * var(--space-18)); padding: var(--space-2) var(--space-3);

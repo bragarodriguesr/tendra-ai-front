@@ -785,6 +785,11 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
     - status Vencido e chave bloqueada;
     - ordenação por status com o vencido por último.
 
+### K11. Menu lateral com Base UI (ajuste de 30/10/2026)
+- Menu lateral refeito com as primitivas de Sidebar do Base UI (`@base-ui/react`) e os tokens do DS: recolhe a ícones no desktop, abre como painel no mobile (abaixo de 900 px), atalho ⌘B/Ctrl+B, dicas nos ícones e o logo no topo do menu.
+- Grupos, itens, contagens e regras do menu continuam vindo do viewModel; "Primeiros passos" mantém o gradiente limão em movimento enquanto a base está vazia.
+- **Situação (30/10/2026): implementada.** Teste de ponta a ponta do menu (desktop, recolhido, mobile, teclado) e jornada verde.
+
 ## Definição de pronto (proposta, P10)
 
 Uma etapa só é concluída quando:

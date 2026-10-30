@@ -88,7 +88,7 @@ test('US3: resize libera modal e preserva preferência desktop', async ({ page }
   await expect(page.getByRole('button', { name: 'Abrir menu', exact: true })).toHaveAttribute('aria-expanded', 'false');
 });
 
-test('US2: recolhimento, atalhos e dicas em portal', async ({ page }) => {
+test('US2: recolhimento, atalhos e dicas em portal', async ({ page }, testInfo) => {
   await enter(page);
   const before = await page.locator('main').boundingBox();
   await page.getByRole('button', { name: 'Recolher menu', exact: true }).click();
@@ -108,7 +108,7 @@ test('US2: recolhimento, atalhos e dicas em portal', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Recolher menu', exact: true })).toBeVisible();
   await page.keyboard.press('Meta+b');
   await expect(page.getByRole('button', { name: 'Expandir menu', exact: true })).toBeVisible();
-  await page.screenshot({ path: 'specs/001-atualizar-sidebar/evidence/sidebar-collapsed.png' });
+  await page.screenshot({ path: testInfo.outputPath('sidebar-collapsed.png') });
   const item = link(page, 'Tarefas');
   await item.hover();
   await expect(page.getByRole('tooltip')).toContainText('Tarefas');
@@ -140,18 +140,21 @@ test('US4: servidor, base vazia e ambiente compartilhado', async ({ page }) => {
   await enter(page, { server: true, shared: true });
   await expect(page.getByRole('button', { name: 'Aprovar todos os itens', exact: true })).toHaveCount(0);
   await expect(page.locator('[data-slot="sidebar-footer"]')).toContainText('Ambiente de testes');
-  const style = await link(page, 'Primeiros passos').evaluate(el => getComputedStyle(el).backgroundImage);
-  expect(style).toBe('none');
+  // Base vazia: o gradiente limão em movimento do "Revisar com IA"; parado com movimento reduzido.
+  const style = () => link(page, 'Primeiros passos').evaluate(el => { const c = getComputedStyle(el); return { image: c.backgroundImage, animation: c.animationName }; });
+  expect(await style()).toMatchObject({ image: expect.stringContaining('linear-gradient'), animation: 'none' });
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  expect(await style()).toMatchObject({ image: expect.stringContaining('linear-gradient'), animation: 'tdr-ai-flow' });
   await expect(link(page, 'Base de conhecimento')).toContainText('0');
 });
 
 for (const viewport of [{ width: 360, height: 640 }, { width: 768, height: 1024 }, { width: 1280, height: 720 }, { width: 1440, height: 900 }]) {
-  test(`DS: legibilidade e movimento reduzido ${viewport.width}x${viewport.height}`, async ({ page }) => {
+  test(`DS: legibilidade e movimento reduzido ${viewport.width}x${viewport.height}`, async ({ page }, testInfo) => {
     await page.setViewportSize(viewport);
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await enter(page);
     await page.evaluate(() => document.fonts.ready);
-    await page.screenshot({ path: `specs/001-atualizar-sidebar/evidence/sidebar-${viewport.width}x${viewport.height}.png` });
+    await page.screenshot({ path: testInfo.outputPath(`sidebar-${viewport.width}x${viewport.height}.png`) });
     expect(await nav(page).evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
     for (const label of labels) {
       const item = link(page, label);
