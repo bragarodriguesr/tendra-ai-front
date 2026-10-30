@@ -158,9 +158,10 @@ test("da base à resposta aprovada, mantida depois de recarregar", async ({ page
   await page.getByText(codigoSemRascunho, { exact: true }).first().click();
   await expect(page.getByText("Resposta escrita pela equipe, sem fonte na base.")).toBeVisible();
   await expect(page.getByText(/Resposta manual, sem fonte na base · escrita por Marcelo Vieira/)).toBeVisible();
-  // A resposta manual não vira alerta a reconhecer: o cartão "Sem contexto" continua no lugar das fontes e o item pode ser revisado.
-  await expect(page.getByText("Fontes · Nenhuma fonte localizada")).toBeVisible();
-  await expect(page.getByText("Informação não localizada na base. A resposta foi escrita manualmente.")).toBeVisible();
+  // A resposta manual não vira alerta a reconhecer: o quadro fica como "Resposta sem fonte", com "Adicionar conhecimento", e o item pode ser revisado.
+  await expect(page.getByText("Resposta sem fonte", { exact: true })).toBeVisible();
+  await expect(page.getByRole("group", { name: "Ações da resposta sem fonte" }).getByRole("button", { name: "Adicionar conhecimento" })).toBeVisible();
+  await expect(page.getByText("Fontes · Nenhuma fonte localizada")).toHaveCount(0);
   await expect(page.getByText("Resposta manual sem fonte", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Marcar como revisado" })).toBeEnabled();
   const manual = (await (await request.get(`${API}/tarefas/${tarefa.id}/itens`)).json()).itens.find((i) => i.id === semRascunho.id);

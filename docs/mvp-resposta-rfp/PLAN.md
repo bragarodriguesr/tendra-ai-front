@@ -785,6 +785,13 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
     - status Vencido e chave bloqueada;
     - ordenação por status com o vencido por último.
 
+### K11. Resposta sem fonte e "Adicionar conhecimento" (ajuste de 30/10/2026)
+- O item sem rascunho e a resposta manual ficam num só quadro, "Resposta sem fonte", sem o cartão "Sem contexto" no lugar das fontes.
+- Texto: "Não encontramos informação na base para esta pergunta. Adicione conhecimento ou escreva a resposta manualmente."
+- Botões "Editar resposta" e "Adicionar conhecimento". Este envia `.md` para a base pela mesma rota da tela da Base, sem sair do item e sem perder o texto em edição; o resultado (ou o erro) aparece no quadro. O item atual não é gerado de novo.
+- Só front.
+- **Situação (30/10/2026): implementada.** Jornada de ponta a ponta atualizada (quadro "Resposta sem fonte" com "Adicionar conhecimento" depois de escrever e recarregar) e teste novo do envio pela revisão, com sucesso e com falha, preservando o texto em edição.
+
 ## Definição de pronto (proposta, P10)
 
 Uma etapa só é concluída quando:
