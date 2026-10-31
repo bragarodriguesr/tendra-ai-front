@@ -141,14 +141,14 @@ export function HomePage({ onPage }) {
         </div>
       </Aurora>
 
-      <Section tone="ink" id="seguranca">
+      <Section id="seguranca">
         <div className="tdr-site-trust">
           <div style={{ display: "grid", gap: "var(--space-5)" }}>
-            <MonoLabel tone="accent">Segurança e confiança</MonoLabel>
-            <h2 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: "var(--text-d2-size)", lineHeight: "var(--text-d2-lh)", letterSpacing: "var(--text-d2-ls)", color: "var(--text-on-inverse)", maxWidth: "22ch", textWrap: "pretty" }}>
+            <MonoLabel>Segurança e confiança</MonoLabel>
+            <h2 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: "var(--text-d2-size)", lineHeight: "var(--text-d2-lh)", letterSpacing: "var(--text-d2-ls)", color: "var(--text-strong)", maxWidth: "22ch", textWrap: "pretty" }}>
               Nenhuma resposta sai sem revisão humana
             </h2>
-            <p style={{ margin: 0, fontSize: "var(--text-body-size)", lineHeight: 1.65, color: "var(--ink-200)", maxWidth: "var(--measure-lead)", textWrap: "pretty" }}>
+            <p style={{ margin: 0, fontSize: "var(--text-body-size)", lineHeight: 1.65, color: "var(--text-body)", maxWidth: "var(--measure-lead)", textWrap: "pretty" }}>
               A trilha de auditoria registra quem aprovou cada item, com qual fonte e em que versão do documento. É o que o seu time de segurança pede quando questiona conteúdo gerado.
             </p>
           </div>
@@ -159,32 +159,18 @@ export function HomePage({ onPage }) {
               { icon: "users", t: "Aprovação nominal", d: "Cada item tem um revisor responsável identificado." },
               { icon: "database", t: "Base curada e governada", d: "Cada resposta tem dono, versão e validade. A base fica melhor a cada proposta aprovada e avisa quando o conhecimento está vencido ou defasado." }
             ].map((r) => (
-              <Card key={r.t} tone="ink-panel" radius="lg" padding="sm">
+              <Card key={r.t} tone="paper" radius="lg" padding="sm">
                 <div style={{ display: "flex", gap: "var(--space-4)", alignItems: "flex-start" }}>
-                  <span style={{ color: "var(--brand-lime)", marginTop: 2 }}><Icon name={r.icon} size="lg" /></span>
+                  <span style={{ color: "var(--brand-sage)", marginTop: 2 }}><Icon name={r.icon} size="lg" /></span>
                   <span style={{ display: "grid", gap: 4 }}>
-                    <span style={{ fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: 17, color: "var(--text-on-inverse)" }}>{r.t}</span>
-                    <span style={{ fontSize: "var(--text-sm-size)", lineHeight: 1.55, color: "var(--ink-200)", textWrap: "pretty" }}>{r.d}</span>
+                    <span style={{ fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: 17, color: "var(--text-strong)" }}>{r.t}</span>
+                    <span style={{ fontSize: "var(--text-sm-size)", lineHeight: 1.55, color: "var(--text-body)", textWrap: "pretty" }}>{r.d}</span>
                   </span>
                 </div>
               </Card>
             ))}
           </div>
         </div>
-      </Section>
-
-      <Section>
-        <Aurora variant="lime" radius="3xl" padding="md">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-8)", flexWrap: "wrap" }}>
-            <div style={{ display: "grid", gap: "var(--space-3)" }}>
-              <MonoLabel style={{ color: "var(--brand-ink)" }}>Webinar · 14 de outubro</MonoLabel>
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: 30, lineHeight: 1.15, letterSpacing: "-0.03em", color: "var(--brand-ink)", maxWidth: "26ch", textWrap: "pretty" }}>
-                Segurança em respostas geradas por IA
-              </div>
-            </div>
-            <Button icon="play">Inscrever</Button>
-          </div>
-        </Aurora>
       </Section>
     </>
   );
