@@ -22,6 +22,7 @@ Chegar a um backend que **prove a hipótese central do MVP** (a pessoa aceita as
 | **D. Publicação compartilhada** | Login, sessão, hospedagem e segurança de exposição (fase 1 de `docs/referencia/mvp-proposta-1/PLAN.md`) | Cenários de `docs/referencia/mvp-proposta-1/SPEC.md`; spec próprio quando a fase começar |
 | **K. Organizações** | Segregação lógica dos dados por empresa usuária (multi-tenant): base, tarefas, revisão, métricas, usuários e arquivos de cada organização | 66 a 79 |
 | **L. Busca de perguntas** | Barra de busca por palavras na Revisão e nos detalhes da tarefa, a mesma nas duas telas, junto com o filtro por estado | B1 a B17 de `SPEC_FASE_L.md` |
+| **M. Filtro pelo progresso** | Barra e legenda de estados dos detalhes da tarefa acionam o filtro por estado; o número do cartão segue o filtro | M1 a M12 de `SPEC_FASE_M.md` |
 
 > **Situação da fase A (23/10/2026):** A1 feita e execuções reais da A5 a A10 concluídas (`gerar-amostra`, `responder` e `avaliar` com Sonnet 5.5 e Opus 5.5). Com as instruções `geracao-v3` e `conflito-v2` e a checagem por parágrafo (cenário 18 revisto), o Opus 5.5 atinge todos os critérios medidos pelo código na RFP-01 e na RFP-02 (3 execuções). Falta só a lista de fidelidade preenchida por uma pessoa para fechar o portão e registrar o modelo em P8.
 
@@ -859,6 +860,53 @@ Pedida em 01/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 | B10, B16 | Buscar nos detalhes, abrir um item e ver a mesma busca na Revisão; abrir outra tarefa e ver a busca vazia |
 | B11, B17 | Repetir no celular, sem rolagem lateral |
 | B12 | Nenhuma chamada a `/api/` ao digitar |
+
+## Fase M: filtro pela barra e pela legenda de estados nos detalhes da tarefa
+
+Pedida em 02/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/spec/SPEC_FASE_M.md` (cenários M1 a M12, `approved`), e o plano detalhado, em `docs/mvp-resposta-rfp/plan/PLAN_FASE_M.md`. Só front: nenhum arquivo do backend muda, e o clique não faz requisições.
+
+**Objetivo:** filtrar a tabela dos detalhes da tarefa direto pelo cartão de progresso.
+- Clicar num segmento da barra ou num item da legenda aplica o filtro daquele estado, o mesmo do menu "Filtrar" e da Revisão.
+- Clicar de novo volta para "Todos".
+- Os outros estados esmaecem.
+- O número do cartão passa a mostrar os itens do estado filtrado.
+
+### Decisões
+
+| Tema | Decisão | Cenários |
+|---|---|---|
+| Estado do filtro | O mesmo `state.filter` do menu "Filtrar" e da Revisão | M1, M6 |
+| Segundo clique | No estado já filtrado, volta para "Todos"; em outro estado, troca direto | M3, M4 |
+| Destaque | Os outros estados ficam com opacidade 0,42 (o valor do DS para botões desativados), mantendo as cores; nada esmaece em "Todos" | M5 |
+| Número do cartão | "2 de 12 itens aprovados" por padrão; com um estado filtrado, "N de 12 itens <estado>"; conta todos os itens da tarefa, sem a busca | M7 |
+| Estado com 0 itens | Item da legenda sem clique e fora da ordem do Tab | M9 |
+| Alerta pendente | Não é um estado de revisão: fora do comportamento do cartão, que mostra os aprovados | Fora de escopo |
+| Dashboard | A barra dele usa o mesmo componente, mas continua só informativa | Fora de escopo |
+
+### Etapas
+
+### M1. Funções puras
+- `filtroAoClicar` e o número do cartão, com testes unitários (`npm test`).
+
+### M2. `viewModel`
+- Valor do filtro e texto do número em cada estado de `segs`; `destaqueDoCartao`.
+
+### M3. Barra com seleção opcional
+- `SegmentBar` aceita `selected` e `onSelect`; sem eles, fica como hoje.
+
+### M4. Cartão dos detalhes da tarefa
+- Barra e legenda ligadas ao filtro, esmaecimento e número do cartão.
+
+### M5. Testes de ponta a ponta
+- `e2e/filtroPeloProgresso.spec.js`, um teste por cenário (M1 a M12), e um teste do Dashboard sem mudança.
+
+### Situação (02/11/2026): implementada
+- Validação manual feita, inclusive do M6 depois da correção.
+- 4 testes unitários novos (`npm test`, 10 no total) e 16 de ponta a ponta da fase M passando; suíte de ponta a ponta completa verde (75 testes).
+- Ajuste de 02/11/2026 (M13): opções do menu "Filtrar" em ordem alfabética, na Revisão e nos detalhes da tarefa; barra e legenda na mesma ordem, sem "Alerta pendente".
+- Correção de 02/11/2026 (fase L, B13): nos detalhes da tarefa, o menu do "Filtrar" abria para a direita e passava da tela. O `FilterMenu` do DS ganhou a opção `align="end"` (padrão `"start"`, sem mudança nas outras telas), usada no computador. Teste de ponta a ponta novo; suíte completa verde (76 testes).
+- Conferida no navegador no computador.
+- Correção na validação manual: clicar numa pergunta da tabela abria a Revisão com o filtro em "Todos". Agora mantém o filtro, como o botão "Abrir revisão" e o menu lateral (M6).
 
 ## Definição de pronto (proposta, P10)
 

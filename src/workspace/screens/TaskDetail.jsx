@@ -1,6 +1,7 @@
 import React from "react";
 import { Badge, Button, EmptyState, Icon, Input, ProgressBar, FilterMenu } from "../../ds/index.js";
-import { ClickRow, DISPLAY, Page, SegmentBar, bigNumber, card, h1Style, legendDot, mono } from "../ui.jsx";
+import { ClickRow, DISPLAY, ESMAECIDO, Page, SegmentBar, bigNumber, card, h1Style, legendDot, mono } from "../ui.jsx";
+import { filtroAoClicar } from "../filtroPeloProgresso.js";
 
 const statusCard = (accent, compact) => card(16, {
   padding: compact ? 20 : 32, display: "flex", flexDirection: "column", gap: 16, maxWidth: 640,
@@ -75,16 +76,31 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
         <>
           <div style={card(16, { padding: 24, display: "flex", flexDirection: "column", gap: 20 })}>
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <span style={bigNumber}>{c.approved} <span style={{ fontSize: 24, color: "var(--n-400)" }}>de {c.total}</span></span>
-              <span style={{ color: "var(--n-700)" }}>itens aprovados</span>
+              <span style={bigNumber}>{v.destaqueDoCartao.n} <span style={{ fontSize: 24, color: "var(--n-400)" }}>de {c.total}</span></span>
+              <span style={{ color: "var(--n-700)" }}>{v.destaqueDoCartao.texto}</span>
             </div>
-            <SegmentBar segments={v.segs} total={c.total} unit="itens" />
+            {/* Barra e legenda aplicam o filtro por estado; clicar de novo volta para "Todos" (SPEC_FASE_M.md, M1 a M5). */}
+            <SegmentBar segments={v.segs} total={c.total} unit="itens" selected={state.filter} onSelect={(estado) => ws.setFilter(filtroAoClicar(state.filter, estado))} />
             <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-              {v.segs.map((g) => (
-                <div key={g.label} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
-                  <span aria-hidden="true" style={legendDot(g.color)} /><span style={{ ...mono(undefined), fontVariantNumeric: "tabular-nums" }}>{g.n}</span><span>{g.label}</span>
-                </div>
-              ))}
+              {v.segs.map((g, _, todos) => {
+                const filtrando = todos.some((x) => x.value === state.filter);
+                const conteudo = <><span aria-hidden="true" style={legendDot(g.color)} /><span style={{ ...mono(undefined), fontVariantNumeric: "tabular-nums" }}>{g.n}</span><span>{g.label}</span></>;
+                const estilo = {
+                  display: "flex", alignItems: "center", gap: 8, fontSize: 13,
+                  opacity: filtrando && g.value !== state.filter ? ESMAECIDO : 1, transition: "opacity var(--duration-fast) var(--ease-out)"
+                };
+                // Estado sem itens: sem clique e fora da ordem do Tab (M9).
+                if (g.n === 0) return <div key={g.label} style={estilo}>{conteudo}</div>;
+                return (
+                  <button
+                    key={g.label} type="button" aria-pressed={g.value === state.filter} aria-label={`${g.label}: ${g.n} de ${c.total} itens`}
+                    onClick={() => ws.setFilter(filtroAoClicar(state.filter, g.value))}
+                    style={{ ...estilo, padding: 0, border: 0, background: "transparent", font: "inherit", fontSize: 13, color: "inherit", cursor: "pointer" }}
+                  >
+                    {conteudo}
+                  </button>
+                );
+              })}
             </div>
           </div>
           {/* Busca à esquerda e filtro à direita, na mesma linha (SPEC_FASE_L.md, B13); no celular, o filtro vai abaixo (B17). */}
@@ -96,7 +112,8 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
               style={isMobile ? { flex: "1 1 100%" } : { flex: "0 1 320px", minWidth: 220 }}
             />
             <div style={isMobile ? undefined : { marginLeft: "auto" }}>
-              <FilterMenu items={v.filterTabs} value={state.filter} onChange={ws.setFilter} />
+              {/* No computador o filtro fica à direita: o menu abre alinhado à direita do botão, sem passar da tela. */}
+              <FilterMenu items={v.filterTabs} value={state.filter} onChange={ws.setFilter} align={isMobile ? "start" : "end"} />
             </div>
           </div>
           <div style={card(14, { overflowX: "auto", overflowY: "hidden" })}>

@@ -109,6 +109,7 @@ Verificação feita em 01/11/2026, no código do front.
 - **Then** a barra de busca aparece na mesma linha do filtro por estado: a barra à esquerda e "Todos" e "Filtrar" à direita (decisão de 01/11/2026), com o mesmo ícone, texto de exemplo ("Buscar por palavras ou código") e rótulo acessível ("Buscar perguntas") da Revisão
 - **And** a barra usa o componente de campo de texto do design system, sem estilo próprio de cor, fonte ou borda
 - **And** quando a tela é estreita demais para os dois na mesma linha, a barra ocupa a largura da lista e o filtro passa para a linha de baixo
+- **And** o menu do botão "Filtrar" abre inteiro dentro da tela, sem rolagem lateral: com o filtro à direita, alinhado à direita do botão (ajuste de 02/11/2026)
 
 ### Cenário B14: tabela filtrada pela busca
 - **Given** a tela de detalhes de uma tarefa

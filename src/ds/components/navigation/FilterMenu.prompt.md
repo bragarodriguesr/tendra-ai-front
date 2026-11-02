@@ -9,4 +9,4 @@
 ]} />
 ```
 
-Use sempre que uma lista ou tabela puder ser recortada por estado, tipo ou alerta — mesmo com só duas ou três visões. Não filtre com `Tabs` (abas são para visões irmãs do mesmo objeto) nem com `Select` (ordenação continua em `Select`). O menu fecha com Esc, clique fora ou ao escolher, e o foco volta ao botão.
+Use sempre que uma lista ou tabela puder ser recortada por estado, tipo ou alerta — mesmo com só duas ou três visões. Não filtre com `Tabs` (abas são para visões irmãs do mesmo objeto) nem com `Select` (ordenação continua em `Select`). O menu fecha com Esc, clique fora ou ao escolher, e o foco volta ao botão. Quando o filtro fica encostado na borda direita da tela, use `align="end"` para o menu abrir alinhado à direita do botão, sem ultrapassar a tela.

@@ -180,6 +180,19 @@ test("Cenário B13: barra de busca à esquerda e filtro à direita, na mesma lin
   expect(caixaDaBusca.x + caixaDaBusca.width).toBeLessThan(caixaDoTodos.x);
 });
 
+test("Cenário B13: o menu do Filtrar abre dentro da tela, no computador e no celular", async ({ page }) => {
+  for (const tamanho of [{ width: 1280, height: 800 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(tamanho);
+    await abrirDetalhes(page);
+    await page.getByRole("button", { name: "Filtrar", exact: true }).click();
+    const menu = await page.getByRole("menu", { name: "Filtrar itens" }).boundingBox();
+    expect(menu.x).toBeGreaterThanOrEqual(0);
+    expect(menu.x + menu.width).toBeLessThanOrEqual(tamanho.width);
+    const rolagemLateral = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+    expect(rolagemLateral).toBe(false);
+  }
+});
+
 test("Cenário B14: tabela filtrada pela busca, sem mudar os números", async ({ page }) => {
   await abrirDetalhes(page);
   await campo(page).fill("LOGS");

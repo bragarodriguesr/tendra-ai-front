@@ -77,18 +77,31 @@ export function AlertDeck({ deck, pending = true, icon, label, suffix, pos, onPr
   );
 }
 
+/** Opacidade dos estados fora do filtro no cartão de progresso: o valor do DS para botões desativados. */
+export const ESMAECIDO = 0.42;
+
 /** Barra empilhada de dataviz: 2px de superfície entre segmentos e tooltip em cada um. */
-export function SegmentBar({ segments, total, unit }) {
+export function SegmentBar({ segments, total, unit, selected, onSelect }) {
   const shown = segments.filter((g) => g.n > 0);
   const last = shown.length - 1;
+  // Com `onSelect`, cada segmento aplica o filtro do seu estado e os demais esmaecem enquanto um
+  // estado está filtrado (SPEC_FASE_M.md, M1, M5 e M10). Sem `onSelect` (Dashboard), só informa.
+  const filtrando = !!onSelect && segments.some((g) => g.value === selected);
   return (
     <div style={{ display: "flex", gap: 2, height: 12 }}>
       {shown.map((g, i) => {
         const text = `${g.label}: ${g.n} de ${total} ${unit}`;
         const l = i === 0 ? 99 : 0, r = i === last ? 99 : 0;
+        const clicavel = onSelect ? {
+          role: "button", "aria-pressed": g.value === selected, onClick: () => onSelect(g.value),
+          onKeyDown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(g.value); } }
+        } : null;
         return (
           <Tooltip key={g.label} content={text} style={{ width: g.width, display: "block" }}>
-            <span tabIndex={0} aria-label={text} style={{ display: "block", height: 12, background: g.color, borderRadius: `${l}px ${r}px ${r}px ${l}px` }} />
+            <span tabIndex={0} aria-label={text} {...clicavel} style={{
+              display: "block", height: 12, background: g.color, borderRadius: `${l}px ${r}px ${r}px ${l}px`,
+              ...(onSelect ? { cursor: "pointer", opacity: filtrando && g.value !== selected ? ESMAECIDO : 1, transition: "opacity var(--duration-fast) var(--ease-out)" } : null)
+            }} />
           </Tooltip>
         );
       })}
