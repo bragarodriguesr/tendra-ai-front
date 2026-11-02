@@ -1,7 +1,7 @@
 # Instruções para o Claude neste repositório
 
 - A fonte principal da fase atual está em `docs/mvp-resposta-rfp/`, em três pastas: `spec/` (arquivos `SPEC*`), `plan/` (arquivos `PLAN*`) e `product/` (os demais):
-  - `product/ARQUITETURA_MAPPING.md`, `spec/SPEC.md` e `plan/PLAN.md`: arquitetura, comportamento e plano do backend;
+  - `product/ARQUITETURA.md`, `spec/SPEC.md` e `plan/PLAN.md`: arquitetura, comportamento e plano do backend;
   - `spec/SPEC_FASE_D.md` e `plan/PLAN_FASE_D.md`: spec e plano da fase D (publicação compartilhada com login);
   - `product/PRD_Front-end_Tendra.ai_MVP_v3.md`: PRD vigente (a seção 20 define o pipeline de IA);
   - `product/PIPELINE_IA_MVP.md`: diagramas do pipeline de IA;

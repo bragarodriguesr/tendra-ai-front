@@ -160,4 +160,4 @@ As duas primeiras camadas já existem. A citação aponta sempre para o bloco, n
 
 1. Aprovar esta decisão.
 2. Especificar a medição da base por organização (passo 1 da seção 6) e definir os limites de custo e de tempo do gatilho.
-3. Registrar no `ARQUITETURA_MAPPING.md` a referência a esta decisão.
+3. Registrar no `ARQUITETURA.md` a referência a esta decisão.
