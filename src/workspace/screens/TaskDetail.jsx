@@ -1,5 +1,5 @@
 import React from "react";
-import { Badge, Button, Icon, ProgressBar, FilterMenu } from "../../ds/index.js";
+import { Badge, Button, EmptyState, Icon, Input, ProgressBar, FilterMenu } from "../../ds/index.js";
 import { ClickRow, DISPLAY, Page, SegmentBar, bigNumber, card, h1Style, legendDot, mono } from "../ui.jsx";
 
 const statusCard = (accent, compact) => card(16, {
@@ -87,9 +87,23 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
               ))}
             </div>
           </div>
-          <FilterMenu items={v.filterTabs} value={state.filter} onChange={ws.setFilter} />
+          {/* Busca à esquerda e filtro à direita, na mesma linha (SPEC_FASE_L.md, B13); no celular, o filtro vai abaixo (B17). */}
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
+            <Input
+              icon="search" placeholder="Buscar por palavras ou código" aria-label="Buscar perguntas"
+              value={state.busca} onChange={(e) => ws.setBusca(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Escape") ws.setBusca(""); }}
+              style={isMobile ? { flex: "1 1 100%" } : { flex: "0 1 320px", minWidth: 220 }}
+            />
+            <div style={isMobile ? undefined : { marginLeft: "auto" }}>
+              <FilterMenu items={v.filterTabs} value={state.filter} onChange={ws.setFilter} />
+            </div>
+          </div>
           <div style={card(14, { overflowX: "auto", overflowY: "hidden" })}>
-            {v.rows.map((r) => (
+            {v.buscaSemResultado ? (
+              <EmptyState icon="search" title="Nenhuma pergunta encontrada." description="Confira as palavras ou limpe a busca." />
+            ) : null}
+            {v.rowsDaBusca.map((r) => (
               isMobile ? (
                 <ClickRow key={r.id} onClick={r.openFromTask} style={{ display: "flex", flexDirection: "column", gap: 8, padding: "14px 16px", borderTop: "1px solid var(--n-100)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>

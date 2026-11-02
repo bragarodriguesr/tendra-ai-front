@@ -1,5 +1,5 @@
 import React from "react";
-import { Badge, Button, EmptyState, Icon, IconButton, MonoLabel, Select, Textarea, FilterMenu } from "../../ds/index.js";
+import { Badge, Button, EmptyState, Icon, IconButton, Input, MonoLabel, Select, Textarea, FilterMenu } from "../../ds/index.js";
 import { AlertDeck, ClickRow, DISPLAY, card, mono } from "../ui.jsx";
 import { SendResult } from "./Base.jsx";
 
@@ -15,13 +15,21 @@ function ItemList({ v, ws, state, isMobile }) {
       <div style={{ padding: "20px 20px 12px", display: "flex", flexDirection: "column", gap: 12 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 18, color: "var(--n-900)" }}>Itens</span>
-          <span style={mono(12, "var(--n-400)")}>{v.rows.length} de {v.counts.total}</span>
+          <span style={mono(12, "var(--n-400)")}>{v.rowsDaBusca.length} de {v.counts.total}</span>
         </div>
         <div style={{ fontSize: 12, color: "var(--n-500)", lineHeight: 1.4 }}>{v.revTask}</div>
+        <Input
+          icon="search" placeholder="Buscar por palavras ou código" aria-label="Buscar perguntas"
+          value={state.busca} onChange={(e) => ws.setBusca(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Escape") ws.setBusca(""); }}
+        />
         <FilterMenu items={v.filterTabs} value={state.filter} onChange={ws.setFilter} />
       </div>
       <div style={{ flex: 1, overflow: "auto" }}>
-        {v.rows.map((r) => (
+        {v.buscaSemResultado ? (
+          <div style={{ padding: "0 20px" }}><EmptyState icon="search" title="Nenhuma pergunta encontrada." description="Confira as palavras ou limpe a busca." /></div>
+        ) : null}
+        {v.rowsDaBusca.map((r) => (
           <ClickRow key={r.id} className="" onClick={() => { r.open(); if (isMobile) ws.setState({ reviewPane: "item" }); }} aria-current={r.active || undefined} style={{
             display: "flex", flexDirection: "column", gap: 6, padding: "14px 20px", borderTop: "1px solid var(--n-200)", fontSize: 14,
             background: r.active ? "var(--n-000)" : "transparent", boxShadow: r.active ? "inset 2px 0 0 var(--n-900)" : "none"
