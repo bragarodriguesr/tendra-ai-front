@@ -1,5 +1,6 @@
 import { formatarTempoSalvamento } from "./tempoSalvamento.js";
 import { AL, ST, code, plural, ITEM_TASKS, TODAY_ISO, OWN } from "./data.js";
+import { correspondeABusca, termosDaBusca } from "./buscaDePerguntas.js";
 import { hojeIso, contarPalavras, MINIMO_DE_PALAVRAS_DA_REVISAO } from "../api.js";
 import { cnpjSemMascara, cnpjValido } from "./cnpj.js";
 
@@ -279,6 +280,10 @@ export function buildView(s, ws) {
       open: () => ws.select(i.id), openFromTask: openItem(i.id)
     };
   });
+  // Linhas com a busca (SPEC_FASE_L.md), na Revisão e nos detalhes da tarefa: só as linhas
+  // mudam; o item aberto, a navegação e os números do filtro seguem o filtro por estado (cenários B9 e B14).
+  const termos = termosDaBusca(s.busca);
+  const rowsDaBusca = termos.length === 0 ? rows : rows.filter((r, n) => correspondeABusca({ pergunta: vis[n].q, codigo: r.code }, termos));
 
   // item atual na revisão
   const it = vis.find((i) => i.id === s.sel) || null;
@@ -511,6 +516,7 @@ export function buildView(s, ws) {
     downloadTask: s.confirmDownload ? tasks.find((t) => t.id === s.confirmDownload) || null : null,
     detalhes: s.detalhes ? { ...s.detalhes, task: tasks.find((t) => t.id === s.detalhes.id) || ws.taskInfo(s.detalhes.id, s) || {} } : null,
     docs, readyDocs, onb, tasks, taskAlerts: bellAlerts, alertsUnread, tDeck, dash, task, counts: c, segs, filterTabs, rows,
+    rowsDaBusca, buscaSemResultado: termos.length > 0 && rowsDaBusca.length === 0,
     revTask: (ws.taskInfo(s.itemsTask, s) || {}).name, cur, savedText, drawer, exportCards, exportTitle, history, historyTabs, form
   };
 }

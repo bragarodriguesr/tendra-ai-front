@@ -21,6 +21,7 @@ Chegar a um backend que **prove a hipótese central do MVP** (a pessoa aceita as
 | **C. Front conectado** | Nova RFP com arquivo real, progresso e revisão com ações gravadas (a Base já sai conectada da A4) | 6, 16, 23, 24, 33, 40, 42 a 46 |
 | **D. Publicação compartilhada** | Login, sessão, hospedagem e segurança de exposição (fase 1 de `docs/referencia/mvp-proposta-1/PLAN.md`) | Cenários de `docs/referencia/mvp-proposta-1/SPEC.md`; spec próprio quando a fase começar |
 | **K. Organizações** | Segregação lógica dos dados por empresa usuária (multi-tenant): base, tarefas, revisão, métricas, usuários e arquivos de cada organização | 66 a 79 |
+| **L. Busca de perguntas** | Barra de busca por palavras na Revisão e nos detalhes da tarefa, a mesma nas duas telas, junto com o filtro por estado | B1 a B17 de `SPEC_FASE_L.md` |
 
 > **Situação da fase A (23/10/2026):** A1 feita e execuções reais da A5 a A10 concluídas (`gerar-amostra`, `responder` e `avaliar` com Sonnet 5.5 e Opus 5.5). Com as instruções `geracao-v3` e `conflito-v2` e a checagem por parágrafo (cenário 18 revisto), o Opus 5.5 atinge todos os critérios medidos pelo código na RFP-01 e na RFP-02 (3 execuções). Falta só a lista de fidelidade preenchida por uma pessoa para fechar o portão e registrar o modelo em P8.
 
@@ -798,6 +799,66 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
 - Menu lateral refeito com as primitivas de Sidebar do Base UI (`@base-ui/react`) e os tokens do DS: recolhe a ícones no desktop, abre como painel no mobile (abaixo de 900 px), atalho ⌘B/Ctrl+B, dicas nos ícones e o logo no topo do menu.
 - Grupos, itens, contagens e regras do menu continuam vindo do viewModel; "Primeiros passos" mantém o gradiente limão em movimento enquanto a base está vazia.
 - **Situação (30/10/2026): implementada.** Teste de ponta a ponta do menu (desktop, recolhido, mobile, teclado) e jornada verde.
+
+## Fase L: busca de perguntas na Revisão e nos detalhes da tarefa
+
+Pedida em 01/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/SPEC_FASE_L.md` (cenários B1 a B17, `approved`), e o plano detalhado, em `docs/mvp-resposta-rfp/PLAN_FASE_L.md`. Só front: nenhum arquivo do backend muda, e a busca não faz requisições.
+
+**Objetivo:** achar uma pergunta numa RFP longa sem rolar a lista. Uma barra de busca reduz a lista às perguntas que contêm as palavras digitadas, no texto completo da pergunta ou no código do item, junto com o filtro por estado. Nenhum outro elemento das telas muda.
+
+### Decisões
+
+| Tema | Decisão | Cenários |
+|---|---|---|
+| Onde a busca acontece | No navegador, sobre os itens já carregados | B12 |
+| Correspondência | Sem diferenciar maiúsculas, minúsculas nem acentos; trecho de palavra vale; todas as palavras precisam aparecer, em qualquer ordem; no texto completo da pergunta (não o cortado da lista) e no código do item | B2 a B5 |
+| Termos | Separados por espaços; espaços repetidos e nas pontas ignorados; só espaços equivale a busca vazia | B5, B8 |
+| Efeito nas telas | Só as linhas mudam (`rowsDaBusca` no `viewModel`). O item aberto, a navegação anterior/próximo e os números do filtro e do cartão de progresso continuam com o filtro por estado | B6, B9, B14 |
+| Mesma busca nas duas telas | Estado `busca` único no `useWorkspace`, como o filtro. Abrir a Revisão pela tabela ou por "Abrir revisão" mantém a busca; trocar de tarefa (`swapTo`) a limpa | B10, B16 |
+| Campo | `Input` do DS com `icon="search"`, texto "Buscar por palavras ou código", rótulo "Buscar perguntas"; Esc limpa | B1, B8, B13 |
+| Sem resultado | `EmptyState` do DS: "Nenhuma pergunta encontrada." e "Confira as palavras ou limpe a busca." | B7, B15 |
+| Posição na Revisão | No painel "Itens", entre o nome da tarefa e o filtro por estado | B1, B11 |
+| Posição nos detalhes | Na linha do filtro: busca à esquerda (320 px, encolhe até 220 px) e "Todos" e "Filtrar" à direita (decisão de 01/11/2026). No celular, a busca ocupa a largura da lista, acima do filtro | B13, B17 |
+| Testes unitários do front | Executor de testes do próprio Node (`npm test`), sem dependência nova | B2 a B5, B8 |
+
+### Etapas
+
+### L1. Função de correspondência
+- `src/workspace/buscaDePerguntas.js`: `termosDaBusca` e `correspondeABusca`. Testes em `test/buscaDePerguntas.test.js` e script `npm test` (`node --test "test/**/*.test.js"`).
+
+### L2. Estado da busca
+- `busca` no estado inicial, ação `setBusca` e reinício da busca nos pontos que trocam ou esvaziam os itens da Revisão (`swapTo`, carga das tarefas do servidor e exclusão da tarefa aberta).
+
+### L3. Linhas filtradas
+- `rowsDaBusca` e `buscaSemResultado` no `viewModel`. `rows` não muda.
+
+### L4. Barra na Revisão
+- `Input` e `EmptyState` no `ItemList` de `Review.jsx`; a contagem "X de Y" passa a usar `rowsDaBusca`.
+
+### L5. Barra nos detalhes da tarefa
+- `Input` e `FilterMenu` na mesma linha em `TaskDetail.jsx`; a tabela passa a usar `rowsDaBusca`; `EmptyState` no lugar das linhas.
+
+### L6. Testes de ponta a ponta
+- `e2e/buscaNaRevisao.spec.js`, um teste por cenário (B1 a B17), com os itens de exemplo e a API desligada, no padrão de `e2e/baseNaRevisao.spec.js`. Inclui a contagem de requisições ao digitar (zero) e o celular (sem rolagem lateral).
+
+### Situação (02/11/2026): implementada, sem commit
+- 6 testes unitários e 18 de ponta a ponta da busca passando; suíte de ponta a ponta completa verde (59 testes).
+- Conferida no navegador nas duas telas, no computador e no celular.
+- **Pendência:** a integração contínua do front (`.github/workflows/front.yml`) roda o build e os testes de ponta a ponta, mas não o `npm test`; os testes unitários do front ainda não rodam no CI.
+
+### Checklist de aceite da fase L
+
+| Cenário | Como conferir |
+|---|---|
+| B1, B13 | A barra aparece entre o nome da tarefa e o filtro na Revisão, e à esquerda do filtro nos detalhes |
+| B2 a B5 | Buscar "CRIPTOGRAF", "trafego", "contratuais" (depois do corte da lista), "req-007" e "seguro empresa" nos itens de exemplo |
+| B6, B14 | Com um filtro escolhido, buscar; os números do filtro e o cartão "2 de 12" não mudam |
+| B7, B15 | Buscar um texto inexistente e ver "Nenhuma pergunta encontrada." |
+| B8 | Apagar, Esc e só espaços |
+| B9 | Com um item aberto, buscar algo que não o inclui; usar anterior e próximo |
+| B10, B16 | Buscar nos detalhes, abrir um item e ver a mesma busca na Revisão; abrir outra tarefa e ver a busca vazia |
+| B11, B17 | Repetir no celular, sem rolagem lateral |
+| B12 | Nenhuma chamada a `/api/` ao digitar |
 
 ## Definição de pronto (proposta, P10)
 
