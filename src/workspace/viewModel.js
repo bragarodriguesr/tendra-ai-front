@@ -1,6 +1,7 @@
 import { formatarTempoSalvamento } from "./tempoSalvamento.js";
 import { AL, ST, code, plural, ITEM_TASKS, TODAY_ISO, OWN } from "./data.js";
 import { correspondeABusca, termosDaBusca } from "./buscaDePerguntas.js";
+import { numeroDoCartao } from "./filtroPeloProgresso.js";
 import { hojeIso, contarPalavras, MINIMO_DE_PALAVRAS_DA_REVISAO } from "../api.js";
 import { cnpjSemMascara, cnpjValido } from "./cnpj.js";
 
@@ -99,7 +100,8 @@ const STATUS_GROUPS = [
   { label: "Vencido", of: ["Vencido"], color: "var(--dv-terra-solid)", ink: "var(--dv-terra-ink)" }
 ];
 
-const FILTERS = [["todos", "Todos"], ["sem-rascunho", "Sem rascunho"], ["sugerida", "Sugerida"], ["em-revisao", "Em revisão"], ["revisada", "Revisada"], ["aprovada", "Aprovada"], ["alerta", "Alerta pendente"]];
+// "Todos" fica fixo como botão; as opções do menu, em ordem alfabética (SPEC_FASE_M.md, M13).
+const FILTERS = [["todos", "Todos"], ["alerta", "Alerta pendente"], ["aprovada", "Aprovada"], ["em-revisao", "Em revisão"], ["revisada", "Revisada"], ["sem-rascunho", "Sem rascunho"], ["sugerida", "Sugerida"]];
 
 /** Deriva tudo o que as telas mostram a partir do estado. */
 export function buildView(s, ws) {
@@ -258,15 +260,19 @@ export function buildView(s, ws) {
   const task0 = ws.taskInfo(s.taskId, s) || ws.taskInfo(taskIds[0], s) || ws.taskInfo("t1", s);
   const tkr = tasks.find((x) => x.id === task0.id) || {};
   const task = { ...task0, sTxt: tkr.status, sTone: tkr.tone, sIcon: tkr.icon, hasItems: !!task0.hasItems, isReady: !!task0.isReady, podeBaixar: podeBaixar(task0) };
-  // Estados dos itens, na ordem do fluxo. Cores de dataviz (tokens/dataviz.css): Em revisão em
-  // Petróleo como no Dashboard, Aprovada em Limão; as demais escolhidas para separar as vizinhas.
+  // Estados dos itens, em ordem alfabética, a mesma do filtro (SPEC_FASE_M.md, M13). Cores de dataviz
+  // (tokens/dataviz.css): Em revisão em Petróleo como no Dashboard, Aprovada em Limão; as demais
+  // escolhidas para separar as vizinhas.
+  // `value` é o filtro por estado que o segmento e a legenda aplicam (SPEC_FASE_M.md, M1 e M2).
   const segs = [
-    { n: c.none, label: "sem rascunho", color: "var(--dv-plum-solid)" },
-    { n: c.sug, label: "sugerida", color: "var(--dv-amber-solid)" },
-    { n: c.emr, label: "em revisão", color: "var(--dv-teal-solid)" },
-    { n: c.rev, label: "revisada", color: "var(--dv-terra-solid)" },
-    { n: c.approved, label: "aprovada", color: "var(--dv-series-6)" }
+    { n: c.approved, label: "aprovada", value: "aprovada", color: "var(--dv-series-6)" },
+    { n: c.emr, label: "em revisão", value: "em-revisao", color: "var(--dv-teal-solid)" },
+    { n: c.rev, label: "revisada", value: "revisada", color: "var(--dv-terra-solid)" },
+    { n: c.none, label: "sem rascunho", value: "sem-rascunho", color: "var(--dv-plum-solid)" },
+    { n: c.sug, label: "sugerida", value: "sugerida", color: "var(--dv-amber-solid)" }
   ].map((g) => ({ ...g, width: (c.total ? (g.n / c.total) * 100 : 0) + "%" }));
+  // Número do cartão: os aprovados por padrão, ou o estado filtrado, sobre todos os itens (M7).
+  const destaqueDoCartao = numeroDoCartao(s.filter, Object.fromEntries(segs.map((g) => [g.value, g.n])));
 
   // filtros e lista
   const cnt = (k) => (k === "todos" ? s.items.length : k === "alerta" ? c.alerts : s.items.filter((i) => i.st === k).length);
@@ -277,7 +283,8 @@ export function buildView(s, ws) {
     return {
       id: i.id, code: code(i), q: i.q.length > 68 ? i.q.slice(0, 66) + "…" : i.q, st: st.l, icon: st.i, tone: st.tone,
       hasAlert: p > 0, alertText: p + " " + plural(p, "alerta", "alertas"), active: i.id === s.sel,
-      open: () => ws.select(i.id), openFromTask: openItem(i.id)
+      // A linha vem da tabela já filtrada: abre a Revisão com o mesmo filtro (SPEC_FASE_M.md, M6).
+      open: () => ws.select(i.id), openFromTask: () => ws.go("review", { taskId: s.itemsTask, sel: i.id })
     };
   });
   // Linhas com a busca (SPEC_FASE_L.md), na Revisão e nos detalhes da tarefa: só as linhas
@@ -515,7 +522,7 @@ export function buildView(s, ws) {
     deletingTask: s.deleting ? tasks.find((t) => t.id === s.deleting) || null : null,
     downloadTask: s.confirmDownload ? tasks.find((t) => t.id === s.confirmDownload) || null : null,
     detalhes: s.detalhes ? { ...s.detalhes, task: tasks.find((t) => t.id === s.detalhes.id) || ws.taskInfo(s.detalhes.id, s) || {} } : null,
-    docs, readyDocs, onb, tasks, taskAlerts: bellAlerts, alertsUnread, tDeck, dash, task, counts: c, segs, filterTabs, rows,
+    docs, readyDocs, onb, tasks, taskAlerts: bellAlerts, alertsUnread, tDeck, dash, task, counts: c, segs, destaqueDoCartao, filterTabs, rows,
     rowsDaBusca, buscaSemResultado: termos.length > 0 && rowsDaBusca.length === 0,
     revTask: (ws.taskInfo(s.itemsTask, s) || {}).name, cur, savedText, drawer, exportCards, exportTitle, history, historyTabs, form
   };

@@ -22,6 +22,8 @@ export interface FilterMenuProps extends Omit<React.HTMLAttributes<HTMLDivElemen
   label?: string;
   /** Texto do botão sem filtro ativo (padrão "Filtrar") */
   triggerLabel?: string;
+  /** Lado do botão "Filtrar" em que o menu se alinha: "start" (padrão) ou "end", para filtros à direita da tela */
+  align?: "start" | "end";
 }
 
 export declare function FilterMenu(props: FilterMenuProps): JSX.Element;

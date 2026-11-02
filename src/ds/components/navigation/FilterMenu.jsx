@@ -35,9 +35,10 @@ function Option({ item, checked, onPick }) {
 
 /**
  * Filtro de lista: o primeiro item ("Todos") fica fixo como botão; os demais vão para um menu
- * suspenso aberto pelo botão "Filtrar", cada um com a sua contagem.
+ * suspenso aberto pelo botão "Filtrar", cada um com a sua contagem. Com `align="end"`, o menu abre
+ * alinhado à direita do botão, para filtros encostados na borda direita da tela.
  */
-export function FilterMenu({ items = [], value, onChange, label = "Filtrar itens", triggerLabel = "Filtrar", style, ...rest }) {
+export function FilterMenu({ items = [], value, onChange, label = "Filtrar itens", triggerLabel = "Filtrar", align = "start", style, ...rest }) {
   const [open, setOpen] = React.useState(false);
   const root = React.useRef(null);
   const menuId = React.useId();
@@ -80,7 +81,7 @@ export function FilterMenu({ items = [], value, onChange, label = "Filtrar itens
             role="menu"
             aria-label={label}
             style={{
-              position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 70, width: 248, boxSizing: "border-box", padding: 6,
+              position: "absolute", top: "calc(100% + 8px)", ...(align === "end" ? { right: 0 } : { left: 0 }), zIndex: 70, width: 248, boxSizing: "border-box", padding: 6,
               display: "grid", background: "var(--surface-card)", border: "1px solid var(--border-default)",
               borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-popover)",
               animation: "tdr-rise var(--duration-fast) var(--ease-out)"
