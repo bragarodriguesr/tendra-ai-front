@@ -37,7 +37,7 @@ Cada etapa abaixo é uma mudança pequena, com objetivo claro, testes próprios 
 | # | Pendência | Bloqueia | Sugestão |
 |---|---|---|---|
 | P1 | Chave de testes da API definida e testada | Fase A | **Resolvida em 23/10/2026 (A1):** chave em `backend/.env`, fora do controle de versão. |
-| P2 | Base `.md`, planilha de RFP sintética e gabarito | Fase A, etapa A4 em diante | Conforme a seção 5 de `ARQUITETURA_MAPPING.md` e `docs/mvp-resposta-rfp/product/FORMATO_BASE_MD.md`. |
+| P2 | Base `.md`, planilha de RFP sintética e gabarito | Fase A, etapa A4 em diante | Conforme a seção 5 de `ARQUITETURA.md` e `docs/mvp-resposta-rfp/product/FORMATO_BASE_MD.md`. |
 | P3 | Método de medir a fidelidade (limite de 90% já decidido) | Etapa A10 | **Implementado na A10:** revisão humana pela lista `fidelidade.xlsx` que o `avaliar` gera (uma linha por resposta sugerida, com os trechos citados e a coluna "Diz o mesmo que os trechos? (sim/não)"). |
 | P4 | Motor do banco local | Etapa A4 | **Decidido na A4:** PGlite 0.5.8 (Postgres embutido), porque a fase D usa o Postgres do Supabase. |
 | P5 | Interface da carga (nome e opções) | Etapa A4 | **Decidido na A4 (revisto em 22/10/2026):** a carga principal é pela tela Base de conhecimento, com "Subir documentos" abrindo o seletor de arquivos `.md` do computador. O comando `npm run carregar-base -- <pasta> [--enviado-por <nome>]` continua, com a mesma carga, e termina com código 1 quando algum arquivo é recusado. A identidade do documento passou a ser o nome do arquivo. |
@@ -135,7 +135,7 @@ Ver etapa A1.
 
 ### 0.2 Dados sintéticos (P2)
 - Empresa fictícia, 4 a 6 documentos `.md` com cabeçalho válido, os casos embutidos (conflito, fonte antiga, instrução maliciosa, documento fora da base, arquivos inválidos para a carga), planilha de RFP com 20 a 30 perguntas (e uma variante sem coluna "Pergunta"), gabarito e lista de pessoas sintéticas.
-- **Verificação:** o material é revisado contra a lista da seção 5 de `ARQUITETURA_MAPPING.md`; cada caso embutido tem uma pergunta correspondente no gabarito.
+- **Verificação:** o material é revisado contra a lista da seção 5 de `ARQUITETURA.md`; cada caso embutido tem uma pergunta correspondente no gabarito.
 
 ## Fase A: prova da IA
 
@@ -718,7 +718,7 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
   - O destaque em gradiente limão em movimento entrou com os PRs #70 e #71. O #71 corrigiu a animação, que estava parada: o `!important` do atalho `background` fixava a posição do fundo.
 
 ### Atualizações de documentos na implementação
-- `ARQUITETURA_MAPPING.md`: a exceção E2 sai, e a seção do isolamento entra.
+- `ARQUITETURA.md`: a exceção E2 sai, e a seção do isolamento entra.
 - `SPEC_FASE_D.md`: D1, D3 e D11 citam a organização.
 - PRD: menu do usuário com a organização.
 - `README` do backend: os comandos novos.

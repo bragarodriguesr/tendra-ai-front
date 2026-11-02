@@ -18,7 +18,7 @@ constitution: 1.0.0
   6. preenchimento das respostas sugeridas;
   7. revisão: editar, restaurar, aprovar e avaliar, com cálculo da taxa de aceitação.
 
-  No front oficial (`tendra-ai-front`, React 18 + Vite), são afetadas a tela Nova RFP (envio da planilha), a tela Base (lista, envio de `.md` e ativar/desativar), o painel de tarefas (progresso) e a tela de revisão (respostas e ações). A arquitetura está em `docs/mvp-resposta-rfp/product/ARQUITETURA_MAPPING.md`.
+  No front oficial (`tendra-ai-front`, React 18 + Vite), são afetadas a tela Nova RFP (envio da planilha), a tela Base (lista, envio de `.md` e ativar/desativar), o painel de tarefas (progresso) e a tela de revisão (respostas e ações). A arquitetura está em `docs/mvp-resposta-rfp/product/ARQUITETURA.md`.
 - **Comportamento atual:** não existe backend. A tela Nova RFP não tem seletor de arquivo real, a nova tarefa sempre "identifica 12 perguntas", e as respostas e ações da revisão são fictícias e se perdem ao recarregar a página (`src/workspace/data.js` e `src/workspace/useWorkspace.js`).
 - **Comportamento esperado:**
   - a partir de uma planilha `.xlsx` de RFP e dos documentos ativos carregados na base, o sistema identifica as perguntas e gera, para cada uma, uma resposta sugerida com fontes verificáveis (documento, localização e trecho), ou indica explicitamente que a base não tem a resposta;
@@ -55,7 +55,7 @@ constitution: 1.0.0
 
 ### Exceções aceitas nesta versão (princípio XII)
 
-As exceções E1 a E5 estão descritas e justificadas na seção 9.2 de `ARQUITETURA_MAPPING.md`: ausência de login, com a pessoa que age vinda de uma lista de configuração (E1), base única (E2), sem criptografia própria em repouso (E3), HTTP só dentro da máquina (E4) e observabilidade só local (E5). Todas valem apenas para as fases A a C, com dados sintéticos, e terminam com a fase D. A exceção E2 (base e organização únicas) termina com a fase K (cenários 66 a 79), que separa os dados por organização.
+As exceções E1 a E5 estão descritas e justificadas na seção 9.2 de `ARQUITETURA.md`: ausência de login, com a pessoa que age vinda de uma lista de configuração (E1), base única (E2), sem criptografia própria em repouso (E3), HTTP só dentro da máquina (E4) e observabilidade só local (E5). Todas valem apenas para as fases A a C, com dados sintéticos, e terminam com a fase D. A exceção E2 (base e organização únicas) termina com a fase K (cenários 66 a 79), que separa os dados por organização.
 
 ## Dependências de infraestrutura
 
@@ -80,7 +80,7 @@ Verificação feita em 21/10/2026, na máquina local de desenvolvimento.
   - **Acesso verificado:** não. O repositório não tem integração contínua configurada.
   - `[DECISÃO PENDENTE: proteção da branch main exigindo a integração contínua aprovada antes do merge. Depende de configuração do repositório.]`
 - **Dados sintéticos**
-  - **Recurso:** pasta de documentos `.md` com o cabeçalho de `docs/mvp-resposta-rfp/product/FORMATO_BASE_MD.md`, planilha de RFP `.xlsx` sintética e gabarito, conforme a seção 5 de `ARQUITETURA_MAPPING.md`.
+  - **Recurso:** pasta de documentos `.md` com o cabeçalho de `docs/mvp-resposta-rfp/product/FORMATO_BASE_MD.md`, planilha de RFP `.xlsx` sintética e gabarito, conforme a seção 5 de `ARQUITETURA.md`.
   - **Acesso verificado:** não. O material ainda não existe.
   - `[BLOQUEIO: criar a base `.md`, a planilha de RFP sintética e o gabarito antes de aprovar o spec.]`
 - **Repositório (`github.com/bragarodriguesr/tendra-ai-front`)**
@@ -722,7 +722,7 @@ Exigidos pela constitution (IV). São medidos pelo comando de avaliação (cená
   - cota de uso da IA por organização;
   - banco, chave de criptografia ou chave da API separados por organização (isolamento físico);
   - Row Level Security por organização no Postgres, se o grupo não escolher a segunda camada (PK2 do `PLAN.md`).
-- Login, sessão, hospedagem, banco gerenciado, armazenamento de arquivos em nuvem e qualquer acesso pela rede: **fase D**, com cenários de `docs/referencia/mvp-proposta-1/SPEC.md` (1 a 4, 37, 44, 50 a 52 e 54). Os cuidados de preparação estão na seção 8 de `ARQUITETURA_MAPPING.md`.
+- Login, sessão, hospedagem, banco gerenciado, armazenamento de arquivos em nuvem e qualquer acesso pela rede: **fase D**, com cenários de `docs/referencia/mvp-proposta-1/SPEC.md` (1 a 4, 37, 44, 50 a 52 e 54). Os cuidados de preparação estão na seção 8 de `ARQUITETURA.md`.
 - Qualquer formato de base que não seja `.md`, conversão de outros formatos e exclusão de documentos. A base entra pela tela ou pelo comando, sempre em `.md`.
 - RFP em formato diferente de `.xlsx`.
 - **Tradução das respostas para o idioma da RFP ou para outros idiomas.** No MVP, as respostas são sempre escritas em português (cenário 50). A tradução fica registrada como evolução futura do produto.

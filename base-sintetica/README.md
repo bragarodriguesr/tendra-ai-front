@@ -22,7 +22,7 @@ Material da **fase 0.2** do `docs/mvp-resposta-rfp/plan/PLAN.md`. Tudo aqui é f
 
 As pastas `base/` e `atualizacao/` são as únicas que representam o estado da base. O `GUIA-casos-de-teste.md` e os demais arquivos de `pulse-beneficios/` ficam fora delas de propósito, para o comando de carga não os ler. Pela tela, suba só os arquivos dessas pastas. A identidade de um documento é o nome do arquivo, sem a pasta.
 
-## Fase 0.2: lista da seção 5 de `ARQUITETURA_MAPPING.md`
+## Fase 0.2: lista da seção 5 de `ARQUITETURA.md`
 
 | Item exigido | Onde está |
 |---|---|
