@@ -1,6 +1,6 @@
 # Formato dos arquivos `.md` da base de conhecimento
 
-*Definido em 21/10/2026; revisado em 22/10/2026 para a carga pela tela. Status: `draft`. Complementa a seção 20 do `PRD_Front-end_Tendra.ai_MVP_v3.md` e o quadro 1 de `docs/mvp-resposta-rfp/PIPELINE_IA_MVP.md`.*
+*Definido em 21/10/2026; revisado em 22/10/2026 para a carga pela tela. Status: `draft`. Complementa a seção 20 do `PRD_Front-end_Tendra.ai_MVP_v3.md` e o quadro 1 de `docs/mvp-resposta-rfp/product/PIPELINE_IA_MVP.md`.*
 
 No MVP, a base de conhecimento entra no banco a partir de arquivos `.md` escritos pela equipe. A pessoa sobe os arquivos pela tela **Base de conhecimento** (botão "Subir documentos", que abre o seletor de arquivos do computador). O comando `carregar-base` faz a mesma carga a partir de uma pasta, para quem prefere o terminal. Este documento define o cabeçalho obrigatório desses arquivos, o que a carga valida e como o arquivo vira fonte citável.
 

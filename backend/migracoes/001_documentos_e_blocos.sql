@@ -1,5 +1,5 @@
 -- Base de conhecimento, carregada pela tela Base de conhecimento ou pelo comando carregar-base (etapa A4).
--- Formato dos arquivos de origem: docs/mvp-resposta-rfp/FORMATO_BASE_MD.md.
+-- Formato dos arquivos de origem: docs/mvp-resposta-rfp/product/FORMATO_BASE_MD.md.
 
 CREATE TABLE documentos (
   id               serial PRIMARY KEY,

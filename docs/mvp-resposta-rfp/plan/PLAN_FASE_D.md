@@ -1,7 +1,7 @@
 ---
 fase: D-publicacao-compartilhada
 status: draft
-spec: docs/mvp-resposta-rfp/SPEC_FASE_D.md
+spec: docs/mvp-resposta-rfp/spec/SPEC_FASE_D.md
 ---
 
 # Plano da fase D: publicação compartilhada com login

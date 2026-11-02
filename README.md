@@ -20,13 +20,13 @@ npm run servidor # http://127.0.0.1:3000, só nesta máquina; exige ANTHROPIC_AP
 # sem a chave (até a A1): TENDRA_API_SIMULADA=1 npm run servidor, com respostas simuladas
 ```
 
-Com o servidor no ar, "Subir documentos" abre o seletor de arquivos do computador: escolha um ou mais `.md` no formato de [`docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`](docs/mvp-resposta-rfp/FORMATO_BASE_MD.md) (por exemplo, os de `base-sintetica/pulse-beneficios/base/`). A tela mostra o resultado de cada arquivo, inclusive o motivo das recusas. O `npm run dev` repassa `/api` para o servidor (`vite.config.js`). Sem o servidor, a tela avisa e mostra a lista de exemplo.
+Com o servidor no ar, "Subir documentos" abre o seletor de arquivos do computador: escolha um ou mais `.md` no formato de [`docs/mvp-resposta-rfp/product/FORMATO_BASE_MD.md`](docs/mvp-resposta-rfp/product/FORMATO_BASE_MD.md) (por exemplo, os de `base-sintetica/pulse-beneficios/base/`). A tela mostra o resultado de cada arquivo, inclusive o motivo das recusas. O `npm run dev` repassa `/api` para o servidor (`vite.config.js`). Sem o servidor, a tela avisa e mostra a lista de exemplo.
 
 Com a base carregada, **Nova RFP/RFI** envia a planilha `.xlsx` escolhida no computador (por exemplo, `base-sintetica/rfps/RFP-01-Rede-Varejo-Alfa.xlsx`). A tarefa processa em segundo plano e a tela mostra o progresso. Ao terminar, os itens entram na **Revisão** e a planilha preenchida pode ser baixada. Editar, restaurar, reconhecer alerta, escolher fonte, marcar como revisado, aprovar e avaliar ficam gravados no banco em nome da pessoa escolhida em "Trocar usuário": Aprovador é Marcelo Vieira, Revisor é Kadu Mendes (`backend/config/pessoas.json`). Na tela **Tarefas**, a lixeira exclui a tarefa com todos os registros e planilhas dela, depois de uma confirmação. Sem o servidor, tarefas e itens são os exemplos fictícios de `src/workspace/data.js`.
 
 ### Teste de ponta a ponta
 
-`npm run e2e` roda `e2e/jornada.spec.js` com o Playwright e é o portão da fase C (`docs/mvp-resposta-rfp/PLAN.md`). O comando sobe sozinho dois servidores:
+`npm run e2e` roda `e2e/jornada.spec.js` com o Playwright e é o portão da fase C (`docs/mvp-resposta-rfp/plan/PLAN.md`). O comando sobe sozinho dois servidores:
 - o backend na porta 3100, com a API simulada e um banco novo numa pasta temporária, sem ler `backend/.env`;
 - o front na porta 5174.
 

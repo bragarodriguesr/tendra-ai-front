@@ -167,5 +167,5 @@ As métricas do piloto vêm do registro de eventos do quadro 4 e não dependem d
 
 - Método de medir a fidelidade: revisão humana de uma amostra ou avaliador automático com modelo. Proposta: começar pela revisão humana da amostra do gabarito.
 - Modelo da redação (Sonnet 5.5 ou Opus 5.5) e tamanho do lote: decididos pela avaliação contra o gabarito.
-- ~~Interface da carga~~: decidida na etapa A4 e revista em 22/10/2026. A carga é pela tela Base de conhecimento ("Subir documentos"), e o comando `npm run carregar-base -- <pasta> [--enviado-por <nome>]` continua como alternativa. O formato dos arquivos `.md` está em `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`.
+- ~~Interface da carga~~: decidida na etapa A4 e revista em 22/10/2026. A carga é pela tela Base de conhecimento ("Subir documentos"), e o comando `npm run carregar-base -- <pasta> [--enviado-por <nome>]` continua como alternativa. O formato dos arquivos `.md` está em `docs/mvp-resposta-rfp/product/FORMATO_BASE_MD.md`.
 - A segunda chamada de IA (conflito) existe porque a API não combina citações com saída estruturada na mesma chamada; o teste prático da primeira etapa pode eliminá-la.

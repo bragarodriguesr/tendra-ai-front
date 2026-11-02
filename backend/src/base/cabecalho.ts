@@ -1,6 +1,6 @@
 /**
  * Leitura e validação dos arquivos `.md` da base de conhecimento, conforme
- * docs/mvp-resposta-rfp/FORMATO_BASE_MD.md (cenários 7 e 9).
+ * docs/mvp-resposta-rfp/product/FORMATO_BASE_MD.md (cenários 7 e 9).
  */
 
 export const TIPOS_DE_DOCUMENTO = ["documento", "rfp-passada"] as const;

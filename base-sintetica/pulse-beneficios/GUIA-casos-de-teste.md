@@ -11,7 +11,7 @@ Empresa fictícia **Pulse Benefícios LTDA** (benefícios corporativos: vale-ali
 - `base/`: estado inicial da base, 16 documentos.
 - `atualizacao/`: 2 documentos com o **mesmo nome de arquivo** de documentos da base e versão mais nova. Carregar essa pasta depois de `base/` testa a substituição de versão (cenário 39 do SPEC).
 - `fora-da-base/`: 1 documento válido que **nunca** pode ser usado como fonte (cenário 35). Não é carregado.
-- `casos-de-carga/`: 13 arquivos para testar a validação da carga (cenário 9 do SPEC e os 16 cenários de `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`).
+- `casos-de-carga/`: 13 arquivos para testar a validação da carga (cenário 9 do SPEC e os 16 cenários de `docs/mvp-resposta-rfp/product/FORMATO_BASE_MD.md`).
 - `injecao-em-documento/`: 1 documento com **instrução maliciosa**, com o mesmo nome de `base/produto/app-mobile-funcionalidades.md` (versão 9.2). Carregue por cima da base (pela tela, basta subir esse arquivo) para o teste do cenário 15.
 
 ## Documentos

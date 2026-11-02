@@ -8,7 +8,7 @@ constitution: 1.0.0
 
 ## Contexto
 
-- **Papel deste documento:** descreve o comportamento do backend nas fases A a C do plano (`docs/mvp-resposta-rfp/PLAN.md`), com tudo rodando numa máquina local e com documentos sintéticos. A fase D (login e hospedagem compartilhada) tem spec próprio em `docs/mvp-resposta-rfp/SPEC_FASE_D.md`, que adapta os cenários de `docs/referencia/mvp-proposta-1/SPEC.md`.
+- **Papel deste documento:** descreve o comportamento do backend nas fases A a C do plano (`docs/mvp-resposta-rfp/plan/PLAN.md`), com tudo rodando numa máquina local e com documentos sintéticos. A fase D (login e hospedagem compartilhada) tem spec próprio em `docs/mvp-resposta-rfp/spec/SPEC_FASE_D.md`, que adapta os cenários de `docs/referencia/mvp-proposta-1/SPEC.md`.
 - **Fluxo/local afetado:** o fluxo principal da Tendra.ai, de ponta a ponta:
   1. carga da base de conhecimento a partir de arquivos `.md`, pela tela Base de conhecimento (ou pelo comando equivalente);
   2. inclusão da planilha `.xlsx` de RFP;
@@ -18,7 +18,7 @@ constitution: 1.0.0
   6. preenchimento das respostas sugeridas;
   7. revisão: editar, restaurar, aprovar e avaliar, com cálculo da taxa de aceitação.
 
-  No front oficial (`tendra-ai-front`, React 18 + Vite), são afetadas a tela Nova RFP (envio da planilha), a tela Base (lista, envio de `.md` e ativar/desativar), o painel de tarefas (progresso) e a tela de revisão (respostas e ações). A arquitetura está em `docs/mvp-resposta-rfp/ARQUITETURA_MAPPING.md`.
+  No front oficial (`tendra-ai-front`, React 18 + Vite), são afetadas a tela Nova RFP (envio da planilha), a tela Base (lista, envio de `.md` e ativar/desativar), o painel de tarefas (progresso) e a tela de revisão (respostas e ações). A arquitetura está em `docs/mvp-resposta-rfp/product/ARQUITETURA_MAPPING.md`.
 - **Comportamento atual:** não existe backend. A tela Nova RFP não tem seletor de arquivo real, a nova tarefa sempre "identifica 12 perguntas", e as respostas e ações da revisão são fictícias e se perdem ao recarregar a página (`src/workspace/data.js` e `src/workspace/useWorkspace.js`).
 - **Comportamento esperado:**
   - a partir de uma planilha `.xlsx` de RFP e dos documentos ativos carregados na base, o sistema identifica as perguntas e gera, para cada uma, uma resposta sugerida com fontes verificáveis (documento, localização e trecho), ou indica explicitamente que a base não tem a resposta;
@@ -33,7 +33,7 @@ constitution: 1.0.0
   - `[DECISÃO PENDENTE: nome e formato dos campos do valor sugerido e dos valores permitidos no contrato com o front. A mudança de contrato precisa ser feita no backend e no front ao mesmo tempo.]`
 - **Termos:**
   - **base** é o conjunto de documentos carregados no banco e marcados como ativos; só eles são fontes autorizadas;
-  - **carga** é a gravação de arquivos `.md` como documentos e blocos no banco. Ela acontece pela tela Base de conhecimento ("Subir documentos", com os arquivos escolhidos no computador) ou pelo comando `carregar-base`, que lê uma pasta; as duas usam as mesmas regras. A identidade do documento é o nome do arquivo. O formato do arquivo está em `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`;
+  - **carga** é a gravação de arquivos `.md` como documentos e blocos no banco. Ela acontece pela tela Base de conhecimento ("Subir documentos", com os arquivos escolhidos no computador) ou pelo comando `carregar-base`, que lê uma pasta; as duas usam as mesmas regras. A identidade do documento é o nome do arquivo. O formato do arquivo está em `docs/mvp-resposta-rfp/product/FORMATO_BASE_MD.md`;
   - **teto da base** é o limite de 25 MB e 400 mil tokens somados dos documentos ativos usados numa execução;
   - **pessoa que age** é uma das pessoas sintéticas da lista de configuração, enviada pelo front em cada ação de revisão (exceção E1);
   - **data e hora do backend** é o relógio da máquina onde o backend roda, nunca um valor enviado pelo navegador.
@@ -80,7 +80,7 @@ Verificação feita em 21/10/2026, na máquina local de desenvolvimento.
   - **Acesso verificado:** não. O repositório não tem integração contínua configurada.
   - `[DECISÃO PENDENTE: proteção da branch main exigindo a integração contínua aprovada antes do merge. Depende de configuração do repositório.]`
 - **Dados sintéticos**
-  - **Recurso:** pasta de documentos `.md` com o cabeçalho de `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`, planilha de RFP `.xlsx` sintética e gabarito, conforme a seção 5 de `ARQUITETURA_MAPPING.md`.
+  - **Recurso:** pasta de documentos `.md` com o cabeçalho de `docs/mvp-resposta-rfp/product/FORMATO_BASE_MD.md`, planilha de RFP `.xlsx` sintética e gabarito, conforme a seção 5 de `ARQUITETURA_MAPPING.md`.
   - **Acesso verificado:** não. O material ainda não existe.
   - `[BLOQUEIO: criar a base `.md`, a planilha de RFP sintética e o gabarito antes de aprovar o spec.]`
 - **Repositório (`github.com/bragarodriguesr/tendra-ai-front`)**
@@ -138,7 +138,7 @@ Verificação feita em 21/10/2026, na máquina local de desenvolvimento.
 
 ### Base de conhecimento
 
-O formato do arquivo e as regras de validação do cabeçalho estão em `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md` (seções 4 e 6). Os cenários abaixo cobrem o comportamento do produto; os cenários daquele documento são verificados pelos mesmos testes da carga. "Executar a carga" vale para a tela e para o comando, salvo quando o cenário diz qual.
+O formato do arquivo e as regras de validação do cabeçalho estão em `docs/mvp-resposta-rfp/product/FORMATO_BASE_MD.md` (seções 4 e 6). Os cenários abaixo cobrem o comportamento do produto; os cenários daquele documento são verificados pelos mesmos testes da carga. "Executar a carga" vale para a tela e para o comando, salvo quando o cenário diz qual.
 
 #### Cenário 7: carga de documento válido
 - **Given** um arquivo `.md` com cabeçalho válido (`titulo`, `tipo`, `atualizado_em`)
@@ -278,7 +278,7 @@ O formato do arquivo e as regras de validação do cabeçalho estão em `docs/mv
 - **Given** um item com uma fonte cujo `atualizado_em` tem mais de 120 dias em relação à data do backend
 - **When** o resultado é checado
 - **Then** o item recebe o alerta `old`
-- **Nota:** a data de atualização de cada documento é o campo `atualizado_em` do cabeçalho do `.md`, sem alternativa pela data do arquivo (`docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`).
+- **Nota:** a data de atualização de cada documento é o campo `atualizado_em` do cabeçalho do `.md`, sem alternativa pela data do arquivo (`docs/mvp-resposta-rfp/product/FORMATO_BASE_MD.md`).
 
 #### Cenário 21: pergunta com termo crítico
 - **Given** uma pergunta que contém um termo da lista de termos críticos, comparada sem diferenciar maiúsculas, minúsculas nem acentos
