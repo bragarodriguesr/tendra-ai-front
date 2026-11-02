@@ -1,4 +1,4 @@
-# Backend da Tendra.ai no Render, modo compartilhado (fase D, etapa D10: docs/mvp-resposta-rfp/PLAN_FASE_D.md).
+# Backend da Tendra.ai no Render, modo compartilhado (fase D, etapa D10: docs/mvp-resposta-rfp/plan/PLAN_FASE_D.md).
 # Os segredos (sync: false) são preenchidos no painel do Render e nunca ficam no repositório.
 services:
   - type: web

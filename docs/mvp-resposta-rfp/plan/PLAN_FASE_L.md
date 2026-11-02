@@ -1,7 +1,7 @@
 ---
 feature: busca-perguntas-revisao
 status: draft
-spec: docs/mvp-resposta-rfp/SPEC_FASE_L.md (status approved)
+spec: docs/mvp-resposta-rfp/spec/SPEC_FASE_L.md (status approved)
 constitution: 1.0.0
 ---
 

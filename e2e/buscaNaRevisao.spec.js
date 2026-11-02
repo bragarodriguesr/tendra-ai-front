@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 /**
- * Busca de perguntas na Revisão e nos detalhes da tarefa (docs/mvp-resposta-rfp/SPEC_FASE_L.md):
+ * Busca de perguntas na Revisão e nos detalhes da tarefa (docs/mvp-resposta-rfp/spec/SPEC_FASE_L.md):
  * com a API desligada, as duas telas mostram os 12 itens de exemplo de src/workspace/data.js.
  */
 

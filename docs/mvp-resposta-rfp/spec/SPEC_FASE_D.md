@@ -8,7 +8,7 @@ constitution: 1.0.0
 
 ## Contexto
 
-- **Papel deste documento:** spec curto da fase D do plano (`docs/mvp-resposta-rfp/PLAN.md`). Complementa o `SPEC.md` (fases A a C), que continua valendo para tudo o que não muda aqui. O plano detalhado está em `docs/mvp-resposta-rfp/PLAN_FASE_D.md`.
+- **Papel deste documento:** spec curto da fase D do plano (`docs/mvp-resposta-rfp/plan/PLAN.md`). Complementa o `SPEC.md` (fases A a C), que continua valendo para tudo o que não muda aqui. O plano detalhado está em `docs/mvp-resposta-rfp/plan/PLAN_FASE_D.md`.
 - **Origem:** os cenários de login, sessão, papéis, segurança de exposição e retomada vêm de `docs/referencia/mvp-proposta-1/SPEC.md` (cenários 1 a 4, 37, 44 e 48 a 54), consultado por pedido expresso em 23/10/2026 e adaptado ao backend que já existe. Os cenários deste documento têm numeração própria (D1, D2…) para não colidir com o `SPEC.md`.
 - **Início com exceção (23/10/2026):** pelo plano, a fase D só começaria com A, B e C aceitas e uma taxa de aceitação medida. Por decisão do grupo, ela começa com a lista de fidelidade da fase A em revisão e a taxa de aceitação ainda não medida. Essas duas pendências continuam valendo e não são resolvidas por esta fase.
 - **Comportamento atual:** o backend roda só na máquina de quem o inicia (`127.0.0.1`, cenário 30), com banco PGlite e arquivos no disco local. Não há login: a pessoa que age é escolhida em "Trocar usuário" e enviada no corpo de cada ação, validada contra `config/pessoas.json` (cenário 41). Cada máquina tem seu banco, e a taxa de aceitação sai fragmentada.

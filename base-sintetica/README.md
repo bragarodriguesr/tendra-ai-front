@@ -1,6 +1,6 @@
 # Dados sintéticos para teste e avaliação
 
-Material da **fase 0.2** do `docs/mvp-resposta-rfp/PLAN.md`. Tudo aqui é fictício: a empresa **Pulse Benefícios LTDA** (benefícios corporativos: vale-alimentação e vale-refeição) não existe, e nenhum documento ou cliente é real. É a base para testar e avaliar o pipeline: a carga da base (pela tela Base de conhecimento ou pelo comando `carregar-base`) e os comandos `responder` e `avaliar`.
+Material da **fase 0.2** do `docs/mvp-resposta-rfp/plan/PLAN.md`. Tudo aqui é fictício: a empresa **Pulse Benefícios LTDA** (benefícios corporativos: vale-alimentação e vale-refeição) não existe, e nenhum documento ou cliente é real. É a base para testar e avaliar o pipeline: a carga da base (pela tela Base de conhecimento ou pelo comando `carregar-base`) e os comandos `responder` e `avaliar`.
 
 **Data de referência para os testes: 2026-10-21.** Os alertas de fonte antiga (mais de 120 dias) foram calculados para essa data, então os testes devem fixar o relógio nela.
 
@@ -8,7 +8,7 @@ Material da **fase 0.2** do `docs/mvp-resposta-rfp/PLAN.md`. Tudo aqui é fictí
 
 | Caminho | O que é |
 |---|---|
-| `pulse-beneficios/base/` | 16 documentos `.md` com o cabeçalho de `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`. São os arquivos a subir pela tela Base de conhecimento (pode escolher todos de uma vez) ou a pasta que o comando `carregar-base` lê. |
+| `pulse-beneficios/base/` | 16 documentos `.md` com o cabeçalho de `docs/mvp-resposta-rfp/product/FORMATO_BASE_MD.md`. São os arquivos a subir pela tela Base de conhecimento (pode escolher todos de uma vez) ou a pasta que o comando `carregar-base` lê. |
 | `pulse-beneficios/atualizacao/` | 2 documentos com o mesmo nome de arquivo de documentos da base e versão mais nova (cenário 39). |
 | `pulse-beneficios/fora-da-base/` | 1 documento válido que nunca pode ser fonte (cenário 35). Não é carregado. |
 | `pulse-beneficios/injecao-em-documento/` | 1 documento com instrução maliciosa, com o mesmo nome de arquivo de um da base (cenário 15). |

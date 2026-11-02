@@ -1,7 +1,7 @@
 ---
 feature: mvp-resposta-rfp
 status: draft
-spec: docs/mvp-resposta-rfp/SPEC.md (status draft)
+spec: docs/mvp-resposta-rfp/spec/SPEC.md (status draft)
 constitution: 1.0.0
 ---
 
@@ -36,7 +36,7 @@ Cada etapa abaixo é uma mudança pequena, com objetivo claro, testes próprios 
 | # | Pendência | Bloqueia | Sugestão |
 |---|---|---|---|
 | P1 | Chave de testes da API definida e testada | Fase A | **Resolvida em 23/10/2026 (A1):** chave em `backend/.env`, fora do controle de versão. |
-| P2 | Base `.md`, planilha de RFP sintética e gabarito | Fase A, etapa A4 em diante | Conforme a seção 5 de `ARQUITETURA_MAPPING.md` e `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`. |
+| P2 | Base `.md`, planilha de RFP sintética e gabarito | Fase A, etapa A4 em diante | Conforme a seção 5 de `ARQUITETURA_MAPPING.md` e `docs/mvp-resposta-rfp/product/FORMATO_BASE_MD.md`. |
 | P3 | Método de medir a fidelidade (limite de 90% já decidido) | Etapa A10 | **Implementado na A10:** revisão humana pela lista `fidelidade.xlsx` que o `avaliar` gera (uma linha por resposta sugerida, com os trechos citados e a coluna "Diz o mesmo que os trechos? (sim/não)"). |
 | P4 | Motor do banco local | Etapa A4 | **Decidido na A4:** PGlite 0.5.8 (Postgres embutido), porque a fase D usa o Postgres do Supabase. |
 | P5 | Interface da carga (nome e opções) | Etapa A4 | **Decidido na A4 (revisto em 22/10/2026):** a carga principal é pela tela Base de conhecimento, com "Subir documentos" abrindo o seletor de arquivos `.md` do computador. O comando `npm run carregar-base -- <pasta> [--enviado-por <nome>]` continua, com a mesma carga, e termina com código 1 quando algum arquivo é recusado. A identidade do documento passou a ser o nome do arquivo. |
@@ -56,7 +56,7 @@ Cada etapa abaixo é uma mudança pequena, com objetivo claro, testes próprios 
 | Banco | PGlite (Postgres embutido) em `dados/banco`, com SQL parametrizado num módulo de persistência e migrações versionadas em `backend/migracoes/`. O query builder tipado ficou de fora na A4 para não somar uma dependência a mais; pode entrar quando as consultas crescerem. |
 | Entrada da RFP | Só `.xlsx`: assinatura do arquivo conferida (não só a extensão), até 10 MB, nome gerado pelo backend |
 | Planilhas | `exceljs` para ler e escrever |
-| Base | Envio de `.md` pela tela (rota `POST /api/base/documentos`) e comando `carregar-base`, com a mesma carga: cabeçalho YAML validado, texto dividido em blocos com `seção` e `linha`, gravados em `documentos` e `blocos`; identidade pelo nome do arquivo (`docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`). Os arquivos chegam em JSON com o conteúdo em base64, sem dependência de multipart. O banco aceita um processo por vez, com trava: o comando não roda com o servidor aberto. |
+| Base | Envio de `.md` pela tela (rota `POST /api/base/documentos`) e comando `carregar-base`, com a mesma carga: cabeçalho YAML validado, texto dividido em blocos com `seção` e `linha`, gravados em `documentos` e `blocos`; identidade pelo nome do arquivo (`docs/mvp-resposta-rfp/product/FORMATO_BASE_MD.md`). Os arquivos chegam em JSON com o conteúdo em base64, sem dependência de multipart. O banco aceita um processo por vez, com trava: o comando não roda com o servidor aberto. |
 | Integração com LLM | SDK oficial da Anthropic (`@anthropic-ai/sdk` 0.132.0), isolado num módulo cliente com erros tipados, novas tentativas em falhas temporárias (3, feitas pelo SDK) e registro de cada requisição. Geração por streaming, com o fallback do servidor para recusas indevidas (`fallbacks: "default"`). Sem agente nem framework intermediário. |
 | Identificação de perguntas com IA | Só quando a regra da coluna "Pergunta" falha: modelo pequeno (candidato: Haiku 5.5) com saída estruturada `{linha, texto}`, seguido de validação literal |
 | Geração | Documentos da base como documentos de conteúdo em blocos, com citações ativadas e cache; perguntas em lotes |
@@ -157,7 +157,7 @@ Ver etapa A1.
 
 ### A4. Carga da base
 - Migração do esquema do banco para `documentos` e `blocos` (PGlite).
-- Carga: validação do cabeçalho, divisão em blocos com seção e linha, gravação, recarga com hash, resumo (cenários 7, 8, 9 e 39, e os cenários de `docs/mvp-resposta-rfp/FORMATO_BASE_MD.md`). A identidade do documento é o nome do arquivo.
+- Carga: validação do cabeçalho, divisão em blocos com seção e linha, gravação, recarga com hash, resumo (cenários 7, 8, 9 e 39, e os cenários de `docs/mvp-resposta-rfp/product/FORMATO_BASE_MD.md`). A identidade do documento é o nome do arquivo.
 - **Carga pela tela (decisão do grupo, 22/10/2026):** a pessoa sobe os `.md` pela tela Base de conhecimento. Por isso esta etapa antecipa uma parte das fases B e C:
   - servidor local mínimo (`npm run servidor`, só em 127.0.0.1) com as rotas da base de B3 e o envio `POST /api/base/documentos`;
   - no front, o proxy do Vite e `src/api.js` de C1, e a tela Base de C4: "Subir documentos" e "Importar RFP passada" abrem o seletor de arquivos do computador, o quadro "Resultado do envio" mostra o motivo de cada recusa, e a chave Ativar/Desativar grava no banco;
@@ -375,7 +375,7 @@ Só começa com A, B e C aceitas e uma taxa de aceitação medida. Nesse momento
 
 O spec curto e o plano detalhado da fase D são escritos quando ela for começar.
 
-**Situação (23/10/2026): iniciada com exceção, por decisão do grupo.** A fase D começou com a lista de fidelidade da fase A em revisão e a taxa de aceitação ainda não medida; as duas pendências continuam valendo. Hospedagem decidida (P11): front na Vercel, backend no Render, banco, arquivos e contas no Supabase. Spec curto em `docs/mvp-resposta-rfp/SPEC_FASE_D.md` e plano detalhado em `docs/mvp-resposta-rfp/PLAN_FASE_D.md`, escritos com consulta à referência por pedido expresso.
+**Situação (23/10/2026): iniciada com exceção, por decisão do grupo.** A fase D começou com a lista de fidelidade da fase A em revisão e a taxa de aceitação ainda não medida; as duas pendências continuam valendo. Hospedagem decidida (P11): front na Vercel, backend no Render, banco, arquivos e contas no Supabase. Spec curto em `docs/mvp-resposta-rfp/spec/SPEC_FASE_D.md` e plano detalhado em `docs/mvp-resposta-rfp/plan/PLAN_FASE_D.md`, escritos com consulta à referência por pedido expresso.
 
 **Situação (24/10/2026): publicada.** As etapas D1 a D10 estão implementadas e o ambiente compartilhado está no ar: front em `https://tendra-ai-front.vercel.app` (Vercel), backend `tendra-backend` no Render e banco, arquivos e contas no Supabase. O grupo entrou com a conta de teste pelo front publicado. Os cenários do checklist de `PLAN_FASE_D.md` foram conferidos no ambiente publicado em 24/10/2026, menos o D15 (reinício no meio de uma tarefa), que o grupo vai testar depois. Continua valendo a pendência da fase A: a taxa de aceitação, que agora pode ser medida no banco compartilhado.
 
@@ -802,7 +802,7 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
 
 ## Fase L: busca de perguntas na Revisão e nos detalhes da tarefa
 
-Pedida em 01/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/SPEC_FASE_L.md` (cenários B1 a B17, `approved`), e o plano detalhado, em `docs/mvp-resposta-rfp/PLAN_FASE_L.md`. Só front: nenhum arquivo do backend muda, e a busca não faz requisições.
+Pedida em 01/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/spec/SPEC_FASE_L.md` (cenários B1 a B17, `approved`), e o plano detalhado, em `docs/mvp-resposta-rfp/plan/PLAN_FASE_L.md`. Só front: nenhum arquivo do backend muda, e a busca não faz requisições.
 
 **Objetivo:** achar uma pergunta numa RFP longa sem rolar a lista. Uma barra de busca reduz a lista às perguntas que contêm as palavras digitadas, no texto completo da pergunta ou no código do item, junto com o filtro por estado. Nenhum outro elemento das telas muda.
 
