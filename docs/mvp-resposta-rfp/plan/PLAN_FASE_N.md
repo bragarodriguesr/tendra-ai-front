@@ -1,18 +1,18 @@
 ---
 feature: tratamento-de-area
-status: draft
-spec: docs/mvp-resposta-rfp/spec/SPEC_FASE_N.md (status draft)
+status: approved
+spec: docs/mvp-resposta-rfp/spec/SPEC_FASE_N.md (status approved)
 constitution: 1.0.0
 ---
 
 # Plano: tratamento de área
 
-*Plano de 04/11/2026, em rascunho. Ele segue as propostas de PN1 a PN9 do spec e muda se alguma decisão mudar. Nada é implementado antes da validação.*
+*Plano de 04/11/2026, com as decisões PN1 a PN9 validadas no mesmo dia (áreas só para o Aprovador; reclassificação das tarefas em aberto na migração).*
 
 ## Objetivo
 
-Implementar os cenários N1 a N14:
-- áreas na pessoa e na pergunta;
+Implementar os cenários N1 a N15:
+- áreas no Aprovador e na pergunta (o Revisor segue sem área);
 - classificação das perguntas pela IA no processamento;
 - aprovação restrita pela área, no backend e na tela;
 - Revisão com "Minha área primeiro".
@@ -23,9 +23,10 @@ A geração das respostas não muda.
 
 | Arquivo | O que muda | Cenários |
 |---|---|---|
-| `backend/migracoes/011_areas.sql` (novo) | `perfis.areas text[] NOT NULL DEFAULT '{}'`; `itens.area text NOT NULL DEFAULT 'Geral'`; `eventos.acao` aceita `area`; Aprovadores atuais com `{C-Level}` | N1, N10, N12 |
+| `backend/migracoes/011_areas.sql` (novo) | `perfis.areas text[] NOT NULL DEFAULT '{}'`, com restrição de Revisor sem área; `itens.area text NOT NULL DEFAULT 'Geral'`; `tarefas.areas_classificadas_em timestamptz`, já preenchida nas tarefas com todos os itens aprovados; `eventos.acao` aceita `area`; Aprovadores atuais com `{C-Level}` | N1, N10, N12, N15 |
+| `backend/src/fluxo/reclassificarAreas.ts` (novo) e `backend/src/http/servidor.ts` | Rotina chamada ao iniciar o servidor, em segundo plano: classifica as tarefas prontas sem `areas_classificadas_em` e as marca; falha deixa a tarefa para a próxima subida | N15 |
 | `backend/src/regras/areas.ts` (novo) | Lista de áreas (PN1), `C-Level`, validação e a regra `podeAprovar(areasDaPessoa, papel, areaDoItem)` | N5 a N7 |
-| `backend/src/autenticacao/perfis.ts`, `sessoes.ts` | Perfil e sessão com `areas`; `cadastrar-perfil --areas` | N1 |
+| `backend/src/autenticacao/perfis.ts`, `sessoes.ts`, `cli/cadastrarPerfil.ts` | Perfil e sessão com `areas`; `cadastrar-perfil --areas` só para o Aprovador | N1 |
 | `backend/src/ia/instrucoes/classificacao-v1.md` (novo) e `backend/src/geracao/classificarAreas.ts` (novo) | Chamada ao Haiku 5.5 em lotes, uma linha `[Pn] Área` por pergunta; área inválida ou ausente vira "Geral" | N2 a N4 |
 | `backend/src/fluxo/processarTarefa.ts` | Etapa `classificacao` entre `identificacao` e `contexto`, medida como as outras; contagem de perguntas que caíram em "Geral" por falha | N2, N3 |
 | `backend/src/config/config.ts` | `modeloDeClassificacao` (`TENDRA_MODELO_CLASSIFICACAO`, padrão `claude-haiku-5-5`) | N2 |
@@ -38,7 +39,7 @@ A geração das respostas não muda.
 ## Etapas
 
 ### N1. Banco e regra de área
-- Migração 011, `regras/areas.ts` com testes de unidade, perfil e sessão com áreas, `cadastrar-perfil --areas`.
+- Migração 011, `regras/areas.ts` com testes de unidade, perfil e sessão com áreas, `cadastrar-perfil --areas` (recusado no Revisor).
 - **Verificação:** testes da migração com dados de antes da fase (N12) e de cadastro (N1).
 
 ### N2. Aprovação restrita no backend
@@ -47,7 +48,8 @@ A geração das respostas não muda.
 
 ### N3. Classificação no processamento
 - Instrução `classificacao-v1`, `classificarAreas.ts` e a etapa em `processarTarefa`. A API simulada ganha respostas de classificação.
-- **Verificação:** testes com a API simulada, incluindo a resposta fora do formato, a área inválida, a falha da IA e a pergunta com instrução embutida (N2 a N4).
+- Rotina de reclassificação das tarefas em aberto ao iniciar o servidor.
+- **Verificação:** testes com a API simulada, incluindo a resposta fora do formato, a área inválida, a falha da IA e a pergunta com instrução embutida (N2 a N4); reclassificação de uma tarefa em aberto, sem tocar na concluída nem na já marcada, e nova tentativa depois de uma falha (N15).
 
 ### N4. Avaliação da classificação
 - Rotulação de três RFPs sintéticas (pendente do grupo) e o critério novo no `avaliar`.
@@ -58,14 +60,16 @@ A geração das respostas não muda.
 - **Verificação:** jornada de ponta a ponta com dois perfis (Jurídico e C-Level) e conferência no navegador, no computador e no celular (N6, N8 a N11).
 
 ### N6. Publicação
-- Merge pela conta dona do time na Vercel. Deploy no Render, migração 011 conferida no Supabase e áreas dos perfis definidas.
+- Merge pela conta dona do time na Vercel. Deploy no Render, migração 011 e reclassificação conferidas no Supabase.
+- Áreas do publicado ajustadas no banco depois do deploy (PN8): `userteste3@gmail.com` com Segurança e privacidade e Tecnologia; `antonio@vereda.com.br` com Jurídico; demais Aprovadores em C-Level. Antes, o grupo confirma o ponto em aberto do spec sobre as organizações ficarem sem C-Level.
 - **Verificação:** o grupo confere no ambiente publicado, com evidências no banco: eventos `aprovacao` e `area`, e itens por área.
 
 ## Checklist de aceite
 
 | Cenário | Como conferir |
 |---|---|
-| N1, N12 | Cadastrar um perfil com áreas e ver o menu do usuário; conferir os Aprovadores atuais como C-Level e os itens antigos como "Geral" |
+| N1, N12 | Cadastrar um Aprovador com áreas e ver o menu do usuário; tentar áreas num Revisor; conferir os Aprovadores atuais como C-Level |
+| N15 | Depois do deploy, conferir no banco as áreas dos itens das tarefas em aberto e a marca `areas_classificadas_em` |
 | N2 a N4 | Enviar uma RFP sintética e ver a área de cada pergunta e a etapa nas métricas; repetir com a IA simulada falhando |
 | N5 a N7 | Com um Aprovador do Jurídico, aprovar um item jurídico, tentar um de Tecnologia (botão desabilitado e 403 pela API) e aprovar um "Geral"; com C-Level, aprovar qualquer um |
 | N8, N9, N11 | Abrir a Revisão com o perfil do Jurídico e ver as jurídicas primeiro; usar "Minha área" na Revisão e nos detalhes |

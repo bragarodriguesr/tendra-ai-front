@@ -1,12 +1,12 @@
 ---
 feature: tratamento-de-area
-status: draft
+status: approved
 constitution: 1.0.0
 ---
 
 # Tratamento de área: perguntas classificadas por área e aprovação pela área responsável
 
-*Spec de 04/11/2026, em rascunho. As decisões PN1 a PN9 precisam da validação do grupo antes da implementação.*
+*Spec de 04/11/2026. Decisões PN1 a PN9 validadas pelo grupo em 04/11/2026, com dois ajustes: áreas só para o Aprovador (PN3) e reclassificação das tarefas em aberto na migração (PN8).*
 
 ## Problema
 
@@ -33,21 +33,21 @@ constitution: 1.0.0
 - **Áreas configuráveis por organização.** O MVP usa uma lista fixa, a mesma para todas as organizações (PN1). Lista própria por organização fica para depois; o desenho do banco não deve impedir isso (requisito P2).
 - **Atribuição de pergunta a uma pessoa específica.** A pergunta vai para uma área, não para uma pessoa; dentro da área, qualquer Aprovador aprova.
 - **Mais de uma área por pergunta.** Cada pergunta tem uma área principal (PN4). Aprovação conjunta de duas áreas é bem mais complexa e não foi pedida.
-- **Restringir edição e "Marcar como revisado" por área.** Só a aprovação depende da área. Revisores continuam podendo trabalhar em qualquer item, como hoje.
+- **Área para o Revisor e restrição de edição e "Marcar como revisado".** Só o Aprovador tem área, e só a aprovação depende dela. O Revisor segue sem área, vê todas as perguntas na ordem original e revisa qualquer item, como hoje.
 
-## Decisões para validação
+## Decisões (validadas em 04/11/2026)
 
-| # | Tema | Proposta | Alternativa |
+| # | Tema | Decisão | Alternativa descartada |
 |---|---|---|---|
 | PN1 | Lista de áreas das perguntas | Fixa: **Produto, Tecnologia, Segurança e privacidade, Comercial, Jurídico** e **Geral** (sem área definida). "Segurança e privacidade" entra porque é o maior bloco das RFPs sintéticas (LGPD, criptografia, incidentes) e divide mal entre Tecnologia e Jurídico. | Só as quatro do pedido (Produto, Tecnologia, Comercial, Jurídico) mais Geral |
 | PN2 | C-Level | É uma área da **pessoa**, não da pergunta: equivale a todas as áreas. Quem é C-Level aprova qualquer pergunta e vê a lista na ordem original. | Tratar C-Level como um terceiro papel, ao lado de Revisor e Aprovador |
-| PN3 | Áreas por pessoa | Uma pessoa pode ter **uma ou mais** áreas (ex.: Jurídico e Comercial). Sem área, o Aprovador só aprova perguntas "Geral". | Uma única área por pessoa |
+| PN3 | Áreas por pessoa | **Só o Aprovador tem área**, uma ou mais (ex.: Jurídico e Comercial). O Revisor não tem área: vê e revisa tudo, na ordem original. O cadastro recusa área num Revisor. Aprovador sem área só aprova perguntas "Geral". | Área também para o Revisor, com ordem preferencial |
 | PN4 | Áreas por pergunta | **Uma** área principal por pergunta. | Várias áreas, com aprovação de qualquer uma delas |
 | PN5 | Como a IA classifica | Uma etapa nova, **"classificação"**, depois da identificação das perguntas e antes da geração. É uma chamada ao Haiku 5.5 com a instrução nova `classificacao-v1`, que devolve só a área de cada pergunta. A geração (`geracao-v3`) não muda, e por isso não precisa de nova avaliação de qualidade das respostas. A classificação ganha a sua própria avaliação: o grupo rotula a área das perguntas de três RFPs sintéticas, e a meta é ≥ 85% de concordância. | Pedir a área na própria resposta da geração (`geracao-v4`). Evita uma chamada, mas obriga a reavaliar as respostas (Definição de pronto, item 5) e mistura duas tarefas no mesmo prompt |
 | PN6 | Falha da classificação | A IA indisponível, resposta fora do formato ou área fora da lista resultam em **"Geral"**, sem falhar a tarefa. A tarefa registra quantas perguntas ficaram "Geral" por falha. | Repetir a chamada antes de cair em "Geral" |
 | PN7 | Correção manual da área | Na Revisão, quem pode aprovar a pergunta (Aprovador da área atual, C-Level ou, para "Geral", qualquer Aprovador) pode trocar a área de um item ainda não aprovado. A troca fica registrada no histórico (evento `area`). | Só C-Level corrige |
-| PN8 | Atribuição e migração | A área da pessoa é definida no `cadastrar-perfil` (novo argumento `--areas`) ou no banco, e aparece no menu do usuário. Na migração, os **Aprovadores atuais viram C-Level**, para ninguém perder a aprovação; os Revisores ficam sem área. Os itens das tarefas existentes ficam "Geral". | Aprovadores atuais sem área (só aprovariam "Geral" até alguém definir as áreas) |
-| PN9 | Visualização na Revisão | Lista com **"Minha área primeiro"** como ordem padrão (a ordem original dentro de cada bloco), um filtro novo **"Minha área"**, a etiqueta da área em cada item e o botão "Aprovar resposta" desabilitado, com o motivo, nas perguntas de outra área. A tabela dos detalhes da tarefa ganha a coluna "Área". | Só o filtro, sem mudar a ordem padrão |
+| PN8 | Atribuição e migração | A área do Aprovador é definida no `cadastrar-perfil` (novo argumento `--areas`) ou no banco, e aparece no menu do usuário. Na migração, os **Aprovadores atuais viram C-Level** e os Revisores ficam sem área. As **tarefas em aberto** (com algum item ainda não aprovado) são **reclassificadas pela IA** logo depois da migração, numa rotina que roda ao iniciar o backend (o Render gratuito não tem terminal). As tarefas com todos os itens aprovados ficam com os itens em "Geral". Depois do deploy, as áreas do publicado são ajustadas no banco: `userteste3@gmail.com` com **Segurança e privacidade** e **Tecnologia**; `antonio@vereda.com.br` com **Jurídico**; os demais Aprovadores seguem C-Level. | Itens das tarefas existentes em "Geral", sem reclassificar |
+| PN9 | Visualização na Revisão | Para o Aprovador com área: lista com **"Minha área primeiro"** como ordem padrão (a ordem original dentro de cada bloco) e um filtro novo **"Minha área"**. Para todos: a etiqueta da área em cada item, o botão "Aprovar resposta" desabilitado com o motivo nas perguntas de outra área e a coluna "Área" nos detalhes da tarefa. | Só o filtro, sem mudar a ordem padrão |
 
 ## Usuários e histórias
 
@@ -61,7 +61,7 @@ constitution: 1.0.0
 - Como C-Level, quero aprovar qualquer pergunta, para destravar a proposta quando uma área não estiver disponível.
 
 **Revisor**
-- Como Revisor da Tecnologia, quero ver primeiro as perguntas técnicas, para preparar o que o meu Aprovador vai aprovar.
+- Como Revisor, quero continuar vendo e revisando todas as perguntas, sem restrição de área, e saber a área de cada uma, para preparar as respostas para o Aprovador certo.
 
 **Responsável pela proposta**
 - Como responsável pela proposta, quero ver nos detalhes da tarefa a área de cada pergunta e filtrar por ela, para saber o que cada área ainda tem a aprovar.
@@ -71,22 +71,27 @@ constitution: 1.0.0
 Verificação feita em 04/11/2026, no código e no banco publicado.
 
 - **Banco (Supabase):** uma migração nova, `011_areas.sql`:
-  - `perfis.areas` (lista de áreas da pessoa);
+  - `perfis.areas` (lista de áreas do Aprovador);
   - `itens.area` (área da pergunta, com "Geral" como padrão);
-  - os Aprovadores atuais passam a C-Level (PN8).
+  - `tarefas.areas_classificadas_em` (quando a tarefa foi classificada);
+  - os Aprovadores atuais passam a C-Level (PN8);
+  - as tarefas com todos os itens aprovados ficam marcadas como classificadas, sem reclassificar.
   - Roda no início do backend, como as anteriores. Planos gratuitos sem mudança.
+- **Reclassificação das tarefas em aberto (PN8):** roda ao iniciar o backend, em segundo plano, sem atrasar a subida. Classifica as tarefas prontas que ainda não foram classificadas. Se a IA falhar, a tarefa continua sem marca, os itens seguem "Geral", e a rotina tenta de novo na próxima subida. Na base publicada de 04/11/2026: 3 tarefas.
+- **Áreas dos Aprovadores do publicado:** ajustadas no banco depois do deploy (PN8). Os e-mails não entram na migração nem no código.
 - **IA (Anthropic):** uma chamada a mais por tarefa, ao Haiku 5.5, com as perguntas em lotes. Na RFP-02 (84 perguntas), estimativa de 3 a 5 mil tokens de entrada e menos de mil de saída, bem abaixo do custo da geração.
 - **Render e Vercel:** sem mudança de configuração. Nenhuma variável nova obrigatória. `TENDRA_MODELO_CLASSIFICACAO` é opcional, com padrão `claude-haiku-5-5`, como `TENDRA_MODELO_IDENTIFICACAO`.
 - **Vercel:** deploys de produção a partir de commits de quem está fora do time ficam bloqueados (fases L e M). Os merges desta fase precisam ser feitos pela conta dona do time, ou exigem um redeploy depois.
 
 ## Acceptance Criteria
 
-### Cenário N1: área da pessoa
-- **Given** um perfil cadastrado com `cadastrar-perfil --areas Jurídico,Comercial`
-- **When** a pessoa entra no Tendra.ai
+### Cenário N1: área do Aprovador
+- **Given** um Aprovador cadastrado com `cadastrar-perfil --areas Jurídico,Comercial`
+- **When** ele entra no Tendra.ai
 - **Then** o menu do usuário mostra o papel e as áreas ("Aprovador · Jurídico, Comercial")
 - **And** uma área fora da lista é recusada no cadastro, com a lista válida na mensagem
 - **And** C-Level aparece como "Aprovador · C-Level"
+- **And** `--areas` num Revisor é recusado ("Só o Aprovador tem área."), e o menu do Revisor mostra só o papel
 
 ### Cenário N2: classificação no processamento
 - **Given** uma RFP enviada com a base carregada
@@ -124,18 +129,18 @@ Verificação feita em 04/11/2026, no código e no banco publicado.
 - **And** um item "Geral" pode ser aprovado por qualquer Aprovador, com ou sem área
 
 ### Cenário N8: "Minha área primeiro"
-- **Given** um Aprovador ou Revisor com área Jurídico, numa tarefa com perguntas de várias áreas
+- **Given** um Aprovador com área Jurídico, numa tarefa com perguntas de várias áreas
 - **When** ele abre a Revisão
 - **Then** a lista mostra primeiro as perguntas "Jurídico", depois as demais, cada bloco na ordem original da planilha
 - **And** cada item mostra a etiqueta da sua área
 - **And** o item aberto ao entrar é o primeiro da sua área ainda não aprovado
-- **And** para C-Level ou pessoa sem área, a lista fica na ordem original
+- **And** para o Revisor, o C-Level e o Aprovador sem área, a lista fica na ordem original, e o Revisor vê a etiqueta da área em cada item
 
 ### Cenário N9: filtro "Minha área"
 - **Given** a Revisão ou os detalhes da tarefa
 - **When** a pessoa escolhe "Minha área" no menu "Filtrar"
 - **Then** só aparecem as perguntas das suas áreas, com a contagem no menu
-- **And** a opção não aparece para C-Level e pessoa sem área
+- **And** a opção não aparece para o Revisor, o C-Level e o Aprovador sem área
 - **And** a busca de palavras (fase L) continua valendo junto com o filtro
 
 ### Cenário N10: trocar a área de um item
@@ -155,8 +160,17 @@ Verificação feita em 04/11/2026, no código e no banco publicado.
 - **Given** o banco publicado antes da fase N
 - **When** a migração 011 roda
 - **Then** os Aprovadores atuais passam a C-Level e os Revisores ficam sem área
-- **And** todos os itens existentes ficam "Geral"
+- **And** todos os itens existentes começam em "Geral"; as tarefas com todos os itens aprovados ficam marcadas como classificadas
 - **And** nenhuma aprovação, edição ou histórico se perde
+
+### Cenário N15: reclassificação das tarefas em aberto
+- **Given** depois da migração, uma tarefa pronta com algum item não aprovado e outra com todos os itens aprovados
+- **When** o backend inicia
+- **Then** a primeira é classificada pela IA (todos os itens, inclusive os já aprovados, que continuam aprovados) e fica marcada como classificada
+- **And** a segunda continua com os itens em "Geral"
+- **And** a subida do backend não espera a reclassificação
+- **And** se a IA falhar, os itens seguem "Geral", e a tarefa é tentada de novo na próxima subida
+- **And** uma tarefa já marcada não é reclassificada, mesmo que alguém tenha trocado a área de um item à mão
 
 ### Cenário N13: isolamento entre organizações
 - **Given** duas organizações
@@ -173,6 +187,7 @@ Verificação feita em 04/11/2026, no código e no banco publicado.
 **P0 (sem eles a fase não resolve o problema):**
 - áreas da pessoa e da pergunta no banco (N1, N12);
 - classificação no processamento com queda em "Geral" (N2 a N4);
+- reclassificação das tarefas em aberto depois da migração (N15);
 - aprovação restrita pela área no backend e na tela (N5 a N7);
 - "Minha área primeiro" com a etiqueta da área (N8);
 - troca manual da área (N10);
@@ -197,9 +212,10 @@ Verificação feita em 04/11/2026, no código e no banco publicado.
 
 ## Perguntas em aberto
 
-- **[Grupo, bloqueia]** Validar PN1 a PN9, sobretudo a lista de áreas (PN1) e a migração dos Aprovadores para C-Level (PN8).
-- **[Grupo, bloqueia a etapa de avaliação]** Quem rotula a área das perguntas das três RFPs sintéticas do gabarito (N14), e quais RFPs.
-- **[Produto, não bloqueia]** Revisor também deve ter a lista restrita (só ver as da sua área) ou só a ordem preferencial? Proposta: só a ordem, como pedido.
+- **Resolvido (04/11/2026):** PN1 a PN9 validadas, com os ajustes de PN3 e PN8.
+- **Resolvido (04/11/2026):** o Revisor não tem área (PN3), então não há ordem preferencial nem lista restrita para ele: vê tudo na ordem original.
+- **[Grupo, bloqueia a etapa N4]** O grupo rotula a área das perguntas das três RFPs sintéticas do gabarito depois (N14). Até lá, a classificação funciona, mas a etapa de avaliação fica pendente.
+- **[Grupo, antes do deploy]** Com as áreas de PN8, nenhuma das duas organizações publicadas fica com um Aprovador C-Level: na Pulse Benefícios, o único Aprovador cobre Segurança e privacidade e Tecnologia; na Vereda Documental, só Jurídico. Perguntas de Produto e Comercial (e Jurídico na Pulse; Tecnologia e Segurança na Vereda) ficariam sem quem as aprove nem mova de área. Confirmar se é intencional para o teste ou se alguém passa a C-Level.
 - **[Produto, não bloqueia]** O download da planilha pelo Revisor (fase J) continua dependendo só de todos os itens aprovados, sem olhar a área. Proposta: sim.
 
 ## Fora de escopo
@@ -207,5 +223,5 @@ Verificação feita em 04/11/2026, no código e no banco publicado.
 - Tela de administração de usuários e áreas.
 - Áreas diferentes por organização.
 - Mais de uma área por pergunta e aprovação conjunta.
-- Restrição de edição, revisão e download por área.
+- Área para o Revisor e restrição de edição, revisão e download por área.
 - Mudanças na geração das respostas (`geracao-v3`).
