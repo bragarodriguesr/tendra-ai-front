@@ -762,7 +762,7 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
   - a rota recusa com 400 o CNPJ fora do formato;
   - a empresa é a mesma com ou sem máscara;
   - a migração `009_cnpj_alfanumerico.sql` troca a restrição do banco para `^[0-9A-Z]{12}[0-9]{2}$`.
-- **Situação (28/10/2026): implementada.**
+- **Situação (04/11/2026): implementada e conferida no ambiente publicado.** Migração 009 aplicada no Supabase em 28/10 (restrição `^[0-9A-Z]{12}[0-9]{2}$` confirmada); o grupo conferiu a máscara e a validação da Nova RFP no teste manual. Nenhuma tarefa nova foi criada no período, então o banco não tem empresa com CNPJ alfanumérico gravado.
   - 352 testes no PGlite e no Postgres, incluindo: o CNPJ alfanumérico gravado e reconhecido com e sem máscara; a recusa de letra nos dígitos verificadores e de tamanho errado; e os testes de unidade da normalização.
   - Jornada de ponta a ponta verde.
   - Máscara e validação do front conferidas com o exemplo oficial.
@@ -779,7 +779,7 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
   - orientação sobre o campo;
   - opção "Ordenar por status": ativos, em processamento, com problema, inativos e vencidos;
   - colunas ajustadas para a tabela caber em 1440 px.
-- **Situação (28/10/2026): implementada.**
+- **Situação (04/11/2026): implementada e conferida no ambiente publicado.** Deploy no Render às 19:43 UTC de 28/10, com a migração 010 aplicada (coluna `documentos.validade` confirmada); o grupo conferiu a coluna Validade ("Indefinido" em todos os documentos das duas organizações, nenhum com o campo) e a ordenação por status no teste manual. Nenhum documento com `validade` foi carregado no publicado.
   - 359 testes no PGlite e no Postgres. Entre eles: leitura e recusas do campo, vencimento na data inclusive, rota com validade e "Indefinido", recusa de reativar, documento vencido fora da geração e renovação por nova versão.
   - Jornada de ponta a ponta verde.
   - No navegador, com um backend de teste, conferi:
@@ -789,17 +789,20 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
 
 ### K11. Indicador de salvamento em minutos e horas (ajuste de 30/10/2026)
 - "Salvo agora" no primeiro minuto, "Salvo há N minuto(s)" até 59 minutos e "Salvo há N hora(s)" a partir de 1 hora, no lugar de "Salvo há N segundos". Só front.
-- **Situação (30/10/2026): implementada.** Teste de ponta a ponta com os limites (59 s, 1 min, 59 min, 1 h, 2 h, 24 h).
+- **Situação (04/11/2026): implementada e conferida no ambiente publicado.** Teste de ponta a ponta com os limites (59 s, 1 min, 59 min, 1 h, 2 h, 24 h). No publicado (front da Vercel com o merge às 20:27 UTC de 30/10), o User Teste 1 editou os itens 3 e 4 de uma tarefa da Pulse Benefícios às 20:49 (eventos `edicao`); o indicador foi conferido pelo grupo no teste manual.
+
 ### K12. Resposta sem fonte e "Adicionar conhecimento" (ajuste de 30/10/2026)
 - O item sem rascunho e a resposta manual ficam num só quadro, "Resposta sem fonte", sem o cartão "Sem contexto" no lugar das fontes.
 - Texto: "Não encontramos informação na base para esta pergunta. Adicione conhecimento ou escreva a resposta manualmente."
 - Botões "Editar resposta" e "Adicionar conhecimento". Este envia `.md` para a base pela mesma rota da tela da Base, sem sair do item e sem perder o texto em edição; o resultado (ou o erro) aparece no quadro. O item atual não é gerado de novo.
 - Só front.
 - **Situação (30/10/2026): implementada.** Jornada de ponta a ponta atualizada (quadro "Resposta sem fonte" com "Adicionar conhecimento" depois de escrever e recarregar) e teste novo do envio pela revisão, com sucesso e com falha, preservando o texto em edição.
+- **Conferida no ambiente publicado (04/11/2026)** pelo grupo no teste manual (front da Vercel com o merge às 20:31 UTC de 30/10).
+
 ### K13. Menu lateral com Base UI (ajuste de 30/10/2026)
 - Menu lateral refeito com as primitivas de Sidebar do Base UI (`@base-ui/react`) e os tokens do DS: recolhe a ícones no desktop, abre como painel no mobile (abaixo de 900 px), atalho ⌘B/Ctrl+B, dicas nos ícones e o logo no topo do menu.
 - Grupos, itens, contagens e regras do menu continuam vindo do viewModel; "Primeiros passos" mantém o gradiente limão em movimento enquanto a base está vazia.
-- **Situação (30/10/2026): implementada.** Teste de ponta a ponta do menu (desktop, recolhido, mobile, teclado) e jornada verde.
+- **Situação (04/11/2026): implementada e conferida no ambiente publicado.** Teste de ponta a ponta do menu (desktop, recolhido, mobile, teclado) e jornada verde. Front da Vercel com o merge às 20:39 UTC de 30/10; menu e gradiente de "Primeiros passos" conferidos pelo grupo no teste manual.
 
 ## Fase L: busca de perguntas na Revisão e nos detalhes da tarefa
 
@@ -842,7 +845,8 @@ Pedida em 01/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 ### L6. Testes de ponta a ponta
 - `e2e/buscaNaRevisao.spec.js`, um teste por cenário (B1 a B17), com os itens de exemplo e a API desligada, no padrão de `e2e/baseNaRevisao.spec.js`. Inclui a contagem de requisições ao digitar (zero) e o celular (sem rolagem lateral).
 
-### Situação (02/11/2026): implementada, sem commit
+### Situação (04/11/2026): implementada e conferida no ambiente publicado
+- Merge em 02/11 (PR #82). Os deploys de produção da Vercel dos merges de 02/11 ficaram bloqueados (commits de uma conta fora do time da Vercel) e o front publicado ficou na versão de 30/10 até o redeploy de 04/11, feito pela conta dona do time. Depois dele, o grupo conferiu a busca no teste manual.
 - 6 testes unitários e 18 de ponta a ponta da busca passando; suíte de ponta a ponta completa verde (59 testes).
 - Conferida no navegador nas duas telas, no computador e no celular.
 - **Pendência:** a integração contínua do front (`.github/workflows/front.yml`) roda o build e os testes de ponta a ponta, mas não o `npm test`; os testes unitários do front ainda não rodam no CI.
@@ -900,7 +904,8 @@ Pedida em 02/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 ### M5. Testes de ponta a ponta
 - `e2e/filtroPeloProgresso.spec.js`, um teste por cenário (M1 a M12), e um teste do Dashboard sem mudança.
 
-### Situação (02/11/2026): implementada
+### Situação (04/11/2026): implementada e conferida no ambiente publicado
+- Merge em 02/11 (PR #84); publicado no redeploy da Vercel de 04/11 (ver a situação da fase L) e conferido pelo grupo no teste manual.
 - Validação manual feita, inclusive do M6 depois da correção.
 - 4 testes unitários novos (`npm test`, 10 no total) e 16 de ponta a ponta da fase M passando; suíte de ponta a ponta completa verde (75 testes).
 - Ajuste de 02/11/2026 (M13): opções do menu "Filtrar" em ordem alfabética, na Revisão e nos detalhes da tarefa; barra e legenda na mesma ordem, sem "Alerta pendente".
