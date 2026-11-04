@@ -913,6 +913,15 @@ Pedida em 02/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 - Conferida no navegador no computador.
 - Correção na validação manual: clicar numa pergunta da tabela abria a Revisão com o filtro em "Todos". Agora mantém o filtro, como o botão "Abrir revisão" e o menu lateral (M6).
 
+## Fase N: tratamento de área (proposta, aguardando validação)
+
+Pedida em 04/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/spec/SPEC_FASE_N.md` (cenários N1 a N14, `draft`), e o plano detalhado, em `docs/mvp-resposta-rfp/plan/PLAN_FASE_N.md`. Nada é implementado antes da validação das decisões PN1 a PN9.
+
+**Objetivo:**
+- cada pergunta da RFP ganha uma área (Produto, Tecnologia, Segurança e privacidade, Comercial, Jurídico ou Geral), atribuída pela IA no processamento;
+- só um Aprovador da área (ou C-Level) aprova a resposta;
+- cada pessoa vê primeiro as perguntas da sua área na Revisão.
+
 ## Definição de pronto (proposta, P10)
 
 Uma etapa só é concluída quando:
