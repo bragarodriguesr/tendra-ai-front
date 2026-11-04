@@ -56,7 +56,8 @@ const initialState = ({ initialScreen, role }) => ({
   modo: "local", sessao: null,
   exported: null, exported4: null, exported8: null, expanded: null,
   form: emptyForm(),
-  fb: {}, saved: 0, tick: 0, taskRetry: false, alertsRead: {}, alertsHidden: {}, alertsDone: {},
+  // Último salvamento de cada item, por "tarefa/item": cada resposta tem o seu indicador.
+  fb: {}, savedAt: {}, tick: 0, taskRetry: false, alertsRead: {}, alertsHidden: {}, alertsDone: {},
   // Cartão de alertas da tela de Tarefas recolhido, e tarefa à espera da confirmação do download.
   tAlertsCollapsed: recolhidosAntes(), confirmDownload: null,
   // "Revisar com IA" em andamento e o texto de antes da revisão, para desfazer (cenário 65).
@@ -228,7 +229,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
           try {
             const { item } = await editarTextoDoItem(p.tid, api.numberOf(p.id), p.pessoa, p.text);
             api.applyServerItem(p.tid, item, { keepText: true });
-            setState({ saved: Date.now() });
+            setState((c) => ({ savedAt: { ...c.savedAt, [p.tid + "/" + p.id]: Date.now() } }));
           } catch (e) {
             api.toast("Texto não gravado", e.message, "danger");
           }
@@ -400,7 +401,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
           return i;
         });
         const s = ref.current;
-        if (!api.isServerItem(s)) { setState({ saved: Date.now() }); return; }
+        if (!api.isServerItem(s)) { setState((c) => ({ savedAt: { ...c.savedAt, [c.itemsTask + "/" + c.sel]: Date.now() } })); return; }
         // Texto vazio só é gravado na resposta manual (item sem sugestão): o item volta a "sem rascunho" (cenário 61).
         const key = s.itemsTask + "/" + s.sel, old = pendingSaves.current[key];
         if (old) clearTimeout(old.timer);

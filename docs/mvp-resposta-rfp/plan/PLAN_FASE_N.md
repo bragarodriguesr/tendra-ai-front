@@ -64,7 +64,7 @@ A geração das respostas não muda.
 - Áreas do publicado ajustadas no banco depois do deploy (PN8): `userteste3@gmail.com` com Segurança e privacidade e Tecnologia; `antonio@vereda.com.br` com Jurídico; demais Aprovadores em C-Level. Antes, o grupo confirma o ponto em aberto do spec sobre as organizações ficarem sem C-Level.
 - **Verificação:** o grupo confere no ambiente publicado, com evidências no banco: eventos `aprovacao` e `area`, e itens por área.
 
-## Situação (04/11/2026): implementada, exceto a avaliação da classificação (N4)
+## Situação (04/11/2026): implementada e conferida no ambiente publicado, exceto a avaliação da classificação (N4)
 
 - **N1 a N3 e N5:** implementadas.
   - Backend: 374 testes no PGlite e no Postgres. Os novos cobrem:
@@ -79,7 +79,21 @@ A geração das respostas não muda.
     - Jurídico, Segurança e Tecnologia, C-Level e Revisor;
     - computador e celular, sem rolagem lateral.
 - **N4 (avaliação da classificação):** pendente. Falta a rotulação das três RFPs do gabarito, que o grupo fará depois (spec, perguntas em aberto). Até lá, a classificação roda com a API real sem a medida de concordância.
-- **N6 (publicação):** pendente do merge. Antes de ajustar as áreas do publicado, confirmar o ponto em aberto sobre as organizações ficarem sem C-Level.
+- **N6 (publicação):** feita e conferida.
+  - **Deploy:** merge do PR #86 às 13:33 UTC. Deploy no Render às 13:34 e na Vercel no mesmo minuto, com o merge pela conta dona do time, sem bloqueio.
+  - **Migração 011 conferida no Supabase:**
+    - Revisores sem área e Aprovadores em C-Level;
+    - 135 itens em "Geral";
+    - RFP-04 (todos os itens aprovados) já marcada como classificada.
+  - **Primeira reclassificação (13:34):** falhou nas duas tarefas em aberto com `chave_recusada`. A chave da Anthropic do Render (e a local) estava inválida, com 401 "invalid x-api-key" em qualquer modelo. A rotina deixou as tarefas sem a marca, como previsto (N15).
+  - **Chave nova e reclassificação (15:25 UTC):** com a chave nova no Render, o reinício reclassificou as duas tarefas da Pulse Benefícios, sem nenhuma pergunta em "Geral" por falha:
+    - RFP-01, 46 itens: Produto 15, Tecnologia 10, Segurança e privacidade 8, Comercial 6, Jurídico 7;
+    - RFP-02, 84 itens: Segurança e privacidade 51, Tecnologia 21, Jurídico 9, Comercial 2, Produto 1.
+    - Custo de cerca de 5,7 mil tokens de entrada e 4,4 mil de saída, em uma chamada ao Haiku 5.5 por tarefa.
+  - **As demais organizações** (Vereda Documental) não têm tarefas, então não havia o que reclassificar.
+  - **Áreas ajustadas no banco depois do deploy (PN8):** `userteste3@gmail.com` com Segurança e privacidade e Tecnologia; `antonio@vereda.com.br` com Jurídico. Os Revisores seguem sem área.
+  - **Teste manual do grupo (04/11/2026):** concluído com os perfis do publicado. Nenhuma ação de revisão (aprovação ou troca de área) ficou gravada no período, então a conferência é do grupo, sem eventos no banco.
+  - **Ponto em aberto mantido:** nenhuma das organizações publicadas tem C-Level. Na Pulse, as perguntas de Produto, Comercial e Jurídico (40 nas duas tarefas) não têm quem as aprove nem quem troque a área.
 
 ## Checklist de aceite
 

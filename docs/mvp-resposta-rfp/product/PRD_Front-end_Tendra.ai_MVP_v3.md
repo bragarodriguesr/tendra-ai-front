@@ -436,7 +436,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
   - cartão de resposta, painel de fontes e feedback;
   - barra fixa de ações com o motivo de bloqueio.
 - Selecionar um item atualiza a coluna direita sem recarregar a página.
-- **Navegação:** botões "Item anterior" e "Próximo item", com os atalhos **K** e **J** (indicados na dica do botão). A navegação percorre os itens do filtro atual e dá a volta no fim da lista.
+- **Navegação:** botões "Item anterior" e "Próximo item", só com as setas (desde 04/11/2026), fixos à direita do código e das etiquetas do item, que quebram linha sem deslocá-los. O nome e os atalhos **K** e **J** aparecem na dica do botão. A navegação percorre os itens do filtro atual e dá a volta no fim da lista.
 - **Filtro vazio:** "Nenhum item neste filtro." + "Escolha outro estado para continuar a revisão."
 - **Abaixo de 900 px:** duas etapas, a lista e, ao escolher um item, o detalhe com o botão "← Itens" e setas de anterior e próximo.
 
@@ -461,8 +461,8 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 **F-20 · P0 · Edição da resposta** (MoSCoW: Must) — Parcial
 
 - "Editar resposta" abre o editor e "Concluir edição" fecha. Parágrafos são separados por uma linha em branco e cada parágrafo mantém seus marcadores de fonte.
-- O salvamento é automático, com o indicador "Salvamento automático" antes do primeiro salvamento; depois, "Salvo agora" no primeiro minuto, "Salvo há N minuto(s)" até 59 minutos e "Salvo há N hora(s)" a partir de 1 hora (30/10/2026).
-- Texto alterado ganha o selo "Editado" e os botões "Ver sugestão original" / "Ocultar sugestão original" e "Restaurar sugestão".
+- O salvamento é automático, com o indicador "Salvamento automático" antes do primeiro salvamento; depois, "Salvo agora" no primeiro minuto, "Salvo há N minuto(s)" até 59 minutos e "Salvo há N hora(s)" a partir de 1 hora (30/10/2026). O indicador é de cada item: só a resposta editada mostra o seu salvamento; as outras seguem com o próprio (04/11/2026).
+- Texto alterado ganha o selo "Editado" e os botões "Ver sugestão original" / "Ocultar sugestão original" e "Restaurar sugestão", só com ícones desde 04/11/2026 (olho e setas circulares), com a descrição na dica ao passar o cursor ou no foco.
 - Editar um item aprovado pede confirmação antes ("Editar e remover aprovação" / "Cancelar").
 - **Pendente:**
   - formatação básica (negrito, itálico, listas); hoje o editor é texto simples em parágrafos;
@@ -602,7 +602,7 @@ O design system vive no repositório do front (`src/ds`) e cada componente tem t
 | Barra de progresso (`ProgressBar`) | T3, T5, T8 | Percentual com o texto "N de M" ao lado |
 | Filtro de lista (`FilterMenu`, novo) | T5, T6, T9 | "Todos" + "Filtrar" com menu e contagens. Padrão obrigatório para filtros |
 | Menu lateral (`SidebarNav`) | Workspace | Grupos com título; modo recolhido só com ícones, na mesma posição |
-| Barra superior (`BrandBar`) | Site e Workspace | Tinta, 64 px, logo à esquerda, ações à direita |
+| Barra superior (`BrandBar`) | Site e Workspace | Tinta, 64 px, logo à esquerda, ações à direita. O logo tem a mesma posição e o mesmo tamanho (28 px, a `--brandbar-pad` da borda) no site, no login, na abertura e no Workspace, também com o menu recolhido; no celular, depois do botão de menu (04/11/2026) |
 | Logo animado (`AnimatedLogo`) | Site, L2 | Variantes Tinta e Papel; respeita "reduzir movimento" |
 | Aviso (`Toast`) | Workspace | Confirmações curtas; anunciado a leitores de tela |
 

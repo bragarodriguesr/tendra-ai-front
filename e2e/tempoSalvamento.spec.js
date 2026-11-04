@@ -105,9 +105,14 @@ for (const conectado of [false, true]) {
       await page.clock.runFor(800);
     }
     await expect(label(page)).toHaveText("Salvo agora");
-    // Outro item conserva referência compartilhada; reload inicia uma sessão de estado nova.
+    // Cada item tem o seu indicador: outro item, não editado, segue em "Salvamento automático";
+    // voltar ao editado mostra o salvamento dele. O reload inicia uma sessão de estado nova.
     if (!conectado) {
-      await page.getByText("REQ-002/012", { exact: true }).first().click();
+      const editado = (await page.locator('[aria-current="true"]').filter({ hasText: /REQ-\d{3}\/012/ }).first().innerText()).match(/REQ-\d{3}\/012/)[0];
+      const outro = editado === "REQ-002/012" ? "REQ-001/012" : "REQ-002/012";
+      await page.getByText(outro, { exact: true }).first().click();
+      await expect(label(page)).toHaveText("Salvamento automático");
+      await page.getByText(editado, { exact: true }).first().click();
       await expect(label(page)).toHaveText("Salvo agora");
     }
     await page.reload();

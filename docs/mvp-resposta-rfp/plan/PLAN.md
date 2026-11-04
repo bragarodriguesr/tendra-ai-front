@@ -922,7 +922,7 @@ Pedida em 04/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 - só um Aprovador da área (ou C-Level) aprova a resposta;
 - o Aprovador vê primeiro as perguntas da sua área na Revisão; o Revisor segue sem área e sem restrição.
 
-**Situação (04/11/2026): implementada, exceto a avaliação da classificação (N4), que espera a rotulação do gabarito.** Detalhes em `plan/PLAN_FASE_N.md`.
+**Situação (04/11/2026): implementada e conferida no ambiente publicado, exceto a avaliação da classificação (N4), que espera a rotulação do gabarito.** Migração 011 e reclassificação das tarefas em aberto conferidas no Supabase, depois da troca da chave da Anthropic no Render. Detalhes em `plan/PLAN_FASE_N.md`.
 
 ## Definição de pronto (proposta, P10)
 

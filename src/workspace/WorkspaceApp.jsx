@@ -27,7 +27,8 @@ function WorkspaceSidebar({ v, ws, state, collapsed, onSite }) {
     <SidebarPanel>
       <SidebarHeader>
         <a href="#" className="tdr-sidebar-brand" aria-label="Tendra.ai — voltar ao site" onClick={event => { event.preventDefault(); ws.setState({ navOpen: false }); onSite(); }}>
-          <Logo variant="ink" size={32} lockup={collapsed ? 'symbol' : 'horizontal'} />
+          {/* Mesmo logo do site (28px, a --brandbar-pad da borda). Recolhido, só o nome some: o símbolo não se move. */}
+          <Logo variant="ink" size={28} />
         </a>
       </SidebarHeader>
       <SidebarContent onClickCapture={event => {
@@ -78,7 +79,11 @@ function WorkspaceLayout({ state, ws, onSite, onLogout }) {
     <div className="tdr-workspace-shell">
       <WorkspaceSidebar v={v} ws={ws} state={state} collapsed={collapsed} onSite={onSite} />
       <div className="tdr-workspace-column">
-        <TopBar tone="ink" className="tdr-workspace-header" start={<SidebarTrigger />} end={<WorkspaceBarActions v={v} state={state} ws={ws} onLogout={onLogout} />} />
+        <TopBar tone="ink" className="tdr-workspace-header" start={<>
+          <SidebarTrigger />
+          {/* No celular o menu lateral fica fechado: o logo vem depois do botão, como no site. */}
+          {isMobile ? <a href="#" className="tdr-logo-link" aria-label="Tendra.ai — voltar ao site" onClick={(e) => { e.preventDefault(); onSite(); }} style={{ display: "flex" }}><Logo variant="ink" size={28} /></a> : null}
+        </>} end={<WorkspaceBarActions v={v} state={state} ws={ws} onLogout={onLogout} />} />
         <div className="tdr-workspace-layout">
           <ToastHost toast={state.toast} isMobile={isMobile} onClose={() => ws.setState({ toast: null })} />
 

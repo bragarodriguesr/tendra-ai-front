@@ -1,5 +1,5 @@
 import React from "react";
-import { Badge, Button, EmptyState, Icon, IconButton, Input, MonoLabel, Select, Textarea, FilterMenu } from "../../ds/index.js";
+import { Badge, Button, EmptyState, Icon, IconButton, Input, MonoLabel, Select, Textarea, FilterMenu, Tooltip } from "../../ds/index.js";
 import { AlertDeck, ClickRow, DISPLAY, card, mono } from "../ui.jsx";
 import { SendResult } from "./Base.jsx";
 
@@ -134,8 +134,13 @@ function Answer({ v, ws, state, cur }) {
           <span style={mono(12, "var(--n-400)")}>{v.savedText}</span>
           {cur.edited ? (
             <>
-              <Button size="sm" variant="ghost" onClick={() => ws.setState({ showOrig: !state.showOrig })}>{state.showOrig ? "Ocultar sugestão original" : "Ver sugestão original"}</Button>
-              <Button size="sm" variant="ghost" icon="refresh-cw" onClick={() => ws.restore(cur.id)}>Restaurar sugestão</Button>
+              {/* Só ícones; a descrição aparece ao passar o cursor (ou no foco). */}
+              <Tooltip content={state.showOrig ? "Ocultar sugestão original" : "Ver sugestão original"} placement="bottom">
+                <IconButton size="sm" variant="ghost" icon="eye" label={state.showOrig ? "Ocultar sugestão original" : "Ver sugestão original"} aria-pressed={state.showOrig} onClick={() => ws.setState({ showOrig: !state.showOrig })} />
+              </Tooltip>
+              <Tooltip content="Restaurar sugestão" placement="bottom">
+                <IconButton size="sm" variant="ghost" icon="refresh-cw" label="Restaurar sugestão" onClick={() => ws.restore(cur.id)} />
+              </Tooltip>
             </>
           ) : null}
           {cur.noSource ? null : editAction}
@@ -299,8 +304,9 @@ export function Review({ v, ws, state, height, isMobile }) {
         {cur ? (
           <>
             <div style={{ flex: 1, overflow: "auto", padding: isMobile ? "20px 16px" : "28px 40px", display: "flex", flexDirection: "column", gap: isMobile ? 20 : 24 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px 16px", flexWrap: "wrap" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              {/* As setas ficam sempre à direita, na mesma posição: as etiquetas quebram linha à esquerda. */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px 12px", flexWrap: "wrap", flex: 1, minWidth: 0 }}>
                   <span style={{ ...mono(13), fontWeight: 500 }}>{cur.code}</span>
                   <Badge tone={cur.tone} icon={cur.icon}>{cur.st}</Badge>
                   {cur.edited ? <Badge tone="neutral" icon="pencil">Editado</Badge> : null}
@@ -312,17 +318,14 @@ export function Review({ v, ws, state, height, isMobile }) {
                     </div>
                   ) : <Badge tone="neutral" icon="building-2">{cur.area}</Badge>}
                 </div>
-                {isMobile ? (
-                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, flex: "none" }}>
+                  <Tooltip content="Item anterior (K)" placement="bottom">
                     <IconButton icon="chevron-left" variant="outline" label="Item anterior" onClick={() => ws.step(-1)} />
+                  </Tooltip>
+                  <Tooltip content="Próximo item (J)" placement="bottom">
                     <IconButton icon="chevron-right" variant="outline" label="Próximo item" onClick={() => ws.step(1)} />
-                  </div>
-                ) : (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                    <Button size="sm" variant="secondary" icon="chevron-left" onClick={() => ws.step(-1)} title="Item anterior (K)">Item anterior</Button>
-                    <Button size="sm" variant="secondary" iconEnd="chevron-right" onClick={() => ws.step(1)} title="Próximo item (J)">Próximo item</Button>
-                  </div>
-                )}
+                  </Tooltip>
+                </div>
               </div>
               <h2 style={{ margin: 0, fontFamily: DISPLAY, fontWeight: 600, fontSize: isMobile ? 22 : 26, letterSpacing: "-.02em", lineHeight: 1.25, color: "var(--n-900)", maxWidth: "40ch", textWrap: "pretty" }}>{cur.q}</h2>
               {cur.alerts.length > 0 ? <ItemAlerts cur={cur} ws={ws} /> : null}

@@ -210,8 +210,12 @@ test('Estrutura: marca no sidebar e controle na borda do conteúdo', async ({ pa
   expect((await sidebar.boundingBox()).y).toBe(0);
   expect(await sidebar.evaluate(el => getComputedStyle(el).borderRightWidth)).toBe('0px');
   expect((await trigger.boundingBox()).x).toBeGreaterThanOrEqual((await sidebar.boundingBox()).width);
+  // Recolher não move o logo: o símbolo fica no mesmo lugar e tamanho, e só o nome some.
+  const simbolo = brand.locator('svg').first();
+  const antes = await simbolo.boundingBox();
   await trigger.click();
   await expect(brand).toBeVisible();
-  await expect(brand.getByText('Tendra', { exact: false })).toHaveCount(0);
   await expect(brand.getByRole('img', { name: 'Tendra.ai', exact: true })).toBeVisible();
+  await expect.poll(() => brand.getByText('Tendra', { exact: false }).evaluate(el => getComputedStyle(el).opacity)).toBe('0');
+  expect(await simbolo.boundingBox()).toEqual(antes);
 });

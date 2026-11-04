@@ -38,7 +38,8 @@ export function LoginPage({ ws, onEnter, onSite }) {
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--surface-page)" }}>
-      <BrandBar logoLabel="Tendra.ai — voltar ao site" onLogo={onSite} />
+      {/* No celular, o espaço do botão de menu do site: o logo fica na mesma posição em todas as telas. */}
+      <BrandBar logoLabel="Tendra.ai — voltar ao site" onLogo={onSite} leading={<span className="tdr-splash-menu-space" aria-hidden="true" />} />
       <div className="tdr-login" style={{ minHeight: `calc(100vh - ${BRAND_BAR_H}px)` }}>
         <div className="tdr-login-aside">
           <div style={{ display: "grid", gap: 20, maxWidth: 460 }}>
