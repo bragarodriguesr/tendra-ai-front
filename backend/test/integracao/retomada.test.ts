@@ -90,7 +90,7 @@ describe("Cenário D15 · retomada após reinício", () => {
     const antes = await obterTarefa(banco, ORGANIZACAO_INICIAL, tarefa.id);
     expect(antes).toMatchObject({ estado: "processando", processadas: 20, total: 46 });
     const requisicoesAntes = await listarRequisicoes(banco, tarefa.id);
-    expect(requisicoesAntes.map((entrada) => entrada.etapa)).toEqual(["contagem", "geracao", "geracao"]);
+    expect(requisicoesAntes.map((entrada) => entrada.etapa)).toEqual(["contagem", "classificacao", "geracao", "geracao"]);
 
     // Reinício: outro servidor sobre o mesmo banco, com a retomada ligada.
     const api = new ApiSimulada();
@@ -113,7 +113,7 @@ describe("Cenário D15 · retomada após reinício", () => {
     expect(await lerRespostasGeradas(banco, tarefa.id)).toEqual([]);
 
     const requisicoes = await listarRequisicoes(banco, tarefa.id);
-    expect(requisicoes.slice(0, 3)).toEqual(requisicoesAntes);
+    expect(requisicoes.slice(0, 4)).toEqual(requisicoesAntes);
     expect(depois?.metricas).toMatchObject({ requisicoes: { total: requisicoes.length } });
 
     // Os itens são os mesmos de uma execução sem interrupção.

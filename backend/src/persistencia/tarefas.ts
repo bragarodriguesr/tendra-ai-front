@@ -60,6 +60,8 @@ export interface ItemGravado extends Omit<ItemDaRevisao, "st"> {
   at?: string;
   rby?: string;
   rat?: string;
+  /** Área da pergunta (fase N, PN4): uma das áreas de regras/areas.ts, "Geral" sem área definida. */
+  area: string;
 }
 
 interface LinhaDeTarefa {
@@ -197,7 +199,7 @@ export async function concluirTarefa(
   banco: Banco,
   id: string,
   resultado: {
-    itens: (ItemDaRevisao & { aba: string; linha: number })[];
+    itens: (ItemDaRevisao & { aba: string; linha: number; area: string })[];
     comportamento: ComportamentoDaTarefa;
     metricas: MetricasDaTarefa;
     caminhoDaPlanilhaPreenchida: string;
@@ -206,13 +208,13 @@ export async function concluirTarefa(
   await banco.transaction(async (transacao) => {
     for (const [posicao, item] of resultado.itens.entries()) {
       await transacao.query(
-        `INSERT INTO itens (tarefa_id, numero, aba, linha, q, paras, paras_originais, srcs, alerts, st, orig) VALUES ($1, $2, $3, $4, $5, $6, $6, $7, $8, $9, $10)`,
-        [id, posicao + 1, item.aba, item.linha, item.q, JSON.stringify(item.paras), JSON.stringify(item.srcs), JSON.stringify(item.alerts), item.st, item.orig],
+        `INSERT INTO itens (tarefa_id, numero, aba, linha, q, paras, paras_originais, srcs, alerts, st, orig, area) VALUES ($1, $2, $3, $4, $5, $6, $6, $7, $8, $9, $10, $11)`,
+        [id, posicao + 1, item.aba, item.linha, item.q, JSON.stringify(item.paras), JSON.stringify(item.srcs), JSON.stringify(item.alerts), item.st, item.orig, item.area],
       );
     }
     await transacao.query(
       `UPDATE tarefas SET estado = 'pronta', processadas = total, comportamento = $2, metricas = $3,
-         caminho_da_planilha_preenchida = $4, concluida_em = now() WHERE id = $1`,
+         caminho_da_planilha_preenchida = $4, concluida_em = now(), areas_classificadas_em = now() WHERE id = $1`,
       [id, JSON.stringify(resultado.comportamento), JSON.stringify(resultado.metricas), resultado.caminhoDaPlanilhaPreenchida],
     );
   });
@@ -252,6 +254,7 @@ interface LinhaDeItem {
   aprovado_em: Date | null;
   revisado_por: string | null;
   revisado_em: Date | null;
+  area: string;
 }
 
 export const paraItem = (linha: LinhaDeItem): ItemGravado => ({
@@ -265,6 +268,7 @@ export const paraItem = (linha: LinhaDeItem): ItemGravado => ({
   alerts: linha.alerts,
   st: linha.st as EstadoDoItem,
   orig: linha.orig,
+  area: linha.area,
   ...(linha.aprovado_por === null ? {} : { by: linha.aprovado_por }),
   ...(linha.aprovado_em === null ? {} : { at: linha.aprovado_em.toISOString() }),
   ...(linha.revisado_por === null ? {} : { rby: linha.revisado_por }),

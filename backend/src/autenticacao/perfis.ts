@@ -1,4 +1,5 @@
 import type { Banco } from "../persistencia/banco.ts";
+import { ErroDeArea, validarAreasDoPerfil } from "../regras/areas.ts";
 
 /**
  * Cadastro de perfis (etapa D4, PD2). A conta é criada no painel do Supabase (Authentication →
@@ -31,9 +32,21 @@ export async function idDaContaNoSupabase(opcoes: { supabaseUrl: string; chaveDe
 /**
  * Cria ou atualiza o perfil da conta, sempre ativo, na organização informada (cenário 67). Um perfil
  * nunca muda de organização (PK5): a conta já ligada a outra é recusada, e a pessoa usa outra conta.
+ * `areas` (fase N, cenário N1): só do Aprovador. Sem `areas`, um perfil novo fica sem área e um
+ * existente mantém as suas; o Revisor sempre fica sem área.
  */
-export async function gravarPerfil(banco: Banco, perfil: { id: string; email: string; nome: string; papel: string; organizacaoId: string }): Promise<void> {
+export async function gravarPerfil(
+  banco: Banco,
+  perfil: { id: string; email: string; nome: string; papel: string; organizacaoId: string; areas?: string[] },
+): Promise<void> {
   if (!PAPEIS.some((papel) => papel === perfil.papel)) throw new ErroDeCadastro(`Papel inválido "${perfil.papel}". Use ${PAPEIS.join(" ou ")}.`);
+  let areas: string[] | null;
+  try {
+    areas = perfil.areas === undefined ? (perfil.papel === "Aprovador" ? null : []) : validarAreasDoPerfil(perfil.papel, perfil.areas);
+  } catch (erro) {
+    if (erro instanceof ErroDeArea) throw new ErroDeCadastro(erro.message);
+    throw erro;
+  }
   const nome = perfil.nome.trim();
   if (nome === "") throw new ErroDeCadastro("Informe o nome da pessoa.");
   const { rows } = await banco.query<{ organizacao_id: string }>("SELECT organizacao_id FROM perfis WHERE id = $1 OR email = $2", [perfil.id, perfil.email]);
@@ -41,9 +54,10 @@ export async function gravarPerfil(banco: Banco, perfil: { id: string; email: st
     throw new ErroDeCadastro(`A conta ${perfil.email} já pertence a outra organização. Um perfil não muda de organização: crie outra conta para esta.`);
   }
   await banco.query(
-    `INSERT INTO perfis (id, email, nome, papel, organizacao_id) VALUES ($1, $2, $3, $4, $5)
-     ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email, nome = EXCLUDED.nome, papel = EXCLUDED.papel, ativo = true`,
-    [perfil.id, perfil.email, nome, perfil.papel, perfil.organizacaoId],
+    `INSERT INTO perfis (id, email, nome, papel, organizacao_id, areas) VALUES ($1, $2, $3, $4, $5, COALESCE($6::text[], '{}'))
+     ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email, nome = EXCLUDED.nome, papel = EXCLUDED.papel, ativo = true,
+       areas = COALESCE($6::text[], perfis.areas)`,
+    [perfil.id, perfil.email, nome, perfil.papel, perfil.organizacaoId, areas],
   );
 }
 

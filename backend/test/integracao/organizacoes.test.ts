@@ -135,6 +135,7 @@ const ROTAS_DE_TAREFA: Record<string, object | undefined> = {
   "POST /api/tarefas/:id/itens/:numero/alertas/:tipo/reconhecer": {},
   "POST /api/tarefas/:id/itens/:numero/fonte": { fonte: 1 },
   "POST /api/tarefas/:id/itens/:numero/revisar": {},
+  "PUT /api/tarefas/:id/itens/:numero/area": { area: "Jurídico" },
   "PUT /api/tarefas/:id/itens/:numero/avaliacao": { valor: "positiva" },
   "POST /api/tarefas/:id/itens/:numero/revisar-texto": { texto: Array.from({ length: 40 }, (_, i) => `palavra${i}`).join(" ") },
 };
@@ -195,9 +196,9 @@ describe("Cenários 66 a 69 · organização, perfis e sessão", () => {
 
   it("login e /api/auth/me trazem a organização da sessão", async () => {
     const login = await servidor.inject({ method: "POST", url: "/api/auth/login", payload: { email: DE_B.email, senha: DE_B.senha } });
-    expect(login.json()).toEqual({ pessoa: { nome: "Bruna Costa", papel: "Aprovador" }, organizacao: { nome: "Organização de teste B" } });
+    expect(login.json()).toEqual({ pessoa: { nome: "Bruna Costa", papel: "Aprovador", areas: [] }, organizacao: { nome: "Organização de teste B" } });
     const cookie = String(login.headers["set-cookie"]).split(";")[0] ?? "";
-    expect((await pedir(cookie, "GET", "/api/auth/me")).json()).toEqual({ pessoa: { nome: "Bruna Costa", papel: "Aprovador" }, organizacao: { nome: "Organização de teste B" } });
+    expect((await pedir(cookie, "GET", "/api/auth/me")).json()).toEqual({ pessoa: { nome: "Bruna Costa", papel: "Aprovador", areas: [] }, organizacao: { nome: "Organização de teste B" } });
   });
 
   it("organização informada no pedido é recusada; na URL ou em cabeçalho, ignorada", async () => {

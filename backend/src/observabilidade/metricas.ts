@@ -11,7 +11,7 @@ import type { ChecagemDoItem, ItemDaRevisao, TipoDeAlerta } from "../rastreabili
  * de etapa: nada de conteúdo de documentos nem texto de respostas.
  */
 
-export const ETAPAS_DA_TAREFA = ["planilha", "identificacao", "contexto", "geracao", "checagem", "conflito", "alertas", "planilhaPreenchida"] as const;
+export const ETAPAS_DA_TAREFA = ["planilha", "identificacao", "classificacao", "contexto", "geracao", "checagem", "conflito", "alertas", "planilhaPreenchida"] as const;
 export type EtapaDaTarefa = (typeof ETAPAS_DA_TAREFA)[number];
 
 export interface DuracaoDaEtapa {
@@ -62,6 +62,8 @@ export interface MetricasDaTarefa {
   itensPorAlerta: Partial<Record<TipoDeAlerta, number>>;
   /** O que a checagem descartou ou não encontrou. */
   ignorados: { citacoesDescartadas: number; trechosSemFonte: number; perguntasSemMarcador: number };
+  /** Perguntas que ficaram em "Geral" por falha da classificação (fase N, cenário N3). Ausente nas tarefas de antes da fase. */
+  perguntasEmGeralPorFalha?: number;
 }
 
 export function calcularMetricas(entrada: {

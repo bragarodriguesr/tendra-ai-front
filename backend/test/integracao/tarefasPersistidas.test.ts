@@ -95,7 +95,7 @@ describe("B1 · tarefa processada e gravada", () => {
     expect(preenchida.worksheets.length).toBeGreaterThan(0);
 
     const registro = await listarRequisicoes(banco, tarefa.id);
-    expect(registro.map((entrada) => entrada.etapa)).toEqual(["contagem", "geracao", "geracao", "geracao", "geracao", "geracao"]);
+    expect(registro.map((entrada) => entrada.etapa)).toEqual(["contagem", "classificacao", "geracao", "geracao", "geracao", "geracao", "geracao"]);
   });
 
   it("Cenário 6 · nome, empresa, CNPJ e contatos ficam no banco e nunca vão à IA", async () => {
@@ -116,7 +116,7 @@ describe("B1 · tarefa processada e gravada", () => {
 
     expect(await obterTarefa(banco, ORGANIZACAO_INICIAL, tarefa.id)).toMatchObject({ estado: "falha", motivo: "Chave da API recusada.", total: 46, processadas: 10, caminhoDaPlanilhaPreenchida: null });
     expect(await listarItens(banco, tarefa.id)).toEqual([]);
-    expect((await listarRequisicoes(banco, tarefa.id)).map((entrada) => entrada.resultado)).toEqual(["sucesso", "sucesso", "erro"]);
+    expect((await listarRequisicoes(banco, tarefa.id)).map((entrada) => entrada.resultado)).toEqual(["sucesso", "sucesso", "sucesso", "erro"]);
   });
 
   it("Cenário 5 · planilha sem perguntas termina em falha com a mensagem do SPEC", async () => {

@@ -11,6 +11,8 @@ export interface Pessoa {
   id: string;
   nome: string;
   papel: string;
+  /** Áreas do Aprovador (fase N, PN3). Só existe com login; a pessoa do modo local não tem área e nada restringe. */
+  areas?: string[];
 }
 
 const ARQUIVO_PADRAO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../config/pessoas.json");

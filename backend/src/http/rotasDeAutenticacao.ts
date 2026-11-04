@@ -101,12 +101,12 @@ export function registrarAutenticacao(servidor: FastifyInstance, opcoes: { banco
 
       const identificador = await criarSessao(banco, perfil.id);
       resposta.header("set-cookie", `${COOKIE_DA_SESSAO}=${identificador}; ${atributos}`);
-      return { pessoa: { nome: perfil.nome, papel: perfil.papel }, organizacao: { nome: perfil.organizacao.nome } };
+      return { pessoa: { nome: perfil.nome, papel: perfil.papel, areas: perfil.areas ?? [] }, organizacao: { nome: perfil.organizacao.nome } };
     },
   );
 
   servidor.get("/api/auth/me", async (pedido) => ({
-    pessoa: { nome: pedido.pessoaDaSessao?.nome, papel: pedido.pessoaDaSessao?.papel },
+    pessoa: { nome: pedido.pessoaDaSessao?.nome, papel: pedido.pessoaDaSessao?.papel, areas: pedido.pessoaDaSessao?.areas ?? [] },
     organizacao: { nome: pedido.organizacaoDaSessao?.nome },
   }));
 
