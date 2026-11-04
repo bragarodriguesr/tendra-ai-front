@@ -130,10 +130,14 @@
 /* O sidebar contém sua marca; o trigger acompanha a borda do conteúdo. */
 .tdr-workspace-shell { display: flex; height: 100dvh; overflow: hidden; }
 .tdr-workspace-column { display: flex; flex: 1; min-width: 0; flex-direction: column; }
-.tdr-workspace-header { flex: none; box-sizing: border-box; height: var(--space-16); min-height: var(--space-16); }
-[data-slot="sidebar-header"] { height: var(--space-16); min-height: var(--space-16); display: flex; align-items: center; padding: 0 var(--space-4); background: var(--surface-inverse); border-bottom: var(--border-width) solid var(--border-inverse); }
+.tdr-workspace-header { flex: none; box-sizing: border-box; height: var(--space-16); min-height: var(--space-16); padding-left: var(--brandbar-pad, var(--space-6)) !important; padding-right: var(--brandbar-pad, var(--space-6)) !important; }
+/* Botão do menu do tamanho do botão de menu do site (40px), para o logo ficar na mesma posição no celular. */
+.tdr-workspace-header .tdr-sidebar-trigger { width: 40px; height: 40px; }
+[data-slot="sidebar-header"] { box-sizing: border-box; height: var(--space-16); min-height: var(--space-16); display: flex; align-items: center; padding: 0 var(--brandbar-pad, var(--space-6)); overflow: hidden; background: var(--surface-inverse); border-bottom: var(--border-width) solid var(--border-inverse); }
 .tdr-sidebar-brand, .tdr-sidebar-brand:hover { display: flex; align-items: center; min-height: var(--hit-min); color: var(--text-on-inverse); text-decoration: none; }
-.tdr-sidebar[data-state="collapsed"] [data-slot="sidebar-header"] { justify-content: center; padding: 0; }
+/* Recolhido: o logo fica onde está (mesma posição do site); só o nome some, sem deslocar o símbolo. */
+.tdr-sidebar-brand > * > span { transition: opacity var(--duration-fast) var(--ease-out); }
+.tdr-sidebar[data-state="collapsed"] .tdr-sidebar-brand > * > span { opacity: 0; }
 .tdr-sidebar-mobile [data-slot="sidebar-header"] { padding-right: var(--space-16); }
 .tdr-sidebar-mobile-close { position: absolute; right: var(--space-2); top: var(--space-2); border-color: transparent; color: var(--text-on-inverse-body); }
 .tdr-sidebar-mobile-close:hover { background: var(--paper-wash); color: var(--text-on-inverse); }

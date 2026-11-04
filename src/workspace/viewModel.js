@@ -382,7 +382,8 @@ export function buildView(s, ws) {
       stateHint: it.st === "aprovada" ? "Editar remove a aprovação." : "Pronta para aprovação."
     };
   }
-  const savedText = formatarTempoSalvamento(s.saved);
+  // Indicador do item aberto: cada resposta tem o seu horário de salvamento.
+  const savedText = formatarTempoSalvamento(it ? (s.savedAt || {})[(s.itemsTask || "") + "/" + it.id] : 0);
 
   // visualizador de fonte
   let drawer = null;
