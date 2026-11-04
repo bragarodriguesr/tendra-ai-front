@@ -4,15 +4,25 @@ import { abrirBancoPostgres } from "../persistencia/banco.ts";
 import { ErroDeOrganizacao, organizacaoAtiva } from "../persistencia/organizacoes.ts";
 
 /**
- * Comando `npm run cadastrar-perfil -- <e-mail> <nome> <Revisor|Aprovador> <id-da-organização>` (etapa
- * D4, PD2, cenário 67): liga uma conta já criada no Supabase Auth ao nome, ao papel e à organização.
- * Exige DATABASE_URL, SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY. Rodar de novo atualiza nome e papel e
- * reativa o perfil; a organização não muda (PK5).
+ * Comando `npm run cadastrar-perfil -- <e-mail> <nome> <Revisor|Aprovador> <id-da-organização> [--areas <A,B>]`
+ * (etapa D4, PD2, cenários 67 e N1): liga uma conta já criada no Supabase Auth ao nome, ao papel, à
+ * organização e, no Aprovador, às áreas (fase N). Exige DATABASE_URL, SUPABASE_URL e
+ * SUPABASE_SERVICE_ROLE_KEY. Rodar de novo atualiza nome, papel e, se informadas, as áreas, e reativa
+ * o perfil; a organização não muda (PK5).
  */
-const USO = "Uso: npm run cadastrar-perfil -- <e-mail> <nome> <Revisor|Aprovador> <id-da-organização>";
+const USO = "Uso: npm run cadastrar-perfil -- <e-mail> <nome> <Revisor|Aprovador> <id-da-organização> [--areas <área,área>]";
 
 async function executar(): Promise<void> {
-  const [emailInformado, nome, papel, organizacaoInformada, ...sobra] = process.argv.slice(2);
+  const argumentos = process.argv.slice(2);
+  const posicaoDasAreas = argumentos.indexOf("--areas");
+  let areas: string[] | undefined;
+  if (posicaoDasAreas !== -1) {
+    const valor = argumentos[posicaoDasAreas + 1];
+    if (valor === undefined) throw new ErroDeCadastro(USO);
+    areas = valor.split(",");
+    argumentos.splice(posicaoDasAreas, 2);
+  }
+  const [emailInformado, nome, papel, organizacaoInformada, ...sobra] = argumentos;
   if (emailInformado === undefined || nome === undefined || papel === undefined || organizacaoInformada === undefined || sobra.length > 0) throw new ErroDeCadastro(USO);
   const configuracao = carregarConfiguracaoSemChave();
   const supabaseUrl = process.env.SUPABASE_URL?.trim().replace(/\/$/, "") ?? "";
@@ -29,8 +39,8 @@ async function executar(): Promise<void> {
   try {
     const organizacao = await organizacaoAtiva(banco, organizacaoInformada.trim());
     const id = await idDaContaNoSupabase({ supabaseUrl, chaveDeServico, email });
-    await gravarPerfil(banco, { id, email, nome, papel, organizacaoId: organizacao.id });
-    console.log(`Perfil gravado: ${nome.trim()} (${papel}), ${email}, na organização ${organizacao.nome}.`);
+    await gravarPerfil(banco, { id, email, nome, papel, organizacaoId: organizacao.id, ...(areas === undefined ? {} : { areas }) });
+    console.log(`Perfil gravado: ${nome.trim()} (${papel}${areas === undefined ? "" : ` · ${areas.join(", ")}`}), ${email}, na organização ${organizacao.nome}.`);
   } finally {
     await banco.close();
   }

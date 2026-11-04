@@ -5,9 +5,10 @@ import { usePopover } from "./usePopover.js";
 /**
  * Nome do usuário na barra superior; abre um menu com o perfil e a troca de usuário da demo. Com
  * login (fase D), o papel vem da sessão e não há troca de usuário (`onSwitch` nulo); a organização
- * da sessão (fase K) aparece acima do perfil.
+ * da sessão (fase K) aparece acima do perfil. As áreas do Aprovador (fase N, cenário N1) vêm ao
+ * lado do papel ("Aprovador · Jurídico, Comercial").
  */
-export function UserMenu({ name, role, organization, onSwitch, onLogout }) {
+export function UserMenu({ name, role, areas = [], organization, onSwitch, onLogout }) {
   const { open, setOpen, root, focusTrigger } = usePopover();
   const menuId = "tdr-user-menu";
 
@@ -36,7 +37,7 @@ export function UserMenu({ name, role, organization, onSwitch, onLogout }) {
           ) : null}
           <div style={{ display: "grid", gap: 4 }}>
             <MonoLabel>Perfil</MonoLabel>
-            <span style={{ fontWeight: 600, color: "var(--n-900)" }}>{role}</span>
+            <span style={{ fontWeight: 600, color: "var(--n-900)" }}>{areas.length > 0 ? `${role} · ${areas.join(", ")}` : role}</span>
           </div>
           {onSwitch ? (
             <Button size="sm" variant="secondary" icon="users" fullWidth onClick={() => { onSwitch(); setOpen(false); focusTrigger(); }}>

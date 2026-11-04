@@ -125,6 +125,8 @@ export const avaliarItemNaApi = (id, numero, pessoa, valor, motivo) =>
 export const reconhecerAlertaNaApi = (id, numero, pessoa, tipo) => pedir(doItem(id, numero, `alertas/${tipo}/reconhecer`), { method: "POST", corpo: { pessoa } });
 export const escolherFonteNaApi = (id, numero, pessoa, fonte) => pedir(doItem(id, numero, "fonte"), { method: "POST", corpo: { pessoa, fonte } });
 export const revisarItemNaApi = (id, numero, pessoa) => pedir(doItem(id, numero, "revisar"), { method: "POST", corpo: { pessoa } });
+/** Troca da área do item (fase N, cenário N10): só quem pode aprová-lo. */
+export const trocarAreaNaApi = (id, numero, pessoa, area) => pedir(doItem(id, numero, "area"), { method: "PUT", corpo: { pessoa, area } });
 /** "Revisar com IA" (cenário 65): devolve `{ texto }` revisado, sem gravar no item. */
 export const revisarTextoComIa = (id, numero, texto) => pedir(doItem(id, numero, "revisar-texto"), { method: "POST", corpo: { texto } });
 /** Palavras mínimas para "Revisar com IA", as mesmas do backend. */

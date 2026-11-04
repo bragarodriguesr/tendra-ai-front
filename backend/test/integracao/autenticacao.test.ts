@@ -106,7 +106,7 @@ describe("Cenário D1 · login com credenciais válidas", () => {
   it("cria a sessão, grava o cookie seguro e devolve nome e papel; o e-mail é normalizado", async () => {
     const resposta = await entrar("  Marcelo.Aprovador@Tendra.test ", "senha-do-aprovador");
     expect(resposta.statusCode).toBe(200);
-    expect(resposta.json()).toEqual({ pessoa: { nome: "Marcelo Vieira", papel: "Aprovador" }, organizacao: { nome: "Pulse Benefícios" } });
+    expect(resposta.json()).toEqual({ pessoa: { nome: "Marcelo Vieira", papel: "Aprovador", areas: [] }, organizacao: { nome: "Pulse Benefícios" } });
     const cookie = String(resposta.headers["set-cookie"]);
     expect(cookie).toMatch(/^tendra_sessao=[A-Za-z0-9_-]{43}; Path=\/; HttpOnly; SameSite=Lax; Secure$/);
     const { rows } = await banco.query<{ id_hash: string }>("SELECT id_hash FROM sessoes");
@@ -178,10 +178,10 @@ describe("Cenário D4 · autor definido pela sessão", () => {
   it("/api/auth/me e /api/pessoas devolvem só a pessoa da sessão", async () => {
     const cookie = await cookieDe(APROVADOR.email, "senha-do-aprovador");
     const sessao = await pedir("/api/auth/me", cookie);
-    expect(sessao.json()).toEqual({ pessoa: { nome: "Marcelo Vieira", papel: "Aprovador" }, organizacao: { nome: "Pulse Benefícios" } });
+    expect(sessao.json()).toEqual({ pessoa: { nome: "Marcelo Vieira", papel: "Aprovador", areas: [] }, organizacao: { nome: "Pulse Benefícios" } });
     // Sem cache: depois de sair, o navegador nunca reaproveita a sessão anterior.
     expect(sessao.headers["cache-control"]).toBe("no-store");
-    expect((await pedir("/api/pessoas", cookie)).json()).toEqual({ pessoas: [{ id: APROVADOR.id, nome: "Marcelo Vieira", papel: "Aprovador" }] });
+    expect((await pedir("/api/pessoas", cookie)).json()).toEqual({ pessoas: [{ id: APROVADOR.id, nome: "Marcelo Vieira", papel: "Aprovador", areas: [] }] });
   });
 
   it("o envio de documentos grava quem enviou pela sessão, não pelo corpo", async () => {

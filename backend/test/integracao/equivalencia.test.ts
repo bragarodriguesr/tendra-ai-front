@@ -103,7 +103,7 @@ describe("B6 · cenário 25: comando e backend são equivalentes", () => {
     const comando = await peloComando();
     const { itens } = await pelaRota();
 
-    const semPosicao = itens.map(({ numero: _numero, aba: _aba, linha: _linha, ...item }) => item);
+    const semPosicao = itens.map(({ numero: _numero, aba: _aba, linha: _linha, area: _area, ...item }) => item);
     expect(semPosicao).toEqual(comando.itens);
     expect(itens.map(({ aba, linha }) => ({ aba, linha }))).toEqual(comando.perguntas.map(({ aba, linha }) => ({ aba, linha })));
   });

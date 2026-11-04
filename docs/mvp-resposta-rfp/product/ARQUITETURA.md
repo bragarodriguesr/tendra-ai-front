@@ -193,6 +193,7 @@ Os dois deploys saem da mesma `main`, mas são independentes: um pode publicar e
 │    1. recebe e valida a planilha ─────────► dados/rfps/                            │
 │    2-3. lê a planilha e identifica as perguntas                                    │
 │    4. monta o contexto a partir dos documentos ativos do banco                     │
+│    4b. classifica a área de cada pergunta (fase N)                                 │
 │    5-6. gera, checa e grava as respostas ─► banco local (tarefas, itens, fontes)   │
 │    7. grava as ações da pessoa (editar, aprovar, avaliar) e calcula a aceitação    │
 │    registro de requisições e eventos ──► banco local (requisicoes, eventos)        │
@@ -209,7 +210,7 @@ Na fase D, o mesmo backend passa a rodar no Render, o banco vira o Postgres do S
 
 Citados como em `docs/mvp-resposta-rfp/spec/SPEC.md`:
 
-- **A IA não controla regras críticas (II).** Estados, alertas, teto da base, validação de entrada e conferência das citações são lógica de código. A IA só identifica perguntas (quando a regra falha), redige rascunhos com citação e aponta conflitos; tudo o que ela devolve passa por validação antes de ser apresentado.
+- **A IA não controla regras críticas (II).** Estados, alertas, teto da base, validação de entrada e conferência das citações são lógica de código. A IA só identifica perguntas (quando a regra falha), classifica a área de cada pergunta (fase N), redige rascunhos com citação e aponta conflitos; tudo o que ela devolve passa por validação antes de ser apresentado.
 - **A Tendra sugere, a pessoa decide (V).** O sistema nunca aprova um item. A aprovação é uma ação de pessoa, gravada com quem e quando.
 - **Sem evidência verificável, não há resposta (IV e VII).** Uma resposta só é apresentada como fundamentada se cada trecho citado puder ser conferido no documento de origem.
 - **Falhas são explícitas (VIII).** Nenhuma falha resulta em respostas parciais apresentadas como concluídas.
@@ -254,6 +255,16 @@ Citados como em `docs/mvp-resposta-rfp/spec/SPEC.md`:
 | **IA?** | Não nesta etapa. A "busca" acontece dentro da etapa 6, quando o Claude cita os trechos. |
 | **Custo** | Os documentos são marcados para **cache**: a partir da segunda chamada, a releitura custa uma fração. |
 | **Limite arquitetural** | A recuperação fica num módulo próprio (`buscarFontes`), separado da geração (constitution II). Hoje devolve a base inteira; uma busca vetorial futura substitui só esse módulo. |
+
+### Etapa 4b: classificar a área das perguntas (fase N, 04/11/2026)
+
+| | |
+|---|---|
+| **O que acontece** | Depois do contexto montado e antes da geração, o texto das perguntas vai a um modelo pequeno (Haiku 5.5, `TENDRA_MODELO_CLASSIFICACAO`) com a instrução `classificacao-v1` e **saída estruturada** (`{numero, area}`), em lotes de até 100. A área vai para `itens.area` e decide quem aprova (só um Aprovador da área ou C-Level; "Geral", qualquer Aprovador). |
+| **Validação** | Só as áreas da lista de `src/regras/areas.ts`. Área fora da lista, pergunta sem classificação ou falha da IA ficam em **"Geral"**, sem falhar a tarefa; a tarefa conta quantas ficaram assim (`metricas.perguntasEmGeralPorFalha`). |
+| **Base vazia** | Nada vai à IA (cenário 10): todas em "Geral". |
+| **Tarefas antigas** | As tarefas em aberto de antes da fase N são classificadas em segundo plano ao iniciar o backend (`reclassificarTarefasEmAberto`, marca `tarefas.areas_classificadas_em`). |
+| **Proteção** | Só o texto das perguntas vai à IA, como na identificação; a pergunta é dado, nunca instrução. |
 
 ### Etapa 5: checar contexto e fonte
 

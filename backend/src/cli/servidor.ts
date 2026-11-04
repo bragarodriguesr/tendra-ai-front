@@ -12,6 +12,7 @@ import { criarLog } from "../observabilidade/log.ts";
 import { carregarPrecos } from "../observabilidade/metricas.ts";
 import { abrirBancoConfigurado, ErroDeBancoEmUso } from "../persistencia/banco.ts";
 import { marcarInterrompidas } from "../persistencia/tarefas.ts";
+import { reclassificarTarefasEmAberto } from "../fluxo/reclassificarAreas.ts";
 
 /**
  * Comando `npm run servidor`: sobe o backend com as rotas da base e das tarefas usadas pelo front.
@@ -37,6 +38,7 @@ async function executar(): Promise<void> {
     if (interrompidas > 0) log.warn({ interrompidas }, "Tarefas interrompidas por reinício marcadas como falha");
   }
 
+  const api = configuracao.api.tipo === "real" ? criarApiDoClaude(configuracao.api.chaveApi) : criarApiSimulada();
   const servidor = criarServidor({
     banco,
     log,
@@ -49,7 +51,7 @@ async function executar(): Promise<void> {
     tarefas: {
       banco,
       armazenamento: modo.tipo === "compartilhado" ? criarArmazenamentoSupabase(modo) : criarArmazenamento(configuracao.pastaDados),
-      api: configuracao.api.tipo === "real" ? criarApiDoClaude(configuracao.api.chaveApi) : criarApiSimulada(),
+      api,
       ia: configuracao.ia,
       nomesDeCabecalho: await carregarCabecalhos(),
       termosCriticos: await carregarTermosCriticos(),
@@ -81,6 +83,13 @@ async function executar(): Promise<void> {
     await encerrar();
     throw erro;
   }
+  // Fase N (cenário N15): as tarefas em aberto ainda sem área são classificadas em segundo plano,
+  // sem atrasar a subida; uma falha fica para a próxima.
+  void reclassificarTarefasEmAberto({ banco, api, ia: configuracao.ia })
+    .then(({ classificadas, adiadas }) => {
+      if (classificadas + adiadas > 0) log.info({ classificadas, adiadas }, "Tarefas em aberto reclassificadas por área");
+    })
+    .catch((erro: unknown) => log.error({ erro: erro instanceof Error ? erro.name : "desconhecido" }, "Falha na reclassificação por área"));
   console.log(`Servidor em http://${host}:${porta}${modo.tipo === "compartilhado" ? " (modo compartilhado, atrás do HTTPS do Render)" : ""}${configuracao.api.tipo === "simulada" ? " (API do Claude SIMULADA)" : ""}. Encerre com Ctrl+C.`);
 }
 

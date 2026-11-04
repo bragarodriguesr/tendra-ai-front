@@ -39,7 +39,11 @@ function ItemList({ v, ws, state, isMobile }) {
               {r.hasAlert ? <span style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--danger)", fontSize: 12, fontWeight: 500 }}><Icon name="triangle-alert" size="sm" />{r.alertText}</span> : null}
             </div>
             <div style={{ color: "var(--n-900)", lineHeight: 1.4 }}>{r.q}</div>
-            <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--n-500)" }}><Icon name={r.icon} size="sm" />{r.st}</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--n-500)", flexWrap: "wrap" }}>
+              <Icon name={r.icon} size="sm" />{r.st}
+              {/* Área da pergunta (fase N, cenário N8). */}
+              <span aria-hidden="true">·</span><Icon name="building-2" size="sm" /><span>{r.area}</span>
+            </span>
           </ClickRow>
         ))}
       </div>
@@ -301,6 +305,12 @@ export function Review({ v, ws, state, height, isMobile }) {
                   <Badge tone={cur.tone} icon={cur.icon}>{cur.st}</Badge>
                   {cur.edited ? <Badge tone="neutral" icon="pencil">Editado</Badge> : null}
                   {cur.hasManual ? <Badge tone="accent" icon="pencil">Resposta manual</Badge> : null}
+                  {/* Área da pergunta (fase N): quem pode aprová-la troca a área enquanto não aprovada (N10). */}
+                  {cur.canChangeArea ? (
+                    <div style={{ width: 220 }}>
+                      <Select options={cur.areaOptions} size="sm" aria-label="Área da pergunta" value={cur.area} onChange={(e) => ws.changeArea(cur.id, e.target.value)} />
+                    </div>
+                  ) : <Badge tone="neutral" icon="building-2">{cur.area}</Badge>}
                 </div>
                 {isMobile ? (
                   <div style={{ display: "flex", alignItems: "center", gap: 4 }}>

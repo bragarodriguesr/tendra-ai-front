@@ -93,9 +93,10 @@ describe("Processamento da RFP-01 com a base da Pulse", () => {
       esforco: "medium",
       modeloDeIdentificacao: "claude-haiku-5-5",
       modeloDeConflito: "claude-haiku-5-5",
-      instrucoes: { geracao: "geracao-v3", identificacao: "identificacao-v1", conflito: "conflito-v2" },
+      modeloDeClassificacao: "claude-haiku-5-5",
+      instrucoes: { geracao: "geracao-v3", identificacao: "identificacao-v1", conflito: "conflito-v2", classificacao: "classificacao-v1" },
     });
-    expect(resultado.etapas.map((etapa) => etapa.etapa)).toEqual(["planilha", "identificacao", "contexto", "geracao", "checagem", "conflito", "alertas", "planilhaPreenchida"]);
+    expect(resultado.etapas.map((etapa) => etapa.etapa)).toEqual(["planilha", "identificacao", "contexto", "classificacao", "geracao", "checagem", "conflito", "alertas", "planilhaPreenchida"]);
     expect(resultado.documentos).toHaveLength(16);
 
     const [primeiro, segundo] = resultado.itens;

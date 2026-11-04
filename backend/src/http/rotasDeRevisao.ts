@@ -17,6 +17,7 @@ import {
   reconhecerPessoa,
   relatorioDeAceitacao,
   restaurarSugestao,
+  trocarArea,
 } from "../revisao/revisao.ts";
 import type { TipoDeAlerta } from "../rastreabilidade/montarItem.ts";
 
@@ -84,6 +85,21 @@ export function registrarRotasDeRevisao(servidor: FastifyInstance, opcoes: { ban
     async (pedido) => {
       exigirAprovador(pedido, "Só o Aprovador pode aprovar respostas.");
       return { item: await aprovarItem(banco, alvo(pedido)) };
+    },
+  );
+
+  // Fase N (cenário N10): troca da área do item, só por quem pode aprová-lo (PN7).
+  servidor.put<{ Params: Parametros; Body: ComPessoa & { area: string } }>(
+    "/api/tarefas/:id/itens/:numero/area",
+    {
+      schema: {
+        params: PARAMETROS,
+        body: { type: "object", required: ["area"], additionalProperties: false, properties: { pessoa: { type: "string" }, area: { type: "string", maxLength: 60 } } },
+      },
+    },
+    async (pedido) => {
+      exigirAprovador(pedido, "Só o Aprovador troca a área de um item.");
+      return { item: await trocarArea(banco, { ...alvo(pedido), area: pedido.body.area }) };
     },
   );
 

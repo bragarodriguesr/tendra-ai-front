@@ -21,6 +21,7 @@ import {
 } from "../persistencia/tarefas.ts";
 import { ErroDeTeto } from "../recuperacao/buscarFontes.ts";
 import { processarTarefa } from "./processarTarefa.ts";
+import { AREA_GERAL } from "../regras/areas.ts";
 
 /**
  * Tarefa persistida (etapa B1): grava a planilha com nome gerado, cria a tarefa como
@@ -94,9 +95,17 @@ export async function executarTarefa(ambiente: AmbienteDaTarefa, tarefa: Tarefa)
     const caminhoDaPlanilhaPreenchida = await ambiente.armazenamento.salvar(tarefa.organizacaoId, "resultados", resultado.planilhaPreenchida, "xlsx");
     await gravacoes;
     await concluirTarefa(ambiente.banco, tarefa.id, {
-      itens: resultado.itens.map((item, posicao) => ({ ...item, aba: resultado.perguntas[posicao]?.aba ?? "", linha: resultado.perguntas[posicao]?.linha ?? 0 })),
+      itens: resultado.itens.map((item, posicao) => ({
+        ...item,
+        aba: resultado.perguntas[posicao]?.aba ?? "",
+        linha: resultado.perguntas[posicao]?.linha ?? 0,
+        area: resultado.areas[posicao] ?? AREA_GERAL,
+      })),
       comportamento: resultado.comportamento,
-      metricas: calcularMetricas({ registro, itens: resultado.itens, checagens: resultado.checagens, etapas: resultado.etapas, precos: ambiente.precos }),
+      metricas: {
+        ...calcularMetricas({ registro, itens: resultado.itens, checagens: resultado.checagens, etapas: resultado.etapas, precos: ambiente.precos }),
+        perguntasEmGeralPorFalha: resultado.perguntasEmGeralPorFalha,
+      },
       caminhoDaPlanilhaPreenchida,
     });
   } catch (erro) {

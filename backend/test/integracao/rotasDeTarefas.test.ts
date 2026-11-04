@@ -117,7 +117,8 @@ describe("POST /api/tarefas e consulta da tarefa", () => {
     let chamadas = 0;
     api = {
       gerar: async (parametros: ParametrosDaGeracao): Promise<MensagemDaIa> => {
-        if (++chamadas === 2) await segura;
+        // A 1ª chamada é a classificação por área (fase N); a 3ª, o 2º lote da geração.
+        if (++chamadas === 3) await segura;
         return respondeImparesCitando(parametros);
       },
       contarTokens: async () => 1000,

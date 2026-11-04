@@ -11,6 +11,7 @@ export const VERSOES_DAS_INSTRUCOES = {
   identificacao: "identificacao-v1",
   conflito: "conflito-v2",
   revisaoDeTexto: "revisao-texto-v1",
+  classificacao: "classificacao-v1",
 } as const;
 
 export type NomeDasInstrucoes = keyof typeof VERSOES_DAS_INSTRUCOES;

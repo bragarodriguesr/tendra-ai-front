@@ -3,6 +3,7 @@ import type { Banco } from "../persistencia/banco.ts";
 import { paraItem, type ItemGravado } from "../persistencia/tarefas.ts";
 import type { ParagrafoDoItem, TipoDeAlerta } from "../rastreabilidade/montarItem.ts";
 import { porcentagemAlterada } from "./diferenca.ts";
+import { areaDoItem, AREAS_DOS_ITENS, motivoDeAreaRestrita, podeAprovarArea } from "../regras/areas.ts";
 
 /**
  * Revisão persistida (etapa B5, cenários 41 a 49, e cenários 57 a 59): editar, restaurar, aprovar,
@@ -142,11 +143,31 @@ export async function aprovarItem(banco: Banco, entrada: { tarefaId: string; num
   return banco.transaction(async (transacao) => {
     const item = await itemDaTarefa(transacao, entrada.tarefaId, entrada.numero);
     if (item.st === "sem-rascunho" || item.paras.length === 0) throw new ErroDeRevisao(400, "Item sem rascunho não pode ser aprovado.");
+    // Fase N (cenários N5 a N7): só a área da pergunta, C-Level ou, em "Geral", qualquer Aprovador.
+    if (!podeAprovarArea(entrada.pessoa.areas, item.area)) throw new ErroDeRevisao(403, motivoDeAreaRestrita(item.area));
     await transacao.query(
       `UPDATE itens SET st = 'aprovada', aprovado_por = $3, aprovado_em = now() WHERE tarefa_id = $1 AND numero = $2`,
       [entrada.tarefaId, entrada.numero, entrada.pessoa.nome],
     );
     await registrarEvento(transacao, { ...entrada, acao: "aprovacao", porcentagem: porcentagemAlterada(item.orig, textoDosParagrafos(item.paras)) });
+    return itemAtual(transacao, entrada.tarefaId, entrada.numero);
+  });
+}
+
+/**
+ * Cenário N10 (PN7): troca a área de um item ainda não aprovado. Só quem pode aprovar o item na área
+ * atual troca; o evento "area" guarda "de → para". A mesma área devolve o item, sem evento.
+ */
+export async function trocarArea(banco: Banco, entrada: { tarefaId: string; numero: number; pessoa: Pessoa; area: string }): Promise<ItemGravado> {
+  const area = areaDoItem(entrada.area);
+  if (area === null) throw new ErroDeRevisao(400, `Área inválida. Use ${AREAS_DOS_ITENS.join(", ")}.`);
+  return banco.transaction(async (transacao) => {
+    const { parasOriginais: _ignorado, ...item } = await itemDaTarefa(transacao, entrada.tarefaId, entrada.numero);
+    if (!podeAprovarArea(entrada.pessoa.areas, item.area)) throw new ErroDeRevisao(403, `Só quem aprova a área ${item.area} troca a área deste item.`);
+    if (item.st === "aprovada") throw new ErroDeRevisao(409, "Item aprovado não troca de área.");
+    if (item.area === area) return item;
+    await transacao.query("UPDATE itens SET area = $3 WHERE tarefa_id = $1 AND numero = $2", [entrada.tarefaId, entrada.numero, area]);
+    await registrarEvento(transacao, { ...entrada, acao: "area", detalhe: `${item.area} → ${area}` });
     return itemAtual(transacao, entrada.tarefaId, entrada.numero);
   });
 }
@@ -251,14 +272,14 @@ export async function avaliarItem(
 
 export interface EventoDeRevisao {
   item: string;
-  acao: "edicao" | "restauracao" | "aprovacao" | "aprovacao_removida" | "avaliacao" | "alerta_reconhecido" | "fonte_escolhida" | "revisao";
+  acao: "edicao" | "restauracao" | "aprovacao" | "aprovacao_removida" | "avaliacao" | "alerta_reconhecido" | "fonte_escolhida" | "revisao" | "area";
   pessoa: string;
   papel: string;
   em: string;
   porcentagemAlterada: number | null;
   avaliacao: string | null;
   motivo: string | null;
-  /** Tipo do alerta reconhecido ou número da fonte escolhida. */
+  /** Tipo do alerta reconhecido, número da fonte escolhida ou, na troca de área, "de → para". */
   detalhe: string | null;
 }
 

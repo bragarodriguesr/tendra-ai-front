@@ -1,7 +1,9 @@
-import type { ConfiguracaoDaIa } from "../config/config.ts";
+import { MODELO_DE_CLASSIFICACAO_PADRAO, type ConfiguracaoDaIa } from "../config/config.ts";
 import type { NomesDeCabecalho } from "../config/cabecalhos.ts";
 import { identificarPerguntas, lerPlanilha, validarArquivoDePlanilha, type ModeloDeResposta, type Pergunta } from "../documentos/planilha.ts";
 import { gerarPlanilhaPreenchida } from "../documentos/planilhaPreenchida.ts";
+import { classificarAreas } from "../geracao/classificarAreas.ts";
+import { AREA_GERAL } from "../regras/areas.ts";
 import { marcarConflitos } from "../geracao/conflitos.ts";
 import { gerarRespostas } from "../geracao/gerarRespostas.ts";
 import { criarIdentificadorComIA } from "../geracao/identificarComIA.ts";
@@ -29,8 +31,10 @@ export interface ComportamentoDaTarefa {
   esforco: ConfiguracaoDaIa["esforco"];
   modeloDeIdentificacao: string;
   modeloDeConflito: string;
+  /** Modelo da classificação por área (fase N). Ausente nas tarefas de antes da fase. */
+  modeloDeClassificacao?: string;
   /** Instruções do processamento. A revisão de texto (cenário 65) é pedida depois, na tela, e não entra aqui. */
-  instrucoes: Omit<typeof VERSOES_DAS_INSTRUCOES, "revisaoDeTexto">;
+  instrucoes: Omit<typeof VERSOES_DAS_INSTRUCOES, "revisaoDeTexto" | "classificacao"> & { classificacao?: string };
 }
 
 export interface ResultadoDaTarefa {
@@ -38,6 +42,10 @@ export interface ResultadoDaTarefa {
   origemDasPerguntas: "regra" | "ia";
   modeloDeResposta: ModeloDeResposta | null;
   itens: ItemDaRevisao[];
+  /** Área de cada item, na mesma ordem (fase N, cenário N2). */
+  areas: string[];
+  /** Perguntas em "Geral" por falha da classificação (cenário N3). */
+  perguntasEmGeralPorFalha: number;
   checagens: ChecagemDoItem[];
   /** Nomes dos documentos usados como contexto; vazio quando a base não tinha documento ativo. */
   documentos: string[];
@@ -94,7 +102,16 @@ export async function processarTarefa(opcoes: OpcoesDaTarefa): Promise<Resultado
   const perguntas = identificacao.perguntas.map((pergunta, posicao) => ({ numero: posicao + 1, texto: pergunta.texto }));
   await opcoes.aoProgredir?.(0, perguntas.length);
 
+
   const fontes = await medir("contexto", () => buscarFontes({ banco: opcoes.banco, organizacaoId: opcoes.organizacaoId, cliente: opcoes.cliente, modelo: opcoes.ia.modelo, hoje: opcoes.hoje }));
+
+  // Fase N (PN5): a área de cada pergunta, antes da geração; nunca falha a tarefa (PN6). Com a base
+  // vazia, nada vai à IA (cenários 10 e 71): todas ficam em "Geral".
+  const modeloDeClassificacao = opcoes.ia.modeloDeClassificacao ?? MODELO_DE_CLASSIFICACAO_PADRAO;
+  const classificacao =
+    fontes.tipo === "vazia"
+      ? { areas: perguntas.map(() => AREA_GERAL), falhas: 0 }
+      : await medir("classificacao", () => classificarAreas({ cliente: opcoes.cliente, modelo: modeloDeClassificacao, perguntas }));
 
   let checados: ItemChecado[];
   if (fontes.tipo === "vazia") {
@@ -142,6 +159,8 @@ export async function processarTarefa(opcoes: OpcoesDaTarefa): Promise<Resultado
     origemDasPerguntas: identificacao.origem,
     modeloDeResposta: identificacao.modelo,
     itens: finais,
+    areas: classificacao.areas,
+    perguntasEmGeralPorFalha: classificacao.falhas,
     checagens: checados.map(({ checagem }) => checagem),
     documentos: fontes.tipo === "vazia" ? [] : fontes.contexto.documentos.map((documento) => documento.nome),
     comportamento: {
@@ -151,7 +170,13 @@ export async function processarTarefa(opcoes: OpcoesDaTarefa): Promise<Resultado
       esforco: opcoes.ia.esforco,
       modeloDeIdentificacao: opcoes.ia.modeloDeIdentificacao,
       modeloDeConflito: opcoes.ia.modeloDeConflito,
-      instrucoes: { geracao: VERSOES_DAS_INSTRUCOES.geracao, identificacao: VERSOES_DAS_INSTRUCOES.identificacao, conflito: VERSOES_DAS_INSTRUCOES.conflito },
+      modeloDeClassificacao,
+      instrucoes: {
+        geracao: VERSOES_DAS_INSTRUCOES.geracao,
+        identificacao: VERSOES_DAS_INSTRUCOES.identificacao,
+        conflito: VERSOES_DAS_INSTRUCOES.conflito,
+        classificacao: VERSOES_DAS_INSTRUCOES.classificacao,
+      },
     },
     etapas,
     planilhaPreenchida,

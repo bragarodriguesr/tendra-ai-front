@@ -62,6 +62,7 @@ describe("Cenário 38 · configuração da IA", () => {
       modeloDeIdentificacao: "claude-haiku-5-5",
       modeloDeConflito: "claude-sonnet-5-5",
       modeloDeRevisaoDeTexto: "claude-haiku-5-5",
+      modeloDeClassificacao: "claude-haiku-5-5",
       esforco: "medium",
       tamanhoDoLote: 10,
     });
@@ -75,6 +76,7 @@ describe("Cenário 38 · configuração da IA", () => {
         TENDRA_MODELO_IDENTIFICACAO: "claude-haiku-5-5",
         TENDRA_MODELO_CONFLITO: "claude-sonnet-5-5",
         TENDRA_MODELO_REVISAO_TEXTO: "claude-sonnet-5-5",
+        TENDRA_MODELO_CLASSIFICACAO: "claude-sonnet-5-5",
         TENDRA_ESFORCO: "high",
         TENDRA_TAMANHO_LOTE: "5",
       },
@@ -85,6 +87,7 @@ describe("Cenário 38 · configuração da IA", () => {
       modeloDeIdentificacao: "claude-haiku-5-5",
       modeloDeConflito: "claude-sonnet-5-5",
       modeloDeRevisaoDeTexto: "claude-sonnet-5-5",
+      modeloDeClassificacao: "claude-sonnet-5-5",
       esforco: "high",
       tamanhoDoLote: 5,
     });

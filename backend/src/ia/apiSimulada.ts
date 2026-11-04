@@ -57,6 +57,23 @@ function identificar(texto: string): string {
   return JSON.stringify({ perguntas });
 }
 
+/** Classificação por área (fase N): por palavras-chave do assunto; sem nenhuma, "Geral". */
+const PALAVRAS_DAS_AREAS: [string, RegExp][] = [
+  ["Segurança e privacidade", /lgpd|privacidade|dados pessoais|criptograf|seguran[çc]a|incidente|acesso|vazamento|iso 27001/i],
+  ["Jurídico", /contrat|cl[aá]usula|multa|indeniza|responsabilidade|foro|garantia|propriedade intelectual/i],
+  ["Comercial", /pre[çc]o|desconto|pagamento|licen[çc]a|plano|refer[eê]ncia|cnpj|faturamento/i],
+  ["Tecnologia", /sla|disponibilidade|infraestrutura|hospedagem|api|backup|arquitetura|nuvem|suporte|rpo|rto/i],
+  ["Produto", /funcionalidade|roadmap|usabilidade|customiza|integra[çc]|relat[oó]rio|aplicativo/i],
+];
+
+function classificar(texto: string): string {
+  const itens = [...texto.matchAll(/^\[P(\d+)\] (.*)$/gm)].map(([, numero, pergunta]) => ({
+    numero: Number(numero),
+    area: PALAVRAS_DAS_AREAS.find(([, padrao]) => padrao.test(pergunta ?? ""))?.[0] ?? "Geral",
+  }));
+  return JSON.stringify({ itens });
+}
+
 function gerarRespostas(parametros: ParametrosDaGeracao): MensagemDaIa["content"] {
   const conteudo = parametros.messages[0]?.content;
   const documentos = Array.isArray(conteudo)
@@ -110,8 +127,9 @@ export function criarApiSimulada(): ApiDoClaude {
         return mensagem(parametros.model, [textoDoBloco(JSON.stringify({ texto: revisado }))]);
       }
       if (parametros.output_config?.format) {
-        // Identificação de perguntas ou conflito: a simulada nunca aponta conflito.
-        return mensagem(parametros.model, [textoDoBloco(texto.startsWith("<planilha>") ? identificar(texto) : JSON.stringify({ itens: [] }))]);
+        // Identificação de perguntas, classificação por área ou conflito: a simulada nunca aponta conflito.
+        const saida = texto.startsWith("<planilha>") ? identificar(texto) : texto.startsWith("<perguntas>") ? classificar(texto) : JSON.stringify({ itens: [] });
+        return mensagem(parametros.model, [textoDoBloco(saida)]);
       }
       return mensagem(parametros.model, gerarRespostas(parametros));
     },
