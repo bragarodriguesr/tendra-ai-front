@@ -64,6 +64,23 @@ A geração das respostas não muda.
 - Áreas do publicado ajustadas no banco depois do deploy (PN8): `userteste3@gmail.com` com Segurança e privacidade e Tecnologia; `antonio@vereda.com.br` com Jurídico; demais Aprovadores em C-Level. Antes, o grupo confirma o ponto em aberto do spec sobre as organizações ficarem sem C-Level.
 - **Verificação:** o grupo confere no ambiente publicado, com evidências no banco: eventos `aprovacao` e `area`, e itens por área.
 
+## Situação (04/11/2026): implementada, exceto a avaliação da classificação (N4)
+
+- **N1 a N3 e N5:** implementadas.
+  - Backend: 374 testes no PGlite e no Postgres. Os novos cobrem:
+    - áreas no cadastro e na sessão;
+    - classificação com falha da IA e com área fora da lista;
+    - aprovação na própria área, em outra área, por C-Level e em "Geral";
+    - troca de área (permissões, item aprovado, área inválida, histórico);
+    - migração 011 com dados de antes da fase;
+    - reclassificação das tarefas em aberto, com nova tentativa depois de falha.
+  - Front: testes de unidade das regras de área e um teste de ponta a ponta com o Aprovador do Jurídico (ordem, "Minha área", motivo, troca de área). Suíte de ponta a ponta completa verde.
+  - No navegador, com um backend de teste e a RFP-02 classificada pela API simulada, conferi:
+    - Jurídico, Segurança e Tecnologia, C-Level e Revisor;
+    - computador e celular, sem rolagem lateral.
+- **N4 (avaliação da classificação):** pendente. Falta a rotulação das três RFPs do gabarito, que o grupo fará depois (spec, perguntas em aberto). Até lá, a classificação roda com a API real sem a medida de concordância.
+- **N6 (publicação):** pendente do merge. Antes de ajustar as áreas do publicado, confirmar o ponto em aberto sobre as organizações ficarem sem C-Level.
+
 ## Checklist de aceite
 
 | Cenário | Como conferir |

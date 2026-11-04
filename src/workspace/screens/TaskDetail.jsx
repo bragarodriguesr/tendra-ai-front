@@ -128,12 +128,17 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
                     {r.hasAlert ? <span style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--danger)", fontSize: 12, fontWeight: 500 }}><Icon name="triangle-alert" size="sm" />{r.alertText}</span> : null}
                   </div>
                   <span style={{ color: "var(--n-900)", lineHeight: 1.4 }}>{r.q}</span>
-                  <div><Badge tone={r.tone} icon={r.icon}>{r.st}</Badge></div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <Badge tone={r.tone} icon={r.icon}>{r.st}</Badge>
+                    <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--n-500)" }}><Icon name="building-2" size="sm" />{r.area}</span>
+                  </div>
                 </ClickRow>
               ) : (
-                <ClickRow key={r.id} onClick={r.openFromTask} style={{ display: "grid", minWidth: 980, gridTemplateColumns: "120px minmax(0,1fr) 150px 150px", gap: 16, alignItems: "center", padding: "14px 20px", borderTop: "1px solid var(--n-100)" }}>
+                <ClickRow key={r.id} onClick={r.openFromTask} style={{ display: "grid", minWidth: 980, gridTemplateColumns: "120px minmax(0,1fr) 170px 150px 150px", gap: 16, alignItems: "center", padding: "14px 20px", borderTop: "1px solid var(--n-100)" }}>
                   <span style={mono(12)}>{r.code}</span>
                   <span style={{ color: "var(--n-900)" }}>{r.q}</span>
+                  {/* Coluna "Área" (fase N, cenário N11). */}
+                  <span style={{ fontSize: 13, color: "var(--n-700)" }}>{r.area}</span>
                   <div><Badge tone={r.tone} icon={r.icon}>{r.st}</Badge></div>
                   {r.hasAlert ? (
                     <span style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--danger)", fontSize: 13, fontWeight: 500 }}>

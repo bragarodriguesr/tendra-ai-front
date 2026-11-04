@@ -62,6 +62,8 @@ A interface do MVP precisa provar que o time revisa mais rápido e com mais conf
 
 O MVP tem dois papéis, **Revisor** e **Aprovador**, e um único ponto de aprovação. O papel Leitor e a aprovação multinível ficam fora.
 
+**Áreas do Aprovador (fase N, 04/11/2026; `spec/SPEC_FASE_N.md`).** Cada pergunta da RFP tem uma área (Produto, Tecnologia, Segurança e privacidade, Comercial, Jurídico ou Geral), atribuída pela IA no processamento e trocável na Revisão por quem pode aprovar a pergunta. O Aprovador tem uma ou mais áreas, ou **C-Level** (todas). Só um Aprovador da área da pergunta (ou C-Level) a aprova; "Geral", qualquer Aprovador. O **Revisor não tem área**: vê e revisa tudo, na ordem original. O menu do usuário mostra "Aprovador · Jurídico".
+
 **Personas do discovery** (sintéticas; ver limite de evidência na seção 1). Os nomes também são usados como usuários de exemplo no front.
 
 | Persona | Papel no front | Job to be done | O que a interface entrega |
@@ -86,7 +88,8 @@ O mapeamento persona-papel é uma sugestão de partida; quem recebe cada papel �
 | Editar a resposta sugerida | Sim | Sim | Implementado |
 | Reconhecer um alerta (registrado com nome e horário) | Sim | Sim | Implementado |
 | Marcar item como "Revisado" | Sim | Sim | Implementado |
-| **Aprovar item** | Não | Sim | Implementado; para o Revisor o botão "Aprovar resposta" não aparece (26/10/2026) |
+| **Aprovar item** | Não | Só da sua área (ou C-Level; "Geral", todos) | Implementado; para o Revisor o botão "Aprovar resposta" não aparece (26/10/2026). Fora da área, o botão fica desabilitado com "Só a área X ou C-Level aprova esta resposta." e a rota recusa com 403 (fase N, 04/11/2026) |
+| Trocar a área de uma pergunta | Não | Quem pode aprová-la, antes de aprovada | Implementado (fase N, 04/11/2026); a troca fica no histórico |
 | **Exportar o documento final** | Só da tarefa pronta | Sim | Implementado; o Revisor baixa a planilha preenchida só da tarefa "Pronta" (100% aprovada, sem alerta pendente); nas demais o botão fica desabilitado (26/10/2026) |
 | Ver histórico de aprovações e revisões | Sim | Sim | Implementado |
 
@@ -475,6 +478,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 **F-22 · P0 · Portões de validação: revisar e aprovar** (MoSCoW: Must) — Implementado
 
 - "Marcar como revisado" está disponível para os dois papéis. "Aprovar resposta" só para o Aprovador; para o Revisor o botão não aparece (26/10/2026).
+- **Área (fase N, 04/11/2026):** cada item mostra a sua área, na lista e no topo do item. Para o Aprovador com área (não C-Level), a lista vem com as perguntas da sua área primeiro, abre na primeira delas ainda não aprovada, e o filtro ganha "Minha área". Quem pode aprovar a pergunta troca a área num seletor no topo do item, enquanto ela não estiver aprovada. Nos detalhes da tarefa, a tabela ganha a coluna "Área".
 - **Ao revisar:** o item vai para *Revisada* e a tela confirma "Item revisado · Pronto para aprovação.". A barra de ações passa a mostrar "Pronta para aprovação.".
 - **Ao aprovar:**
   - o item mostra o selo "Aprovado por [nome] · [data hora]";

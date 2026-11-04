@@ -2,8 +2,10 @@ import React from "react";
 import { seedItems, seedDocs, genItems, nowStr, ITEM_TASKS, GENERATED, TASKS, TASK_IDS } from "./data.js";
 import {
   MENSAGEM_FORMATO_DA_RFP, aprovarItemNaApi, avaliarItemNaApi, criarTarefa, editarTextoDoItem, listarAvaliacoes, listarPessoas, restaurarItem, dataHoraDaTela, definirDocumentoAtivo, enderecoDaPlanilha, enviarDocumentosDaBase, hojeIso, listarDocumentosDaBase, listarItensDaTarefa,
-  listarTarefas, paraDocumentoDaTela, paraItemDaTela, reconhecerAlertaNaApi, escolherFonteNaApi, revisarItemNaApi, revisarTextoComIa, excluirTarefa, obterEmpresaDaTarefa, listarUsuarios
+  listarTarefas, paraDocumentoDaTela, paraItemDaTela, reconhecerAlertaNaApi, escolherFonteNaApi, revisarItemNaApi, trocarAreaNaApi, revisarTextoComIa, excluirTarefa, obterEmpresaDaTarefa, listarUsuarios
 , entrar, obterSessao, quandoPerderASessao, sair} from "../api.js";
+
+import { areaDoItem, areasPreferidas, ordenarPorArea } from "./areas.js";
 
 let contactSeq = 0;
 // Estado dos alertas no navegador, por dono: com login, organização e pessoa da sessão (fase K, cenário 75).
@@ -247,7 +249,9 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
       itemsOf(id, s = ref.current) { return id === s.itemsTask ? s.items : (s.store[id] || (api.serverTask(id, s) ? [] : api.genFor(id))); },
       /** Troca os itens da Revisão para os da tarefa `tid`, guardando os da tarefa anterior. */
       swapTo(tid, s = ref.current) {
-        const next = api.itemsOf(tid, s), first = next.find((i) => i.st !== "aprovada") || next[0];
+        // "Minha área primeiro" (fase N, cenário N8): abre no primeiro item da área ainda não aprovado.
+        const next = api.itemsOf(tid, s), ordenados = ordenarPorArea(next, areasPreferidas(s));
+        const first = ordenados.find((i) => i.st !== "aprovada") || ordenados[0];
         const store = s.itemsTask ? { ...s.store, [s.itemsTask]: s.items } : s.store;
         return { items: next, store, itemsTask: tid, sel: first ? first.id : null, filter: "todos", busca: "" };
       },
@@ -281,8 +285,15 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         toastTimer.current = setTimeout(() => setState({ toast: null }), 4000);
       },
       upd(id, fn) { setState((s) => ({ items: s.items.map((i) => (i.id === id ? fn({ ...i }) : i)) })); },
+      /** Itens do filtro, com as da área do Aprovador primeiro (fase N, cenários N8 e N9). */
       visible(s = ref.current) {
-        return s.items.filter((i) => (s.filter === "todos" ? true : s.filter === "alerta" ? i.alerts.some(alertaPendente) : i.st === s.filter));
+        const preferidas = areasPreferidas(s);
+        const doFiltro = s.items.filter((i) =>
+          s.filter === "todos" ? true
+            : s.filter === "alerta" ? i.alerts.some(alertaPendente)
+              : s.filter === "minha-area" ? !!preferidas && preferidas.includes(areaDoItem(i))
+                : i.st === s.filter);
+        return ordenarPorArea(doFiltro, preferidas);
       },
       step(d) {
         const v = api.visible();
@@ -536,6 +547,16 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         const by = api.name(), at = nowStr();
         api.upd(id, (i) => { i.st = "revisada"; i.rby = by; i.rat = at; return i; });
         api.toast("Item revisado", "Pronto para aprovação.");
+      },
+      /** Troca da área do item (fase N, cenário N10). */
+      async changeArea(id, area) {
+        if (api.isServerItem()) {
+          const item = await api.serverAction(id, (tid, n, p) => trocarAreaNaApi(tid, n, p, area), "Área não alterada");
+          if (item) api.toast("Área alterada", `A pergunta passou para ${item.area}.`, "neutral");
+          return;
+        }
+        api.upd(id, (i) => { i.area = area; return i; });
+        api.toast("Área alterada", `A pergunta passou para ${area}.`, "neutral");
       },
       async restore(id) {
         const s = ref.current;

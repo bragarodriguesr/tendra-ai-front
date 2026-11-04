@@ -77,11 +77,12 @@ flowchart LR
 
 ## 3. Gerar respostas com fonte
 
-O núcleo do produto. No máximo duas chamadas de IA por lote.
+O núcleo do produto. No máximo duas chamadas de IA por lote, mais uma chamada leve por tarefa para a área das perguntas (fase N, 04/11/2026).
 
 ```mermaid
 flowchart LR
     G1["1 · Montar o contexto<br/>Sistema<br/>Só documentos ativos e prontos<br/>Base vazia: tudo Sem rascunho, sem IA"]:::sistema
+    G1B["1b · Classificar por área<br/>IA leve · Haiku 5.5, saída estruturada<br/>Só o texto das perguntas<br/>Falha ou área fora da lista: Geral"]:::ia
     G2["2 · Redigir por lote<br/>IA 1 · Claude com citações<br/>Cerca de 10 perguntas, base em cache<br/>Documento é dado, nunca instrução"]:::ia
     G3["3 · Conferir as citações<br/>Sistema · sem IA<br/>Trecho existe no documento? Senão, descarta"]:::sistema
     G4["4 · Calcular os alertas<br/>Sistema · regras<br/>Sem contexto, baixa confiança,<br/>fonte antiga, termo crítico"]:::sistema
@@ -89,7 +90,7 @@ flowchart LR
     G5[("5 · Gravar os itens<br/>Sugerida ou Sem rascunho,<br/>parágrafos, fontes, alertas")]:::dados
     F["Falha do provedor de IA<br/>Nova tentativa; depois tarefa em Falha<br/>Tentar de novo só nos lotes pendentes"]:::excecao
 
-    G1 --> G2 --> G3 --> G4 --> G5
+    G1 --> G1B --> G2 --> G3 --> G4 --> G5
     G4 --> G4B --> G5
     G2 -.-> F
 

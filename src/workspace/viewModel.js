@@ -4,6 +4,7 @@ import { correspondeABusca, termosDaBusca } from "./buscaDePerguntas.js";
 import { numeroDoCartao } from "./filtroPeloProgresso.js";
 import { hojeIso, contarPalavras, MINIMO_DE_PALAVRAS_DA_REVISAO } from "../api.js";
 import { cnpjSemMascara, cnpjValido } from "./cnpj.js";
+import { AREAS_DOS_ITENS, areaDoItem, areasDaSessao, areasPreferidas, motivoDeAreaRestrita, podeAprovarArea } from "./areas.js";
 
 const DANGER = "#A8402E";
 
@@ -101,7 +102,8 @@ const STATUS_GROUPS = [
 ];
 
 // "Todos" fica fixo como botão; as opções do menu, em ordem alfabética (SPEC_FASE_M.md, M13).
-const FILTERS = [["todos", "Todos"], ["alerta", "Alerta pendente"], ["aprovada", "Aprovada"], ["em-revisao", "Em revisão"], ["revisada", "Revisada"], ["sem-rascunho", "Sem rascunho"], ["sugerida", "Sugerida"]];
+// "Minha área" (fase N, cenário N9) só aparece para o Aprovador com área que não seja C-Level.
+const FILTERS = [["todos", "Todos"], ["alerta", "Alerta pendente"], ["aprovada", "Aprovada"], ["em-revisao", "Em revisão"], ["minha-area", "Minha área"], ["revisada", "Revisada"], ["sem-rascunho", "Sem rascunho"], ["sugerida", "Sugerida"]];
 
 /** Deriva tudo o que as telas mostram a partir do estado. */
 export function buildView(s, ws) {
@@ -275,13 +277,16 @@ export function buildView(s, ws) {
   const destaqueDoCartao = numeroDoCartao(s.filter, Object.fromEntries(segs.map((g) => [g.value, g.n])));
 
   // filtros e lista
-  const cnt = (k) => (k === "todos" ? s.items.length : k === "alerta" ? c.alerts : s.items.filter((i) => i.st === k).length);
-  const filterTabs = FILTERS.map(([value, label]) => ({ value, label, count: cnt(value) }));
+  const preferidas = areasPreferidas(s);
+  const cnt = (k) => (k === "todos" ? s.items.length : k === "alerta" ? c.alerts
+    : k === "minha-area" ? s.items.filter((i) => preferidas.includes(areaDoItem(i))).length
+      : s.items.filter((i) => i.st === k).length);
+  const filterTabs = FILTERS.filter(([value]) => value !== "minha-area" || preferidas).map(([value, label]) => ({ value, label, count: cnt(value) }));
   const vis = ws.visible(s);
   const rows = vis.map((i) => {
     const st = ST[i.st], p = ws.pendingCount(i);
     return {
-      id: i.id, code: code(i), q: i.q.length > 68 ? i.q.slice(0, 66) + "…" : i.q, st: st.l, icon: st.i, tone: st.tone,
+      id: i.id, code: code(i), q: i.q.length > 68 ? i.q.slice(0, 66) + "…" : i.q, st: st.l, icon: st.i, tone: st.tone, area: areaDoItem(i),
       hasAlert: p > 0, alertText: p + " " + plural(p, "alerta", "alertas"), active: i.id === s.sel,
       // A linha vem da tabela já filtrada: abre a Revisão com o mesmo filtro (SPEC_FASE_M.md, M6).
       open: () => ws.select(i.id), openFromTask: () => ws.go("review", { taskId: s.itemsTask, sel: i.id })
@@ -329,6 +334,10 @@ export function buildView(s, ws) {
     else if (p > 0) { blockText = `Falta tratar ${alertWord} antes de aprovar.`; noRevise = true; noApprove = true; }
     // O Revisor não aprova: o botão nem aparece para ele (26/10/2026).
     if (!isA) noApprove = true;
+    // Fase N (cenário N6): pergunta de outra área, com o motivo.
+    const daMinhaArea = podeAprovarArea(s, it);
+    // O motivo da área vem na frente: tratar os alertas não basta para quem não aprova esta área.
+    if (isA && !daMinhaArea) { noApprove = true; if (it.st !== "aprovada") blockText = motivoDeAreaRestrita(it); }
     if (it.st === "revisada") noRevise = true;
     const openSrc = (k) => () => ws.setState({ drawer: { id: it.id, k } });
     const decided = it.srcs.some((x) => x.conflict && x.chosen);
@@ -367,6 +376,9 @@ export function buildView(s, ws) {
       // Item sem rascunho também tem editor: a resposta escrita fica marcada como manual (cenário 61).
       canEdit: true,
       isApprovedOrRevised: it.st === "revisada" || it.st === "aprovada", canApprove: isA,
+      // Área da pergunta (fase N): todos veem; só quem pode aprovar troca, enquanto não aprovado (N10).
+      area: areaDoItem(it), areaOptions: AREAS_DOS_ITENS,
+      canChangeArea: isA && daMinhaArea && it.st !== "aprovada",
       stateHint: it.st === "aprovada" ? "Editar remove a aprovação." : "Pronta para aprovação."
     };
   }
@@ -517,6 +529,8 @@ export function buildView(s, ws) {
 
   return {
     isA, online, podeExportar, userName: ws.name(), navGroups, navValue,
+    // Áreas do Aprovador da sessão, no menu do usuário (fase N, cenário N1).
+    userAreas: areasDaSessao(s) || [],
     // Nova RFP/RFI só com algum documento carregado na base.
     canCreate: !ws.baseVazia(s),
     deletingTask: s.deleting ? tasks.find((t) => t.id === s.deleting) || null : null,
