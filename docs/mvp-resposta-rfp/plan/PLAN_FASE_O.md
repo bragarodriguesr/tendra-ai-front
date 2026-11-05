@@ -64,7 +64,7 @@ A geração, a classificação por área e a regra de download (fase J) não mud
 - Merge pela conta dona do time na Vercel; deploy no Render e migração 012 conferida no Supabase. A RFP-04 da Pulse fica em andamento.
 - **Verificação:** o grupo confere no ambiente publicado, com a situação das tarefas no banco.
 
-## Situação (05/11/2026): implementada, aguardando merge e publicação
+## Situação (05/11/2026): implementada e conferida no ambiente publicado
 
 - **O1 (banco e rotas):** migração 012, `mudarSituacao` numa transação com a linha da tarefa travada, rotas `finalizar`, `arquivar` e `reativar`, só leitura em `itemDaTarefa` e no "Revisar com IA", `DELETE` de finalizada recusado e reclassificação só das em andamento.
   - 386 testes no PGlite e no Postgres. Os novos cobrem finalizar (só a pronta, pelo Revisor), arquivar e reativar (só o Aprovador, não durante o processamento), as nove rotas de mudança de item recusadas com 409, exclusão da arquivada e recusa da finalizada, 404 para outra organização (também na suíte de isolamento) e a migração com dados de antes da fase.
@@ -72,7 +72,18 @@ A geração, a classificação por área e a regra de download (fase J) não mud
   - Ícones novos do Lucide: `archive`, `rotate-ccw` e `lightbulb`.
   - 19 testes de unidade e 80 de ponta a ponta verdes, com o novo `e2e/cicloDaTarefa.spec.js` (O1 a O15) e a jornada e o menu lateral ajustados.
   - Conferi no navegador, no computador (inclusive a 1.024 px e com o menu recolhido) e no celular: as três listas, a Revisão só para leitura, a Exportação com o box, a Dica e os detalhes do documento.
-- **O5 (publicação):** pendente.
+- **O5 (publicação):** feita e conferida.
+  - **Deploy:** merge do PR #90 às 19:30 UTC, com a conta dona do time na Vercel, sem bloqueio. Vercel pronta e Render no ar às 19:31.
+  - **Migração 012 conferida no Supabase:** as 4 tarefas em andamento, sem autoria, inclusive a RFP-04 da Pulse (O16).
+  - **Teste manual do grupo (05/11/2026):** todas as mudanças feitas pelo User Teste 3 (Aprovador), na Pulse Benefícios, e registradas no log do backend e no banco:
+    - 20:37 UTC: arquivou a RFP-04 enviada às 17:22 (5 itens, nenhum aprovado) (O10);
+    - 20:38: finalizou pelo box da Exportação a RFP-04 de 24/10, com os 5 itens aprovados (O6, O7);
+    - 20:39: reativou a RFP-04 arquivada (O12);
+    - 20:40: arquivou a mesma RFP-04 de novo, que segue arquivada.
+  - **Resultado no banco:** a RFP-01 e a RFP-02 em andamento; uma RFP-04 finalizada e a outra arquivada, ambas por User Teste 3.
+  - **Só leitura (O11):** nenhum evento de item gravado depois do deploy, nem nas tarefas encerradas.
+  - A RFP-04 de 24/10, que a migração deixou em andamento como pedido, foi finalizada pelo grupo no teste, pelo caminho normal do box.
+  - A Base (Dica, tabela e detalhes do documento), a ordem, o filtro e a busca da Exportação e os contadores foram conferidos pelo grupo no teste manual. São mudanças de tela, sem registro no banco.
 
 ## Checklist de aceite
 
