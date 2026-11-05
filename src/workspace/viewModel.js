@@ -519,8 +519,10 @@ export function buildView(s, ws) {
   // histórico
   const MERIDIAN = "Questionário de segurança — Banco Meridian";
   const liveSrcs = (i) => i.srcs.map((x, n) => ({ label: `${x.doc} · ${x.loc}`, open: () => ws.setState({ drawer: { id: i.id, k: n + 1 } }) }));
-  const live = t1Items.filter((i) => i.st === "aprovada").map((i) => ({ key: i.id, kind: "aprovacao", q: i.q, task: MERIDIAN, full: i.paras.map((p) => p.t).join(" "), by: i.by, at: i.at, age: 0, srcs: liveSrcs(i) }));
-  const liveRev = t1Items.filter((i) => i.st === "revisada").map((i) => ({ key: i.id + "-rev", kind: "revisao", q: i.q, task: MERIDIAN, full: i.paras.map((p) => p.t).join(" "), by: i.rby, at: i.rat, age: 0, srcs: liveSrcs(i) }));
+  // A seta de cada registro abre o que ele descreve: a pergunta na Revisão ou a tarefa (ajuste de 05/11/2026).
+  const abrirItem = (taskId, sel) => () => ws.go("review", { taskId, sel, filter: "todos" });
+  const live = t1Items.filter((i) => i.st === "aprovada").map((i) => ({ key: i.id, kind: "aprovacao", q: i.q, task: MERIDIAN, full: i.paras.map((p) => p.t).join(" "), by: i.by, at: i.at, age: 0, srcs: liveSrcs(i), go: abrirItem("t1", i.id) }));
+  const liveRev = t1Items.filter((i) => i.st === "revisada").map((i) => ({ key: i.id + "-rev", kind: "revisao", q: i.q, task: MERIDIAN, full: i.paras.map((p) => p.t).join(" "), by: i.rby, at: i.rat, age: 0, srcs: liveSrcs(i), go: abrirItem("t1", i.id) }));
   const past = [
     { key: "h1", kind: "aprovacao", q: "Onde ficam armazenados os backups?", task: "RFP Aurora Seguros — 2025", full: "Backups ficam em região distinta da produção, criptografados com AES-256 e retidos por 35 dias.", by: "Marcelo Vieira", at: "14/03/2026 10:12", age: 199, srcs: [{ label: "Politica_Backup_DR.pdf · p. 7" }] },
     { key: "h2", kind: "aprovacao", q: "A plataforma possui certificação ISO 27001?", task: "RFI Helix Saúde — 2026", full: "Sim. A certificação ISO/IEC 27001 está vigente, com escopo que cobre desenvolvimento e operação da plataforma.", by: "Marcelo Vieira", at: "02/07/2026 16:48", age: 89, srcs: [{ label: "Certificado_ISO27001.pdf · p. 1" }] },
@@ -530,7 +532,7 @@ export function buildView(s, ws) {
   ];
   // Com o servidor: aprovações e revisões dos itens das tarefas já lidas.
   const serverHist = tasks.filter((t) => t.isServer && t.hasItems).flatMap((t) => ws.itemsOf(t.id, s).flatMap((i) => {
-    const base = { q: i.q, task: t.name, full: i.paras.map((p) => p.t).join(" "), age: 0, srcs: i.srcs.map((x) => ({ label: `${x.doc} · ${x.loc}` })) };
+    const base = { q: i.q, task: t.name, full: i.paras.map((p) => p.t).join(" "), age: 0, srcs: i.srcs.map((x) => ({ label: `${x.doc} · ${x.loc}` })), go: abrirItem(t.id, i.id) };
     return [
       ...(i.st === "aprovada" ? [{ ...base, key: t.id + i.id, kind: "aprovacao", by: i.by, at: i.at, ms: Date.parse(i.atIso) || 0 }] : []),
       ...(i.st === "revisada" ? [{ ...base, key: t.id + i.id + "-rev", kind: "revisao", by: i.rby, at: i.rat, ms: Date.parse(i.ratIso) || 0 }] : [])
@@ -543,7 +545,10 @@ export function buildView(s, ws) {
     return {
       key: `tarefa-${e.tarefaId}-${e.acao}-${e.em}-${n}`, kind: "tarefa", action: e.acao, kindLabel: label,
       q: e.tarefa, task: e.empresa || "Empresa não informada", full: `${e.tarefa} ${verbo} ${quem}.`,
-      by: e.pessoa, at: dataHoraDaTelaLocal(e.em), ms: Date.parse(e.em), age: Math.max(0, Math.floor((Date.now() - Date.parse(e.em)) / 86400000)), srcs: []
+      by: e.pessoa, at: dataHoraDaTelaLocal(e.em), ms: Date.parse(e.em), age: Math.max(0, Math.floor((Date.now() - Date.parse(e.em)) / 86400000)), srcs: [],
+      // A tarefa excluída não tem para onde levar: a seta fica desabilitada, com o motivo.
+      go: s.tarefas.some((t) => t.id === e.tarefaId) ? () => ws.go("task", { taskId: e.tarefaId }) : null,
+      goOff: "A tarefa foi excluída."
     };
   });
   // Mais recentes primeiro, misturando itens e tarefas.
@@ -556,9 +561,9 @@ export function buildView(s, ws) {
     kindLabel: h.kind === "tarefa" ? h.kindLabel : h.kind === "revisao" ? "Revisada" : "Aprovada",
     kindTone: h.kind === "tarefa" ? (TOM_DA_ACAO[h.action] || "neutral") : h.kind === "revisao" ? "neutral" : "approved",
     kindIcon: h.kind === "tarefa" ? (ICONE_DA_ACAO[h.action] || "layout-grid") : h.kind === "revisao" ? "check" : "shield-check",
-    imported: !!h.imported, ageText: h.age === 0 ? "hoje" : h.age === 1 ? "1 dia" : h.age + " dias", open: s.expanded === h.key,
-    toggle: () => ws.setState((x) => ({ expanded: x.expanded === h.key ? null : h.key })),
-    srcs: h.srcs.map((x) => ({ label: x.label, open: x.open || (() => ws.toast("Fonte de histórico", "Abra a tarefa de origem para ver o trecho.", "neutral")) }))
+    imported: !!h.imported,
+    goLabel: h.kind === "tarefa" ? `Abrir a tarefa ${h.q}` : `Abrir a pergunta ${h.q}`, goTip: h.kind === "tarefa" ? "Abrir tarefa" : "Abrir pergunta",
+    go: h.go || null, goOff: h.go ? null : h.goOff || "Registro importado: a tarefa de origem não está no Tendra.ai."
   }));
 
   // Alertas do sino: tarefas e base de conhecimento (nunca os alertas de itens da Revisão).

@@ -55,7 +55,7 @@ const initialState = ({ initialScreen, role }) => ({
   deleting: null, excluindo: false,
   // Fase D: "compartilhado" quando o backend tem login; a sessão traz nome e papel da pessoa e, na fase K, o nome da organização.
   modo: "local", sessao: null,
-  exported: null, exported4: null, exported8: null, expanded: null,
+  exported: null, exported4: null, exported8: null,
   form: emptyForm(),
   // Último salvamento de cada item, por "tarefa/item": cada resposta tem o seu indicador.
   fb: {}, savedAt: {}, tick: 0, taskRetry: false, alertsRead: {}, alertsHidden: {}, alertsDone: {},
