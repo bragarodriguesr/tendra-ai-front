@@ -75,6 +75,25 @@ const STEPS = [
   { title: "Revisar e aprovar", meta: "Item a item, com a fonte ao lado" }
 ];
 
+// Cabeçalho de cada passo: o título e o texto acompanham o passo aberto (revisão de design de 05/11/2026).
+const CABECALHOS = [
+  {
+    eyebrow: "Primeiro uso · Base de conhecimento",
+    titulo: "Suba os documentos que sustentam suas respostas",
+    texto: "Cada rascunho da Tendra.ai cita o documento de onde veio. Propostas anteriores, políticas, contratos padrão e certificados dão contexto às próximas RFPs. Mais documentos, rascunhos melhores."
+  },
+  {
+    eyebrow: "Primeiro uso · Nova RFP",
+    titulo: "Importe a primeira lista de perguntas",
+    texto: "Envie a planilha da RFP ou do questionário. A Tendra.ai identifica as perguntas, redige um rascunho para cada uma com a fonte da base e aponta o que precisa de atenção."
+  },
+  {
+    eyebrow: "Primeiro uso · Revisão",
+    titulo: "Revise e aprove item a item",
+    texto: "Confira cada rascunho com a fonte ao lado, edite o que for preciso e trate os alertas. Nada sai sem a aprovação de uma pessoa."
+  }
+];
+
 /**
  * Título de um passo: navega para ele, sem aparência de botão. Concluído, ganha a marca limão; o passo
  * seguinte ao atual fica bloqueado até o atual ser concluído.
@@ -118,13 +137,14 @@ export function Onboarding({ v, ws, state, pad, isMobile }) {
     if (current > anterior.current) ws.setState({ onbStep: null });
     anterior.current = current;
   }, [ws, current]);
+  const cabecalho = CABECALHOS[Math.min(Math.max((shown || 1) - 1, 0), CABECALHOS.length - 1)];
   const meta1 = online ? (sent ? `${plural(sent, "documento", "documentos")} na base · ${ready} ${ready === 1 ? "ativo" : "ativos"}` : "Nenhum documento na base") : sent ? `${plural(sent, "enviado", "enviados")} · ${done} processados` : "Nenhum documento enviado";
   return (
     <Page pad={pad} gap={32}>
       <div style={{ display: "grid", gap: 8 }}>
-        <MonoLabel tone="sage">Primeiro uso · Banco de conhecimento</MonoLabel>
-        <h1 style={{ margin: 0, fontFamily: DISPLAY, fontWeight: 600, fontSize: isMobile ? 26 : 30, lineHeight: 1.18, letterSpacing: "-.02em", color: "var(--n-900)", textWrap: "balance" }}>Suba os documentos que sustentam suas respostas</h1>
-        <p style={{ margin: 0, maxWidth: "66ch", fontSize: 15, lineHeight: 1.6, color: "var(--n-700)", textWrap: "pretty" }}>Cada rascunho da Tendra.ai cita o documento de onde veio. Propostas anteriores, políticas, contratos padrão e certificados dão contexto às próximas RFPs. Mais documentos, rascunhos melhores.</p>
+        <MonoLabel tone="sage">{cabecalho.eyebrow}</MonoLabel>
+        <h1 style={{ margin: 0, fontFamily: DISPLAY, fontWeight: 600, fontSize: isMobile ? 26 : 30, lineHeight: 1.18, letterSpacing: "-.02em", color: "var(--n-900)", textWrap: "balance" }}>{cabecalho.titulo}</h1>
+        <p style={{ margin: 0, maxWidth: "66ch", fontSize: 15, lineHeight: 1.6, color: "var(--n-700)", textWrap: "pretty" }}>{cabecalho.texto}</p>
       </div>
 
       <nav className="tdr-onb-steps" aria-label="Passos">

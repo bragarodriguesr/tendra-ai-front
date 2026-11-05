@@ -5,13 +5,15 @@ import { DISPLAY, card, mono } from "./ui.jsx";
 const bar = (width, height = 6, background = "var(--n-100)") => <div style={{ height, width, background, borderRadius: 2 }} />;
 
 /** T7 — trecho de origem destacado numa gaveta lateral. Esc fecha. */
+// Sobreposições fixas na tela inteira: o escurecimento cobre também o menu lateral e a barra superior
+// (revisão de design de 05/11/2026).
 export function SourceDrawer({ dr, onClose }) {
   const closeRef = React.useRef(null);
   React.useEffect(() => { closeRef.current && closeRef.current.querySelector("button")?.focus(); }, [dr.doc, dr.k]);
   return (
     <>
-      <div style={{ position: "absolute", inset: 0, zIndex: 20, background: "rgba(18,20,15,.32)" }} onClick={onClose} />
-      <aside role="dialog" aria-modal="true" aria-label="Visualizador de fonte" style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: 560, maxWidth: "92vw", zIndex: 21, background: "var(--n-000)", borderLeft: "1px solid var(--n-200)", boxShadow: "var(--shadow-overlay)", display: "flex", flexDirection: "column", animation: "tdr-fade var(--duration-base) var(--ease-out) both" }}>
+      <div style={{ position: "fixed", inset: 0, zIndex: 110, background: "rgba(18,20,15,.32)" }} onClick={onClose} />
+      <aside role="dialog" aria-modal="true" aria-label="Visualizador de fonte" style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: 560, maxWidth: "92vw", zIndex: 111, background: "var(--n-000)", borderLeft: "1px solid var(--n-200)", boxShadow: "var(--shadow-overlay)", display: "flex", flexDirection: "column", animation: "tdr-fade var(--duration-base) var(--ease-out) both" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--n-200)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
             <span style={{ ...mono(11, "var(--n-400)"), letterSpacing: ".1em", textTransform: "uppercase" }}>Fonte [{dr.k}] · {dr.type}</span>
@@ -67,8 +69,8 @@ export function TaskDetailsDrawer({ d, onClose }) {
   const t = d.task;
   return (
     <>
-      <div style={{ position: "absolute", inset: 0, zIndex: 20, background: "rgba(18,20,15,.32)" }} onClick={onClose} />
-      <aside role="dialog" aria-modal="true" aria-label="Detalhes da tarefa" style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: 520, maxWidth: "92vw", zIndex: 21, background: "var(--n-000)", borderLeft: "1px solid var(--n-200)", boxShadow: "var(--shadow-overlay)", display: "flex", flexDirection: "column", animation: "tdr-fade var(--duration-base) var(--ease-out) both" }}>
+      <div style={{ position: "fixed", inset: 0, zIndex: 110, background: "rgba(18,20,15,.32)" }} onClick={onClose} />
+      <aside role="dialog" aria-modal="true" aria-label="Detalhes da tarefa" style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: 520, maxWidth: "92vw", zIndex: 111, background: "var(--n-000)", borderLeft: "1px solid var(--n-200)", boxShadow: "var(--shadow-overlay)", display: "flex", flexDirection: "column", animation: "tdr-fade var(--duration-base) var(--ease-out) both" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--n-200)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
             <span style={{ ...mono(11, "var(--n-400)"), letterSpacing: ".1em", textTransform: "uppercase" }}>Detalhes da tarefa</span>
@@ -113,7 +115,7 @@ export function TaskDetailsDrawer({ d, onClose }) {
 /** Confirmação antes de editar um item já aprovado. */
 export function ConfirmEditDialog({ onCancel, onConfirm }) {
   return (
-    <div style={{ position: "absolute", inset: 0, zIndex: 30, background: "rgba(18,20,15,.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 120, background: "rgba(18,20,15,.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div role="alertdialog" aria-modal="true" aria-labelledby="tdr-edit-title" style={{ width: 440, maxWidth: "calc(100vw - 32px)", boxSizing: "border-box", background: "var(--n-000)", borderRadius: 16, padding: 28, display: "flex", flexDirection: "column", gap: 16, boxShadow: "var(--shadow-overlay)" }}>
         <div id="tdr-edit-title" style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 22, color: "var(--n-900)" }}>Editar remove a aprovação.</div>
         <div style={{ lineHeight: 1.6 }}>O item volta para Em revisão e o evento fica registrado.</div>
@@ -129,7 +131,7 @@ export function ConfirmEditDialog({ onCancel, onConfirm }) {
 /** Confirmação antes de excluir uma tarefa com todos os registros dela (cenário 60). */
 export function ConfirmDeleteTaskDialog({ task, busy, onCancel, onConfirm }) {
   return (
-    <div style={{ position: "absolute", inset: 0, zIndex: 30, background: "rgba(18,20,15,.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 120, background: "rgba(18,20,15,.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div role="alertdialog" aria-modal="true" aria-labelledby="tdr-del-title" aria-describedby="tdr-del-desc" style={{ width: 460, maxWidth: "calc(100vw - 32px)", boxSizing: "border-box", background: "var(--n-000)", borderRadius: 16, padding: 28, display: "flex", flexDirection: "column", gap: 16, boxShadow: "var(--shadow-overlay)" }}>
         <div id="tdr-del-title" style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 22, color: "var(--n-900)" }}>Excluir “{task.title}”?</div>
         <div id="tdr-del-desc" style={{ lineHeight: 1.6 }}>A tarefa sai para todas as pessoas, com os itens, as edições, as aprovações, as avaliações, o histórico e as planilhas. Não é possível desfazer.</div>
@@ -145,7 +147,7 @@ export function ConfirmDeleteTaskDialog({ task, busy, onCancel, onConfirm }) {
 /** Download da planilha com a revisão ainda não concluída: pede a confirmação antes de baixar. */
 export function ConfirmDownloadDialog({ task, onCancel, onConfirm }) {
   return (
-    <div style={{ position: "absolute", inset: 0, zIndex: 30, background: "rgba(18,20,15,.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 120, background: "rgba(18,20,15,.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div role="alertdialog" aria-modal="true" aria-labelledby="tdr-dl-title" aria-describedby="tdr-dl-desc" style={{ width: 460, maxWidth: "calc(100vw - 32px)", boxSizing: "border-box", background: "var(--n-000)", borderRadius: 16, padding: 28, display: "flex", flexDirection: "column", gap: 16, boxShadow: "var(--shadow-overlay)" }}>
         <div id="tdr-dl-title" style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 22, color: "var(--n-900)" }}>A revisão ainda não foi finalizada.</div>
         <div id="tdr-dl-desc" style={{ lineHeight: 1.6 }}>
@@ -167,8 +169,8 @@ export function ToastHost({ toast, onClose, isMobile }) {
       {toast ? (
         <div style={isMobile
           // No celular o aviso fica no topo, para não cobrir a barra de revisar/aprovar.
-          ? { position: "absolute", left: 16, right: 16, top: 12, zIndex: 40 }
-          : { position: "absolute", right: 24, bottom: 24, zIndex: 40 }}>
+          ? { position: "absolute", left: 16, right: 16, top: 12, zIndex: 130 }
+          : { position: "absolute", right: 24, bottom: 24, zIndex: 130 }}>
           <Toast title={toast.title} description={toast.desc} tone={toast.tone} onClose={onClose} />
         </div>
       ) : null}

@@ -29,6 +29,10 @@
 
   /* ---- Semânticas ---- */
   --danger: #A8402E;
+  /* Aviso que não é erro (fonte antiga, prazo perto, base desatualizada): o âmbar do dataviz, texto ≥4,5:1. */
+  --warning: #72480B;
+  --warning-line: #DFA635;
+  --warning-wash: #FDF1D8;
   --state-ink: #4B5046;      /* estado em texto: conformidade OK, validado */
   --lime-wash: rgba(200, 247, 61, 0.16);
   --paper-wash: rgba(255, 255, 255, 0.08);

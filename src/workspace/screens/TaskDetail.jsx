@@ -7,6 +7,7 @@ const statusCard = (accent, compact) => card(16, {
   padding: compact ? 20 : 32, display: "flex", flexDirection: "column", gap: 16, maxWidth: 640,
   ...(accent ? { border: "1px solid var(--danger)", borderTop: "3px solid var(--danger)" } : null)
 });
+const COLUNAS_DOS_ITENS = "120px minmax(0,1fr) 170px 150px 150px";
 const cardTitle = { fontFamily: DISPLAY, fontWeight: 600, fontSize: 24, color: "var(--n-900)" };
 
 export function TaskDetail({ v, ws, state, pad, isMobile }) {
@@ -120,12 +121,18 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
             {v.buscaSemResultado ? (
               <EmptyState icon="search" title="Nenhuma pergunta encontrada." description="Confira as palavras ou limpe a busca." />
             ) : null}
+            {/* Cabeçalho das colunas, no mesmo estilo da tabela de Tarefas (revisão de design de 05/11/2026). */}
+            {!isMobile && v.rowsDaBusca.length > 0 ? (
+              <div aria-hidden="true" style={{ display: "grid", minWidth: 980, gridTemplateColumns: COLUNAS_DOS_ITENS, gap: 16, padding: "12px 20px", background: "var(--n-050)", borderBottom: "1px solid var(--n-200)", ...mono(11, "var(--n-500)"), letterSpacing: ".1em", textTransform: "uppercase" }}>
+                <span>Código</span><span>Pergunta</span><span>Área</span><span>Estado</span><span>Alertas</span>
+              </div>
+            ) : null}
             {v.rowsDaBusca.map((r) => (
               isMobile ? (
                 <ClickRow key={r.id} onClick={r.openFromTask} style={{ display: "flex", flexDirection: "column", gap: 8, padding: "14px 16px", borderTop: "1px solid var(--n-100)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
                     <span style={mono(12)}>{r.code}</span>
-                    {r.hasAlert ? <span style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--danger)", fontSize: 12, fontWeight: 500 }}><Icon name="triangle-alert" size="sm" />{r.alertText}</span> : null}
+                    {r.hasAlert ? <span style={{ display: "flex", alignItems: "center", gap: 4, color: r.alertTone === "warning" ? "var(--warning)" : "var(--danger)", fontSize: 12, fontWeight: 500 }}><Icon name="triangle-alert" size="sm" />{r.alertText}</span> : null}
                   </div>
                   <span style={{ color: "var(--n-900)", lineHeight: 1.4 }}>{r.q}</span>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -134,14 +141,14 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
                   </div>
                 </ClickRow>
               ) : (
-                <ClickRow key={r.id} onClick={r.openFromTask} style={{ display: "grid", minWidth: 980, gridTemplateColumns: "120px minmax(0,1fr) 170px 150px 150px", gap: 16, alignItems: "center", padding: "14px 20px", borderTop: "1px solid var(--n-100)" }}>
+                <ClickRow key={r.id} onClick={r.openFromTask} style={{ display: "grid", minWidth: 980, gridTemplateColumns: COLUNAS_DOS_ITENS, gap: 16, alignItems: "center", padding: "14px 20px", borderTop: "1px solid var(--n-100)" }}>
                   <span style={mono(12)}>{r.code}</span>
                   <span style={{ color: "var(--n-900)" }}>{r.q}</span>
                   {/* Coluna "Área" (fase N, cenário N11). */}
                   <span style={{ fontSize: 13, color: "var(--n-700)" }}>{r.area}</span>
                   <div><Badge tone={r.tone} icon={r.icon}>{r.st}</Badge></div>
                   {r.hasAlert ? (
-                    <span style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--danger)", fontSize: 13, fontWeight: 500 }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 6, color: r.alertTone === "warning" ? "var(--warning)" : "var(--danger)", fontSize: 13, fontWeight: 500 }}>
                       <Icon name="triangle-alert" size="sm" />{r.alertText}
                     </span>
                   ) : <span />}

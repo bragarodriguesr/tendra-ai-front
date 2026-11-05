@@ -48,7 +48,7 @@ test("da base à resposta aprovada, mantida depois de recarregar", async ({ page
   await seletor.setFiles(RFP);
   await page.locator("#nt-company").fill("Rede Varejo Alfa");
   await page.locator("#nt-cnpj").fill("11222333000181");
-  await page.locator("#nt-due").fill("2099-12-31");
+  await page.locator("#nt-due").fill("31/12/2099");
   await page.locator("#nt-owner").selectOption({ label: "Marcelo Vieira" });
   const contato = page.getByRole("group", { name: "Contato 1" });
   await contato.getByLabel("Nome").fill("Ana Souza");

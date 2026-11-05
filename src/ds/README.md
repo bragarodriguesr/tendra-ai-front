@@ -53,7 +53,7 @@ Quatro cores, papel (`#F5F6F1`) e sálvia (`#6E7268`) como base, tinta (`#12140F
 
 A **regra do limão** é a regra mais importante do sistema: limão é *preenchimento*, nunca *texto*. Marcador atrás de uma palavra, fundo de selo, barra de progresso, check de checkbox. Em fundo claro ele tem 1.3:1 — texto limão é ilegível e está proibido. A única superfície onde o limão pode ser cor de texto é campo tinta (`approved-inverse`, `--text-accent-on-inverse`).
 
-Estado em texto usa **Sálvia Estado** (`#4B5046`), não limão. Erro usa `--danger` (`#A8402E`), reservado a destrutivo e à coluna "Não faça".
+Estado em texto usa **Sálvia Estado** (`#4B5046`), não limão. Erro usa `--danger` (`#A8402E`), reservado a destrutivo e à coluna "Não faça". Aviso que não é erro (fonte antiga, prazo perto, base desatualizada) usa `--warning` (`#72480B`, texto), com `--warning-line` (`#DFA635`) e `--warning-wash` (`#FDF1D8`), o âmbar do dataviz; no `Badge`, `tone="warning"` (05/11/2026).
 
 Neutros são verde-oliva dessaturados, nunca cinza puro — o papel puxa para o verde e um cinza neutro ao lado dele parece sujo.
 

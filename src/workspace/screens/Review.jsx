@@ -36,7 +36,7 @@ function ItemList({ v, ws, state, isMobile }) {
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={mono(12)}>{r.code}</span>
-              {r.hasAlert ? <span style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--danger)", fontSize: 12, fontWeight: 500 }}><Icon name="triangle-alert" size="sm" />{r.alertText}</span> : null}
+              {r.hasAlert ? <span style={{ display: "flex", alignItems: "center", gap: 4, color: r.alertTone === "warning" ? "var(--warning)" : "var(--danger)", fontSize: 12, fontWeight: 500 }}><Icon name="triangle-alert" size="sm" />{r.alertText}</span> : null}
             </div>
             <div style={{ color: "var(--n-900)", lineHeight: 1.4 }}>{r.q}</div>
             <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--n-500)", flexWrap: "wrap" }}>
@@ -80,7 +80,7 @@ function ItemAlerts({ cur, ws }) {
       </div>
     ) : null}
     <AlertDeck
-      deck={cur} pending={a.pending} icon={a.icon} label={a.label} suffix={a.pending ? <span>· pendente</span> : null}
+      deck={cur} pending={a.pending} tone={a.tone} icon={a.icon} label={a.label} suffix={a.pending ? <span>· pendente</span> : null}
       pos={cur.hasMany ? cur.alertPos : null} onPrev={() => move(-1)} onNext={() => move(1)}
     >
       {a.text ? <div style={{ color: "var(--n-900)", lineHeight: 1.5 }}>{a.text}</div> : null}
@@ -121,6 +121,27 @@ function ManualEditor({ cur, ws }) {
   );
 }
 
+/**
+ * Fontes de cada parágrafo enquanto a resposta é editada: o texto puro do editor não mostra os
+ * marcadores, e cada parágrafo mantém as fontes da sua posição (revisão de design de 05/11/2026).
+ */
+function EditorSources({ paras }) {
+  if (!paras.some((p) => p.marks.length)) return null;
+  return (
+    <div role="group" aria-label="Fontes por parágrafo" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "6px 16px", fontSize: 13, color: "var(--n-500)" }}>
+      <span style={mono(11, "var(--n-400)", { letterSpacing: ".1em", textTransform: "uppercase" })}>Fontes por parágrafo</span>
+      {paras.map((p, n) => (
+        <span key={n} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+          <span>Parágrafo {n + 1}</span>
+          {p.marks.length ? p.marks.map((m) => (
+            <button key={m.k} type="button" className="tdr-src-mark" onClick={m.open} aria-label={`${m.aria} (parágrafo ${n + 1})`}>{m.k}</button>
+          )) : <span style={{ color: "var(--n-400)" }}>sem fonte</span>}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function Answer({ v, ws, state, cur }) {
   const startEdit = () => (cur.isApproved ? ws.setState({ dialog: true }) : ws.setState({ edit: true }));
   const editAction = !cur.canEdit ? null : state.edit
@@ -154,7 +175,10 @@ function Answer({ v, ws, state, cur }) {
       ) : null}
       {state.edit ? (
         cur.aiReview ? <ManualEditor cur={cur} ws={ws} /> : (
-          <Textarea rows={8} value={cur.text} placeholder="Escreva a resposta. Separe parágrafos com uma linha em branco." onChange={(e) => ws.onDraft(e.target.value)} aria-label="Resposta" autoFocus />
+          <>
+            <Textarea rows={8} value={cur.text} placeholder="Escreva a resposta. Separe parágrafos com uma linha em branco." onChange={(e) => ws.onDraft(e.target.value)} aria-label="Resposta" autoFocus />
+            <EditorSources paras={cur.paras} />
+          </>
         )
       ) : (
         <>
@@ -202,7 +226,7 @@ function SourceCard({ s, style }) {
       <div style={{ ...mono(13, off ? "var(--n-400)" : undefined), lineHeight: 1.4, wordBreak: "break-word" }}>{s.doc} · {s.loc}</div>
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
         <span style={mono(12, off ? "var(--n-400)" : "var(--n-700)")}>{s.ageText}</span>
-        {s.old && !off ? <Badge tone="danger" icon="clock">Mais de 120 dias</Badge> : null}
+        {s.old && !off ? <Badge tone="warning" icon="clock">Mais de 120 dias</Badge> : null}
         {s.conflict ? <Badge tone="danger" icon="copy">Em conflito</Badge> : null}
         {s.chosen ? <Badge tone="approved" icon="check">Fonte escolhida</Badge> : null}
         {off ? <Badge tone="neutral" icon="minus">Não escolhida</Badge> : null}
@@ -316,7 +340,7 @@ export function Review({ v, ws, state, height, isMobile }) {
                     <div style={{ width: 220 }}>
                       <Select options={cur.areaOptions} size="sm" aria-label="Área da pergunta" value={cur.area} onChange={(e) => ws.changeArea(cur.id, e.target.value)} />
                     </div>
-                  ) : <Badge tone="neutral" icon="building-2">{cur.area}</Badge>}
+                  ) : <span aria-label={`Área: ${cur.area}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--n-700)" }}><Icon name="building-2" size="sm" />{cur.area}</span>}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 4, flex: "none" }}>
                   <Tooltip content="Item anterior (K)" placement="bottom">

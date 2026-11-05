@@ -102,6 +102,14 @@ const STATUS_GROUPS = [
 ];
 
 // "Todos" fica fixo como botão; as opções do menu, em ordem alfabética (SPEC_FASE_M.md, M13).
+// Severidade dos alertas do item (revisão de design de 05/11/2026): vermelho para o que bloqueia por
+// conteúdo (termo crítico, conflito, sem contexto), âmbar para aviso (baixa confiança, fonte antiga).
+const TOM_DO_ALERTA = { critical: "danger", conflict: "danger", nocontext: "danger", lowconf: "warning", old: "warning", manual: "warning" };
+const tomDosAlertas = (alertas) => (alertas.some((a) => !a.ack && TOM_DO_ALERTA[a.t] === "danger") ? "danger" : "warning");
+// Severidade dos avisos do sino e do painel de tarefas: erro e prazo vencido em vermelho, o que pede
+// atenção em âmbar, boa notícia em limão.
+const tomDoAviso = (a) => (/^(Falha|Erro|Prazo vencido)/.test(a.label) ? "danger" : /^(Processamento concluído|Tarefa 100%)/.test(a.label) ? "success" : "warning");
+
 // "Minha área" (fase N, cenário N9) só aparece para o Aprovador com área que não seja C-Level.
 const FILTERS = [["todos", "Todos"], ["alerta", "Alerta pendente"], ["aprovada", "Aprovada"], ["em-revisao", "Em revisão"], ["minha-area", "Minha área"], ["revisada", "Revisada"], ["sem-rascunho", "Sem rascunho"], ["sugerida", "Sugerida"]];
 
@@ -121,9 +129,11 @@ export function buildView(s, ws) {
   const openItem = (id, tid) => () => ws.go("review", { taskId: tid || s.itemsTask, sel: id, filter: "todos" });
 
   // navegação
-  // Contador de "Revisão": itens ainda a trabalhar na tarefa aberta (sem rascunho, sugeridos e em revisão),
-  // fora os já revisados e aprovados (26/10/2026; antes contava os itens com alerta pendente).
-  const pend = s.items.filter((i) => i.st !== "revisada" && i.st !== "aprovada").length;
+  // Contador de "Revisão": itens ainda a trabalhar (sem rascunho, sugeridos e em revisão), fora os já
+  // revisados e aprovados (26/10/2026), somando todas as tarefas com itens, como o Dashboard; antes era
+  // só a tarefa aberta e mostrava 0 até abrir uma (revisão de design de 05/11/2026).
+  const tarefasComItens = online ? taskIds.filter((id) => ws.hasItems(id, s)) : [...new Set([...ITEM_TASKS, s.itemsTask].filter(Boolean))];
+  const pend = tarefasComItens.reduce((n, id) => n + ws.itemsOf(id, s).filter((i) => i.st !== "revisada" && i.st !== "aprovada").length, 0);
   const go = (sc) => (e) => { e && e.preventDefault && e.preventDefault(); ws.go(sc); };
   const navGroups = [
     { label: "Início", items: [
@@ -287,7 +297,7 @@ export function buildView(s, ws) {
     const st = ST[i.st], p = ws.pendingCount(i);
     return {
       id: i.id, code: code(i), q: i.q.length > 68 ? i.q.slice(0, 66) + "…" : i.q, st: st.l, icon: st.i, tone: st.tone, area: areaDoItem(i),
-      hasAlert: p > 0, alertText: p + " " + plural(p, "alerta", "alertas"), active: i.id === s.sel,
+      hasAlert: p > 0, alertText: p + " " + plural(p, "alerta", "alertas"), alertTone: tomDosAlertas(i.alerts), active: i.id === s.sel,
       // A linha vem da tabela já filtrada: abre a Revisão com o mesmo filtro (SPEC_FASE_M.md, M6).
       open: () => ws.select(i.id), openFromTask: () => ws.go("review", { taskId: s.itemsTask, sel: i.id })
     };
@@ -315,7 +325,7 @@ export function buildView(s, ws) {
       if (a.t === "nocontext" || a.t === "manual") return [];
       const d = AL[a.t], pending = !a.ack;
       return [{
-        label: d.l, icon: a.ack ? "check" : d.i, pending, isAck: !!a.ack,
+        label: d.l, icon: a.ack ? "check" : d.i, pending, isAck: !!a.ack, tone: TOM_DO_ALERTA[a.t] || "danger",
         text: a.t === "old" ? `Fonte sem atualização há ${maxAge} dias, acima do prazo de 120 dias.` : d.x,
         ackText: a.ack ? `Reconhecido por ${a.ack.by}, ${a.ack.at}` : "",
         showAck: pending && a.t !== "conflict", showNone: pending && a.t === "conflict",
@@ -330,8 +340,9 @@ export function buildView(s, ws) {
     let blockText = "", noRevise = false, noApprove = false;
     const alertWord = p > 1 ? `${p} alertas` : "1 alerta";
     if (it.st === "aprovada") { noApprove = true; noRevise = true; }
-    else if (!hasAnswer) { blockText = "Escreva a resposta antes de revisar ou aprovar."; noRevise = true; noApprove = true; }
-    else if (p > 0) { blockText = `Falta tratar ${alertWord} antes de aprovar.`; noRevise = true; noApprove = true; }
+    // A mensagem fala só do que o papel pode fazer: o Revisor não aprova (revisão de design de 05/11/2026).
+    else if (!hasAnswer) { blockText = isA ? "Escreva a resposta antes de revisar ou aprovar." : "Escreva a resposta antes de marcar como revisado."; noRevise = true; noApprove = true; }
+    else if (p > 0) { blockText = isA ? `Falta tratar ${alertWord} antes de revisar ou aprovar.` : `Falta tratar ${alertWord} antes de marcar como revisado.`; noRevise = true; noApprove = true; }
     // O Revisor não aprova: o botão nem aparece para ele (26/10/2026).
     if (!isA) noApprove = true;
     // Fase N (cenário N6): pergunta de outra área, com o motivo.
@@ -426,7 +437,8 @@ export function buildView(s, ws) {
     mkCard("t4", "Helios Logística", "Questionário LGPD", 24, 24, s.exported4, () => ws.exportTask("exported4"))
   ];
   const exportTitle = online
-    ? `${exportCards.length} ${plural(exportCards.length, "tarefa pronta", "tarefas prontas")} para baixar`
+    // "Pronta" só quando 100% aprovada; as demais também baixam, com o estado atual (revisão de design de 05/11/2026).
+    ? ((n, prontas) => `${n} ${plural(n, "tarefa", "tarefas")} para baixar · ${prontas} ${plural(prontas, "pronta", "prontas")}`)(exportCards.length, exportCards.filter((x) => x.badge === "Pronta").length)
     : `${exportCards.filter((x) => !x.blocked).length} de ${exportCards.length} tarefas prontas para exportar`;
 
   // histórico
@@ -494,7 +506,7 @@ export function buildView(s, ws) {
   const agora = Date.now();
   const bellAlerts = taskAlerts.filter((a) => !(a.criadoEm && agora - a.criadoEm > VALIDADE_DOS_AVISOS) && !s.alertsDone[a.key] && !s.alertsHidden[a.key]);
   // os mesmos alertas no sino da barra superior, com o estado de leitura
-  bellAlerts.forEach((a) => { a.read = !!s.alertsRead[a.key]; a.hide = () => ws.hideAlert(a.key); });
+  bellAlerts.forEach((a) => { a.read = !!s.alertsRead[a.key]; a.hide = () => ws.hideAlert(a.key); a.tone = tomDoAviso(a); });
   const alertsUnread = bellAlerts.filter((a) => !a.read).length;
   // o card da tela de Tarefas mostra só os alertas ainda não lidos no sino
   const pendingAlerts = bellAlerts.filter((a) => !a.read && a.kind !== "base");
@@ -503,7 +515,7 @@ export function buildView(s, ws) {
 
   // formulário de nova RFP
   const f = s.form, tried = f.tried, today = online ? hojeIso() : TODAY_ISO;
-  const dueErr = tried && (!f.due ? "Informe o prazo de submissão." : f.due < today ? "O prazo não pode estar no passado." : null);
+  const dueErr = tried && (!f.due ? ((f.dueBr || "").length === 10 ? "Data inválida. Use dd/mm/aaaa." : "Informe o prazo de submissão.") : f.due < today ? "O prazo não pode estar no passado." : null);
   // CNPJ numérico ou alfanumérico (IN RFB nº 2.229/2024).
   const cnpjDigits = cnpjSemMascara(f.cnpj);
   const errCnpj = !f.cnpj ? null : cnpjDigits.length < 14 ? "CNPJ incompleto." : !cnpjValido(cnpjDigits) ? "CNPJ inválido." : null;

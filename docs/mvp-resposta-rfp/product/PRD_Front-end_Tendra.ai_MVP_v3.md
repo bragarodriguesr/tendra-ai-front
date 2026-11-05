@@ -125,7 +125,7 @@ A interface segue seis princípios, todos derivados do discovery, e usa o design
 - **Tipografia:** Space Grotesk para títulos e números; IBM Plex Sans para corpo e interface; IBM Plex Mono para IDs de requisito, nomes de arquivo, datas e contagens (por exemplo, `REQ-004/012` e `Security_Whitepaper_v4.pdf · p. 12`).
 - **Marca:** escrever sempre "Tendra.ai", nunca em caixa alta. No texto corrido, "a Tendra.ai". O logo animado (`AnimatedLogo`) é usado no cabeçalho do site e na abertura do Workspace.
 - **Padrão de filtro (novo na v2):** listas e tabelas filtram sempre com o componente `FilterMenu`: botão "Todos" fixo + botão "Filtrar" com menu suspenso das demais visões, cada uma com a quantidade de itens. Abas não filtram; seletor fica para ordenação.
-- **Estado nunca depende só de cor:** todo estado leva ícone e rótulo em texto. Como todos os alertas usam o mesmo vermelho, são o ícone e o rótulo que distinguem os tipos.
+- **Estado nunca depende só de cor:** todo estado leva ícone e rótulo em texto. Desde 05/11/2026 a cor segue a severidade: vermelho (`--danger`) só para bloqueio ou erro (termo crítico, conflito, sem contexto, falha, prazo vencido); âmbar (`--warning`) para aviso (baixa confiança, fonte antiga, documento com mais de 120 dias, prazo perto, base desatualizada); limão para boa notícia (processamento concluído, tarefa 100% aprovada). O ícone e o rótulo continuam distinguindo os tipos.
 
 ## 5. Mapa de telas e jornada
 
@@ -154,7 +154,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 **Menu lateral** (grupos e itens, na ordem):
 
 - **Início:** Primeiros passos (acima do Dashboard desde 28/10/2026), Dashboard.
-- **Trabalho:** Tarefas (contagem de tarefas), Revisão (contagem dos itens ainda a trabalhar na tarefa aberta: sem rascunho, sugeridos e em revisão, fora os revisados e aprovados; antes de 26/10/2026 contava os itens com alerta pendente), Exportação, Histórico.
+- **Trabalho:** Tarefas (contagem de tarefas), Revisão (contagem dos itens ainda a trabalhar: sem rascunho, sugeridos e em revisão, fora os revisados e aprovados, somando todas as tarefas com itens, como o Dashboard; até 05/11/2026 era só a tarefa aberta, e antes de 26/10/2026 contava os itens com alerta pendente), Exportação, Histórico.
 - **Base:** Base de conhecimento (contagem de documentos).
 - **Painel de demo** no rodapé: "Aprovar todos os itens" — **Simulado**, não vai para produção.
 
@@ -350,7 +350,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
   - **Empresa** — obrigatório.
   - **CNPJ** — opcional; novo na v2.
   - **Tipo** — RFP ou RFI; obrigatório.
-  - **Prazo de submissão** — obrigatório; não pode estar no passado.
+  - **Prazo de submissão** — obrigatório; não pode estar no passado. Digitado em dd/mm/aaaa, com máscara, em qualquer idioma do navegador; data que não existe mostra "Data inválida. Use dd/mm/aaaa." (05/11/2026).
   - **Responsável** — obrigatório; escolhido entre os usuários da plataforma (com login, os perfis ativos; sem login, as pessoas de exemplo), lidos de `GET /api/usuarios` desde 24/10/2026 (SPEC, cenário 62).
 - **CNPJ (novo):** máscara 00.000.000/0000-00 e conferência dos dígitos verificadores, com os erros "CNPJ incompleto." e "CNPJ inválido.".
   - Desde 28/10/2026, aceita também o CNPJ alfanumérico (IN RFB nº 2.229/2024): letras ou números nas 12 primeiras posições e 2 dígitos verificadores numéricos.
@@ -428,7 +428,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
   - contagem "N de M", conforme o filtro;
   - nome da tarefa;
   - filtro `FilterMenu`, com as mesmas opções da T5;
-  - lista com ID em mono, pergunta resumida, estado com ícone e "N alertas" em vermelho quando houver.
+  - lista com ID em mono, pergunta resumida, estado com ícone e "N alertas" quando houver: em vermelho se algum pendente bloqueia por conteúdo, em âmbar se só há avisos (05/11/2026).
 - **Coluna direita:**
   - ID, selo de estado e, quando o texto foi alterado, o selo "Editado";
   - pergunta completa;
@@ -502,7 +502,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 
 **F-26 · P0 · Exportação bloqueada até 100% aprovado** (T8; MoSCoW: Must) — Implementado (arquivo Simulado)
 
-- **Cabeçalho:** "Exportação", com o título "[N] de [M] tarefas prontas para exportar".
+- **Cabeçalho:** "Exportação", com o título "[N] de [M] tarefas prontas para exportar". Com o servidor, "[N] tarefas para baixar · [P] prontas" (05/11/2026): todas baixam com o estado atual, e "pronta" é só a tarefa 100% aprovada.
 - **Um cartão por tarefa**, com:
   - empresa e nome;
   - selo "Bloqueada", "Pronta" ou "Exportada";
