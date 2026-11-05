@@ -804,6 +804,45 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
 - Grupos, itens, contagens e regras do menu continuam vindo do viewModel; "Primeiros passos" mantém o gradiente limão em movimento enquanto a base está vazia.
 - **Situação (04/11/2026): implementada e conferida no ambiente publicado.** Teste de ponta a ponta do menu (desktop, recolhido, mobile, teclado) e jornada verde. Front da Vercel com o merge às 20:39 UTC de 30/10; menu e gradiente de "Primeiros passos" conferidos pelo grupo no teste manual.
 
+### K14. Logo, salvamento por item e botões da Revisão (ajuste de 04/11/2026)
+- **Logo:** mesmo tamanho (28 px) e mesma posição (`--brandbar-pad` da borda) no site, no login, na abertura e no Workspace.
+  - Recolher o menu lateral só esconde o nome, sem deslocar o símbolo.
+  - No celular, o logo vem depois do botão de menu, como no site.
+- **Salvamento:** o indicador "Salvo agora / há N" passa a ser de cada item, não um só para todos.
+- **Revisão:**
+  - "Item anterior" e "Próximo item" só com as setas, fixos à direita;
+  - "Ver/Ocultar sugestão original" e "Restaurar sugestão" só com ícones, com a descrição na dica.
+- Só front (PR #87).
+- **Situação (05/11/2026): implementada e conferida no ambiente publicado.**
+  - Front da Vercel e backend do Render com o merge às 16:38 UTC de 04/11.
+  - No publicado, o User Teste 1 (Revisor) editou, restaurou pelo ícone e editou de novo o item 14 da RFP-02 às 16:45 (eventos `edicao`, `restauracao` e `edicao`).
+  - O logo nas transições, o indicador de cada item e os botões só com ícones foram conferidos pelo grupo no teste manual.
+  - Antes do merge: posição do logo medida em cada tela e durante o recolhimento; posição das setas igual entre itens; suíte de ponta a ponta verde.
+
+### K15. Usabilidade e consistência da área logada (revisão de design de 05/11/2026)
+- **Usabilidade:**
+  - o contador "Revisão" do menu soma os itens a trabalhar de todas as tarefas, como o Dashboard (antes, 0 até abrir uma tarefa);
+  - a Exportação diz "N tarefas para baixar · P prontas" (antes, "pronta para baixar" com 0 de 84 aprovados);
+  - o rodapé da Revisão fala do que o papel pode fazer: o Revisor lê "antes de marcar como revisado";
+  - a tabela dos detalhes da tarefa ganha cabeçalho (Código, Pergunta, Área, Estado, Alertas);
+  - o editor da resposta mostra as fontes de cada parágrafo;
+  - o Histórico vazio orienta, com o EmptyState;
+  - os Primeiros passos mudam o título e o texto conforme o passo aberto;
+  - a Base mostra o título do documento em sans, numa coluna mais larga;
+  - o prazo da Nova RFP é digitado em dd/mm/aaaa, com máscara, em qualquer idioma do navegador.
+- **Consistência:**
+  - cor por severidade, com o token novo `--warning` (âmbar do dataviz) e o tom `warning` no Badge:
+    - vermelho só para bloqueio ou erro;
+    - âmbar para aviso (fonte antiga, baixa confiança, mais de 120 dias, prazo perto, base desatualizada);
+    - limão para "Processamento concluído" e "Tarefa 100% aprovada";
+  - a sobreposição da fonte, dos detalhes e dos diálogos escurece a tela inteira, menu lateral incluído;
+  - a área no topo do item tem o mesmo estilo da lista (ícone e texto);
+  - Button e IconButton do DS com a borda em propriedades separadas, sem o aviso do React ao trocar o hover.
+- Só front.
+- **Situação (05/11/2026): implementada.**
+  - Build, 15 testes de unidade e a suíte de ponta a ponta completa (77) verdes.
+  - Conferi no navegador com um backend de teste, com C-Level e Revisor: todos os itens acima e nenhum aviso do React no console.
+
 ## Fase L: busca de perguntas na Revisão e nos detalhes da tarefa
 
 Pedida em 01/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/spec/SPEC_FASE_L.md` (cenários B1 a B17, `approved`), e o plano detalhado, em `docs/mvp-resposta-rfp/plan/PLAN_FASE_L.md`. Só front: nenhum arquivo do backend muda, e a busca não faz requisições.

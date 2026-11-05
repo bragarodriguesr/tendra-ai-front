@@ -18,7 +18,7 @@ const lerMapa = (chave) => { try { return JSON.parse(localStorage.getItem(chave)
 const gravar = (chave, valor) => { try { localStorage.setItem(chave, valor); } catch { /* sem armazenamento: só nesta aba */ } };
 const recolhidosAntes = () => { try { return localStorage.getItem(CHAVE_ALERTAS_RECOLHIDOS) === "1"; } catch { return false; } };
 export const newContact = () => ({ id: "c" + ++contactSeq, name: "", role: "", phone: "", email: "" });
-const emptyForm = () => ({ name: "", company: "", cnpj: "", type: "RFP", due: "", owner: "", contacts: [newContact()], file: null, fileError: null, identified: false, tried: false });
+const emptyForm = () => ({ name: "", company: "", cnpj: "", type: "RFP", due: "", dueBr: "", owner: "", contacts: [newContact()], file: null, fileError: null, identified: false, tried: false });
 
 const DIA = 24 * 60 * 60 * 1000;
 /**

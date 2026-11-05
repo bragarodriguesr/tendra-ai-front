@@ -92,7 +92,10 @@ A geração das respostas não muda.
     - Custo de cerca de 5,7 mil tokens de entrada e 4,4 mil de saída, em uma chamada ao Haiku 5.5 por tarefa.
   - **As demais organizações** (Vereda Documental) não têm tarefas, então não havia o que reclassificar.
   - **Áreas ajustadas no banco depois do deploy (PN8):** `userteste3@gmail.com` com Segurança e privacidade e Tecnologia; `antonio@vereda.com.br` com Jurídico. Os Revisores seguem sem área.
-  - **Teste manual do grupo (04/11/2026):** concluído com os perfis do publicado. Nenhuma ação de revisão (aprovação ou troca de área) ficou gravada no período, então a conferência é do grupo, sem eventos no banco.
+  - **Teste manual do grupo (04/11/2026):** concluído com os perfis do publicado. Eventos gravados entre 15:54 e 16:14 UTC, todos do User Teste 3 (Aprovador, Segurança e privacidade e Tecnologia):
+    - trocas de área: item 33 da RFP-02 de Tecnologia para Produto; item 20 da RFP-01 de Tecnologia para Segurança e privacidade e de volta;
+    - aprovações dos itens 2 e 5 da RFP-02, ambos de Segurança e privacidade;
+    - edição, restauração e revisão do item 3.
   - **Ponto em aberto mantido:** nenhuma das organizações publicadas tem C-Level. Na Pulse, as perguntas de Produto, Comercial e Jurídico (40 nas duas tarefas) não têm quem as aprove nem quem troque a área.
 
 ## Checklist de aceite

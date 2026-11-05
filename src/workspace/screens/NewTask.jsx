@@ -3,6 +3,7 @@ import { Badge, Button, Field, Icon, IconButton, Input, MonoLabel, Select } from
 import { ClickRow, DISPLAY, Page, card, h1Style, mono } from "../ui.jsx";
 import { newContact } from "../useWorkspace.js";
 import { mascararCnpj } from "../cnpj.js";
+import { dataBrParaIso, mascararData } from "../dataBr.js";
 
 // máscara do telefone: (00) 00000-0000; a do CNPJ, numérico ou alfanumérico, está em cnpj.js
 const maskPhone = (v) => {
@@ -74,7 +75,7 @@ export function NewTask({ v, ws, state, pad, isMobile }) {
               <Input id="nt-cnpj" mono autoCapitalize="characters" autoComplete="off" spellCheck={false} value={f.cnpj} placeholder="00.000.000/0000-00" onChange={(e) => ws.setState((x) => ({ form: { ...x.form, cnpj: mascararCnpj(e.target.value) } }))} invalid={!!f.errCnpj} />
             </Field>
             <Field label="Tipo" required htmlFor="nt-type"><Select id="nt-type" options={["RFP", "RFI"]} value={f.type} onChange={set("type")} /></Field>
-            <Field label="Prazo de submissão" required error={f.errDue} htmlFor="nt-due"><Input id="nt-due" type="date" value={f.due} onChange={set("due")} invalid={!!f.errDue} /></Field>
+            <Field label="Prazo de submissão" required error={f.errDue} htmlFor="nt-due"><Input id="nt-due" inputMode="numeric" placeholder="dd/mm/aaaa" maxLength={10} value={f.dueBr} onChange={(e) => { const dueBr = mascararData(e.target.value); ws.setState((x) => ({ form: { ...x.form, dueBr, due: dataBrParaIso(dueBr) } })); }} invalid={!!f.errDue} /></Field>
             <Field label="Responsável" required error={f.errOwner} htmlFor="nt-owner"><Select id="nt-owner" options={f.owners} placeholder="Escolha um usuário" value={f.owner} onChange={set("owner")} invalid={!!f.errOwner} /></Field>
           </div>
           <section aria-labelledby="nt-contacts-title" style={{ display: "flex", flexDirection: "column", gap: 16, paddingTop: 8 }}>

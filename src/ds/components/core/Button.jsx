@@ -7,29 +7,31 @@ const SIZES = {
   lg: { fontSize: "var(--text-body-size)", padding: "15px 24px", minHeight: 52, gap: 10, icon: 20 }
 };
 
+// Borda em propriedades separadas: o hover troca só a cor, sem o aviso do React de misturar a forma
+// curta (border) com a longa (borderColor) (revisão de design de 05/11/2026).
 const VARIANTS = {
   primary: {
-    rest: { background: "var(--action-primary-bg)", color: "var(--action-primary-fg)", border: "1px solid var(--action-primary-bg)" },
+    rest: { background: "var(--action-primary-bg)", color: "var(--action-primary-fg)", borderWidth: 1, borderStyle: "solid", borderColor: "var(--action-primary-bg)" },
     hover: { background: "var(--action-primary-bg-hover)", borderColor: "var(--action-primary-bg-hover)" }
   },
   secondary: {
-    rest: { background: "transparent", color: "var(--action-secondary-fg)", border: "1px solid var(--action-secondary-border)" },
+    rest: { background: "transparent", color: "var(--action-secondary-fg)", borderWidth: 1, borderStyle: "solid", borderColor: "var(--action-secondary-border)" },
     hover: { borderColor: "var(--brand-ink)" }
   },
   accent: {
-    rest: { background: "var(--action-accent-bg)", color: "var(--action-accent-fg)", border: "1px solid var(--action-accent-bg)" },
+    rest: { background: "var(--action-accent-bg)", color: "var(--action-accent-fg)", borderWidth: 1, borderStyle: "solid", borderColor: "var(--action-accent-bg)" },
     hover: { background: "#B6E22C", borderColor: "#B6E22C" }
   },
   ghost: {
-    rest: { background: "transparent", color: "var(--text-body)", border: "1px solid transparent" },
+    rest: { background: "transparent", color: "var(--text-body)", borderWidth: 1, borderStyle: "solid", borderColor: "transparent" },
     hover: { background: "var(--surface-sunken)", color: "var(--text-strong)" }
   },
   "inverse-secondary": {
-    rest: { background: "transparent", color: "var(--text-on-inverse-body)", border: "1px solid var(--border-inverse-strong)" },
+    rest: { background: "transparent", color: "var(--text-on-inverse-body)", borderWidth: 1, borderStyle: "solid", borderColor: "var(--border-inverse-strong)" },
     hover: { borderColor: "var(--n-400)", color: "var(--text-on-inverse)" }
   },
   danger: {
-    rest: { background: "transparent", color: "var(--danger)", border: "1px solid var(--danger)" },
+    rest: { background: "transparent", color: "var(--danger)", borderWidth: 1, borderStyle: "solid", borderColor: "var(--danger)" },
     hover: { background: "var(--danger)", color: "var(--n-000)" }
   }
 };

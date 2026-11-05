@@ -39,7 +39,7 @@ export function TaskAlerts({ v, ws }) {
   const move = (d) => ws.setState({ tAi: (tDeck.index + d + tDeck.count) % tDeck.count });
   return (
     <AlertDeck
-      region="Alertas" deck={tDeck} icon={a.icon} label={a.label}
+      region="Alertas" deck={tDeck} tone={a.tone} icon={a.icon} label={a.label}
       pos={tDeck.hasMany ? tDeck.pos : null} onPrev={() => move(-1)} onNext={() => move(1)}
     >
       <div style={{ color: "var(--n-900)", lineHeight: 1.5 }}><b>{a.name}</b> {a.text}</div>

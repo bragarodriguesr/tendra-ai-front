@@ -42,23 +42,34 @@ export function ClickRow({ onClick, style, role = "button", className = "tdr-hov
 }
 
 /**
+ * Cor de cada severidade (revisão de design de 05/11/2026): vermelho só para bloqueio ou erro, âmbar
+ * para aviso, limão para boa notícia. Tratado (`pending` falso), o cartão fica neutro.
+ */
+const TONS_DO_ALERTA = {
+  danger: { line: "var(--danger)", text: "var(--danger)" },
+  warning: { line: "var(--warning-line)", text: "var(--warning)" },
+  success: { line: "var(--brand-lime)", text: "var(--n-700)" }
+};
+
+/**
  * Alertas como cartões sobrepostos: só o atual fica visível, com até duas bordas atrás
  * e setas para navegar quando há mais de um.
  */
-export function AlertDeck({ deck, pending = true, icon, label, suffix, pos, onPrev, onNext, region, children }) {
-  const border = pending ? "var(--danger)" : "var(--n-200)";
+export function AlertDeck({ deck, pending = true, tone = "danger", icon, label, suffix, pos, onPrev, onNext, region, children }) {
+  const cor = TONS_DO_ALERTA[tone] || TONS_DO_ALERTA.danger;
+  const border = pending ? cor.line : "var(--n-200)";
   return (
     <div role={region ? "region" : undefined} aria-label={region} style={{ position: "relative", paddingBottom: deck.pad }}>
       {deck.layers.map((ly, i) => <div key={i} style={ly} />)}
       <div
         style={{
           display: "flex", flexDirection: "column", gap: 10, padding: "16px 20px", background: "var(--n-000)",
-          border: `1px solid ${border}`, borderTop: `3px solid ${pending ? "var(--danger)" : "var(--n-350)"}`, borderRadius: 12,
+          border: `1px solid ${border}`, borderTop: `3px solid ${pending ? cor.line : "var(--n-350)"}`, borderRadius: 12,
           position: "relative", zIndex: 5
         }}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px 12px", flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flex: "1 1 180px", minWidth: 0, ...eyebrow, fontWeight: 500, color: pending ? "#A8402E" : "#4B5046" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flex: "1 1 180px", minWidth: 0, ...eyebrow, fontWeight: 500, color: pending ? cor.text : "var(--n-500)" }}>
             <Icon name={icon} size="md" />
             {label}
             {suffix}

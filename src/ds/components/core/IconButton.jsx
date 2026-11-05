@@ -4,10 +4,10 @@ import { Icon } from "./Icon.jsx";
 const SIZES = { sm: { box: 32, icon: 14 }, md: { box: 40, icon: 16 }, lg: { box: 44, icon: 20 } };
 
 const VARIANTS = {
-  ghost: { rest: { background: "transparent", border: "1px solid transparent", color: "var(--text-body)" }, hover: { background: "var(--surface-sunken)", color: "var(--text-strong)" } },
-  outline: { rest: { background: "var(--surface-card)", border: "1px solid var(--border-default)", color: "var(--text-body)" }, hover: { borderColor: "var(--border-strong)", color: "var(--text-strong)" } },
-  solid: { rest: { background: "var(--action-primary-bg)", border: "1px solid var(--action-primary-bg)", color: "var(--action-primary-fg)" }, hover: { background: "var(--action-primary-bg-hover)" } },
-  inverse: { rest: { background: "transparent", border: "1px solid transparent", color: "var(--text-on-inverse-body)" }, hover: { background: "var(--paper-wash)", color: "var(--text-on-inverse)" } }
+  ghost: { rest: { background: "transparent", borderWidth: 1, borderStyle: "solid", borderColor: "transparent", color: "var(--text-body)" }, hover: { background: "var(--surface-sunken)", color: "var(--text-strong)" } },
+  outline: { rest: { background: "var(--surface-card)", borderWidth: 1, borderStyle: "solid", borderColor: "var(--border-default)", color: "var(--text-body)" }, hover: { borderColor: "var(--border-strong)", color: "var(--text-strong)" } },
+  solid: { rest: { background: "var(--action-primary-bg)", borderWidth: 1, borderStyle: "solid", borderColor: "var(--action-primary-bg)", color: "var(--action-primary-fg)" }, hover: { background: "var(--action-primary-bg-hover)" } },
+  inverse: { rest: { background: "transparent", borderWidth: 1, borderStyle: "solid", borderColor: "transparent", color: "var(--text-on-inverse-body)" }, hover: { background: "var(--paper-wash)", color: "var(--text-on-inverse)" } }
 };
 
 export function IconButton({ icon, label, variant = "ghost", size = "md", disabled = false, style, ...rest }) {

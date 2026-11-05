@@ -2,7 +2,8 @@ import React from "react";
 import { Badge, Button, EmptyState, Icon, IconButton, MonoLabel, Select, Switch, Tooltip } from "../../ds/index.js";
 import { Page, card, h1Style, mono } from "../ui.jsx";
 
-const COLS = "minmax(0,2fr) 96px 96px 100px 150px minmax(130px,1fr) 110px 90px";
+// Documento com mais largura e título em sans, para o nome não quebrar em várias linhas (revisão de design de 05/11/2026).
+const COLS = "minmax(200px,3fr) 92px 92px 92px 150px minmax(120px,1fr) 100px 64px";
 const rowGrid = { display: "grid", minWidth: 1040, gridTemplateColumns: COLS, gap: 16 };
 const SORT_OPTIONS = [{ value: "idade", label: "Ordenar por idade" }, { value: "nome", label: "Ordenar por nome" }, { value: "upload", label: "Ordenar por envio" }, { value: "status", label: "Ordenar por status" }];
 
@@ -66,12 +67,12 @@ function DocCards({ docs }) {
       {docs.map((d, i) => (
         <div key={d.id} style={{ display: "flex", flexDirection: "column", gap: 10, padding: "14px 16px", borderTop: i ? "1px solid var(--n-100)" : 0 }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ ...mono(13), overflowWrap: "anywhere" }}>{d.name}</div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: "var(--n-900)", lineHeight: 1.35, overflowWrap: "anywhere" }}>{d.name}</div>
             <div style={{ fontSize: 12, color: "var(--n-400)", marginTop: 2, overflowWrap: "anywhere" }}>{subtitle(d)} · {d.type} · {d.by}</div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <Badge tone={d.tone} icon={d.icon}>{d.statusText}</Badge>
-            {d.old ? <Badge tone="danger" icon="clock">Mais de 120 dias</Badge> : null}
+            {d.old ? <Badge tone="warning" icon="clock">Mais de 120 dias</Badge> : null}
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <span style={mono(12, "var(--n-500)")}>Atualizado {d.upd} · {d.ageText} · Validade {d.validity}</span>
@@ -130,7 +131,7 @@ export function Base({ v, ws, state, pad, isMobile }) {
         {v.docs.map((d) => (
           <div key={d.id} style={{ ...rowGrid, padding: "14px 20px", borderTop: "1px solid var(--n-100)", alignItems: "center" }}>
             <div style={{ minWidth: 0 }}>
-              <div style={{ ...mono(13), overflow: "hidden", textOverflow: "ellipsis" }}>{d.name}</div>
+              <div style={{ fontSize: 14, fontWeight: 500, color: "var(--n-900)", lineHeight: 1.35, overflow: "hidden", textOverflow: "ellipsis" }}>{d.name}</div>
               <div style={{ fontSize: 12, color: "var(--n-400)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis" }}>{subtitle(d)}</div>
             </div>
             <span>{d.type}</span>
@@ -138,7 +139,7 @@ export function Base({ v, ws, state, pad, isMobile }) {
             <span style={mono(12, d.expired ? "var(--danger)" : "inherit")}>{d.validity}</span>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
               <span style={mono(13)}>{d.ageText}</span>
-              {d.old ? <Badge tone="danger" icon="clock">Mais de 120 dias</Badge> : null}
+              {d.old ? <Badge tone="warning" icon="clock">Mais de 120 dias</Badge> : null}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", minWidth: 0 }}>
               {/* rótulos longos ("Em tratamento pelo suporte") quebram dentro da coluna em vez de invadir a vizinha */}

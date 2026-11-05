@@ -1,5 +1,5 @@
 import React from "react";
-import { Badge, Button, Icon, FilterMenu } from "../../ds/index.js";
+import { Badge, Button, EmptyState, Icon, FilterMenu } from "../../ds/index.js";
 import { ClickRow, Page, PageHeader, card, mono } from "../ui.jsx";
 
 export function History({ v, ws, state, pad, isMobile }) {
@@ -9,6 +9,11 @@ export function History({ v, ws, state, pad, isMobile }) {
       <PageHeader eyebrow="Histórico de aprovações e revisões" title={`${n} ${n === 1 ? "registro" : "registros"}`} />
       <FilterMenu items={v.historyTabs} value={state.hfilter} onChange={(hfilter) => ws.setState({ hfilter })} label="Filtrar registros" />
       <div style={card(14, { overflowX: "auto", overflowY: "hidden" })}>
+        {/* Sem registros: orienta em vez de deixar a área em branco (revisão de design de 05/11/2026). */}
+        {n === 0 ? (
+          <EmptyState icon="history" title={state.hfilter && state.hfilter !== "todos" ? "Nenhum registro neste filtro." : "Nenhuma ação registrada ainda."}
+            description={state.hfilter && state.hfilter !== "todos" ? "Escolha outro filtro para ver os demais registros." : "As revisões e as aprovações dos itens aparecem aqui, com quem fez e quando."} />
+        ) : null}
         {v.history.map((h) => (
           <div key={h.key} style={{ borderTop: "1px solid var(--n-100)" }}>
             {isMobile ? (

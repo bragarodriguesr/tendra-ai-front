@@ -1,6 +1,6 @@
 import * as React from "react";
 
-export type BadgeTone = "neutral" | "approved" | "approved-inverse" | "accent" | "ink" | "inverse" | "danger";
+export type BadgeTone = "neutral" | "approved" | "approved-inverse" | "accent" | "ink" | "inverse" | "danger" | "warning";
 
 /**
  * Selo de estado em mono caixa alta: conformidade, rastreabilidade, revisão.
