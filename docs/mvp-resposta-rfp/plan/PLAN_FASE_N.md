@@ -96,6 +96,7 @@ A geração das respostas não muda.
     - trocas de área: item 33 da RFP-02 de Tecnologia para Produto; item 20 da RFP-01 de Tecnologia para Segurança e privacidade e de volta;
     - aprovações dos itens 2 e 5 da RFP-02, ambos de Segurança e privacidade;
     - edição, restauração e revisão do item 3.
+  - **Primeira tarefa nova classificada no processamento (05/11/2026, N2):** a RFP-04 da Pulse Benefícios, enviada às 17:22 UTC, ficou pronta em 15 s com as 5 perguntas classificadas (Produto 2, Tecnologia 2, Comercial 1) e a marca `areas_classificadas_em` no fim do processamento.
   - **Ponto em aberto mantido:** nenhuma das organizações publicadas tem C-Level. Na Pulse, as perguntas de Produto, Comercial e Jurídico (40 nas duas tarefas) não têm quem as aprove nem quem troque a área.
 
 ## Checklist de aceite

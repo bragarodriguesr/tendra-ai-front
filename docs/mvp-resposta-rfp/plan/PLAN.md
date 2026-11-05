@@ -829,7 +829,7 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
   - o Histórico vazio orienta, com o EmptyState;
   - os Primeiros passos mudam o título e o texto conforme o passo aberto;
   - a Base mostra o título do documento em sans, numa coluna mais larga;
-  - o prazo da Nova RFP é digitado em dd/mm/aaaa, com máscara, em qualquer idioma do navegador. Correção de 06/11/2026: a troca tirou o calendário; ele voltou num botão ao lado do campo (ou Alt+↓), que abre o calendário do navegador e preenche o campo em dd/mm/aaaa.
+  - o prazo da Nova RFP é digitado em dd/mm/aaaa, com máscara, em qualquer idioma do navegador. Correção de 05/11/2026 (PR #89): a troca tirou o calendário; ele voltou num botão ao lado do campo (ou Alt+↓), que abre o calendário do navegador e preenche o campo em dd/mm/aaaa.
 - **Consistência:**
   - cor por severidade, com o token novo `--warning` (âmbar do dataviz) e o tom `warning` no Badge:
     - vermelho só para bloqueio ou erro;
@@ -839,9 +839,11 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
   - a área no topo do item tem o mesmo estilo da lista (ícone e texto);
   - Button e IconButton do DS com a borda em propriedades separadas, sem o aviso do React ao trocar o hover.
 - Só front.
-- **Situação (05/11/2026): implementada e conferida no ambiente publicado.**
+- **Situação (05/11/2026): implementada e conferida no ambiente publicado, com a correção do calendário.**
   - Front da Vercel e backend do Render com o merge do PR #88 às 12:49 UTC.
-  - Conferida pelo grupo no teste manual. Como as mudanças são de tela, nenhuma ação de revisão nem tarefa nova ficou gravada no período, então não há eventos no banco.
+  - Conferida pelo grupo no teste manual. Como as mudanças são de tela, nenhuma ação de revisão ficou gravada no período, então não há eventos no banco.
+  - Prazo digitado em dd/mm/aaaa: às 17:22 UTC, a Pulse Benefícios enviou a RFP-04 (5 perguntas) com o prazo gravado como `2026-11-30`. A tarefa ficou pronta em 15 s, já classificada no processamento (Produto 2, Tecnologia 2, Comercial 1).
+  - Calendário de volta (PR #89): merge às 17:34 UTC, front da Vercel e backend do Render no ar às 17:35; conferido pelo grupo no teste manual. O calendário só preenche o campo, então não deixa marca no banco além do prazo da tarefa.
   - Build, 15 testes de unidade e a suíte de ponta a ponta completa (77) verdes.
   - Conferi no navegador com um backend de teste, com C-Level e Revisor: todos os itens acima e nenhum aviso do React no console.
 
