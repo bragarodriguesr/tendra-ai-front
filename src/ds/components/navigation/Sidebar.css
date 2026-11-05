@@ -81,6 +81,9 @@
   background: var(--sidebar-filet); border-radius: var(--radius-sm) 0 0 var(--radius-sm);
 }
 .tdr-sidebar-menu-button > svg { flex: none; }
+/* Subitens (fase O): o rótulo alinha com o do item pai (padding + ícone de 20 px + gap). */
+.tdr-sidebar-menu-sub { display: flex; flex-direction: column; padding: 0; margin: 0; list-style: none; }
+.tdr-sidebar-menu-button.tdr-sidebar-menu-sub-button { padding-left: calc(var(--space-3) * 2 + 20px); }
 .tdr-sidebar-item-label { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 [data-slot="sidebar-menu-badge"] { flex: none; font: var(--text-label-size)/var(--text-label-lh) var(--font-mono); color: var(--sidebar-meta); font-variant-numeric: tabular-nums; }
 .tdr-sidebar-nav[data-collapsed="true"] [data-slot="sidebar-group-label"] { visibility: hidden; overflow: hidden; white-space: nowrap; }

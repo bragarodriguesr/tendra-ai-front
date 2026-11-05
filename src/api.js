@@ -97,6 +97,14 @@ export const listarItensDaTarefa = (id) => pedir(`/tarefas/${id}/itens`);
 export const enderecoDaPlanilha = (id) => `/api/tarefas/${id}/planilha`;
 /** Exclui a tarefa com todos os registros e arquivos dela (cenário 60). Só o Aprovador, no modo compartilhado. */
 export const excluirTarefa = (id) => pedir(`/tarefas/${id}`, { method: "DELETE" });
+/**
+ * Fase O: situação da tarefa (cenários O7, O10 e O12). Devolve `{ tarefa }` com a situação nova.
+ * `pessoa` é o id da lista de configuração no modo local; com login, o backend usa a sessão.
+ */
+const mudarSituacao = (acao) => (id, pessoa) => pedir(`/tarefas/${id}/${acao}`, { method: "POST", corpo: pessoa ? { pessoa } : {} });
+export const finalizarTarefa = mudarSituacao("finalizar");
+export const arquivarTarefa = mudarSituacao("arquivar");
+export const reativarTarefa = mudarSituacao("reativar");
 
 /** Cria a tarefa. Recusa na hora o que não for .xlsx ou passar de 10 MB, com as mesmas mensagens do backend. */
 export async function criarTarefa(file, dados) {
@@ -179,6 +187,8 @@ export function paraDocumentoDaTela(d, hoje = new Date()) {
     // Validade do cabeçalho (cenário 80): "Indefinido" sem ela; vencido, o documento fica inativo de vez.
     validity: d.validade ? d.validade.split("-").reverse().join("/") : "Indefinido",
     expired: !!d.vencido,
-    off: !d.ativo
+    off: !d.ativo,
+    // Data e hora da carga, para os detalhes do documento (fase O, cenário O3).
+    sentAt: d.carregadoEm ? dataHoraDaTela(d.carregadoEm) : null
   };
 }

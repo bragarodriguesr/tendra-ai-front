@@ -1,12 +1,12 @@
 ---
 feature: ciclo-de-vida-da-tarefa-e-base
-status: draft
+status: approved
 constitution: 1.0.0
 ---
 
 # Ciclo de vida da tarefa (finalizar, arquivar, reativar) e ajustes da Base e da Exportação
 
-*Spec de 05/11/2026, a partir do pedido do grupo do mesmo dia. Decisões PO1 a PO12 propostas, aguardando validação.*
+*Spec de 05/11/2026, a partir do pedido do grupo do mesmo dia. Decisões PO1 a PO12 e fases O-a a O-c validadas pelo grupo em 05/11/2026; a RFP-04 da Pulse Benefícios fica em andamento.*
 
 ## Problema
 
@@ -47,7 +47,7 @@ constitution: 1.0.0
 - **Busca no conteúdo das perguntas na Exportação.** A busca da Exportação olha só a empresa e o título. A busca nas perguntas já existe na Revisão e nos detalhes da tarefa (fase L).
 - **Editar o documento da base pelos detalhes.** O painel de detalhes do documento só mostra. Para mudar algo, envia-se uma nova versão do `.md`, como hoje.
 
-## Decisões (propostas, aguardando validação)
+## Decisões (validadas em 05/11/2026)
 
 | # | Tema | Proposta | Alternativa descartada |
 |---|---|---|---|
@@ -289,12 +289,9 @@ constitution: 1.0.0
 
 ## Perguntas em aberto
 
-- **[Grupo, bloqueia o início]** Validar PO1 a PO12, principalmente estas três:
-  - o nome "Finalizar RFP" no box (PO2);
-  - só o Aprovador arquiva e reativa (PO4);
-  - a finalizada também é só leitura e não reabre (PO5).
-- **[Grupo, não bloqueia]** Status ao reativar uma tarefa 100% aprovada: a proposta é mostrar "Pronta", calculado pelos itens (PO7), e não forçar "Em revisão".
-- **[Grupo, não bloqueia]** A RFP-04 da Pulse Benefícios, 100% aprovada antes da fase, fica em andamento depois da migração. Para finalizá-la, alguém baixa a planilha e usa o box (O16). Alternativa: marcá-la como finalizada no banco depois do deploy.
+- **Resolvido (05/11/2026):** PO1 a PO12 validadas, com as fases O-a a O-c.
+- **Resolvido (05/11/2026):** ao reativar, o status é o calculado pelos itens (PO7): "Pronta" se a tarefa já estava 100% aprovada.
+- **Resolvido (05/11/2026):** a RFP-04 da Pulse Benefícios, 100% aprovada antes da fase, fica em andamento depois da migração (O16). Nenhum ajuste no banco depois do deploy.
 - **[Design, não bloqueia]** Textos do box de conclusão, da confirmação de arquivar e dos estados vazios de Finalizadas e Arquivadas.
 
 ## Fases sugeridas

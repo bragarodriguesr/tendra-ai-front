@@ -10,6 +10,16 @@ const statusCard = (accent, compact) => card(16, {
 const COLUNAS_DOS_ITENS = "120px minmax(0,1fr) 170px 150px 150px";
 const cardTitle = { fontFamily: DISPLAY, fontWeight: 600, fontSize: 24, color: "var(--n-900)" };
 
+/** Faixa da tarefa encerrada (fase O, PO11): quem, quando e que é só para leitura. */
+export function ReadOnlyNote({ text, archived }) {
+  return (
+    <div role="note" style={card(12, { padding: "12px 16px", display: "flex", gap: 10, alignItems: "center", background: "var(--n-050)" })}>
+      <Icon name={archived ? "archive" : "lock"} size={16} />
+      <span style={{ fontSize: 14, color: "var(--n-700)" }}>{text}</span>
+    </div>
+  );
+}
+
 export function TaskDetail({ v, ws, state, pad, isMobile }) {
   const { task, counts: c } = v;
   return (
@@ -22,13 +32,14 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
             <span style={{ color: "var(--n-400)" }}>{task.company} · {task.type} · prazo {task.due} ({task.dueText}) · responsável {task.owner}</span>
           </div>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            {task.hasItems ? (task.isServer
-              ? <Button variant="secondary" icon="download" disabled={!task.podeBaixar} title={task.podeBaixar ? undefined : "O Revisor baixa a planilha quando a tarefa estiver pronta: todos os itens aprovados e nenhum alerta pendente."} onClick={() => ws.askDownload(task.id)}>Baixar planilha preenchida</Button>
-              : <Button variant="secondary" icon="download" onClick={() => ws.go("export", { taskId: "t1" })}>Exportação</Button>) : null}
+            {/* O download fica só na Exportação (fase O, cenário O14). */}
+            {task.hasItems && !task.isServer ? <Button variant="secondary" icon="download" onClick={() => ws.go("export", { taskId: "t1" })}>Exportação</Button> : null}
             <Button variant="secondary" icon="building-2" onClick={() => ws.openTaskDetails(task.id)}>Ver detalhes</Button>
+            {task.canReactivate ? <Button variant="secondary" icon="rotate-ccw" loading={state.mudandoSituacao} onClick={task.reactivate}>{task.reactivateLabel}</Button> : null}
             {task.hasItems ? <Button icon="eye" onClick={() => ws.go("review")}>Abrir revisão</Button> : null}
           </div>
         </div>
+        {task.closedNote ? <ReadOnlyNote text={task.closedNote} archived={task.isArchived} /> : null}
       </div>
 
       {task.isProcessing ? (

@@ -137,6 +137,9 @@ const ROTAS_DE_TAREFA: Record<string, object | undefined> = {
   "POST /api/tarefas/:id/itens/:numero/revisar": {},
   "PUT /api/tarefas/:id/itens/:numero/area": { area: "Jurídico" },
   "PUT /api/tarefas/:id/itens/:numero/avaliacao": { valor: "positiva" },
+  "POST /api/tarefas/:id/finalizar": {},
+  "POST /api/tarefas/:id/arquivar": {},
+  "POST /api/tarefas/:id/reativar": {},
   "POST /api/tarefas/:id/itens/:numero/revisar-texto": { texto: Array.from({ length: 40 }, (_, i) => `palavra${i}`).join(" ") },
 };
 /** Rotas sem id de tarefa, cobertas pelos demais testes deste arquivo. */

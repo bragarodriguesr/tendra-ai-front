@@ -62,46 +62,26 @@ function Linha({ rotulo, valor, mono: emMono }) {
   );
 }
 
-/** Barra lateral "Ver detalhes" da tarefa: dados da empresa e contatos informados na Nova RFP (cenário 64). Esc fecha. */
-export function TaskDetailsDrawer({ d, onClose }) {
+/**
+ * Painel lateral com título, conteúdo rolável e "Fechar" (fase O, PO12): o mesmo dos detalhes da
+ * tarefa, da Dica e dos detalhes do documento. Clique fora e Esc fecham; no celular, ocupa a tela.
+ */
+export function SidePanel({ label, eyebrow, title, onClose, children, focusKey, closeLabel }) {
   const closeRef = React.useRef(null);
-  React.useEffect(() => { closeRef.current && closeRef.current.querySelector("button")?.focus(); }, [d.id]);
-  const t = d.task;
+  React.useEffect(() => { closeRef.current && closeRef.current.querySelector("button")?.focus(); }, [focusKey]);
   return (
     <>
       <div style={{ position: "fixed", inset: 0, zIndex: 110, background: "rgba(18,20,15,.32)" }} onClick={onClose} />
-      <aside role="dialog" aria-modal="true" aria-label="Detalhes da tarefa" style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: 520, maxWidth: "92vw", zIndex: 111, background: "var(--n-000)", borderLeft: "1px solid var(--n-200)", boxShadow: "var(--shadow-overlay)", display: "flex", flexDirection: "column", animation: "tdr-fade var(--duration-base) var(--ease-out) both" }}>
+      <aside role="dialog" aria-modal="true" aria-label={label} style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: 520, maxWidth: "min(100vw, 520px)", zIndex: 111, background: "var(--n-000)", borderLeft: "1px solid var(--n-200)", boxShadow: "var(--shadow-overlay)", display: "flex", flexDirection: "column", animation: "tdr-fade var(--duration-base) var(--ease-out) both" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--n-200)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
-            <span style={{ ...mono(11, "var(--n-400)"), letterSpacing: ".1em", textTransform: "uppercase" }}>Detalhes da tarefa</span>
-            <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 20, color: "var(--n-900)", overflowWrap: "anywhere" }}>{t.name}</span>
+            <span style={{ ...mono(11, "var(--n-400)"), letterSpacing: ".1em", textTransform: "uppercase" }}>{eyebrow}</span>
+            <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 20, color: "var(--n-900)", overflowWrap: "anywhere" }}>{title}</span>
           </div>
-          <span ref={closeRef} style={{ display: "flex" }}><IconButton icon="x" label="Fechar detalhes" onClick={onClose} /></span>
+          <span ref={closeRef} style={{ display: "flex" }}><IconButton icon="x" label={closeLabel || `Fechar ${label.toLowerCase()}`} onClick={onClose} /></span>
         </div>
         <div style={{ flex: 1, overflow: "auto", padding: 24, background: "var(--n-050)", display: "flex", flexDirection: "column", gap: 20 }}>
-          <section aria-label="Empresa" style={card(12, { padding: 20, display: "flex", flexDirection: "column", gap: 12 })}>
-            <span style={{ ...mono(11, "var(--n-500)"), letterSpacing: ".1em", textTransform: "uppercase" }}>Empresa</span>
-            <Linha rotulo="Nome" valor={d.empresa ? d.empresa.nome : t.company} />
-            <Linha rotulo="CNPJ" valor={d.empresa ? cnpjDaTela(d.empresa.cnpj) : "—"} emMono />
-            <Linha rotulo="Tipo" valor={t.type} />
-            <Linha rotulo="Prazo" valor={t.due && t.due !== "—" ? `${t.due} (${t.dueText})` : "Sem prazo"} emMono />
-            <Linha rotulo="Responsável" valor={t.owner} />
-            {t.file ? <Linha rotulo="Arquivo" valor={t.file} emMono /> : null}
-          </section>
-          <section aria-label="Contatos" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <span style={{ ...mono(11, "var(--n-500)"), letterSpacing: ".1em", textTransform: "uppercase" }}>Contatos · {d.carregando ? "…" : d.contatos.length}</span>
-            {d.carregando ? <div style={{ fontSize: 14, color: "var(--n-500)" }}>Carregando…</div>
-              : d.erro ? <div role="alert" style={{ fontSize: 14, color: "var(--danger)" }}>Não foi possível ler os dados: {d.erro}</div>
-              : !d.contatos.length ? <div style={{ fontSize: 14, color: "var(--n-500)" }}>Nenhum contato informado na importação.</div>
-              : d.contatos.map((c, i) => (
-                <div key={i} style={card(12, { padding: 16, display: "flex", flexDirection: "column", gap: 10 })}>
-                  <span style={{ fontWeight: 600, color: "var(--n-900)" }}>{c.nome || "Sem nome"}</span>
-                  <Linha rotulo="Cargo" valor={c.cargo} />
-                  <Linha rotulo="Telefone" valor={c.telefone} emMono />
-                  <Linha rotulo="E-mail" valor={c.email ? <a href={`mailto:${c.email}`}>{c.email}</a> : ""} emMono />
-                </div>
-              ))}
-          </section>
+          {children}
         </div>
         <div style={{ padding: "16px 24px", borderTop: "1px solid var(--n-200)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={mono(11, "var(--n-400)")}>Esc fecha</span>
@@ -109,6 +89,49 @@ export function TaskDetailsDrawer({ d, onClose }) {
         </div>
       </aside>
     </>
+  );
+}
+
+/** Bloco do painel lateral: rótulo em caixa alta e o conteúdo num cartão. */
+export function PanelSection({ label, children }) {
+  return (
+    <section aria-label={label} style={card(12, { padding: 20, display: "flex", flexDirection: "column", gap: 12 })}>
+      <span style={{ ...mono(11, "var(--n-500)"), letterSpacing: ".1em", textTransform: "uppercase" }}>{label}</span>
+      {children}
+    </section>
+  );
+}
+
+export { Linha as PanelRow };
+
+/** Barra lateral "Ver detalhes" da tarefa: dados da empresa e contatos informados na Nova RFP (cenário 64). Esc fecha. */
+export function TaskDetailsDrawer({ d, onClose }) {
+  const t = d.task;
+  return (
+    <SidePanel label="Detalhes da tarefa" eyebrow="Detalhes da tarefa" title={t.name} onClose={onClose} focusKey={d.id} closeLabel="Fechar detalhes">
+      <PanelSection label="Empresa">
+        <Linha rotulo="Nome" valor={d.empresa ? d.empresa.nome : t.company} />
+        <Linha rotulo="CNPJ" valor={d.empresa ? cnpjDaTela(d.empresa.cnpj) : "—"} emMono />
+        <Linha rotulo="Tipo" valor={t.type} />
+        <Linha rotulo="Prazo" valor={t.due && t.due !== "—" ? `${t.due} (${t.dueText})` : "Sem prazo"} emMono />
+        <Linha rotulo="Responsável" valor={t.owner} />
+        {t.file ? <Linha rotulo="Arquivo" valor={t.file} emMono /> : null}
+      </PanelSection>
+      <section aria-label="Contatos" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <span style={{ ...mono(11, "var(--n-500)"), letterSpacing: ".1em", textTransform: "uppercase" }}>Contatos · {d.carregando ? "…" : d.contatos.length}</span>
+        {d.carregando ? <div style={{ fontSize: 14, color: "var(--n-500)" }}>Carregando…</div>
+          : d.erro ? <div role="alert" style={{ fontSize: 14, color: "var(--danger)" }}>Não foi possível ler os dados: {d.erro}</div>
+          : !d.contatos.length ? <div style={{ fontSize: 14, color: "var(--n-500)" }}>Nenhum contato informado na importação.</div>
+          : d.contatos.map((c, i) => (
+            <div key={i} style={card(12, { padding: 16, display: "flex", flexDirection: "column", gap: 10 })}>
+              <span style={{ fontWeight: 600, color: "var(--n-900)" }}>{c.nome || "Sem nome"}</span>
+              <Linha rotulo="Cargo" valor={c.cargo} />
+              <Linha rotulo="Telefone" valor={c.telefone} emMono />
+              <Linha rotulo="E-mail" valor={c.email ? <a href={`mailto:${c.email}`}>{c.email}</a> : ""} emMono />
+            </div>
+          ))}
+      </section>
+    </SidePanel>
   );
 }
 
@@ -159,6 +182,43 @@ export function ConfirmDownloadDialog({ task, onCancel, onConfirm }) {
         </div>
       </div>
     </div>
+  );
+}
+
+/** Diálogo de confirmação no padrão dos demais (largura de 460 px, Esc fecha pelo atalho do Workspace). */
+function Confirm({ id, title, children, actions }) {
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 120, background: "rgba(18,20,15,.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div role="alertdialog" aria-modal="true" aria-labelledby={`${id}-title`} aria-describedby={`${id}-desc`} style={{ width: 460, maxWidth: "calc(100vw - 32px)", boxSizing: "border-box", background: "var(--n-000)", borderRadius: 16, padding: 28, display: "flex", flexDirection: "column", gap: 16, boxShadow: "var(--shadow-overlay)" }}>
+        <div id={`${id}-title`} style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 22, color: "var(--n-900)" }}>{title}</div>
+        <div id={`${id}-desc`} style={{ lineHeight: 1.6 }}>{children}</div>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>{actions}</div>
+      </div>
+    </div>
+  );
+}
+
+/** Box de conclusão depois de baixar a tarefa pronta (fase O, cenário O6). */
+export function FinishTaskDialog({ task, busy, onCancel, onConfirm }) {
+  return (
+    <Confirm id="tdr-fim" title={`${task.kind} concluída. Parabéns pelo trabalho!`} actions={<>
+      <Button variant="secondary" onClick={onCancel} disabled={busy}>Agora não</Button>
+      <Button icon="check-check" onClick={onConfirm} loading={busy} autoFocus>Finalizar {task.kind}</Button>
+    </>}>
+      Quer finalizar “{task.title}”? Ela sai das tarefas em andamento e fica em Finalizadas, só para leitura.
+    </Confirm>
+  );
+}
+
+/** Confirmação antes de arquivar (fase O, cenário O10). */
+export function ConfirmArchiveTaskDialog({ task, busy, onCancel, onConfirm }) {
+  return (
+    <Confirm id="tdr-arq" title={`Arquivar “${task.title}”?`} actions={<>
+      <Button variant="secondary" onClick={onCancel} disabled={busy} autoFocus>Cancelar</Button>
+      <Button icon="archive" onClick={onConfirm} loading={busy}>Arquivar tarefa</Button>
+    </>}>
+      Ela sai das tarefas em andamento e fica em Arquivadas, só para leitura, com os itens, os alertas e o estágio de agora. Você pode reativá-la depois.
+    </Confirm>
   );
 }
 

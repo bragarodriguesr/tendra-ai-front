@@ -9,11 +9,12 @@ import { listarUsuarios } from "../autenticacao/perfis.ts";
 import { normalizarCnpj } from "../regras/cnpj.ts";
 import { MENSAGEM_DE_TAREFA_NAO_ENCONTRADA, organizacaoDo } from "./organizacao.ts";
 import { gerarPlanilhaDaRevisao } from "../revisao/planilhaDaRevisao.ts";
+import { mensagemDeSoLeitura, reconhecerPessoa } from "../revisao/revisao.ts";
 import { obterEmpresaDaTarefa } from "../persistencia/empresas.ts";
 import { ClienteDaIa, ErroDaIa } from "../ia/cliente.ts";
 import { MODELO_DE_REVISAO_DE_TEXTO_PADRAO } from "../config/config.ts";
 import { ErroDaRevisaoDeTexto, MAXIMO_DE_CARACTERES, MINIMO_DE_PALAVRAS, contarPalavras, revisarTexto } from "../revisao/revisaoDeTexto.ts";
-import { excluirTarefa, listarItens, listarRequisicoes, registrarRequisicao, listarTarefas, listarTarefasEmProcessamento, obterTarefa, type DadosDaTarefa, type Tarefa } from "../persistencia/tarefas.ts";
+import { excluirTarefa, listarItens, mudarSituacao, type SituacaoDaTarefa, listarRequisicoes, registrarRequisicao, listarTarefas, listarTarefasEmProcessamento, obterTarefa, type DadosDaTarefa, type Tarefa } from "../persistencia/tarefas.ts";
 
 /**
  * Rotas de tarefas (etapa B2). A planilha é validada na hora (cenários 4 e 31); o processamento
@@ -36,6 +37,9 @@ export function tarefaPublica(tarefa: Tarefa) {
     comportamento: tarefa.comportamento,
     criadaEm: tarefa.criadaEm,
     concluidaEm: tarefa.concluidaEm,
+    situacao: tarefa.situacao,
+    situacaoPor: tarefa.situacaoPor,
+    situacaoEm: tarefa.situacaoEm,
   };
 }
 
@@ -186,6 +190,8 @@ export function registrarRotasDeTarefas(servidor: FastifyInstance, opcoes: Opcoe
     const tarefa = await tarefaExistente(pedido, pedido.params.id);
     // A tarefa em processamento ainda grava itens e arquivos: excluir só depois que ela terminar.
     if (tarefa.estado === "processando") throw new ErroDaRota(409, "A tarefa ainda está em processamento. Exclua depois que ela terminar.");
+    // Cenário O13: a finalizada é o registro do que foi entregue e não é excluída (PO5).
+    if (tarefa.situacao === "finalizada") throw new ErroDaRota(409, "Tarefa finalizada não pode ser excluída.");
     const caminhos = await excluirTarefa(banco, tarefa.organizacaoId, tarefa.id);
     // Os registros já saíram; um arquivo que falhe ao apagar fica só no log, sem tarefa que aponte para ele.
     for (const caminho of caminhos) {
@@ -215,6 +221,48 @@ export function registrarRotasDeTarefas(servidor: FastifyInstance, opcoes: Opcoe
       .send(conteudo);
   });
 
+  // Fase O: finalizar, arquivar e reativar (cenários O7, O10 e O12). Quem age é a pessoa da sessão;
+  // sem login, a da lista de configuração (`pessoa`, como nas rotas da revisão).
+  const quemAge = (pedido: FastifyRequest<{ Body: { pessoa?: string } | undefined }>) =>
+    (pedido.pessoaDaSessao ?? reconhecerPessoa(opcoes.pessoas, pedido.body?.pessoa)).nome;
+  const MUDANCA = { schema: { params: ID, body: { type: "object", additionalProperties: false, properties: { pessoa: { type: "string" } } } } } as const;
+  const mudar = async (
+    pedido: FastifyRequest<{ Params: { id: string }; Body: { pessoa?: string } | undefined }>,
+    de: SituacaoDaTarefa, para: SituacaoDaTarefa, recusa: (atual: SituacaoDaTarefa) => string, exigir?: (itens: Awaited<ReturnType<typeof listarItens>>) => void,
+  ) => {
+    const tarefa = await tarefaExistente(pedido, pedido.params.id);
+    const pessoa = quemAge(pedido);
+    if (tarefa.situacao !== de) throw new ErroDaRota(409, recusa(tarefa.situacao));
+    const mudada = await mudarSituacao(banco, { organizacaoId: tarefa.organizacaoId, id: tarefa.id, de, para, pessoa, ...(exigir === undefined ? {} : { exigir }) });
+    if (mudada === null) throw new ErroDaRota(409, "A tarefa mudou de situação enquanto o pedido era atendido. Atualize a tela.");
+    pedido.log.info({ tarefa: tarefa.id, pessoa, de, para }, "Situação da tarefa alterada");
+    return { tarefa: tarefaPublica(mudada) };
+  };
+  const jaEncerrada = (atual: SituacaoDaTarefa) => (atual === "finalizada" ? "A tarefa já está finalizada." : "A tarefa está arquivada.");
+
+  // PO3 e PO4: só a tarefa pronta (100% aprovada, sem alerta pendente), por quem pode baixá-la (Revisor e Aprovador).
+  servidor.post<{ Params: { id: string }; Body: { pessoa?: string } | undefined }>("/api/tarefas/:id/finalizar", MUDANCA, async (pedido) => {
+    const tarefa = await tarefaPronta(pedido, pedido.params.id);
+    if (tarefa.situacao !== "em_andamento") throw new ErroDaRota(409, jaEncerrada(tarefa.situacao));
+    return mudar(pedido, "em_andamento", "finalizada", jaEncerrada, (itens) => {
+      if (!revisaoConcluida(itens)) throw new ErroDaRota(409, "Só a tarefa pronta é finalizada: todos os itens aprovados e nenhum alerta pendente.");
+    });
+  });
+
+  // PO4 e PO6: só o Aprovador, e não durante o processamento, que ainda grava itens.
+  servidor.post<{ Params: { id: string }; Body: { pessoa?: string } | undefined }>("/api/tarefas/:id/arquivar", MUDANCA, async (pedido) => {
+    exigirAprovador(pedido, "Só o Aprovador pode arquivar tarefas.");
+    const tarefa = await tarefaExistente(pedido, pedido.params.id);
+    if (tarefa.estado === "processando") throw new ErroDaRota(409, "A tarefa ainda está em processamento. Arquive depois que ela terminar.");
+    return mudar(pedido, "em_andamento", "arquivada", jaEncerrada);
+  });
+
+  // PO7: volta a em andamento com itens, aprovações e alertas como estavam. Só a arquivada (PO5).
+  servidor.post<{ Params: { id: string }; Body: { pessoa?: string } | undefined }>("/api/tarefas/:id/reativar", MUDANCA, async (pedido) => {
+    exigirAprovador(pedido, "Só o Aprovador pode reativar tarefas.");
+    return mudar(pedido, "arquivada", "em_andamento", (atual) => (atual === "finalizada" ? "Tarefa finalizada não é reativada." : "A tarefa já está em andamento."));
+  });
+
   // Dados da empresa e contatos informados na Nova RFP (cenários 63 e 64), em qualquer estado da tarefa.
   servidor.get<{ Params: { id: string } }>("/api/tarefas/:id/empresa", { schema: { params: ID } }, async (pedido) => {
     const tarefa = await tarefaExistente(pedido, pedido.params.id);
@@ -236,6 +284,7 @@ export function registrarRotasDeTarefas(servidor: FastifyInstance, opcoes: Opcoe
       const { id } = pedido.params;
       const numero = Number(pedido.params.numero);
       const tarefa = await tarefaPronta(pedido, id);
+      if (tarefa.situacao !== "em_andamento") throw new ErroDaRota(409, mensagemDeSoLeitura(tarefa.situacao));
       const { rows } = await banco.query<{ orig: string }>("SELECT orig FROM itens WHERE tarefa_id = $1 AND numero = $2", [tarefa.id, numero]);
       if (rows[0] === undefined) throw new ErroDaRota(404, "Item não encontrado.");
       if (rows[0].orig !== "") throw new ErroDaRota(409, "A revisão com IA é só para respostas escritas em itens sem rascunho.");

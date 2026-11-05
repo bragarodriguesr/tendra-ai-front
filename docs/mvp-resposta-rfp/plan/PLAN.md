@@ -967,6 +967,18 @@ Pedida em 04/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 
 **Situação (04/11/2026): implementada e conferida no ambiente publicado, exceto a avaliação da classificação (N4), que espera a rotulação do gabarito.** Migração 011 e reclassificação das tarefas em aberto conferidas no Supabase, depois da troca da chave da Anthropic no Render. Detalhes em `plan/PLAN_FASE_N.md`.
 
+## Fase O: ciclo de vida da tarefa, Exportação e Base
+
+Pedida em 05/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/spec/SPEC_FASE_O.md` (cenários O1 a O17, `approved`), e o plano detalhado, em `docs/mvp-resposta-rfp/plan/PLAN_FASE_O.md`. Decisões PO1 a PO12 e fases O-a a O-c validadas em 05/11/2026; a RFP-04 da Pulse Benefícios fica em andamento.
+
+**Objetivo:**
+- a tarefa termina sem perder nada: finalizada (entregue) ou arquivada (abandonada), com quem e quando, e só para leitura;
+- os contadores de trabalho em andamento não contam as encerradas;
+- a Exportação mostra as prontas primeiro, com filtro e busca;
+- a Base fica mais enxuta, com a Dica e os detalhes do documento em painéis.
+
+**Situação (05/11/2026): implementada, aguardando merge e publicação.** Detalhes em `plan/PLAN_FASE_O.md`.
+
 ## Definição de pronto (proposta, P10)
 
 Uma etapa só é concluída quando:

@@ -102,7 +102,7 @@ Corpo em N-700 sobre papel = 9.1:1. Meta em N-400 = 4.9:1 (é o tom mais claro p
 
 ## ICONOGRAPHY
 
-A marca **não tinha** conjunto de ícones próprio. Adotamos **Lucide** (licença ISC): traço 2px, cantos arredondados, geometria de 24px — a escolha mais próxima do símbolo, que também é feito de traço uniforme. 51 glifos foram copiados para `assets/icons/` e embutidos em `components/core/icon-paths.js`; o componente `Icon` os renderiza inline herdando `currentColor`.
+A marca **não tinha** conjunto de ícones próprio. Adotamos **Lucide** (licença ISC): traço 2px, cantos arredondados, geometria de 24px — a escolha mais próxima do símbolo, que também é feito de traço uniforme. 56 glifos foram copiados para `assets/icons/` e embutidos em `components/core/icon-paths.js`; o componente `Icon` os renderiza inline herdando `currentColor`.
 
 Regras:
 - Tamanhos: 14 (dentro de badge), 16 (padrão em botões e listas), 20 (nav e cabeçalhos), 24 (estado vazio).
@@ -198,6 +198,6 @@ O Workspace usa `SidebarProvider`, `Sidebar`, `SidebarTrigger`, `SidebarContent`
 
 `SidebarProvider` é controlado: `open/onOpenChange`, `openMobile/onOpenMobileChange` e `isMobile`. No Workspace os valores vêm de `useWorkspace`, sem cookie novo. Abaixo de 900px, `Sidebar` usa Dialog Base UI em portal; desktop recolhe a ícones. `useSidebar` fornece toggle, refs do trigger/main e motivo de fechamento para foco. Atalho ⌘B/Ctrl+B ignora campos editáveis.
 
-`SidebarNav` preserva sua API anterior e funciona isolado sem provider. Grupos/itens vêm do viewModel; contagens e ações não são recalculadas. O padrão aberto é 288px (4 × space-18) e recolhido 64px (space-16), itens >=44px, ícones 20px, foco sálvia. Rodapé fica fora da região rolável. Tooltips são específicos do sidebar, em portal, sem alteração do Tooltip global. O destaque de Primeiros passos (base vazia) usa o gradiente limão em movimento do "Revisar com IA", selecionado ou não, por pedido explícito. Movimento reduzido desativa transições.
+`SidebarNav` preserva sua API anterior e funciona isolado sem provider. Um item pode ter subitens (`items`, fase O): ficam recuados, sem ícone, alinhados ao rótulo do pai; aberto, o pai não fica marcado e cada subitem mostra a sua contagem; recolhido, só o pai aparece, com a contagem no rótulo, os subitens na dica e a marca quando um deles é a página atual. Grupos/itens vêm do viewModel; contagens e ações não são recalculadas. O padrão aberto é 288px (4 × space-18) e recolhido 64px (space-16), itens >=44px, ícones 20px, foco sálvia. Rodapé fica fora da região rolável. Tooltips são específicos do sidebar, em portal, sem alteração do Tooltip global. O destaque de Primeiros passos (base vazia) usa o gradiente limão em movimento do "Revisar com IA", selecionado ou não, por pedido explícito. Movimento reduzido desativa transições.
 
 O shell do Workspace contém o sidebar integral com `SidebarHeader` e o Logo horizontal de 28px, na mesma posição do site (`--brandbar-pad`); recolhido, só o nome some e o símbolo não se move. O controle fica no header da coluna de conteúdo, junto à borda da navegação; a marca não depende da BrandBar global. No mobile, o logo aparece depois do botão de menu na barra superior, como no site, e também no header do painel.
