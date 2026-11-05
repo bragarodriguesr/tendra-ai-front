@@ -2,7 +2,7 @@ import React from "react";
 import { seedItems, seedDocs, genItems, nowStr, ITEM_TASKS, GENERATED, TASKS, TASK_IDS } from "./data.js";
 import {
   MENSAGEM_FORMATO_DA_RFP, aprovarItemNaApi, avaliarItemNaApi, criarTarefa, editarTextoDoItem, listarAvaliacoes, listarPessoas, restaurarItem, dataHoraDaTela, definirDocumentoAtivo, enderecoDaPlanilha, enviarDocumentosDaBase, hojeIso, listarDocumentosDaBase, listarItensDaTarefa,
-  listarTarefas, paraDocumentoDaTela, paraItemDaTela, reconhecerAlertaNaApi, escolherFonteNaApi, revisarItemNaApi, trocarAreaNaApi, revisarTextoComIa, excluirTarefa, obterEmpresaDaTarefa, listarUsuarios
+  listarTarefas, paraDocumentoDaTela, paraItemDaTela, reconhecerAlertaNaApi, escolherFonteNaApi, revisarItemNaApi, trocarAreaNaApi, revisarTextoComIa, excluirTarefa, obterEmpresaDaTarefa, listarUsuarios, finalizarTarefa, arquivarTarefa, reativarTarefa
 , entrar, obterSessao, quandoPerderASessao, sair} from "../api.js";
 
 import { areaDoItem, areasPreferidas, ordenarPorArea } from "./areas.js";
@@ -13,10 +13,8 @@ const chaveDosAlertasLidos = (pessoa) => "tendra.alertasLidos." + pessoa;
 // Alertas do sino fechados no "X" (voltam no próximo login) e tratados pelo botão de ação (não voltam).
 const chaveDosAlertasFechados = (pessoa) => "tendra.alertasFechados." + pessoa;
 const chaveDosAlertasTratados = (pessoa) => "tendra.alertasTratados." + pessoa;
-const CHAVE_ALERTAS_RECOLHIDOS = "tendra.alertasRecolhidos";
 const lerMapa = (chave) => { try { return JSON.parse(localStorage.getItem(chave) || "{}") || {}; } catch { return {}; } };
 const gravar = (chave, valor) => { try { localStorage.setItem(chave, valor); } catch { /* sem armazenamento: só nesta aba */ } };
-const recolhidosAntes = () => { try { return localStorage.getItem(CHAVE_ALERTAS_RECOLHIDOS) === "1"; } catch { return false; } };
 export const newContact = () => ({ id: "c" + ++contactSeq, name: "", role: "", phone: "", email: "" });
 const emptyForm = () => ({ name: "", company: "", cnpj: "", type: "RFP", due: "", dueBr: "", owner: "", contacts: [newContact()], file: null, fileError: null, identified: false, tried: false });
 
@@ -36,7 +34,7 @@ function prazoDaTela(prazo) {
 }
 
 const initialState = ({ initialScreen, role }) => ({
-  view: "site", tAi: 0, hfilter: "todos", alertAt: { id: null, i: 0 },
+  view: "site", hfilter: "todos", alertAt: { id: null, i: 0 },
   // Cartão de fontes em conflito mostrado e item com o histórico de alertas aberto (todos tratados).
   srcAt: { id: null, i: 0 }, alertsOpen: null,
   screen: initialScreen, role,
@@ -58,8 +56,15 @@ const initialState = ({ initialScreen, role }) => ({
   form: emptyForm(),
   // Último salvamento de cada item, por "tarefa/item": cada resposta tem o seu indicador.
   fb: {}, savedAt: {}, tick: 0, taskRetry: false, alertsRead: {}, alertsHidden: {}, alertsDone: {},
-  // Cartão de alertas da tela de Tarefas recolhido, e tarefa à espera da confirmação do download.
-  tAlertsCollapsed: recolhidosAntes(), confirmDownload: null,
+  // Tarefa à espera da confirmação do download.
+  confirmDownload: null,
+  // Fase O: box de conclusão depois do download (cenário O6), tarefa à espera da confirmação de
+  // arquivar (O10) e mudança de situação em andamento.
+  finishing: null, archiving: null, mudandoSituacao: false,
+  // Exportação: filtro por status e busca por empresa ou título (cenário O5).
+  exportFilter: "todos", exportBusca: "",
+  // Base: painel da Dica (O1) e documento com os detalhes abertos (O3).
+  baseHint: false, docDetails: null,
   // "Revisar com IA" em andamento e o texto de antes da revisão, para desfazer (cenário 65).
   revisandoIa: false, antesDaIa: null,
   // Passo aberto em Primeiros passos; null mostra o passo atual (o primeiro ainda não concluído).
@@ -117,7 +122,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
        */
       forgetSessionData() {
         setRaw((s) => {
-          const next = { ...initialState({ initialScreen: "dashboard", role: s.role }), view: s.view, modo: s.modo, vw: s.vw, sideCollapsed: s.sideCollapsed, tAlertsCollapsed: s.tAlertsCollapsed };
+          const next = { ...initialState({ initialScreen: "dashboard", role: s.role }), view: s.view, modo: s.modo, vw: s.vw, sideCollapsed: s.sideCollapsed };
           ref.current = next;
           return next;
         });
@@ -189,11 +194,6 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
           return { alertsRead: lerMapa(chaveDosAlertasLidos(dono)), alertsHidden: lerMapa(chaveDosAlertasFechados(dono)), alertsDone: lerMapa(chaveDosAlertasTratados(dono)) };
         });
       },
-      /** Recolhe ou abre o cartão de alertas da tela de Tarefas; a escolha fica no navegador. */
-      collapseTaskAlerts(recolher) {
-        gravar(CHAVE_ALERTAS_RECOLHIDOS, recolher ? "1" : "0");
-        setState({ tAlertsCollapsed: recolher });
-      },
       switchRole() {
         api.flushSaves();
         setState((s) => ({ role: s.role === "Aprovador" ? "Revisor" : "Aprovador" }));
@@ -260,9 +260,9 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         api.flushSaves();
         const st = ref.current;
         let tid = extra.taskId;
-        // Com o servidor, a Revisão sem tarefa escolhida abre a primeira tarefa pronta.
+        // Com o servidor, a Revisão sem tarefa escolhida abre a primeira tarefa pronta em andamento (PO11).
         if (screen === "review" && !tid && !st.itemsTask) {
-          const pronta = st.tarefas.find((t) => t.estado === "pronta");
+          const pronta = st.tarefas.find((t) => t.estado === "pronta" && (t.situacao || "em_andamento") === "em_andamento");
           if (pronta) { tid = pronta.id; extra = { ...extra, taskId: tid }; }
         }
         let sw = {};
@@ -655,12 +655,58 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
           return false;
         }
       },
-      /** "Baixar planilha preenchida": com a revisão ainda não concluída (tarefa não "Pronta"), pergunta antes. */
+      /**
+       * "Baixar planilha preenchida": com a revisão ainda não concluída (tarefa não "Pronta"), pergunta antes.
+       * A tarefa pronta e em andamento abre, depois do download, o box de conclusão (cenário O6).
+       */
       askDownload(id) {
         const t = api.taskInfo(id);
-        if (t && t.isReady) api.downloadSheet(id);
-        else setState({ confirmDownload: id });
+        if (t && (t.isReady || t.isClosed)) {
+          api.downloadSheet(id);
+          if (t.isReady && !t.isClosed && t.isServer) setState({ finishing: id });
+        } else setState({ confirmDownload: id });
       },
+      /** Troca a tarefa do servidor pela que a rota devolveu, com a situação nova. */
+      applyTask(tarefa) {
+        setState((x) => ({ tarefas: x.tarefas.map((t) => (t.id === tarefa.id ? tarefa : t)) }));
+      },
+      /** Fase O: finalizar (O7), arquivar (O10) e reativar (O12). Devolve true se a situação mudou. */
+      async changeSituation(id, acao) {
+        const s = ref.current;
+        if (s.mudandoSituacao) return false;
+        const nome = api.taskInfo(id).name, tipo = api.kindOf(id);
+        const chamada = { finalizar: finalizarTarefa, arquivar: arquivarTarefa, reativar: reativarTarefa }[acao];
+        setState({ mudandoSituacao: true });
+        try {
+          const { tarefa } = await chamada(id, api.person(s).id);
+          api.applyTask(tarefa);
+          setState({ mudandoSituacao: false });
+          const msg = {
+            finalizar: [`${tipo} finalizada`, `${nome} saiu das tarefas em andamento e está em Finalizadas.`],
+            arquivar: [`${tipo} arquivada`, `${nome} está em Arquivadas, só para leitura. Você pode reativá-la nos detalhes.`],
+            reativar: [`${tipo} reativada`, `${nome} voltou para as tarefas em andamento.`]
+          }[acao];
+          api.toast(msg[0], msg[1], acao === "finalizar" ? "success" : "neutral");
+          return true;
+        } catch (e) {
+          setState({ mudandoSituacao: false });
+          api.toast(`${tipo} não ${{ finalizar: "finalizada", arquivar: "arquivada", reativar: "reativada" }[acao]}`, e.message, "danger");
+          return false;
+        }
+      },
+      async finishTask() {
+        const id = ref.current.finishing;
+        if (id && (await api.changeSituation(id, "finalizar"))) setState({ finishing: null });
+      },
+      askArchiveTask(id) { setState({ archiving: id }); },
+      async archiveTask() {
+        const id = ref.current.archiving;
+        if (id && (await api.changeSituation(id, "arquivar"))) setState({ archiving: null });
+        else setState({ archiving: null });
+      },
+      reactivateTask(id) { return api.changeSituation(id, "reativar"); },
+      /** "RFP" ou "RFI", para os textos do box, dos botões e dos avisos. */
+      kindOf(id) { const t = api.taskInfo(id) || {}; return /RFI/i.test(t.type || "") ? "RFI" : "RFP"; },
       confirmDownloadSheet() {
         const id = ref.current.confirmDownload;
         setState({ confirmDownload: null });
@@ -712,6 +758,10 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         }
       },
       closeTaskDetails() { setState({ detalhes: null }); },
+      /** Base (fase O): painel da Dica (O1) e detalhes de um documento (O3). */
+      openBaseHint() { setState({ baseHint: true, docDetails: null }); },
+      openDocDetails(id) { setState({ docDetails: id, baseHint: false }); },
+      closeBasePanels() { setState({ baseHint: false, docDetails: null }); },
       /** Usuários da plataforma para o campo "Responsável" da Nova RFP (cenário 62). */
       async loadUsers() {
         try {
@@ -789,7 +839,11 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
           id: t.id, name: d.nome || t.arquivo, company: d.empresa || "Empresa não informada", type: d.tipo || "RFP", items: t.total,
           ...prazoDaTela(d.prazo), dueColor: "#12140F", owner: d.responsavel || "—", isServer: true, file: t.arquivo,
           isProcessing: t.estado === "processando", isFailed: t.estado === "falha", reason: t.motivo, done: t.processadas,
-          when: dataHoraDaTela(t.concluidaEm || t.criadaEm), whenMs: Date.parse(t.concluidaEm || t.criadaEm)
+          when: dataHoraDaTela(t.concluidaEm || t.criadaEm), whenMs: Date.parse(t.concluidaEm || t.criadaEm),
+          // Fase O (PO1): situação da tarefa, com quem e quando a encerrou.
+          situacao: t.situacao || "em_andamento", isFinal: t.situacao === "finalizada", isArchived: t.situacao === "arquivada",
+          isClosed: t.situacao === "finalizada" || t.situacao === "arquivada",
+          closedBy: t.situacaoPor || null, closedAt: t.situacaoEm ? dataHoraDaTela(t.situacaoEm).slice(0, 10) : null, closedMs: t.situacaoEm ? Date.parse(t.situacaoEm) : null
         };
         if (api.hasItems(t.id, s)) {
           const cc = api.counts(t.id, s);
@@ -812,6 +866,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
       if (e.key === "Escape" && s.drawer) { ws.setState({ drawer: null }); return; }
       if (e.key === "Escape" && s.detalhes) { ws.setState({ detalhes: null }); return; }
       if (e.key === "Escape" && s.confirmDownload) { ws.setState({ confirmDownload: null }); return; }
+      if (e.key === "Escape" && (s.finishing || s.archiving || s.baseHint || s.docDetails)) { ws.setState({ finishing: null, archiving: null, baseHint: false, docDetails: null }); return; }
       if (t === "INPUT" || t === "TEXTAREA" || t === "SELECT" || s.view !== "app" || s.screen !== "review" || s.drawer) return;
       if (e.key === "j" || e.key === "J") ws.step(1);
       if (e.key === "k" || e.key === "K") ws.step(-1);
@@ -843,7 +898,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
   React.useEffect(() => { if (state.screen === "base" || state.screen === "onboarding") ws.loadBase(); }, [ws, state.screen]);
   // Tarefas: lê ao abrir e ao entrar nas telas que as mostram; enquanto alguma processa, consulta o estado a cada 2 segundos.
   // Primeiros passos também: os passos 2 e 3 dependem das tarefas e dos itens revisados.
-  React.useEffect(() => { if (["dashboard", "tasks", "task", "export", "review", "onboarding"].includes(state.screen)) ws.loadTasks(); }, [ws, state.screen]);
+  React.useEffect(() => { if (["dashboard", "tasks", "finalizadas", "arquivadas", "task", "export", "review", "onboarding"].includes(state.screen)) ws.loadTasks(); }, [ws, state.screen]);
   React.useEffect(() => { if (state.screen === "new") ws.loadUsers(); }, [ws, state.screen, state.sessao]);
   const processing = state.tarefas.some((t) => t.estado === "processando");
   React.useEffect(() => {

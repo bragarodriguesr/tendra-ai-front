@@ -2,7 +2,7 @@ import type { EntradaDoRegistro } from "../ia/cliente.ts";
 import type { ComportamentoDaTarefa } from "../fluxo/processarTarefa.ts";
 import type { MetricasDaTarefa } from "../observabilidade/metricas.ts";
 import type { ItemDaRevisao } from "../rastreabilidade/montarItem.ts";
-import type { Banco } from "./banco.ts";
+import type { Banco, Consultas } from "./banco.ts";
 import { gravarEmpresaDaTarefa } from "./empresas.ts";
 import type { RespostaGerada } from "../geracao/separarRespostas.ts";
 
@@ -13,6 +13,9 @@ import type { RespostaGerada } from "../geracao/separarRespostas.ts";
  */
 
 export type EstadoDaTarefa = "processando" | "pronta" | "falha";
+
+/** Situação da tarefa (fase O, PO1): a decisão da empresa, separada do estado do processamento. */
+export type SituacaoDaTarefa = "em_andamento" | "finalizada" | "arquivada";
 
 export const MOTIVO_DE_INTERRUPCAO = "Processamento interrompido; envie a planilha novamente";
 
@@ -43,6 +46,10 @@ export interface Tarefa {
   caminhoDaPlanilhaPreenchida: string | null;
   criadaEm: string;
   concluidaEm: string | null;
+  situacao: SituacaoDaTarefa;
+  /** Quem finalizou ou arquivou, e quando; null em andamento. */
+  situacaoPor: string | null;
+  situacaoEm: string | null;
 }
 
 export type EstadoDoItem = "sugerida" | "em-revisao" | "revisada" | "aprovada" | "sem-rascunho";
@@ -79,6 +86,9 @@ interface LinhaDeTarefa {
   caminho_da_planilha_preenchida: string | null;
   criada_em: Date;
   concluida_em: Date | null;
+  situacao: SituacaoDaTarefa;
+  situacao_por: string | null;
+  situacao_em: Date | null;
 }
 
 const paraTarefa = (linha: LinhaDeTarefa): Tarefa => ({
@@ -96,7 +106,35 @@ const paraTarefa = (linha: LinhaDeTarefa): Tarefa => ({
   caminhoDaPlanilhaPreenchida: linha.caminho_da_planilha_preenchida,
   criadaEm: linha.criada_em.toISOString(),
   concluidaEm: linha.concluida_em?.toISOString() ?? null,
+  situacao: linha.situacao,
+  situacaoPor: linha.situacao_por,
+  situacaoEm: linha.situacao_em?.toISOString() ?? null,
 });
+
+/**
+ * Muda a situação da tarefa (fase O) numa transação, com a linha da tarefa travada: só se ela ainda
+ * estiver na situação de origem, e depois da conferência `exigir` sobre os itens (por exemplo, todos
+ * aprovados para finalizar). Assim, uma mudança de item ao mesmo tempo (que trava a mesma linha) não
+ * passa por baixo da conferência. Devolve a tarefa atualizada, ou null se a situação já não era a de origem.
+ */
+export async function mudarSituacao(
+  banco: Banco,
+  entrada: { organizacaoId: string; id: string; de: SituacaoDaTarefa; para: SituacaoDaTarefa; pessoa: string | null; exigir?: (itens: ItemGravado[]) => void },
+): Promise<Tarefa | null> {
+  return banco.transaction(async (transacao) => {
+    const atual = await transacao.query<{ situacao: SituacaoDaTarefa }>("SELECT situacao FROM tarefas WHERE id = $1 AND organizacao_id = $2 FOR UPDATE", [entrada.id, entrada.organizacaoId]);
+    if (atual.rows[0]?.situacao !== entrada.de) return null;
+    entrada.exigir?.(await listarItens(transacao, entrada.id));
+    const emAndamento = entrada.para === "em_andamento";
+    const { rows } = await transacao.query<LinhaDeTarefa>(
+      `UPDATE tarefas SET situacao = $3, situacao_por = $4, situacao_em = CASE WHEN $5::boolean THEN NULL ELSE now() END
+        WHERE id = $1 AND organizacao_id = $2 RETURNING *`,
+      [entrada.id, entrada.organizacaoId, entrada.para, emAndamento ? null : entrada.pessoa, emAndamento],
+    );
+    const linha = rows[0];
+    return linha === undefined ? null : paraTarefa(linha);
+  });
+}
 
 /**
  * Cria a tarefa na organização e, na mesma transação, grava a empresa e os contatos informados
@@ -276,7 +314,7 @@ export const paraItem = (linha: LinhaDeItem): ItemGravado => ({
 });
 
 /** Itens da tarefa, na ordem da planilha. Só existem para tarefas prontas. */
-export async function listarItens(banco: Banco, id: string): Promise<ItemGravado[]> {
+export async function listarItens(banco: Consultas, id: string): Promise<ItemGravado[]> {
   const { rows } = await banco.query<LinhaDeItem>("SELECT * FROM itens WHERE tarefa_id = $1 ORDER BY numero", [id]);
   return rows.map(paraItem);
 }

@@ -21,6 +21,10 @@ export class ErroDeRevisao extends Error {
   }
 }
 
+/** Cenário O11: a mesma mensagem nas rotas de item e no "Revisar com IA". */
+export const mensagemDeSoLeitura = (situacao: string | undefined) =>
+  `A tarefa está ${situacao === "finalizada" ? "finalizada" : "arquivada"} e é só para leitura.`;
+
 export const MOTIVOS_DE_AVALIACAO_NEGATIVA = ["Fonte incorreta", "Texto impreciso", "Informação desatualizada", "Outro"] as const;
 type Transacao = Parameters<Parameters<Banco["transaction"]>[0]>[0];
 
@@ -35,10 +39,14 @@ const textoDosParagrafos = (paras: ParagrafoDoItem[]) => paras.map((paragrafo) =
 const normalizar = (texto: string) => texto.replace(/\s+/g, " ").trim();
 
 async function itemDaTarefa(transacao: Transacao, tarefaId: string, numero: number): Promise<ItemGravado & { parasOriginais: ParagrafoDoItem[] }> {
-  const tarefa = await transacao.query<{ estado: string }>("SELECT estado FROM tarefas WHERE id = $1", [tarefaId]);
+  // FOR UPDATE: finalizar ou arquivar espera a mudança de item em curso, e vice-versa (fase O).
+  const tarefa = await transacao.query<{ estado: string; situacao: string }>("SELECT estado, situacao FROM tarefas WHERE id = $1 FOR UPDATE", [tarefaId]);
   const estado = tarefa.rows[0]?.estado;
   if (estado === undefined) throw new ErroDeRevisao(404, "Tarefa não encontrada.");
   if (estado !== "pronta") throw new ErroDeRevisao(409, "A tarefa não está pronta para revisão.");
+  // Cenário O11: tarefa finalizada ou arquivada é só para leitura.
+  const situacao = tarefa.rows[0]?.situacao;
+  if (situacao !== "em_andamento") throw new ErroDeRevisao(409, mensagemDeSoLeitura(situacao));
   const { rows } = await transacao.query<Parameters<typeof paraItem>[0] & { paras_originais: ParagrafoDoItem[] }>(
     "SELECT * FROM itens WHERE tarefa_id = $1 AND numero = $2",
     [tarefaId, numero],

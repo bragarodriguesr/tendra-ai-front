@@ -17,7 +17,7 @@ export async function reclassificarTarefasEmAberto(opcoes: { banco: Banco; api: 
   const { banco } = opcoes;
   const modelo = opcoes.ia.modeloDeClassificacao ?? MODELO_DE_CLASSIFICACAO_PADRAO;
   const { rows: tarefas } = await banco.query<{ id: string }>(
-    "SELECT id FROM tarefas WHERE estado = 'pronta' AND areas_classificadas_em IS NULL ORDER BY criada_em, id",
+    "SELECT id FROM tarefas WHERE estado = 'pronta' AND situacao = 'em_andamento' AND areas_classificadas_em IS NULL ORDER BY criada_em, id",
   );
   let classificadas = 0;
   let adiadas = 0;

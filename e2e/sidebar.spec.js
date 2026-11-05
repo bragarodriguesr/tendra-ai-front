@@ -28,10 +28,16 @@ async function enter(page, { server = false, shared = false, documents = 0 } = {
   await expect(nav(page)).toBeVisible();
 }
 
-test('US1: sete destinos, seleção, contadores e alvos do DS', async ({ page }) => {
+// Fase O (PO8): Tarefas tem três subitens; aberto, o item pai abre Em andamento, que fica marcado.
+const expandedLabels = ['Primeiros passos', 'Dashboard', 'Em andamento', 'Finalizadas', 'Arquivadas', 'Revisão', 'Exportação', 'Histórico', 'Base de conhecimento'];
+
+test('US1: sete destinos, três subitens de Tarefas, seleção, contadores e alvos do DS', async ({ page }) => {
   await enter(page);
-  await expect(nav(page).getByRole('link')).toHaveCount(7);
-  for (const label of labels) {
+  await expect(nav(page).getByRole('link')).toHaveCount(10);
+  await link(page, 'Tarefas').click();
+  await expect(link(page, 'Em andamento')).toHaveAttribute('aria-current', 'page');
+  await expect(link(page, 'Tarefas')).not.toHaveAttribute('aria-current', 'page');
+  for (const label of expandedLabels) {
     const item = link(page, label);
     await expect(item).toBeVisible();
     expect((await item.boundingBox()).height).toBeGreaterThanOrEqual(44);
@@ -41,7 +47,7 @@ test('US1: sete destinos, seleção, contadores e alvos do DS', async ({ page })
   expect((await nav(page).getByRole('link').allTextContents()).map(text => text.trim())).toEqual(expect.arrayContaining(labels.filter(x => !['Tarefas', 'Revisão', 'Base de conhecimento'].includes(x))));
   await link(page, 'Tarefas').click();
   await page.getByRole('row', { name: /^Abrir / }).first().click();
-  await expect(link(page, 'Tarefas')).toHaveAttribute('aria-current', 'page');
+  await expect(link(page, 'Em andamento')).toHaveAttribute('aria-current', 'page');
   await link(page, 'Tarefas').click();
   await page.getByRole('button', { name: 'Nova RFP/RFI', exact: true }).click();
   await expect(nav(page).locator('[aria-current="page"]')).toHaveCount(0);

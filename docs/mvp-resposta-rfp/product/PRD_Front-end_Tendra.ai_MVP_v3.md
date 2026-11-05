@@ -75,6 +75,8 @@ O MVP tem dois papéis, **Revisor** e **Aprovador**, e um único ponto de aprova
 
 O mapeamento persona-papel é uma sugestão de partida; quem recebe cada papel é decisão do cliente (Q-05).
 
+**Ciclo de vida da tarefa (fase O, 05/11/2026; `spec/SPEC_FASE_O.md`).** O menu Tarefas tem três listas: **Em andamento** (processando, em revisão, pronta, vencida, com falha), **Finalizadas** (100% aprovadas, baixadas e finalizadas pelo box da Exportação) e **Arquivadas** (que a empresa desistiu de concluir, mantidas como histórico). Finalizada e arquivada abrem só para leitura, com quem e quando; a arquivada pode ser reativada ou excluída, a finalizada não. Os contadores de trabalho em andamento (menu, Revisão, Dashboard e sino) não contam as encerradas. Na Exportação, as prontas vêm primeiro e as encerradas por último, com filtro por status e busca por empresa ou título. Na Base, as regras do `.md` ficam no painel "Dica", e os dados de cada documento, em "Ver detalhes".
+
 **Identidade no Workspace (novo na v2).** O nome do usuário logado aparece na barra superior. Clicar nele abre um menu com o **perfil** (Revisor ou Aprovador). O botão **"Trocar usuário"** desse menu alterna entre Kadu Mendes (Revisor) e Marcelo Vieira (Aprovador) — **Simulado**, existe só para demonstrar as permissões dos dois papéis. No produto real, o papel vem da sessão autenticada (seção 16).
 
 **O que cada papel pode fazer** (como o front aplica hoje):
@@ -90,7 +92,9 @@ O mapeamento persona-papel é uma sugestão de partida; quem recebe cada papel �
 | Marcar item como "Revisado" | Sim | Sim | Implementado |
 | **Aprovar item** | Não | Só da sua área (ou C-Level; "Geral", todos) | Implementado; para o Revisor o botão "Aprovar resposta" não aparece (26/10/2026). Fora da área, o botão fica desabilitado com "Só a área X ou C-Level aprova esta resposta." e a rota recusa com 403 (fase N, 04/11/2026) |
 | Trocar a área de uma pergunta | Não | Quem pode aprová-la, antes de aprovada | Implementado (fase N, 04/11/2026); a troca fica no histórico |
-| **Exportar o documento final** | Só da tarefa pronta | Sim | Implementado; o Revisor baixa a planilha preenchida só da tarefa "Pronta" (100% aprovada, sem alerta pendente); nas demais o botão fica desabilitado (26/10/2026) |
+| **Exportar o documento final** | Só da tarefa pronta | Sim | Implementado; o Revisor baixa a planilha preenchida só da tarefa "Pronta" (100% aprovada, sem alerta pendente); nas demais o botão fica desabilitado (26/10/2026). O download fica só na Exportação (fase O, 05/11/2026) |
+| Finalizar a tarefa pronta | Sim | Sim | Implementado (fase O, 05/11/2026): pelo box que abre depois de baixar a tarefa pronta na Exportação; vai para Finalizadas, só para leitura |
+| Arquivar, reativar e excluir arquivada | Não | Sim | Implementado (fase O, 05/11/2026): arquivar em Tarefas · Em andamento; reativar nos detalhes da arquivada; a finalizada não é excluída |
 | Ver histórico de aprovações e revisões | Sim | Sim | Implementado |
 
 As linhas de subir documentos, ativar/desativar, criar tarefa e exportar seguem como suposições deste PRD (Q-05).

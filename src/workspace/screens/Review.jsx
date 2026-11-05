@@ -2,6 +2,7 @@ import React from "react";
 import { Badge, Button, EmptyState, Icon, IconButton, Input, MonoLabel, Select, Textarea, FilterMenu, Tooltip } from "../../ds/index.js";
 import { AlertDeck, ClickRow, DISPLAY, card, mono } from "../ui.jsx";
 import { SendResult } from "./Base.jsx";
+import { ReadOnlyNote } from "./TaskDetail.jsx";
 
 const FB_REASONS = ["Fonte incorreta", "Texto impreciso", "Informação desatualizada", "Outro"];
 const fbStyle = (on) => ({
@@ -152,16 +153,18 @@ function Answer({ v, ws, state, cur }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <MonoLabel>{cur.noSource ? "Resposta sem fonte" : "Resposta"}</MonoLabel>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <span style={mono(12, "var(--n-400)")}>{v.savedText}</span>
+          {cur.readOnly ? null : <span style={mono(12, "var(--n-400)")}>{v.savedText}</span>}
           {cur.edited ? (
             <>
               {/* Só ícones; a descrição aparece ao passar o cursor (ou no foco). */}
               <Tooltip content={state.showOrig ? "Ocultar sugestão original" : "Ver sugestão original"} placement="bottom">
                 <IconButton size="sm" variant="ghost" icon="eye" label={state.showOrig ? "Ocultar sugestão original" : "Ver sugestão original"} aria-pressed={state.showOrig} onClick={() => ws.setState({ showOrig: !state.showOrig })} />
               </Tooltip>
-              <Tooltip content="Restaurar sugestão" placement="bottom">
-                <IconButton size="sm" variant="ghost" icon="refresh-cw" label="Restaurar sugestão" onClick={() => ws.restore(cur.id)} />
-              </Tooltip>
+              {cur.canRestore ? (
+                <Tooltip content="Restaurar sugestão" placement="bottom">
+                  <IconButton size="sm" variant="ghost" icon="refresh-cw" label="Restaurar sugestão" onClick={() => ws.restore(cur.id)} />
+                </Tooltip>
+              ) : null}
             </>
           ) : null}
           {cur.noSource ? null : editAction}
@@ -195,7 +198,7 @@ function Answer({ v, ws, state, cur }) {
           ))}
         </>
       )}
-      {cur.noSource ? <AddKnowledge key={cur.id} ws={ws} state={state} editAction={editAction} /> : null}
+      {cur.noSource && !cur.readOnly ? <AddKnowledge key={cur.id} ws={ws} state={state} editAction={editAction} /> : null}
       {cur.hasManual ? (
         <div style={{ ...mono(12, "var(--n-500)"), display: "flex", alignItems: "center", gap: 6 }}>
           <Icon name="pencil" size="sm" />Resposta manual, sem fonte na base · escrita por {cur.manualBy}
@@ -328,6 +331,7 @@ export function Review({ v, ws, state, height, isMobile }) {
         {cur ? (
           <>
             <div style={{ flex: 1, overflow: "auto", padding: isMobile ? "20px 16px" : "28px 40px", display: "flex", flexDirection: "column", gap: isMobile ? 20 : 24 }}>
+              {v.readOnlyNote ? <ReadOnlyNote text={v.readOnlyNote} archived={/arquivada/.test(v.readOnlyNote)} /> : null}
               {/* As setas ficam sempre à direita, na mesma posição: as etiquetas quebram linha à esquerda. */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px 12px", flexWrap: "wrap", flex: 1, minWidth: 0 }}>
@@ -362,7 +366,7 @@ export function Review({ v, ws, state, height, isMobile }) {
                 {cur.fbDown ? <div style={{ width: 220 }}><Select options={FB_REASONS} placeholder="Motivo" size="sm" aria-label="Motivo" value={cur.fbReason} onChange={(e) => ws.rate("down", e.target.value)} /></div> : null}
               </div> : null}
             </div>
-            <div style={{ borderTop: "1px solid var(--n-200)", background: "var(--n-000)", padding: `${isMobile ? 12 : 16}px ${padX}px`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: isMobile ? 10 : 16, flexWrap: "wrap" }}>
+            {cur.readOnly ? null : <div style={{ borderTop: "1px solid var(--n-200)", background: "var(--n-000)", padding: `${isMobile ? 12 : 16}px ${padX}px`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: isMobile ? 10 : 16, flexWrap: "wrap" }}>
               <div style={{ fontSize: 13, lineHeight: 1.5, color: "var(--n-900)", display: "flex", alignItems: "center", gap: 8, maxWidth: 420 }}>
                 {cur.blockText ? <Icon name="info" size="md" /> : null}<span>{cur.blockText}</span>
               </div>
@@ -371,7 +375,7 @@ export function Review({ v, ws, state, height, isMobile }) {
                 <Button variant="secondary" icon="check" disabled={cur.noRevise} onClick={() => ws.revise(cur.id)}>Marcar como revisado</Button>
                 {cur.canApprove ? <Button icon="shield-check" disabled={cur.noApprove} onClick={ws.approve}>Aprovar resposta</Button> : null}
               </div>
-            </div>
+            </div>}
           </>
         ) : (
           <div style={{ padding: padX }}><EmptyState icon="filter" title="Nenhum item neste filtro." description="Escolha outro estado para continuar a revisão." /></div>

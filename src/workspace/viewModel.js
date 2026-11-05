@@ -2,6 +2,7 @@ import { formatarTempoSalvamento } from "./tempoSalvamento.js";
 import { AL, ST, code, plural, ITEM_TASKS, TODAY_ISO, OWN } from "./data.js";
 import { correspondeABusca, termosDaBusca } from "./buscaDePerguntas.js";
 import { numeroDoCartao } from "./filtroPeloProgresso.js";
+import { correspondeAExportacao, ordenarParaExportacao } from "./cicloDaTarefa.js";
 import { hojeIso, contarPalavras, MINIMO_DE_PALAVRAS_DA_REVISAO } from "../api.js";
 import { cnpjSemMascara, cnpjValido } from "./cnpj.js";
 import { AREAS_DOS_ITENS, areaDoItem, areasDaSessao, areasPreferidas, motivoDeAreaRestrita, podeAprovarArea } from "./areas.js";
@@ -23,6 +24,11 @@ function concluidas(s, ws) {
     if (!itens.length || itens.some((i) => i.st !== "aprovada" || !i.atIso || ws.pendingCount(i) > 0)) return [];
     return [{ inicio: Date.parse(t.criadaEm), fim: Math.max(...itens.map((i) => Date.parse(i.atIso))) }];
   });
+}
+
+/** Tarefas finalizadas (fase O, PO10), com o fim na finalização: "RFPs concluídas por mês". */
+function finalizadas(s) {
+  return s.tarefas.filter((t) => t.situacao === "finalizada" && t.situacaoEm).map((t) => ({ inicio: Date.parse(t.criadaEm), fim: Date.parse(t.situacaoEm) }));
 }
 
 /** Os 6 últimos meses, terminando no atual, com quantas RFPs foram concluídas em cada um. */
@@ -120,8 +126,9 @@ export function buildView(s, ws) {
   // só da tarefa "Pronta" (revisto em 26/10/2026). Sem login, todos.
   const podeExportar = !s.sessao || isA;
   const podeBaixar = (t) => podeExportar || !!(t && t.isReady);
-  // Excluir tarefa (cenário 60): com login, só o Aprovador.
+  // Excluir tarefa (cenário 60): com login, só o Aprovador. Arquivar e reativar também (fase O, PO4).
   const podeExcluir = podeExportar;
+  const podeArquivar = podeExcluir;
   // Com o servidor, tarefas, exportação, histórico e alertas vêm do banco; sem ele, dos exemplos de data.js.
   const online = s.tarefasOrigem === "servidor";
   const taskIds = ws.taskIds(s);
@@ -132,7 +139,12 @@ export function buildView(s, ws) {
   // Contador de "Revisão": itens ainda a trabalhar (sem rascunho, sugeridos e em revisão), fora os já
   // revisados e aprovados (26/10/2026), somando todas as tarefas com itens, como o Dashboard; antes era
   // só a tarefa aberta e mostrava 0 até abrir uma (revisão de design de 05/11/2026).
-  const tarefasComItens = online ? taskIds.filter((id) => ws.hasItems(id, s)) : [...new Set([...ITEM_TASKS, s.itemsTask].filter(Boolean))];
+  // Fase O (PO10): só as tarefas em andamento.
+  const emAndamento = (id) => !(ws.taskInfo(id, s) || {}).isClosed;
+  const tarefasComItens = (online ? taskIds.filter((id) => ws.hasItems(id, s)) : [...new Set([...ITEM_TASKS, s.itemsTask].filter(Boolean))]).filter(emAndamento);
+  const andamentoIds = taskIds.filter(emAndamento);
+  const finalizadasIds = taskIds.filter((id) => (ws.taskInfo(id, s) || {}).isFinal);
+  const arquivadasIds = taskIds.filter((id) => (ws.taskInfo(id, s) || {}).isArchived);
   const pend = tarefasComItens.reduce((n, id) => n + ws.itemsOf(id, s).filter((i) => i.st !== "revisada" && i.st !== "aprovada").length, 0);
   const go = (sc) => (e) => { e && e.preventDefault && e.preventDefault(); ws.go(sc); };
   const navGroups = [
@@ -142,7 +154,12 @@ export function buildView(s, ws) {
       { value: "dashboard", label: "Dashboard", icon: "layout-dashboard", onClick: go("dashboard") }
     ] },
     { label: "Trabalho", items: [
-      { value: "tasks", label: "Tarefas", icon: "layout-grid", count: taskIds.length, onClick: go("tasks") },
+      // Fase O (PO8): Tarefas com Em andamento, Finalizadas e Arquivadas; o item pai abre Em andamento.
+      { value: "tarefas", label: "Tarefas", icon: "layout-grid", count: andamentoIds.length, onClick: go("tasks"), items: [
+        { value: "tasks", label: "Em andamento", count: andamentoIds.length, onClick: go("tasks") },
+        { value: "finalizadas", label: "Finalizadas", count: finalizadasIds.length, onClick: go("finalizadas") },
+        { value: "arquivadas", label: "Arquivadas", count: arquivadasIds.length, onClick: go("arquivadas") }
+      ] },
       { value: "review", label: "Revisão", icon: "eye", count: pend, onClick: go("review") },
       { value: "export", label: "Exportação", icon: "download", onClick: (e) => { e.preventDefault(); ws.go("export", online ? {} : { taskId: "t1" }); } },
       { value: "history", label: "Histórico", icon: "history", onClick: go("history") }
@@ -151,7 +168,8 @@ export function buildView(s, ws) {
       { value: "base", label: "Base de conhecimento", icon: "database", count: s.docs.length, onClick: go("base") }
     ] }
   ];
-  const navValue = s.screen === "task" ? "tasks" : s.screen;
+  // Nos detalhes da tarefa, o menu marca a lista da situação dela.
+  const navValue = s.screen === "task" ? (((t) => (t && t.isFinal ? "finalizadas" : t && t.isArchived ? "arquivadas" : "tasks"))(ws.taskInfo(s.taskId, s))) : s.screen;
 
   // documentos
   const docsSorted = [...s.docs];
@@ -169,6 +187,7 @@ export function buildView(s, ws) {
       toggleLabel: d.expired ? "Documento vencido: envie uma versão com nova validade" : d.off ? "Ativar documento" : "Desativar documento", toggle: () => ws.toggleDoc(d),
       statusText: x[0], tone: x[1], icon: x[2], ageText: d.age === 0 ? "hoje" : d.age + " dias", old: d.age > 120,
       version: d.ver ? "Versão " + d.ver : "Sem versão", canRetry: d.st === "erro" && !d.off, retry: () => ws.retryDoc(d.id),
+      openDetails: () => ws.openDocDetails(d.id),
       note: d.st === "formato" ? `Formato não aceito. Formatos aceitos: ${FORMATS}.`
         : d.st === "suporte" ? "Este arquivo precisa de tratamento pelo suporte. Avisaremos aqui quando estiver pronto."
         : d.st === "erro" ? "Falha ao processar. Tente novamente."
@@ -206,7 +225,9 @@ export function buildView(s, ws) {
   // tarefas
   const tasks = taskIds.map((id) => {
     const t = ws.taskInfo(id, s);
-    const status = t.isServer
+    const status = t.isFinal ? ["Finalizada", "approved", "check-check"]
+      : t.isArchived ? ["Arquivada", "neutral", "archive"]
+      : t.isServer
       ? (t.isFailed ? ["Falha", "danger", "triangle-alert"]
         : t.isProcessing ? ["Processando", "neutral", "loader-circle"]
         : t.isReady ? ["Pronta", "approved", "check-check"]
@@ -228,50 +249,80 @@ export function buildView(s, ws) {
       compText: t.hasItems || t.isReady ? t.shortProg : t.isServer ? serverProgress : t.isProcessing ? "42 de 180 processadas" : t.isFailed ? "0 de 0" : "Reprocessando",
       status: status[0], tone: status[1], icon: status[2], open: () => ws.go("task", { taskId: id }),
       // Só tarefas do banco, e não durante o processamento, que ainda grava itens e arquivos.
-      canDelete: !!t.isServer && !t.isProcessing && podeExcluir, del: () => ws.askDeleteTask(id)
+      // A finalizada não é excluída (fase O, PO5).
+      canDelete: !!t.isServer && !t.isProcessing && !t.isFinal && podeExcluir, del: () => ws.askDeleteTask(id),
+      // Arquivar (fase O, O10): só em Em andamento, desabilitado durante o processamento, com o motivo.
+      canArchive: !!t.isServer && !t.isClosed && podeArquivar, archiveDisabled: !!t.isProcessing, archive: () => ws.askArchiveTask(id),
+      archiveLabel: t.isProcessing ? "A tarefa está em processamento: arquive depois que ela terminar" : "Arquivar tarefa",
+      closedText: t.isClosed ? `${t.isFinal ? "Finalizada" : "Arquivada"} por ${t.closedBy} · ${t.closedAt}` : null
     };
   });
+  // Listas de Tarefas por situação (fase O, O8), na ordem de envio (mais recente primeiro).
+  const tasksAndamento = tasks.filter((t) => !t.isClosed);
+  const TASK_LISTS = {
+    tasks: { kind: "andamento", items: tasksAndamento, title: (n) => `${n} RFPs e RFIs em andamento`, eyebrow: "Tarefas · em andamento",
+      empty: ["Nenhuma tarefa em andamento.", "Crie uma Nova RFP ou reative uma arquivada."] },
+    finalizadas: { kind: "finalizadas", items: tasks.filter((t) => t.isFinal), title: (n) => `${n} RFPs e RFIs finalizadas`, eyebrow: "Tarefas · finalizadas",
+      empty: ["Nenhuma tarefa finalizada.", "A tarefa 100% aprovada é finalizada na Exportação, depois de baixar a planilha."] },
+    arquivadas: { kind: "arquivadas", items: tasks.filter((t) => t.isArchived), title: (n) => `${n} RFPs e RFIs arquivadas`, eyebrow: "Tarefas · arquivadas",
+      empty: ["Nenhuma tarefa arquivada.", "Arquive em Em andamento as RFPs que a empresa não vai concluir."] }
+  };
+  const taskList = ((l) => ({ ...l, title: l.title(l.items.length) }))(TASK_LISTS[s.screen] || TASK_LISTS.tasks);
 
   // dashboard
   const dateKey = (x) => { const [d, m, y] = x.split("/"); return +(y + m + d); };
-  const itc = (online ? taskIds.filter((id) => ws.hasItems(id, s)) : ITEM_TASKS).map((id) => ws.counts(id, s));
+  const comItens = online ? taskIds.filter((id) => ws.hasItems(id, s)) : ITEM_TASKS;
+  // Itens aprovados somam todas as tarefas (histórico); itens em aberto, só as em andamento (PO10).
+  const itcTodas = comItens.map((id) => ws.counts(id, s));
+  const itc = comItens.filter(emAndamento).map((id) => ws.counts(id, s));
   // Sem o servidor, os números somam o histórico fictício do protótipo.
   const sample = online ? { open: 0, done: 0, approved: 0 } : { open: 138, done: 18, approved: 1284 };
   const openItems = itc.reduce((a, q) => a + q.total - q.approved, 0) + sample.open;
   const statusGroups = STATUS_GROUPS
-    .map((g) => ({ ...g, n: tasks.filter((t) => g.of.includes(t.status)).length }))
+    .map((g) => ({ ...g, n: tasksAndamento.filter((t) => g.of.includes(t.status)).length }))
     .filter((g) => g.n > 0)
-    .map((g) => ({ ...g, pct: Math.round((g.n / tasks.length) * 100), width: (g.n / tasks.length) * 100 + "%" }));
+    .map((g) => ({ ...g, pct: Math.round((g.n / tasksAndamento.length) * 100), width: (g.n / tasksAndamento.length) * 100 + "%" }));
   // Com o servidor: RFP concluída é a tarefa pronta com todos os itens aprovados; ela termina na
   // última aprovação. Tempo médio e concluídas por mês saem dessas datas (sem exemplos fictícios).
   const done = online ? concluidas(s, ws) : [];
   const manuaisAprovadas = online
     ? taskIds.filter((id) => ws.hasItems(id, s)).reduce((a, id) => a + ws.itemsOf(id, s).filter((i) => i.st === "aprovada" && i.alerts.some((x) => x.t === "manual")).length, 0)
     : 0;
-  const months = online ? ultimosMeses(done) : [["Abr", "abril", 2], ["Mai", "maio", 3], ["Jun", "junho", 3], ["Jul", "julho", 4], ["Ago", "agosto", 3], ["Set", "setembro", 3]];
+  const months = online ? ultimosMeses(finalizadas(s)) : [["Abr", "abril", 2], ["Mai", "maio", 3], ["Jun", "junho", 3], ["Jul", "julho", 4], ["Ago", "agosto", 3], ["Set", "setembro", 3]];
   const monthMax = Math.max(1, ...months.map((m) => m[2]));
   const dash = {
     eyebrow: online ? "Dashboard · todas as tarefas" : "Dashboard · últimos 90 dias",
     worked: String(tasks.length + sample.done),
-    workedSub: online ? (tasks.length - done.length) + " em andamento · " + done.length + (done.length === 1 ? " concluída" : " concluídas") : tasks.length + " em andamento · " + sample.done + " concluídas",
-    open: String(openItems), openSub: ((n) => `Em ${n} ${n === 1 ? "tarefa ativa" : "tarefas ativas"}, entre revisão e processamento.`)(tasks.filter((t) => !t.isReady).length),
+    workedSub: online
+      ? ((a, f, q) => `${a} em andamento · ${f} ${f === 1 ? "finalizada" : "finalizadas"} · ${q} ${q === 1 ? "arquivada" : "arquivadas"}`)(tasksAndamento.length, finalizadasIds.length, arquivadasIds.length)
+      : tasks.length + " em andamento · " + sample.done + " concluídas",
+    open: String(openItems), openSub: ((n) => `Em ${n} ${n === 1 ? "tarefa ativa" : "tarefas ativas"}, entre revisão e processamento.`)(tasksAndamento.filter((t) => !t.isReady).length),
     avg: online ? (done.length ? duracao(done.reduce((a, d) => a + d.fim - d.inicio, 0) / done.length) : "—") : "2,4 dias",
     avgSub: online
       ? (done.length ? `Do envio da planilha à aprovação do último item, em ${done.length} ${done.length === 1 ? "RFP concluída" : "RFPs concluídas"}.` : "Nenhuma RFP concluída ainda: conta do envio da planilha à aprovação do último item.")
       : "Da importação à exportação do documento.",
-    approved: (sample.approved + itc.reduce((a, q) => a + q.approved, 0)).toLocaleString("pt-BR"),
+    approved: (sample.approved + itcTodas.reduce((a, q) => a + q.approved, 0)).toLocaleString("pt-BR"),
     approvedSub: online && manuaisAprovadas
       ? `${manuaisAprovadas} ${manuaisAprovadas === 1 ? "resposta manual" : "respostas manuais"}, sem fonte na base; as demais com fonte rastreável até o documento de origem.`
       : "Todas com fonte rastreável até o documento de origem.",
-    status: statusGroups, total: tasks.length,
+    status: statusGroups, total: tasksAndamento.length,
     months: months.map(([m, full, n]) => ({ m, full, n, pct: (n / monthMax) * 100 })),
-    deadlines: tasks.filter((t) => { const m = /faltam? (\d+)/.exec(t.dueText || ""); return t.dueText === "vence hoje" || (m && +m[1] < 15); }).sort((a, b) => dateKey(a.due) - dateKey(b.due))
+    deadlines: tasksAndamento.filter((t) => { const m = /faltam? (\d+)/.exec(t.dueText || ""); return t.dueText === "vence hoje" || (m && +m[1] < 15); }).sort((a, b) => dateKey(a.due) - dateKey(b.due))
   };
 
   // detalhe da tarefa
   const task0 = ws.taskInfo(s.taskId, s) || ws.taskInfo(taskIds[0], s) || ws.taskInfo("t1", s);
   const tkr = tasks.find((x) => x.id === task0.id) || {};
-  const task = { ...task0, sTxt: tkr.status, sTone: tkr.tone, sIcon: tkr.icon, hasItems: !!task0.hasItems, isReady: !!task0.isReady, podeBaixar: podeBaixar(task0) };
+  const task = {
+    ...task0, sTxt: tkr.status, sTone: tkr.tone, sIcon: tkr.icon, hasItems: !!task0.hasItems, isReady: !!task0.isReady, podeBaixar: podeBaixar(task0),
+    // Fase O: reativar a arquivada (O12), só o Aprovador; faixa de só leitura da encerrada (O11).
+    canReactivate: !!task0.isArchived && podeArquivar, reactivate: () => ws.reactivateTask(task0.id), reactivateLabel: `Reativar ${ws.kindOf(task0.id)}`,
+    closedNote: task0.isClosed ? `${ws.kindOf(task0.id)} ${task0.isFinal ? "finalizada" : "arquivada"} por ${task0.closedBy} em ${task0.closedAt}: só leitura.` : null
+  };
+  // Revisão de tarefa encerrada (PO11): tudo visível, nenhuma ação que mude o item.
+  const revInfo = ws.taskInfo(s.itemsTask, s) || {};
+  const readOnly = !!revInfo.isClosed;
+  const readOnlyNote = readOnly ? `${ws.kindOf(s.itemsTask)} ${revInfo.isFinal ? "finalizada" : "arquivada"} por ${revInfo.closedBy} em ${revInfo.closedAt}: só leitura.` : null;
   // Estados dos itens, em ordem alfabética, a mesma do filtro (SPEC_FASE_M.md, M13). Cores de dataviz
   // (tokens/dataviz.css): Em revisão em Petróleo como no Dashboard, Aprovada em Limão; as demais
   // escolhidas para separar as vizinhas.
@@ -328,7 +379,7 @@ export function buildView(s, ws) {
         label: d.l, icon: a.ack ? "check" : d.i, pending, isAck: !!a.ack, tone: TOM_DO_ALERTA[a.t] || "danger",
         text: a.t === "old" ? `Fonte sem atualização há ${maxAge} dias, acima do prazo de 120 dias.` : d.x,
         ackText: a.ack ? `Reconhecido por ${a.ack.by}, ${a.ack.at}` : "",
-        showAck: pending && a.t !== "conflict", showNone: pending && a.t === "conflict",
+        showAck: pending && a.t !== "conflict" && !readOnly, showNone: pending && a.t === "conflict" && !readOnly,
         ack: () => ws.ack(it.id, idx), none: () => { ws.ack(it.id, idx); ws.setState({ edit: true }); }
       }];
     });
@@ -350,12 +401,13 @@ export function buildView(s, ws) {
     // O motivo da área vem na frente: tratar os alertas não basta para quem não aprova esta área.
     if (isA && !daMinhaArea) { noApprove = true; if (it.st !== "aprovada") blockText = motivoDeAreaRestrita(it); }
     if (it.st === "revisada") noRevise = true;
+    if (readOnly) { noRevise = true; noApprove = true; blockText = ""; }
     const openSrc = (k) => () => ws.setState({ drawer: { id: it.id, k } });
     const decided = it.srcs.some((x) => x.conflict && x.chosen);
     const srcs = it.srcs.map((x, n) => {
       const k = n + 1;
       return {
-        ...x, k, ageText: x.age + " dias", old: x.age > 120, conflict: !!x.conflict && hasConflict, chosen: !!x.chosen, canUse: !!x.conflict && hasConflict, use: () => ws.useSource(it.id, k), open: openSrc(k),
+        ...x, k, ageText: x.age + " dias", old: x.age > 120, conflict: !!x.conflict && hasConflict, chosen: !!x.chosen, canUse: !!x.conflict && hasConflict && !readOnly, use: () => ws.useSource(it.id, k), open: openSrc(k),
         // Depois da escolha, a fonte em conflito que não foi escolhida fica só como histórico.
         discarded: !!x.conflict && decided && !x.chosen
       };
@@ -374,7 +426,7 @@ export function buildView(s, ws) {
       allResolved, alertsOpen: !allResolved || s.alertsOpen === it.id,
       srcDeck, otherSrcs: srcDeck ? srcs.filter((x) => !it.srcs[x.k - 1].conflict) : srcs, noSource,
       // "Esta resposta ajudou?" avalia a sugestão da IA: item sem rascunho não tem o que avaliar.
-      canRate: it.orig !== "",
+      canRate: it.orig !== "" && !readOnly,
       // "Revisar com IA" no editor da resposta manual (cenário 65): habilita a partir de 30 palavras.
       aiReview: it.orig === "" ? ((n) => ({
         words: n, min: MINIMO_DE_PALAVRAS_DA_REVISAO, ready: n >= MINIMO_DE_PALAVRAS_DA_REVISAO && !s.revisandoIa, loading: s.revisandoIa,
@@ -385,11 +437,11 @@ export function buildView(s, ws) {
       hasManual: it.alerts.some((a) => a.t === "manual"), manualBy: it.manualBy || (it.alerts.find((a) => a.t === "manual") || {}).by, isApproved: it.st === "aprovada",
       blockText, noRevise, noApprove, fbUp: fb.value === "up", fbDown: fb.value === "down", fbReason: fb.reason || "",
       // Item sem rascunho também tem editor: a resposta escrita fica marcada como manual (cenário 61).
-      canEdit: true,
-      isApprovedOrRevised: it.st === "revisada" || it.st === "aprovada", canApprove: isA,
+      canEdit: !readOnly, readOnly, canRestore: !readOnly,
+      isApprovedOrRevised: it.st === "revisada" || it.st === "aprovada", canApprove: isA && !readOnly,
       // Área da pergunta (fase N): todos veem; só quem pode aprovar troca, enquanto não aprovado (N10).
       area: areaDoItem(it), areaOptions: AREAS_DOS_ITENS,
-      canChangeArea: isA && daMinhaArea && it.st !== "aprovada",
+      canChangeArea: isA && daMinhaArea && it.st !== "aprovada" && !readOnly,
       stateHint: it.st === "aprovada" ? "Editar remove a aprovação." : "Pronta para aprovação."
     };
   }
@@ -418,28 +470,44 @@ export function buildView(s, ws) {
       exported: exp, doExport: onExp, goReview: openItem(t1Pending[0] ? t1Pending[0].id : "r1", "t1")
     };
   };
-  // Com o servidor: uma linha por tarefa pronta; a planilha é gerada no download com o estado da revisão (cenário 24).
-  const serverCards = tasks.filter((t) => t.isServer && t.hasItems).map((t) => {
+  // Com o servidor: uma linha por tarefa com itens; a planilha é gerada no download (cenário 24).
+  // Fase O (O4): prontas primeiro, depois as demais em andamento, e por último as finalizadas e as
+  // arquivadas; dentro de cada bloco, a ordem de envio (mais recente primeiro).
+  const serverCards = ordenarParaExportacao(tasks.filter((t) => t.isServer && t.hasItems)).map((t) => {
     const items = ws.itemsOf(t.id, s), pending = items.find((i) => i.st !== "aprovada") || items[0];
+    const pode = podeBaixar(t) || (t.isClosed && podeExportar);
     return {
       id: t.id, company: t.company, title: t.title, count: t.shortProg, pct: t.pct, blocked: false, filled: true,
-      badge: t.isReady ? "Pronta" : "Em revisão", tone: t.isReady ? "approved" : "neutral", icon: t.isReady ? "circle-check" : "eye",
-      disabled: !podeBaixar(t), btn: "Baixar planilha preenchida", doExport: () => ws.askDownload(t.id),
-      reason: podeBaixar(t)
+      badge: t.status, tone: t.tone, icon: t.icon, isReady: !!t.isReady, isClosed: !!t.isClosed,
+      disabled: !pode, btn: t.isFinal ? "Baixar novamente" : "Baixar planilha preenchida", doExport: () => ws.askDownload(t.id),
+      reason: t.isClosed
+        ? (pode ? `${t.isFinal ? "Finalizada" : "Arquivada"}: a planilha traz o estado da revisão no ${t.isFinal ? "fim" : "arquivamento"}, só para leitura.` : "O Revisor baixa a planilha quando a tarefa estiver pronta: todos os itens aprovados e nenhum alerta pendente.")
+        : pode
         ? "Traz o estado atual da revisão: o texto de cada item (sugestão, edição ou resposta manual), as fontes citadas e a situação (aprovada, revisada, em revisão)."
         : "O Revisor baixa a planilha quando a tarefa estiver pronta: todos os itens aprovados e nenhum alerta pendente.",
+      closed: t.isClosed ? { label: t.closedText, tone: t.isFinal ? "approved" : "neutral", icon: t.isFinal ? "check-check" : "archive" } : null,
       goReview: () => ws.go("review", { taskId: t.id, sel: pending ? pending.id : undefined, filter: "todos" })
     };
   });
-  const exportCards = online ? serverCards : [
+  const allExportCards = online ? serverCards : [
     mkCard("t1", "Banco Meridian", "Questionário de segurança", t1Items.length, t1Items.length - t1Pending.length, s.exported, () => ws.exportTask("exported")),
     mkCard("t8", "Atlas Saúde", "Questionário de segurança", 32, 32, s.exported8, () => ws.exportTask("exported8")),
     mkCard("t4", "Helios Logística", "Questionário LGPD", 24, 24, s.exported4, () => ws.exportTask("exported4"))
   ];
+  // Filtro por status e busca por empresa ou título (O5), com as regras da busca da fase L.
+  const EXPORT_STATUS = ["Pronta", "Em revisão", "Vencido", "Finalizada", "Arquivada"];
+  const exportFilterTabs = [["todos", "Todos"], ...EXPORT_STATUS.map((x) => [x, x])].map(([value, label]) => ({
+    value, label, count: value === "todos" ? allExportCards.length : allExportCards.filter((x) => x.badge === value).length
+  }));
+  const termosDaExportacao = termosDaBusca(s.exportBusca || "");
+  const exportCards = allExportCards.filter((x) => (s.exportFilter === "todos" || x.badge === s.exportFilter)
+    && correspondeAExportacao(x, termosDaExportacao));
+  const exportarEmAndamento = allExportCards.filter((x) => !x.isClosed);
   const exportTitle = online
-    // "Pronta" só quando 100% aprovada; as demais também baixam, com o estado atual (revisão de design de 05/11/2026).
-    ? ((n, prontas) => `${n} ${plural(n, "tarefa", "tarefas")} para baixar · ${prontas} ${plural(prontas, "pronta", "prontas")}`)(exportCards.length, exportCards.filter((x) => x.badge === "Pronta").length)
-    : `${exportCards.filter((x) => !x.blocked).length} de ${exportCards.length} tarefas prontas para exportar`;
+    // "Pronta" só quando 100% aprovada; as demais também baixam, com o estado atual. Só as em andamento (O4).
+    ? ((n, prontas) => `${n} ${plural(n, "tarefa", "tarefas")} para baixar · ${prontas} ${plural(prontas, "pronta", "prontas")}`)(exportarEmAndamento.length, exportarEmAndamento.filter((x) => x.badge === "Pronta").length)
+    : `${allExportCards.filter((x) => !x.blocked).length} de ${allExportCards.length} tarefas prontas para exportar`;
+  const exportSemResultado = allExportCards.length > 0 && exportCards.length === 0;
 
   // histórico
   const MERIDIAN = "Questionário de segurança — Banco Meridian";
@@ -478,7 +546,8 @@ export function buildView(s, ws) {
   if (online) {
     const hoje = dataDeHoje();
     const abrir = (t) => () => ws.go("task", { taskId: t.id });
-    for (const t of tasks) {
+    // Fase O (O15): nenhum alerta de tarefa encerrada.
+    for (const t of tasksAndamento) {
       const dias = diasAtePrazo(t.dueText);
       const quem = t.company !== "Empresa não informada" ? t.company : t.title;
       if (t.isFailed) taskAlerts.push({ key: "falha-" + t.id, kind: "tarefa", at: t.when, icon: "triangle-alert", label: "Falha no processamento", name: quem, text: "não pôde ser processada: " + (t.reason || "sem motivo registrado").replace(/\.$/, "") + ".", action: "Conferir tarefa", go: abrir(t) });
@@ -508,10 +577,6 @@ export function buildView(s, ws) {
   // os mesmos alertas no sino da barra superior, com o estado de leitura
   bellAlerts.forEach((a) => { a.read = !!s.alertsRead[a.key]; a.hide = () => ws.hideAlert(a.key); a.tone = tomDoAviso(a); });
   const alertsUnread = bellAlerts.filter((a) => !a.read).length;
-  // o card da tela de Tarefas mostra só os alertas ainda não lidos no sino
-  const pendingAlerts = bellAlerts.filter((a) => !a.read && a.kind !== "base");
-  const tAi = Math.min(s.tAi, Math.max(pendingAlerts.length - 1, 0));
-  const tDeck = { ...deckLayers(pendingAlerts.length), a: pendingAlerts[tAi], pos: `${tAi + 1} de ${pendingAlerts.length}`, hasMany: pendingAlerts.length > 1, index: tAi, count: pendingAlerts.length, collapsed: s.tAlertsCollapsed };
 
   // formulário de nova RFP
   const f = s.form, tried = f.tried, today = online ? hojeIso() : TODAY_ISO;
@@ -549,7 +614,12 @@ export function buildView(s, ws) {
     deletingTask: s.deleting ? tasks.find((t) => t.id === s.deleting) || null : null,
     downloadTask: s.confirmDownload ? tasks.find((t) => t.id === s.confirmDownload) || null : null,
     detalhes: s.detalhes ? { ...s.detalhes, task: tasks.find((t) => t.id === s.detalhes.id) || ws.taskInfo(s.detalhes.id, s) || {} } : null,
-    docs, readyDocs, onb, tasks, taskAlerts: bellAlerts, alertsUnread, tDeck, dash, task, counts: c, segs, destaqueDoCartao, filterTabs, rows,
+    // Fase O: box de conclusão (O6) e confirmação de arquivar (O10).
+    finishingTask: s.finishing ? ((t) => t && { ...t, kind: ws.kindOf(t.id) })(tasks.find((t) => t.id === s.finishing)) || null : null,
+    archivingTask: s.archiving ? tasks.find((t) => t.id === s.archiving) || null : null,
+    taskList, readOnlyNote, exportFilterTabs, exportSemResultado,
+    docDetails: s.docDetails ? docs.find((d) => d.id === s.docDetails) || null : null,
+    docs, readyDocs, onb, tasks, taskAlerts: bellAlerts, alertsUnread, dash, task, counts: c, segs, destaqueDoCartao, filterTabs, rows,
     rowsDaBusca, buscaSemResultado: termos.length > 0 && rowsDaBusca.length === 0,
     revTask: (ws.taskInfo(s.itemsTask, s) || {}).name, cur, savedText, drawer, exportCards, exportTitle, history, historyTabs, form
   };
