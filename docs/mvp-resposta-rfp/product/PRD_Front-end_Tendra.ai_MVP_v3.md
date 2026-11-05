@@ -350,7 +350,7 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
   - **Empresa** — obrigatório.
   - **CNPJ** — opcional; novo na v2.
   - **Tipo** — RFP ou RFI; obrigatório.
-  - **Prazo de submissão** — obrigatório; não pode estar no passado. Digitado em dd/mm/aaaa, com máscara, em qualquer idioma do navegador; data que não existe mostra "Data inválida. Use dd/mm/aaaa." (05/11/2026).
+  - **Prazo de submissão** — obrigatório; não pode estar no passado. Digitado em dd/mm/aaaa, com máscara, em qualquer idioma do navegador, ou escolhido no calendário do navegador pelo botão ao lado do campo (ou Alt+↓), sem datas passadas; data que não existe mostra "Data inválida. Use dd/mm/aaaa." (05/11/2026; calendário de volta em 06/11/2026).
   - **Responsável** — obrigatório; escolhido entre os usuários da plataforma (com login, os perfis ativos; sem login, as pessoas de exemplo), lidos de `GET /api/usuarios` desde 24/10/2026 (SPEC, cenário 62).
 - **CNPJ (novo):** máscara 00.000.000/0000-00 e conferência dos dígitos verificadores, com os erros "CNPJ incompleto." e "CNPJ inválido.".
   - Desde 28/10/2026, aceita também o CNPJ alfanumérico (IN RFB nº 2.229/2024): letras ou números nas 12 primeiras posições e 2 dígitos verificadores numéricos.
