@@ -3,7 +3,7 @@ import { Badge, Button, Field, Icon, IconButton, Input, MonoLabel, Select } from
 import { ClickRow, DISPLAY, Page, card, h1Style, mono } from "../ui.jsx";
 import { newContact } from "../useWorkspace.js";
 import { mascararCnpj } from "../cnpj.js";
-import { dataBrParaIso, mascararData } from "../dataBr.js";
+import { dataBrParaIso, isoParaDataBr, mascararData } from "../dataBr.js";
 
 // máscara do telefone: (00) 00000-0000; a do CNPJ, numérico ou alfanumérico, está em cnpj.js
 const maskPhone = (v) => {
@@ -32,6 +32,31 @@ function ContactCard({ ct, index, total, tried, isMobile, onChange, onRemove }) 
           <Input id={id("email")} type="email" value={ct.email} placeholder="nome@empresa.com.br" onChange={set("email")} invalid={tried && !!ct.errEmail} />
         </Field>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Prazo em dd/mm/aaaa: digitado com máscara ou escolhido no calendário do navegador, que abre pelo
+ * botão. O texto não depende do idioma do navegador (05/11/2026); o calendário voltou em 06/11/2026.
+ */
+function CampoDeData({ id, valor, minimo, invalido, onChange }) {
+  const calendario = React.useRef(null);
+  const abrir = () => {
+    const el = calendario.current;
+    if (!el) return;
+    try { el.showPicker(); } catch { el.focus(); el.click(); }
+  };
+  return (
+    <div style={{ position: "relative" }}>
+      <Input id={id} inputMode="numeric" placeholder="dd/mm/aaaa" maxLength={10} value={valor} invalid={invalido}
+        onChange={(e) => onChange(mascararData(e.target.value))}
+        onKeyDown={(e) => { if (e.altKey && e.key === "ArrowDown") { e.preventDefault(); abrir(); } }} />
+      <input ref={calendario} type="date" tabIndex={-1} aria-hidden="true" min={minimo} value={dataBrParaIso(valor)}
+        onChange={(e) => onChange(isoParaDataBr(e.target.value))}
+        style={{ position: "absolute", right: 0, bottom: 0, width: 1, height: 1, opacity: 0, border: 0, padding: 0, pointerEvents: "none" }} />
+      <IconButton icon="calendar" label="Abrir calendário" variant="ghost" onClick={abrir}
+        style={{ position: "absolute", right: 2, top: "50%", transform: "translateY(-50%)" }} />
     </div>
   );
 }
@@ -75,7 +100,7 @@ export function NewTask({ v, ws, state, pad, isMobile }) {
               <Input id="nt-cnpj" mono autoCapitalize="characters" autoComplete="off" spellCheck={false} value={f.cnpj} placeholder="00.000.000/0000-00" onChange={(e) => ws.setState((x) => ({ form: { ...x.form, cnpj: mascararCnpj(e.target.value) } }))} invalid={!!f.errCnpj} />
             </Field>
             <Field label="Tipo" required htmlFor="nt-type"><Select id="nt-type" options={["RFP", "RFI"]} value={f.type} onChange={set("type")} /></Field>
-            <Field label="Prazo de submissão" required error={f.errDue} htmlFor="nt-due"><Input id="nt-due" inputMode="numeric" placeholder="dd/mm/aaaa" maxLength={10} value={f.dueBr} onChange={(e) => { const dueBr = mascararData(e.target.value); ws.setState((x) => ({ form: { ...x.form, dueBr, due: dataBrParaIso(dueBr) } })); }} invalid={!!f.errDue} /></Field>
+            <Field label="Prazo de submissão" required error={f.errDue} htmlFor="nt-due"><CampoDeData id="nt-due" valor={f.dueBr} minimo={f.today} invalido={!!f.errDue} onChange={(dueBr) => ws.setState((x) => ({ form: { ...x.form, dueBr, due: dataBrParaIso(dueBr) } }))} /></Field>
             <Field label="Responsável" required error={f.errOwner} htmlFor="nt-owner"><Select id="nt-owner" options={f.owners} placeholder="Escolha um usuário" value={f.owner} onChange={set("owner")} invalid={!!f.errOwner} /></Field>
           </div>
           <section aria-labelledby="nt-contacts-title" style={{ display: "flex", flexDirection: "column", gap: 16, paddingTop: 8 }}>

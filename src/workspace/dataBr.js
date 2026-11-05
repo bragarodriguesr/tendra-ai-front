@@ -18,3 +18,9 @@ export function dataBrParaIso(texto) {
   const existe = data.getUTCFullYear() === ano && data.getUTCMonth() === mes - 1 && data.getUTCDate() === dia;
   return existe ? `${m[3]}-${m[2]}-${m[1]}` : "";
 }
+
+/** AAAA-MM-DD → dd/mm/aaaa (o valor do calendário nativo para o campo da tela). */
+export function isoParaDataBr(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : "";
+}

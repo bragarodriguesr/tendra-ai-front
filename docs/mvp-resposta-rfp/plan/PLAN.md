@@ -829,7 +829,7 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
   - o Histórico vazio orienta, com o EmptyState;
   - os Primeiros passos mudam o título e o texto conforme o passo aberto;
   - a Base mostra o título do documento em sans, numa coluna mais larga;
-  - o prazo da Nova RFP é digitado em dd/mm/aaaa, com máscara, em qualquer idioma do navegador.
+  - o prazo da Nova RFP é digitado em dd/mm/aaaa, com máscara, em qualquer idioma do navegador. Correção de 06/11/2026: a troca tirou o calendário; ele voltou num botão ao lado do campo (ou Alt+↓), que abre o calendário do navegador e preenche o campo em dd/mm/aaaa.
 - **Consistência:**
   - cor por severidade, com o token novo `--warning` (âmbar do dataviz) e o tom `warning` no Badge:
     - vermelho só para bloqueio ou erro;
@@ -839,7 +839,9 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
   - a área no topo do item tem o mesmo estilo da lista (ícone e texto);
   - Button e IconButton do DS com a borda em propriedades separadas, sem o aviso do React ao trocar o hover.
 - Só front.
-- **Situação (05/11/2026): implementada.**
+- **Situação (05/11/2026): implementada e conferida no ambiente publicado.**
+  - Front da Vercel e backend do Render com o merge do PR #88 às 12:49 UTC.
+  - Conferida pelo grupo no teste manual. Como as mudanças são de tela, nenhuma ação de revisão nem tarefa nova ficou gravada no período, então não há eventos no banco.
   - Build, 15 testes de unidade e a suíte de ponta a ponta completa (77) verdes.
   - Conferi no navegador com um backend de teste, com C-Level e Revisor: todos os itens acima e nenhum aviso do React no console.
 
