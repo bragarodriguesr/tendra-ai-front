@@ -13,6 +13,9 @@ const chaveDosAlertasLidos = (pessoa) => "tendra.alertasLidos." + pessoa;
 // Alertas do sino fechados no "X" (voltam no próximo login) e tratados pelo botão de ação (não voltam).
 const chaveDosAlertasFechados = (pessoa) => "tendra.alertasFechados." + pessoa;
 const chaveDosAlertasTratados = (pessoa) => "tendra.alertasTratados." + pessoa;
+// Menu Tarefas aberto ou recolhido (ajuste de 05/11/2026): lembrado em cada navegador; aberto por padrão.
+const CHAVE_TAREFAS_RECOLHIDAS = "tendra.menuTarefasRecolhido";
+const tarefasAbertasAntes = () => { try { return localStorage.getItem(CHAVE_TAREFAS_RECOLHIDAS) !== "1"; } catch { return true; } };
 const lerMapa = (chave) => { try { return JSON.parse(localStorage.getItem(chave) || "{}") || {}; } catch { return {}; } };
 const gravar = (chave, valor) => { try { localStorage.setItem(chave, valor); } catch { /* sem armazenamento: só nesta aba */ } };
 export const newContact = () => ({ id: "c" + ++contactSeq, name: "", role: "", phone: "", email: "" });
@@ -67,6 +70,8 @@ const initialState = ({ initialScreen, role }) => ({
   baseHint: false, docDetails: null,
   // Histórico: ações sobre as tarefas (importar, finalizar, arquivar, reativar, excluir; cenário O19).
   taskEvents: [],
+  // Subitens de Tarefas no menu lateral: abertos por padrão; a escolha fica no navegador.
+  tarefasAbertas: tarefasAbertasAntes(),
   // "Revisar com IA" em andamento e o texto de antes da revisão, para desfazer (cenário 65).
   revisandoIa: false, antesDaIa: null,
   // Passo aberto em Primeiros passos; null mostra o passo atual (o primeiro ainda não concluído).
@@ -124,7 +129,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
        */
       forgetSessionData() {
         setRaw((s) => {
-          const next = { ...initialState({ initialScreen: "dashboard", role: s.role }), view: s.view, modo: s.modo, vw: s.vw, sideCollapsed: s.sideCollapsed };
+          const next = { ...initialState({ initialScreen: "dashboard", role: s.role }), view: s.view, modo: s.modo, vw: s.vw, sideCollapsed: s.sideCollapsed, tarefasAbertas: s.tarefasAbertas };
           ref.current = next;
           return next;
         });
@@ -760,6 +765,12 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         }
       },
       closeTaskDetails() { setState({ detalhes: null }); },
+      /** Abre ou recolhe os subitens de Tarefas no menu lateral e guarda a escolha no navegador. */
+      toggleTasksMenu() {
+        const abertas = !ref.current.tarefasAbertas;
+        gravar(CHAVE_TAREFAS_RECOLHIDAS, abertas ? "0" : "1");
+        setState({ tarefasAbertas: abertas });
+      },
       /** Ações sobre as tarefas, para o Histórico (cenário O19). Sem o servidor, a lista fica vazia. */
       async loadTaskEvents() {
         try {

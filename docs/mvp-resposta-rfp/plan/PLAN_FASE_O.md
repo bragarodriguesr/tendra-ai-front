@@ -92,6 +92,11 @@ A geração, a classificação por área e a regra de download (fase J) não mud
   - Rota `GET /api/historico/tarefas`, na suíte de isolamento.
   - No front, o Histórico junta itens e tarefas, dos mais recentes para os mais antigos, com o filtro "Tarefas".
 - **Coluna "Itens":** sai das três listas de Tarefas.
+- **Menu Tarefas colapsável** (sugestão aprovada pelo grupo com as imagens):
+  - uma seta à direita de "Tarefas" abre e recolhe Em andamento, Finalizadas e Arquivadas; aberto por padrão;
+  - recolhido, "Tarefas" mostra a contagem de Em andamento e fica marcado quando a página é de um dos subitens;
+  - o clique em "Tarefas" continua abrindo Em andamento, sem reabrir os subitens;
+  - a escolha fica no navegador de cada pessoa; no menu reduzido a ícones, nada muda.
 - **Testes:** 387 no backend, no PGlite e no Postgres; 81 de ponta a ponta.
 - **Situação:** implementado, aguardando merge e publicação.
 

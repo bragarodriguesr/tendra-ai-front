@@ -82,6 +82,8 @@
 }
 .tdr-sidebar-menu-button > svg { flex: none; }
 /* Subitens (fase O): o rótulo alinha com o do item pai (padding + ícone de 20 px + gap). */
+.tdr-sidebar-item-with-toggle { position: relative; }
+.tdr-sidebar-item-with-toggle > .tdr-sidebar-menu-button { padding-right: calc(36px + var(--space-2)); }
 .tdr-sidebar-menu-sub { display: flex; flex-direction: column; padding: 0; margin: 0; list-style: none; }
 .tdr-sidebar-menu-button.tdr-sidebar-menu-sub-button { padding-left: calc(var(--space-3) * 2 + 20px); }
 .tdr-sidebar-item-label { flex: 1; min-width: 0; overflow-wrap: anywhere; }
@@ -145,3 +147,7 @@
 .tdr-sidebar-mobile-close { position: absolute; right: var(--space-2); top: var(--space-2); border-color: transparent; color: var(--text-on-inverse-body); }
 .tdr-sidebar-mobile-close:hover { background: var(--paper-wash); color: var(--text-on-inverse); }
 .tdr-sidebar-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+
+/* Botão de abrir e recolher os subitens (ajuste de 05/11/2026): dentro da linha do item pai, à direita. */
+.tdr-sidebar-item-with-toggle > .tdr-sidebar-sub-toggle { position: absolute; right: var(--space-1); top: 4px; width: 36px; height: 36px; z-index: 1; border-color: transparent; color: var(--sidebar-meta, var(--text-meta)); }
+.tdr-sidebar-item-with-toggle > .tdr-sidebar-sub-toggle:hover { background: var(--sidebar-hover); color: inherit; }

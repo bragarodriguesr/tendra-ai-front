@@ -271,6 +271,11 @@ constitution: 1.0.0
 
 **Coluna "Itens" (O8):** sai das três listas de Tarefas; a barra de progresso já traz o total ("2 de 46 aprovados").
 
+**Menu Tarefas colapsável (O8):**
+- Uma seta à direita de "Tarefas" abre e recolhe os subitens. O menu abre por padrão, e a escolha fica no navegador.
+- Recolhido, o item pai mostra a contagem de Em andamento e fica marcado quando a página é de um subitem.
+- O clique em "Tarefas" sempre abre Em andamento.
+
 ## Requisitos
 
 **P0 (sem eles a fase não resolve o problema):**

@@ -162,7 +162,7 @@ export function buildView(s, ws) {
     ] },
     { label: "Trabalho", items: [
       // Fase O (PO8): Tarefas com Em andamento, Finalizadas e Arquivadas; o item pai abre Em andamento.
-      { value: "tarefas", label: "Tarefas", icon: "layout-grid", count: andamentoIds.length, onClick: go("tasks"), items: [
+      { value: "tarefas", label: "Tarefas", icon: "layout-grid", count: andamentoIds.length, onClick: go("tasks"), expanded: s.tarefasAbertas !== false, onToggle: (e) => { e.preventDefault(); ws.toggleTasksMenu(); }, items: [
         { value: "tasks", label: "Em andamento", count: andamentoIds.length, onClick: go("tasks") },
         { value: "finalizadas", label: "Finalizadas", count: finalizadasIds.length, onClick: go("finalizadas") },
         { value: "arquivadas", label: "Arquivadas", count: arquivadasIds.length, onClick: go("arquivadas") }
