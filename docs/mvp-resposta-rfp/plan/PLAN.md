@@ -804,6 +804,21 @@ Também não entram uma dependência nova, um banco por cliente ou uma chave de 
 - Grupos, itens, contagens e regras do menu continuam vindo do viewModel; "Primeiros passos" mantém o gradiente limão em movimento enquanto a base está vazia.
 - **Situação (04/11/2026): implementada e conferida no ambiente publicado.** Teste de ponta a ponta do menu (desktop, recolhido, mobile, teclado) e jornada verde. Front da Vercel com o merge às 20:39 UTC de 30/10; menu e gradiente de "Primeiros passos" conferidos pelo grupo no teste manual.
 
+### K14. Logo, salvamento por item e botões da Revisão (ajuste de 04/11/2026)
+- **Logo:** mesmo tamanho (28 px) e mesma posição (`--brandbar-pad` da borda) no site, no login, na abertura e no Workspace.
+  - Recolher o menu lateral só esconde o nome, sem deslocar o símbolo.
+  - No celular, o logo vem depois do botão de menu, como no site.
+- **Salvamento:** o indicador "Salvo agora / há N" passa a ser de cada item, não um só para todos.
+- **Revisão:**
+  - "Item anterior" e "Próximo item" só com as setas, fixos à direita;
+  - "Ver/Ocultar sugestão original" e "Restaurar sugestão" só com ícones, com a descrição na dica.
+- Só front (PR #87).
+- **Situação (05/11/2026): implementada e conferida no ambiente publicado.**
+  - Front da Vercel e backend do Render com o merge às 16:38 UTC de 04/11.
+  - No publicado, o User Teste 1 (Revisor) editou, restaurou pelo ícone e editou de novo o item 14 da RFP-02 às 16:45 (eventos `edicao`, `restauracao` e `edicao`).
+  - O logo nas transições, o indicador de cada item e os botões só com ícones foram conferidos pelo grupo no teste manual.
+  - Antes do merge: posição do logo medida em cada tela e durante o recolhimento; posição das setas igual entre itens; suíte de ponta a ponta verde.
+
 ## Fase L: busca de perguntas na Revisão e nos detalhes da tarefa
 
 Pedida em 01/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/spec/SPEC_FASE_L.md` (cenários B1 a B17, `approved`), e o plano detalhado, em `docs/mvp-resposta-rfp/plan/PLAN_FASE_L.md`. Só front: nenhum arquivo do backend muda, e a busca não faz requisições.
