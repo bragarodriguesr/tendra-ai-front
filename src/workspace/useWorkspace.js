@@ -2,7 +2,7 @@ import React from "react";
 import { seedItems, seedDocs, genItems, nowStr, ITEM_TASKS, GENERATED, TASKS, TASK_IDS } from "./data.js";
 import {
   MENSAGEM_FORMATO_DA_RFP, aprovarItemNaApi, avaliarItemNaApi, criarTarefa, editarTextoDoItem, listarAvaliacoes, listarPessoas, restaurarItem, dataHoraDaTela, definirDocumentoAtivo, enderecoDaPlanilha, enviarDocumentosDaBase, hojeIso, listarDocumentosDaBase, listarItensDaTarefa,
-  listarTarefas, paraDocumentoDaTela, paraItemDaTela, reconhecerAlertaNaApi, escolherFonteNaApi, revisarItemNaApi, trocarAreaNaApi, revisarTextoComIa, excluirTarefa, obterEmpresaDaTarefa, listarUsuarios, finalizarTarefa, arquivarTarefa, reativarTarefa
+  listarTarefas, paraDocumentoDaTela, paraItemDaTela, reconhecerAlertaNaApi, escolherFonteNaApi, revisarItemNaApi, trocarAreaNaApi, revisarTextoComIa, excluirTarefa, obterEmpresaDaTarefa, listarUsuarios, finalizarTarefa, arquivarTarefa, reativarTarefa, listarEventosDeTarefas
 , entrar, obterSessao, quandoPerderASessao, sair} from "../api.js";
 
 import { areaDoItem, areasPreferidas, ordenarPorArea } from "./areas.js";
@@ -65,6 +65,8 @@ const initialState = ({ initialScreen, role }) => ({
   exportFilter: "todos", exportBusca: "",
   // Base: painel da Dica (O1) e documento com os detalhes abertos (O3).
   baseHint: false, docDetails: null,
+  // Histórico: ações sobre as tarefas (importar, finalizar, arquivar, reativar, excluir; cenário O19).
+  taskEvents: [],
   // "Revisar com IA" em andamento e o texto de antes da revisão, para desfazer (cenário 65).
   revisandoIa: false, antesDaIa: null,
   // Passo aberto em Primeiros passos; null mostra o passo atual (o primeiro ainda não concluído).
@@ -758,6 +760,15 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         }
       },
       closeTaskDetails() { setState({ detalhes: null }); },
+      /** Ações sobre as tarefas, para o Histórico (cenário O19). Sem o servidor, a lista fica vazia. */
+      async loadTaskEvents() {
+        try {
+          const { eventos } = await listarEventosDeTarefas();
+          setState({ taskEvents: eventos });
+        } catch {
+          // Sem o servidor, o Histórico mostra só os registros dos itens.
+        }
+      },
       /** Base (fase O): painel da Dica (O1) e detalhes de um documento (O3). */
       openBaseHint() { setState({ baseHint: true, docDetails: null }); },
       openDocDetails(id) { setState({ docDetails: id, baseHint: false }); },
@@ -900,6 +911,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
   // Primeiros passos também: os passos 2 e 3 dependem das tarefas e dos itens revisados.
   React.useEffect(() => { if (["dashboard", "tasks", "finalizadas", "arquivadas", "task", "export", "review", "onboarding"].includes(state.screen)) ws.loadTasks(); }, [ws, state.screen]);
   React.useEffect(() => { if (state.screen === "new") ws.loadUsers(); }, [ws, state.screen, state.sessao]);
+  React.useEffect(() => { if (state.screen === "history") ws.loadTaskEvents(); }, [ws, state.screen]);
   const processing = state.tarefas.some((t) => t.estado === "processando");
   React.useEffect(() => {
     if (!processing) return undefined;

@@ -97,6 +97,8 @@ export const listarItensDaTarefa = (id) => pedir(`/tarefas/${id}/itens`);
 export const enderecoDaPlanilha = (id) => `/api/tarefas/${id}/planilha`;
 /** Exclui a tarefa com todos os registros e arquivos dela (cenário 60). Só o Aprovador, no modo compartilhado. */
 export const excluirTarefa = (id) => pedir(`/tarefas/${id}`, { method: "DELETE" });
+/** Ações sobre as tarefas da organização para o Histórico (fase O, cenário O19): `{ eventos }`. */
+export const listarEventosDeTarefas = () => pedir("/historico/tarefas");
 /**
  * Fase O: situação da tarefa (cenários O7, O10 e O12). Devolve `{ tarefa }` com a situação nova.
  * `pessoa` é o id da lista de configuração no modo local; com login, o backend usa a sessão.
@@ -165,7 +167,7 @@ export function paraItemDaTela(item, total) {
     ...(item.alerts.some((a) => a.t === "manual" && a.by) ? { manualBy: item.alerts.find((a) => a.t === "manual").by } : null),
     // Data da aprovação em ISO, para os indicadores do Dashboard.
     ...(item.at ? { at: dataHoraDaTela(item.at), atIso: item.at } : null),
-    ...(item.rat ? { rat: dataHoraDaTela(item.rat) } : null)
+    ...(item.rat ? { rat: dataHoraDaTela(item.rat), ratIso: item.rat } : null)
   };
 }
 

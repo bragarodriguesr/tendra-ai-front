@@ -6,13 +6,13 @@ export function History({ v, ws, state, pad, isMobile }) {
   const n = v.history.length;
   return (
     <Page pad={pad}>
-      <PageHeader eyebrow="Histórico de aprovações e revisões" title={`${n} ${n === 1 ? "registro" : "registros"}`} />
+      <PageHeader eyebrow="Histórico de aprovações, revisões e tarefas" title={`${n} ${n === 1 ? "registro" : "registros"}`} />
       <FilterMenu items={v.historyTabs} value={state.hfilter} onChange={(hfilter) => ws.setState({ hfilter })} label="Filtrar registros" />
       <div style={card(14, { overflowX: "auto", overflowY: "hidden" })}>
         {/* Sem registros: orienta em vez de deixar a área em branco (revisão de design de 05/11/2026). */}
         {n === 0 ? (
           <EmptyState icon="history" title={state.hfilter && state.hfilter !== "todos" ? "Nenhum registro neste filtro." : "Nenhuma ação registrada ainda."}
-            description={state.hfilter && state.hfilter !== "todos" ? "Escolha outro filtro para ver os demais registros." : "As revisões e as aprovações dos itens aparecem aqui, com quem fez e quando."} />
+            description={state.hfilter && state.hfilter !== "todos" ? "Escolha outro filtro para ver os demais registros." : "As revisões e as aprovações dos itens e as ações sobre as tarefas aparecem aqui, com quem fez e quando."} />
         ) : null}
         {v.history.map((h) => (
           <div key={h.key} style={{ borderTop: "1px solid var(--n-100)" }}>
@@ -53,9 +53,9 @@ export function History({ v, ws, state, pad, isMobile }) {
             {h.open ? (
               <div style={{ padding: isMobile ? "0 16px 16px" : "4px 20px 20px", display: "flex", flexDirection: "column", gap: 12, background: "var(--n-050)" }}>
                 <div style={{ fontSize: isMobile ? 15 : 16, lineHeight: 1.65, maxWidth: "70ch", paddingTop: 16 }}>{h.full}</div>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {h.srcs.length ? <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {h.srcs.map((s) => <Button key={s.label} size="sm" variant="secondary" icon="external-link" onClick={s.open}>{s.label}</Button>)}
-                </div>
+                </div> : null}
               </div>
             ) : null}
           </div>

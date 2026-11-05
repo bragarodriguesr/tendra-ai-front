@@ -85,6 +85,16 @@ A geração, a classificação por área e a regra de download (fase J) não mud
   - A RFP-04 de 24/10, que a migração deixou em andamento como pedido, foi finalizada pelo grupo no teste, pelo caminho normal do box.
   - A Base (Dica, tabela e detalhes do documento), a ordem, o filtro e a busca da Exportação e os contadores foram conferidos pelo grupo no teste manual. São mudanças de tela, sem registro no banco.
 
+## Ajustes de 05/11/2026: Histórico das tarefas e coluna "Itens"
+
+- **O18 e O19:** migração `013_eventos_de_tarefa.sql`, só de inclusão e sem chave estrangeira para `tarefas` (o registro da exclusão sobrevive), com o nome da tarefa e da empresa guardados na ação.
+  - Gravam a importação (`POST /api/tarefas`), a finalização, o arquivamento e a reativação (na mesma transação da mudança de situação) e a exclusão.
+  - Rota `GET /api/historico/tarefas`, na suíte de isolamento.
+  - No front, o Histórico junta itens e tarefas, dos mais recentes para os mais antigos, com o filtro "Tarefas".
+- **Coluna "Itens":** sai das três listas de Tarefas.
+- **Testes:** 387 no backend, no PGlite e no Postgres; 81 de ponta a ponta.
+- **Situação:** implementado, aguardando merge e publicação.
+
 ## Checklist de aceite
 
 | Cenário | Como conferir |
@@ -95,5 +105,6 @@ A geração, a classificação por área e a regra de download (fase J) não mud
 | O8, O9, O15 | Submenus com contagens; contadores sem as encerradas |
 | O10 a O13 | Arquivar, abrir só para leitura, tentar uma edição pela API (409), reativar, excluir arquivada |
 | O14 | Detalhes da tarefa sem o botão de download |
+| O18, O19 | Importar, finalizar, arquivar, reativar e excluir uma tarefa e ver cada ação no Histórico, com o filtro "Tarefas"; a excluída continua lá |
 | O16 | Depois do deploy, todas as tarefas em andamento no banco |
 | O17 | Finalizar ou arquivar a tarefa de outra organização (404) |

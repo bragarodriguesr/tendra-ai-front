@@ -153,6 +153,7 @@ const ROTAS_SEM_ID = [
   "PATCH /api/base/documentos/:id",
   "GET /api/tarefas",
   "POST /api/tarefas",
+  "GET /api/historico/tarefas",
   "GET /api/pessoas",
   "GET /api/usuarios",
 ];

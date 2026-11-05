@@ -116,6 +116,13 @@ const tomDosAlertas = (alertas) => (alertas.some((a) => !a.ack && TOM_DO_ALERTA[
 // atenção em âmbar, boa notícia em limão.
 const tomDoAviso = (a) => (/^(Falha|Erro|Prazo vencido)/.test(a.label) ? "danger" : /^(Processamento concluído|Tarefa 100%)/.test(a.label) ? "success" : "warning");
 
+// Ações sobre a tarefa no Histórico (fase O, cenários O18 e O19): rótulo, verbo, tom e ícone.
+const ACOES_DA_TAREFA = { importacao: ["Importada", "importada"], finalizacao: ["Finalizada", "finalizada"], arquivamento: ["Arquivada", "arquivada"], reativacao: ["Reativada", "reativada"], exclusao: ["Excluída", "excluída"] };
+const TOM_DA_ACAO = { importacao: "neutral", finalizacao: "approved", arquivamento: "neutral", reativacao: "neutral", exclusao: "danger" };
+const ICONE_DA_ACAO = { importacao: "upload", finalizacao: "check-check", arquivamento: "archive", reativacao: "rotate-ccw", exclusao: "trash-2" };
+const p2 = (n) => String(n).padStart(2, "0");
+const dataHoraDaTelaLocal = (iso) => { const d = new Date(iso); return `${p2(d.getDate())}/${p2(d.getMonth() + 1)}/${d.getFullYear()} ${p2(d.getHours())}:${p2(d.getMinutes())}`; };
+
 // "Minha área" (fase N, cenário N9) só aparece para o Aprovador com área que não seja C-Level.
 const FILTERS = [["todos", "Todos"], ["alerta", "Alerta pendente"], ["aprovada", "Aprovada"], ["em-revisao", "Em revisão"], ["minha-area", "Minha área"], ["revisada", "Revisada"], ["sem-rascunho", "Sem rascunho"], ["sugerida", "Sugerida"]];
 
@@ -525,17 +532,31 @@ export function buildView(s, ws) {
   const serverHist = tasks.filter((t) => t.isServer && t.hasItems).flatMap((t) => ws.itemsOf(t.id, s).flatMap((i) => {
     const base = { q: i.q, task: t.name, full: i.paras.map((p) => p.t).join(" "), age: 0, srcs: i.srcs.map((x) => ({ label: `${x.doc} · ${x.loc}` })) };
     return [
-      ...(i.st === "aprovada" ? [{ ...base, key: t.id + i.id, kind: "aprovacao", by: i.by, at: i.at }] : []),
-      ...(i.st === "revisada" ? [{ ...base, key: t.id + i.id + "-rev", kind: "revisao", by: i.rby, at: i.rat }] : [])
+      ...(i.st === "aprovada" ? [{ ...base, key: t.id + i.id, kind: "aprovacao", by: i.by, at: i.at, ms: Date.parse(i.atIso) || 0 }] : []),
+      ...(i.st === "revisada" ? [{ ...base, key: t.id + i.id + "-rev", kind: "revisao", by: i.rby, at: i.rat, ms: Date.parse(i.ratIso) || 0 }] : [])
     ];
   }));
-  const allHist = online ? serverHist : [...live, ...liveRev, ...past];
-  const kindOf = (k) => (k === "aprovacoes" ? "aprovacao" : "revisao");
+  // Ações sobre as tarefas (fase O, cenários O18 e O19): importar, finalizar, arquivar, reativar e excluir.
+  const taskHist = (s.taskEvents || []).map((e, n) => {
+    const [label, verbo] = ACOES_DA_TAREFA[e.acao] || ["Tarefa", "alterada"];
+    const quem = e.pessoa === "Sem identificação" ? "sem identificação de quem fez" : `por ${e.pessoa}`;
+    return {
+      key: `tarefa-${e.tarefaId}-${e.acao}-${e.em}-${n}`, kind: "tarefa", action: e.acao, kindLabel: label,
+      q: e.tarefa, task: e.empresa || "Empresa não informada", full: `${e.tarefa} ${verbo} ${quem}.`,
+      by: e.pessoa, at: dataHoraDaTelaLocal(e.em), ms: Date.parse(e.em), age: Math.max(0, Math.floor((Date.now() - Date.parse(e.em)) / 86400000)), srcs: []
+    };
+  });
+  // Mais recentes primeiro, misturando itens e tarefas.
+  const allHist = online ? [...serverHist, ...taskHist].sort((a, b) => b.ms - a.ms) : [...live, ...liveRev, ...past];
+  const kindOf = (k) => (k === "aprovacoes" ? "aprovacao" : k === "tarefas" ? "tarefa" : "revisao");
   const histCount = (k) => (k === "todos" ? allHist.length : allHist.filter((x) => x.kind === kindOf(k)).length);
-  const historyTabs = [["todos", "Todos"], ["aprovacoes", "Aprovações"], ["revisoes", "Revisões"]].map(([value, label]) => ({ value, label, count: histCount(value) }));
+  const historyTabs = [["todos", "Todos"], ["aprovacoes", "Aprovações"], ["revisoes", "Revisões"], ...(online ? [["tarefas", "Tarefas"]] : [])].map(([value, label]) => ({ value, label, count: histCount(value) }));
   const history = (s.hfilter === "todos" ? allHist : allHist.filter((x) => x.kind === kindOf(s.hfilter))).map((h) => ({
-    ...h, kindLabel: h.kind === "revisao" ? "Revisada" : "Aprovada", kindTone: h.kind === "revisao" ? "neutral" : "approved", kindIcon: h.kind === "revisao" ? "check" : "shield-check",
-    imported: !!h.imported, ageText: h.age === 0 ? "hoje" : h.age + " dias", open: s.expanded === h.key,
+    ...h,
+    kindLabel: h.kind === "tarefa" ? h.kindLabel : h.kind === "revisao" ? "Revisada" : "Aprovada",
+    kindTone: h.kind === "tarefa" ? (TOM_DA_ACAO[h.action] || "neutral") : h.kind === "revisao" ? "neutral" : "approved",
+    kindIcon: h.kind === "tarefa" ? (ICONE_DA_ACAO[h.action] || "layout-grid") : h.kind === "revisao" ? "check" : "shield-check",
+    imported: !!h.imported, ageText: h.age === 0 ? "hoje" : h.age === 1 ? "1 dia" : h.age + " dias", open: s.expanded === h.key,
     toggle: () => ws.setState((x) => ({ expanded: x.expanded === h.key ? null : h.key })),
     srcs: h.srcs.map((x) => ({ label: x.label, open: x.open || (() => ws.toast("Fonte de histórico", "Abra a tarefa de origem para ver o trecho.", "neutral")) }))
   }));

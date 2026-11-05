@@ -3,8 +3,9 @@ import { Badge, EmptyState, IconButton, ProgressBar, Tooltip } from "../../ds/in
 import { ClickRow, Page, PageHeader, card, mono } from "../ui.jsx";
 import { NewRfpButton } from "../NewRfpButton.jsx";
 
-const COLS = "minmax(0,2.2fr) 64px minmax(0,1.7fr) 150px 130px 130px 96px";
-const rowGrid = { display: "grid", minWidth: 1050, gridTemplateColumns: COLS, gap: 16 };
+// Sem a coluna "Itens" (ajuste de 05/11/2026): o progresso já mostra o total ("2 de 46 aprovados").
+const COLS = "minmax(0,2.2fr) minmax(0,1.7fr) 150px 130px 130px 96px";
+const rowGrid = { display: "grid", minWidth: 970, gridTemplateColumns: COLS, gap: 16 };
 
 /** Excluir tarefa (cenário 60): o clique não abre a tarefa; a exclusão pede confirmação. */
 function DeleteTask({ t }) {
@@ -70,7 +71,7 @@ export function Tasks({ v, ws, pad, isMobile }) {
       ) : !isMobile ? (
         <div role="table" aria-label="Tarefas" style={card(14, { overflowX: "auto", overflowY: "hidden" })}>
           <div role="row" style={{ ...rowGrid, padding: "12px 20px", background: "var(--n-050)", borderBottom: "1px solid var(--n-200)", ...mono(11, "var(--n-500)"), letterSpacing: ".1em", textTransform: "uppercase" }}>
-            <span role="columnheader">Tarefa</span><span role="columnheader">Itens</span><span role="columnheader">Progresso</span>
+            <span role="columnheader">Tarefa</span><span role="columnheader">Progresso</span>
             <span role="columnheader">{whenHeader}</span><span role="columnheader">Responsável</span><span role="columnheader">Status</span>
             <span role="columnheader"><span style={{ position: "absolute", left: -9999 }}>Ações</span></span>
           </div>
@@ -80,7 +81,6 @@ export function Tasks({ v, ws, pad, isMobile }) {
                 <div style={{ fontWeight: 600, color: "var(--n-900)" }}>{t.title}</div>
                 <div style={{ fontSize: 13, color: "var(--n-500)", marginTop: 2 }}>{t.company} · {t.type}</div>
               </div>
-              <span role="cell" style={mono(13)}>{t.items}</span>
               <div role="cell" style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-start" }}>
                 <div style={{ width: "100%" }}><ProgressBar value={t.pct} fillClassName={t.isProcessing ? "tdr-progress-ai" : undefined} /></div>
                 <span style={{ fontSize: 12, color: "#4B5046" }}>{t.compText}</span>

@@ -48,6 +48,14 @@ function servidor(page) {
     if (caminho === "/api/base/documentos") {
       return route.fulfill({ json: { documentos: [{ id: 1, nome: "politica-seguranca.md", titulo: "Política de Segurança da Informação", tipo: "documento", atualizadoEm: "2026-10-01", versao: "3.2", validade: "2027-10-01", vencido: false, ativo: true, enviadoPor: "Carla Diretora", carregadoEm: "2026-10-02T13:45:00.000Z" }] } });
     }
+    if (caminho === "/api/historico/tarefas") {
+      return route.fulfill({ json: { eventos: [
+        { tarefaId: id(9), tarefa: "RFP Excluída", empresa: "Cordel Seguros", acao: "exclusao", pessoa: "Carla Diretora", papel: "Aprovador", em: "2026-11-05T10:00:00.000Z" },
+        { tarefaId: id(2), tarefa: "RFI Entregue", empresa: "Pulse Benefícios", acao: "finalizacao", pessoa: "Carla Diretora", papel: "Aprovador", em: "2026-11-04T15:00:00.000Z" },
+        { tarefaId: id(1), tarefa: "RFP Desistida", empresa: "Orbis Energia", acao: "arquivamento", pessoa: "Carla Diretora", papel: "Aprovador", em: "2026-11-03T15:00:00.000Z" },
+        { tarefaId: id(1), tarefa: "RFP Desistida", empresa: "Orbis Energia", acao: "importacao", pessoa: "Rui Revisor", papel: "Revisor", em: "2026-11-01T12:00:00.000Z" }
+      ] } });
+    }
     if (caminho === "/api/pessoas") return route.fulfill({ json: { pessoas: [{ nome: "Carla Diretora", papel: "Aprovador", areas: ["C-Level"] }] } });
     if (caminho === "/api/usuarios") return route.fulfill({ json: { usuarios: [] } });
     if (caminho.endsWith("/eventos")) return route.fulfill({ json: { eventos: [] } });
@@ -79,6 +87,9 @@ test("O8 a O13 e O15: submenus, arquivar, só leitura, reativar e contadores", a
   await link(page, "Tarefas").click();
   await expect(page.getByRole("heading", { level: 1, name: "2 RFPs e RFIs em andamento" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Alertas" })).toHaveCount(0);
+  // Sem a coluna "Itens": o progresso já traz o total.
+  await expect(page.getByRole("columnheader", { name: "Itens" })).toHaveCount(0);
+  await expect(page.getByRole("row", { name: "Abrir RFP Em Revisão" })).toContainText("1 de 2 aprovados");
   await expect(page.getByRole("row", { name: /^Abrir / })).toHaveCount(2);
   await expect(page.getByRole("button", { name: "Excluir RFP Em Revisão" })).toBeVisible();
 
@@ -210,4 +221,26 @@ test("O1 a O3: Base com Dica, tabela enxuta e detalhes do documento", async ({ p
   const largura = (await detalhes.boundingBox()).width;
   expect(largura).toBeGreaterThanOrEqual(374);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test("O18 e O19: ações sobre as tarefas no Histórico, com o filtro Tarefas", async ({ page }) => {
+  await entrar(page);
+  await link(page, "Histórico").click();
+  await page.getByRole("button", { name: /Filtrar/ }).first().click();
+  await page.getByRole("menuitemradio", { name: /Tarefas/ }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "4 registros" })).toBeVisible();
+  const linhas = page.locator("main [aria-expanded]").filter({ hasText: /Excluída|Finalizada|Arquivada|Importada/ });
+  await expect(linhas).toHaveCount(4);
+  // Mais recentes primeiro, com a ação, quem fez e quando; a excluída continua no Histórico.
+  await expect(linhas.nth(0)).toContainText("RFP Excluída");
+  await expect(linhas.nth(0)).toContainText("Excluída");
+  await expect(linhas.nth(1)).toContainText("Finalizada");
+  await expect(linhas.nth(2)).toContainText("Arquivada");
+  await expect(linhas.nth(3)).toContainText("Importada");
+  await expect(linhas.nth(3)).toContainText("Rui Revisor");
+  await linhas.nth(1).click();
+  await expect(page.getByText("RFI Entregue finalizada por Carla Diretora.").last()).toBeVisible();
+  // "Todos" junta itens e tarefas: 4 ações e as 6 aprovações dos itens carregados.
+  await page.getByRole("button", { name: /^Todos/ }).first().click();
+  await expect(page.getByRole("heading", { level: 1, name: "10 registros" })).toBeVisible();
 });
