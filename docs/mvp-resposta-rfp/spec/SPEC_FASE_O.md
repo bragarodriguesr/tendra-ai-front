@@ -253,6 +253,29 @@ constitution: 1.0.0
 - **When** alguém de uma delas finaliza, arquiva, reativa ou exclui
 - **Then** nada muda na outra. As rotas novas devolvem 404 para tarefa de outra organização (fase K)
 
+### Ajustes de 05/11/2026 (pedidos depois da publicação)
+
+**Cenário O18: ações sobre a tarefa no Histórico**
+- **Given** uma tarefa da organização
+- **When** alguém a importa, finaliza, arquiva, reativa ou exclui
+- **Then** o Histórico mostra a ação, a tarefa, a empresa, quem fez e quando, com os registros dos itens, dos mais recentes para os mais antigos
+- **And** a exclusão continua no Histórico depois que a tarefa sai, com o nome que ela tinha
+- **And** uma tentativa recusada (por exemplo, excluir uma finalizada) não entra no Histórico
+- **And** os registros são só de inclusão (tabela `eventos_de_tarefa`, migração 013), sem chave estrangeira para a tarefa
+
+**Cenário O19: filtro "Tarefas" no Histórico**
+- **Given** o Histórico com o servidor
+- **When** a pessoa escolhe "Tarefas" no filtro
+- **Then** só aparecem as ações sobre as tarefas, com a contagem no filtro; "Todos" junta itens e tarefas
+- **And** a rota `GET /api/historico/tarefas` só devolve as ações da organização da sessão (fase K)
+
+**Coluna "Itens" (O8):** sai das três listas de Tarefas; a barra de progresso já traz o total ("2 de 46 aprovados").
+
+**Menu Tarefas colapsável (O8):**
+- Uma seta à direita de "Tarefas" abre e recolhe os subitens. O menu abre por padrão, e a escolha fica no navegador.
+- Recolhido, o item pai mostra a contagem de Em andamento e fica marcado quando a página é de um subitem.
+- O clique em "Tarefas" sempre abre Em andamento.
+
 ## Requisitos
 
 **P0 (sem eles a fase não resolve o problema):**

@@ -119,7 +119,7 @@ const paraTarefa = (linha: LinhaDeTarefa): Tarefa => ({
  */
 export async function mudarSituacao(
   banco: Banco,
-  entrada: { organizacaoId: string; id: string; de: SituacaoDaTarefa; para: SituacaoDaTarefa; pessoa: string | null; exigir?: (itens: ItemGravado[]) => void },
+  entrada: { organizacaoId: string; id: string; de: SituacaoDaTarefa; para: SituacaoDaTarefa; pessoa: string | null; papel?: string | null; exigir?: (itens: ItemGravado[]) => void },
 ): Promise<Tarefa | null> {
   return banco.transaction(async (transacao) => {
     const atual = await transacao.query<{ situacao: SituacaoDaTarefa }>("SELECT situacao FROM tarefas WHERE id = $1 AND organizacao_id = $2 FOR UPDATE", [entrada.id, entrada.organizacaoId]);
@@ -132,8 +132,46 @@ export async function mudarSituacao(
       [entrada.id, entrada.organizacaoId, entrada.para, emAndamento ? null : entrada.pessoa, emAndamento],
     );
     const linha = rows[0];
-    return linha === undefined ? null : paraTarefa(linha);
+    if (linha === undefined) return null;
+    const tarefa = paraTarefa(linha);
+    const acao = entrada.para === "finalizada" ? "finalizacao" : entrada.para === "arquivada" ? "arquivamento" : "reativacao";
+    await registrarEventoDeTarefa(transacao, { tarefa, acao, pessoa: entrada.pessoa, papel: entrada.papel ?? null });
+    return tarefa;
   });
+}
+
+/** Ação sobre a tarefa no Histórico (fase O, cenários O18 e O19). */
+export type AcaoDaTarefa = "importacao" | "finalizacao" | "arquivamento" | "reativacao" | "exclusao";
+
+export interface EventoDeTarefa {
+  tarefaId: string;
+  tarefa: string;
+  empresa: string | null;
+  acao: AcaoDaTarefa;
+  pessoa: string;
+  papel: string | null;
+  em: string;
+}
+
+/** Grava a ação com o nome da tarefa e da empresa de agora, para o registro valer mesmo depois da exclusão. */
+export async function registrarEventoDeTarefa(
+  banco: Consultas,
+  entrada: { tarefa: Tarefa; acao: AcaoDaTarefa; pessoa: string | null; papel: string | null },
+): Promise<void> {
+  const { tarefa } = entrada;
+  await banco.query(
+    "INSERT INTO eventos_de_tarefa (organizacao_id, tarefa_id, tarefa, empresa, acao, pessoa, papel) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+    [tarefa.organizacaoId, tarefa.id, tarefa.dados.nome?.trim() || tarefa.arquivo, tarefa.dados.empresa?.trim() || null, entrada.acao, entrada.pessoa ?? "Sem identificação", entrada.papel],
+  );
+}
+
+/** Ações sobre as tarefas da organização, da mais recente para a mais antiga (no máximo 500). */
+export async function listarEventosDeTarefa(banco: Banco, organizacaoId: string): Promise<EventoDeTarefa[]> {
+  const { rows } = await banco.query<{ tarefa_id: string; tarefa: string; empresa: string | null; acao: AcaoDaTarefa; pessoa: string; papel: string | null; em: Date }>(
+    "SELECT tarefa_id, tarefa, empresa, acao, pessoa, papel, em FROM eventos_de_tarefa WHERE organizacao_id = $1 ORDER BY em DESC, id DESC LIMIT 500",
+    [organizacaoId],
+  );
+  return rows.map((linha) => ({ tarefaId: linha.tarefa_id, tarefa: linha.tarefa, empresa: linha.empresa, acao: linha.acao, pessoa: linha.pessoa, papel: linha.papel, em: linha.em.toISOString() }));
 }
 
 /**

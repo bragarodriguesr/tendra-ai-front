@@ -977,7 +977,10 @@ Pedida em 05/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 - a Exportação mostra as prontas primeiro, com filtro e busca;
 - a Base fica mais enxuta, com a Dica e os detalhes do documento em painéis.
 
-**Situação (05/11/2026): implementada, aguardando merge e publicação.** Detalhes em `plan/PLAN_FASE_O.md`.
+**Situação (05/11/2026): implementada e conferida no ambiente publicado.**
+- Merge do PR #90 às 19:30 UTC; migração 012 conferida no Supabase.
+- No teste manual do grupo, a RFP-04 de 24/10 foi finalizada pelo box da Exportação; a outra RFP-04 foi arquivada, reativada e arquivada de novo.
+- Detalhes em `plan/PLAN_FASE_O.md`.
 
 ## Definição de pronto (proposta, P10)
 

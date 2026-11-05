@@ -2,7 +2,7 @@ import React from "react";
 import { seedItems, seedDocs, genItems, nowStr, ITEM_TASKS, GENERATED, TASKS, TASK_IDS } from "./data.js";
 import {
   MENSAGEM_FORMATO_DA_RFP, aprovarItemNaApi, avaliarItemNaApi, criarTarefa, editarTextoDoItem, listarAvaliacoes, listarPessoas, restaurarItem, dataHoraDaTela, definirDocumentoAtivo, enderecoDaPlanilha, enviarDocumentosDaBase, hojeIso, listarDocumentosDaBase, listarItensDaTarefa,
-  listarTarefas, paraDocumentoDaTela, paraItemDaTela, reconhecerAlertaNaApi, escolherFonteNaApi, revisarItemNaApi, trocarAreaNaApi, revisarTextoComIa, excluirTarefa, obterEmpresaDaTarefa, listarUsuarios, finalizarTarefa, arquivarTarefa, reativarTarefa
+  listarTarefas, paraDocumentoDaTela, paraItemDaTela, reconhecerAlertaNaApi, escolherFonteNaApi, revisarItemNaApi, trocarAreaNaApi, revisarTextoComIa, excluirTarefa, obterEmpresaDaTarefa, listarUsuarios, finalizarTarefa, arquivarTarefa, reativarTarefa, listarEventosDeTarefas
 , entrar, obterSessao, quandoPerderASessao, sair} from "../api.js";
 
 import { areaDoItem, areasPreferidas, ordenarPorArea } from "./areas.js";
@@ -13,6 +13,9 @@ const chaveDosAlertasLidos = (pessoa) => "tendra.alertasLidos." + pessoa;
 // Alertas do sino fechados no "X" (voltam no próximo login) e tratados pelo botão de ação (não voltam).
 const chaveDosAlertasFechados = (pessoa) => "tendra.alertasFechados." + pessoa;
 const chaveDosAlertasTratados = (pessoa) => "tendra.alertasTratados." + pessoa;
+// Menu Tarefas aberto ou recolhido (ajuste de 05/11/2026): lembrado em cada navegador; aberto por padrão.
+const CHAVE_TAREFAS_RECOLHIDAS = "tendra.menuTarefasRecolhido";
+const tarefasAbertasAntes = () => { try { return localStorage.getItem(CHAVE_TAREFAS_RECOLHIDAS) !== "1"; } catch { return true; } };
 const lerMapa = (chave) => { try { return JSON.parse(localStorage.getItem(chave) || "{}") || {}; } catch { return {}; } };
 const gravar = (chave, valor) => { try { localStorage.setItem(chave, valor); } catch { /* sem armazenamento: só nesta aba */ } };
 export const newContact = () => ({ id: "c" + ++contactSeq, name: "", role: "", phone: "", email: "" });
@@ -65,6 +68,10 @@ const initialState = ({ initialScreen, role }) => ({
   exportFilter: "todos", exportBusca: "",
   // Base: painel da Dica (O1) e documento com os detalhes abertos (O3).
   baseHint: false, docDetails: null,
+  // Histórico: ações sobre as tarefas (importar, finalizar, arquivar, reativar, excluir; cenário O19).
+  taskEvents: [],
+  // Subitens de Tarefas no menu lateral: abertos por padrão; a escolha fica no navegador.
+  tarefasAbertas: tarefasAbertasAntes(),
   // "Revisar com IA" em andamento e o texto de antes da revisão, para desfazer (cenário 65).
   revisandoIa: false, antesDaIa: null,
   // Passo aberto em Primeiros passos; null mostra o passo atual (o primeiro ainda não concluído).
@@ -122,7 +129,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
        */
       forgetSessionData() {
         setRaw((s) => {
-          const next = { ...initialState({ initialScreen: "dashboard", role: s.role }), view: s.view, modo: s.modo, vw: s.vw, sideCollapsed: s.sideCollapsed };
+          const next = { ...initialState({ initialScreen: "dashboard", role: s.role }), view: s.view, modo: s.modo, vw: s.vw, sideCollapsed: s.sideCollapsed, tarefasAbertas: s.tarefasAbertas };
           ref.current = next;
           return next;
         });
@@ -758,6 +765,21 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         }
       },
       closeTaskDetails() { setState({ detalhes: null }); },
+      /** Abre ou recolhe os subitens de Tarefas no menu lateral e guarda a escolha no navegador. */
+      toggleTasksMenu() {
+        const abertas = !ref.current.tarefasAbertas;
+        gravar(CHAVE_TAREFAS_RECOLHIDAS, abertas ? "0" : "1");
+        setState({ tarefasAbertas: abertas });
+      },
+      /** Ações sobre as tarefas, para o Histórico (cenário O19). Sem o servidor, a lista fica vazia. */
+      async loadTaskEvents() {
+        try {
+          const { eventos } = await listarEventosDeTarefas();
+          setState({ taskEvents: eventos });
+        } catch {
+          // Sem o servidor, o Histórico mostra só os registros dos itens.
+        }
+      },
       /** Base (fase O): painel da Dica (O1) e detalhes de um documento (O3). */
       openBaseHint() { setState({ baseHint: true, docDetails: null }); },
       openDocDetails(id) { setState({ docDetails: id, baseHint: false }); },
@@ -900,6 +922,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
   // Primeiros passos também: os passos 2 e 3 dependem das tarefas e dos itens revisados.
   React.useEffect(() => { if (["dashboard", "tasks", "finalizadas", "arquivadas", "task", "export", "review", "onboarding"].includes(state.screen)) ws.loadTasks(); }, [ws, state.screen]);
   React.useEffect(() => { if (state.screen === "new") ws.loadUsers(); }, [ws, state.screen, state.sessao]);
+  React.useEffect(() => { if (state.screen === "history") ws.loadTaskEvents(); }, [ws, state.screen]);
   const processing = state.tarefas.some((t) => t.estado === "processando");
   React.useEffect(() => {
     if (!processing) return undefined;

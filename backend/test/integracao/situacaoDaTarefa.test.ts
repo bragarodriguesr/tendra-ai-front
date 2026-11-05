@@ -222,3 +222,44 @@ describe("Cenário O17 · isolamento entre organizações", () => {
     expect(await situacao(id)).toEqual({ situacao: "em_andamento", por: null, em: false });
   });
 });
+
+describe("Cenários O18 e O19 · ações sobre a tarefa no Histórico", () => {
+  it("importar, arquivar, reativar, finalizar e excluir ficam registrados, com quem e quando; a exclusão sobrevive à tarefa", async () => {
+    const planilha = (await readFile(RFP)).toString("base64");
+    const criada = await pedir("revisor", "POST", "/api/tarefas", { arquivo: { nome: "RFP-01.xlsx", conteudoBase64: planilha }, dados: { nome: "RFP do histórico", empresa: "Rede Alfa" } });
+    expect(criada.statusCode).toBe(202);
+    const id = criada.json().tarefa.id as string;
+    await expect.poll(async () => (await obterTarefa(banco, ORGANIZACAO_INICIAL, id))?.estado, { timeout: 30_000 }).toBe("pronta");
+
+    expect((await pedir("aprovador", "POST", `/api/tarefas/${id}/arquivar`, {})).statusCode).toBe(200);
+    expect((await pedir("aprovador", "POST", `/api/tarefas/${id}/reativar`, {})).statusCode).toBe(200);
+    await aprovarTudo(id);
+    expect((await pedir("revisor", "POST", `/api/tarefas/${id}/finalizar`, {})).statusCode).toBe(200);
+    // A finalizada não é excluída: a tentativa recusada não entra no Histórico.
+    expect((await pedir("aprovador", "DELETE", `/api/tarefas/${id}`)).statusCode).toBe(409);
+
+    const outra = await novaTarefa();
+    expect((await pedir("aprovador", "POST", `/api/tarefas/${outra}/arquivar`, {})).statusCode).toBe(200);
+    expect((await pedir("aprovador", "DELETE", `/api/tarefas/${outra}`)).statusCode).toBe(200);
+
+    const { eventos } = (await pedir("revisor", "GET", "/api/historico/tarefas")).json() as { eventos: { tarefaId: string; tarefa: string; empresa: string | null; acao: string; pessoa: string; papel: string; em: string }[] };
+    const resumo = (alvo: string) => eventos.filter((e) => e.tarefaId === alvo).reverse().map(({ acao, pessoa, papel, tarefa, empresa }) => ({ acao, pessoa, papel, tarefa, empresa }));
+    expect(resumo(id)).toEqual([
+      { acao: "importacao", pessoa: "Rui Revisor", papel: "Revisor", tarefa: "RFP do histórico", empresa: "Rede Alfa" },
+      { acao: "arquivamento", pessoa: "Ana Aprovadora", papel: "Aprovador", tarefa: "RFP do histórico", empresa: "Rede Alfa" },
+      { acao: "reativacao", pessoa: "Ana Aprovadora", papel: "Aprovador", tarefa: "RFP do histórico", empresa: "Rede Alfa" },
+      { acao: "finalizacao", pessoa: "Rui Revisor", papel: "Revisor", tarefa: "RFP do histórico", empresa: "Rede Alfa" },
+    ]);
+    expect(resumo(outra)).toEqual([
+      { acao: "arquivamento", pessoa: "Ana Aprovadora", papel: "Aprovador", tarefa: "RFP de teste", empresa: null },
+      { acao: "exclusao", pessoa: "Ana Aprovadora", papel: "Aprovador", tarefa: "RFP de teste", empresa: null },
+    ]);
+    expect(eventos.every((e) => !Number.isNaN(Date.parse(e.em)))).toBe(true);
+
+    // Isolamento (O17): a outra organização não vê nenhuma dessas ações.
+    expect((await pedir("outra", "GET", "/api/historico/tarefas")).json()).toEqual({ eventos: [] });
+    // Só inclusão.
+    await expect(banco.query("UPDATE eventos_de_tarefa SET pessoa = 'X'")).rejects.toThrow();
+    await expect(banco.query("DELETE FROM eventos_de_tarefa")).rejects.toThrow();
+  }, 60_000);
+});

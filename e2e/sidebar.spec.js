@@ -225,3 +225,35 @@ test('Estrutura: marca no sidebar e controle na borda do conteúdo', async ({ pa
   await expect.poll(() => brand.getByText('Tendra', { exact: false }).evaluate(el => getComputedStyle(el).opacity)).toBe('0');
   expect(await simbolo.boundingBox()).toEqual(antes);
 });
+
+test('Tarefas colapsável: a seta abre e recolhe os subitens, e a escolha fica no navegador', async ({ page }) => {
+  await enter(page);
+  const recolher = page.getByRole('button', { name: 'Recolher Tarefas', exact: true });
+  await expect(link(page, 'Em andamento')).toBeVisible();
+  await expect(recolher).toHaveAttribute('aria-expanded', 'true');
+  expect((await recolher.boundingBox()).height).toBeGreaterThanOrEqual(36);
+
+  // Em Finalizadas, recolhido: os subitens somem e o pai fica marcado, com a contagem de Em andamento.
+  await link(page, 'Finalizadas').click();
+  await recolher.click();
+  const mostrar = page.getByRole('button', { name: 'Mostrar Tarefas', exact: true });
+  await expect(mostrar).toHaveAttribute('aria-expanded', 'false');
+  await expect(link(page, 'Em andamento')).toHaveCount(0);
+  await expect(link(page, 'Finalizadas')).toHaveCount(0);
+  await expect(link(page, 'Tarefas')).toHaveAttribute('aria-current', 'page');
+  await expect(link(page, 'Tarefas')).toContainText(/\d/);
+
+  // Clicar em Tarefas abre Em andamento, sem reabrir os subitens; a escolha sobrevive a recarregar.
+  await link(page, 'Tarefas').click();
+  await expect(page.getByRole('heading', { level: 1, name: /em andamento$/ })).toBeVisible();
+  await expect(mostrar).toBeVisible();
+  await enter(page);
+  await expect(page.getByRole('button', { name: 'Mostrar Tarefas', exact: true })).toBeVisible();
+  await expect(link(page, 'Em andamento')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Mostrar Tarefas', exact: true }).click();
+  await expect(link(page, 'Em andamento')).toBeVisible();
+
+  // Menu reduzido a ícones: sem a seta, como antes.
+  await page.getByRole('button', { name: 'Recolher menu', exact: true }).click();
+  await expect(page.getByRole('button', { name: /^(Recolher|Mostrar) Tarefas$/ })).toHaveCount(0);
+});
