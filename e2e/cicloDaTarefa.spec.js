@@ -223,24 +223,38 @@ test("O1 a O3: Base com Dica, tabela enxuta e detalhes do documento", async ({ p
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
-test("O18 e O19: ações sobre as tarefas no Histórico, com o filtro Tarefas", async ({ page }) => {
+test("O18 e O19: ações sobre as tarefas no Histórico, com o filtro Tarefas e a seta que abre o registro", async ({ page }) => {
   await entrar(page);
   await link(page, "Histórico").click();
+  // Colunas separadas: registro, status, usuário e data e hora; sem a resposta e sem a idade.
+  const tabela = page.getByRole("table", { name: "Histórico" });
+  for (const coluna of ["Registro", "Status", "Usuário", "Data e hora"]) await expect(tabela.getByRole("columnheader", { name: coluna })).toBeVisible();
+  await expect(tabela.getByText("hoje", { exact: true })).toHaveCount(0);
+  await expect(tabela.getByText("Resposta 1.", { exact: true })).toHaveCount(0);
+
   await page.getByRole("button", { name: /Filtrar/ }).first().click();
   await page.getByRole("menuitemradio", { name: /Tarefas/ }).click();
   await expect(page.getByRole("heading", { level: 1, name: "4 registros" })).toBeVisible();
-  const linhas = page.locator("main [aria-expanded]").filter({ hasText: /Excluída|Finalizada|Arquivada|Importada/ });
+  const linhas = tabela.getByRole("row").filter({ hasText: /Excluída|Finalizada|Arquivada|Importada/ });
   await expect(linhas).toHaveCount(4);
   // Mais recentes primeiro, com a ação, quem fez e quando; a excluída continua no Histórico.
   await expect(linhas.nth(0)).toContainText("RFP Excluída");
-  await expect(linhas.nth(0)).toContainText("Excluída");
+  await expect(linhas.nth(0).getByRole("cell").nth(1)).toHaveText("Excluída");
+  await expect(linhas.nth(0).getByRole("cell").nth(2)).toHaveText("Carla Diretora");
+  await expect(linhas.nth(0).getByRole("cell").nth(3)).toHaveText(/^05\/11\/2026 \d{2}:00$/);
   await expect(linhas.nth(1)).toContainText("Finalizada");
   await expect(linhas.nth(2)).toContainText("Arquivada");
   await expect(linhas.nth(3)).toContainText("Importada");
   await expect(linhas.nth(3)).toContainText("Rui Revisor");
-  await linhas.nth(1).click();
-  await expect(page.getByText("RFI Entregue finalizada por Carla Diretora.").last()).toBeVisible();
-  // "Todos" junta itens e tarefas: 4 ações e as 6 aprovações dos itens carregados.
+  // A tarefa excluída não tem para onde levar; a seta da finalizada abre os detalhes dela.
+  await expect(page.getByRole("button", { name: "Abrir a tarefa RFP Excluída" })).toBeDisabled();
+  await page.getByRole("button", { name: "Abrir a tarefa RFI Entregue" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "RFI Entregue" })).toBeVisible();
+
+  // "Todos" junta itens e tarefas: 4 ações e as 6 aprovações dos itens carregados; a seta de um item abre a pergunta.
+  await link(page, "Histórico").click();
   await page.getByRole("button", { name: /^Todos/ }).first().click();
   await expect(page.getByRole("heading", { level: 1, name: "10 registros" })).toBeVisible();
+  await page.getByRole("button", { name: "Abrir a pergunta Pergunta 2?" }).first().click();
+  await expect(page.getByRole("heading", { level: 2, name: "Pergunta 2?" })).toBeVisible();
 });

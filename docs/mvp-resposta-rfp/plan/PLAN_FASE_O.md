@@ -97,7 +97,11 @@ A geração, a classificação por área e a regra de download (fase J) não mud
   - recolhido, "Tarefas" mostra a contagem de Em andamento e fica marcado quando a página é de um dos subitens;
   - o clique em "Tarefas" continua abrindo Em andamento, sem reabrir os subitens;
   - a escolha fica no navegador de cada pessoa; no menu reduzido a ícones, nada muda.
-- **Testes:** 387 no backend, no PGlite e no Postgres; 81 de ponta a ponta.
+- **Histórico em colunas (ajuste de 05/11/2026, depois do merge do PR #91):**
+  - uma coluna para cada informação: Registro (pergunta ou tarefa, com a tarefa ou a empresa abaixo), Status, Usuário e Data e hora;
+  - saem a coluna com a resposta (ou o nome da RFP), a coluna da idade (que mostrava "hoje" em todos os itens, porque a idade dos itens do servidor não era calculada) e a linha que se expandia;
+  - no lugar da expansão, uma seta abre o registro: a pergunta na Revisão ou a tarefa nos detalhes. Na tarefa excluída e nos registros importados, a seta fica desabilitada, com o motivo na dica.
+- **Testes:** 387 no backend, no PGlite e no Postgres; 82 de ponta a ponta.
 - **Situação:** implementado, aguardando merge e publicação.
 
 ## Checklist de aceite

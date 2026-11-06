@@ -269,6 +269,8 @@ constitution: 1.0.0
 - **Then** só aparecem as ações sobre as tarefas, com a contagem no filtro; "Todos" junta itens e tarefas
 - **And** a rota `GET /api/historico/tarefas` só devolve as ações da organização da sessão (fase K)
 
+**Histórico em colunas (O19):** Registro, Status, Usuário e Data e hora, cada um na sua coluna, e uma seta que abre a pergunta na Revisão ou a tarefa. Sem a coluna da resposta, a da idade e a expansão da linha. Na tarefa excluída, a seta fica desabilitada.
+
 **Coluna "Itens" (O8):** sai das três listas de Tarefas; a barra de progresso já traz o total ("2 de 46 aprovados").
 
 **Menu Tarefas colapsável (O8):**
