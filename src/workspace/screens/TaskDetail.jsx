@@ -36,7 +36,10 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
             {task.hasItems && !task.isServer ? <Button variant="secondary" icon="download" onClick={() => ws.go("export", { taskId: "t1" })}>Exportação</Button> : null}
             <Button variant="secondary" icon="building-2" onClick={() => ws.openTaskDetails(task.id)}>Ver detalhes</Button>
             {task.canReactivate ? <Button variant="secondary" icon="rotate-ccw" loading={state.mudandoSituacao} onClick={task.reactivate}>{task.reactivateLabel}</Button> : null}
-            {task.hasItems ? <Button icon="eye" onClick={() => ws.go("review")}>Abrir revisão</Button> : null}
+            {/* Tarefa pronta ou finalizada (ajuste de 06/11/2026): "Abrir revisão" no estilo de "Ver detalhes" e
+                "Ir para exportação" em destaque ao lado, sem o cartão "Pronta para exportar". */}
+            {task.hasItems ? <Button variant={task.completa ? "secondary" : "primary"} icon="eye" onClick={() => ws.go("review")}>Abrir revisão</Button> : null}
+            {task.completa ? <Button icon="download" onClick={() => ws.go("export", task.isServer ? {} : { taskId: task.id })}>Ir para exportação</Button> : null}
           </div>
         </div>
         {task.closedNote ? <ReadOnlyNote text={task.closedNote} archived={task.isArchived} /> : null}
@@ -74,16 +77,6 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
         </div>
       ) : null}
 
-      {task.isReady ? (
-        <div style={statusCard(false, isMobile)}>
-          <div><Badge tone="approved" icon="check-check">Pronta para exportar</Badge></div>
-          <div style={cardTitle}>{task.progText}</div>
-          <ProgressBar value={100} />
-          <div style={{ color: "var(--n-400)", lineHeight: 1.6 }}>Nenhum alerta pendente. A planilha com respostas e fontes já pode ser baixada por Aprovadores e Revisores.</div>
-          <div><Button icon="download" onClick={() => ws.go("export", task.isServer ? {} : { taskId: task.id })}>Ir para exportação</Button></div>
-        </div>
-      ) : null}
-
       {task.hasItems ? (
         <>
           <div style={card(16, { padding: 24, display: "flex", flexDirection: "column", gap: 20 })}>
@@ -91,6 +84,8 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
               <span style={bigNumber}>{v.destaqueDoCartao.n} <span style={{ fontSize: 24, color: "var(--n-400)" }}>de {c.total}</span></span>
               <span style={{ color: "var(--n-700)" }}>{v.destaqueDoCartao.texto}</span>
             </div>
+            {/* Tarefa completa: só a barra em 100%, sem os estados zerados nem a legenda (ajuste de 06/11/2026). */}
+            {task.completa ? <ProgressBar value={100} /> : <>
             {/* Barra e legenda aplicam o filtro por estado; clicar de novo volta para "Todos" (SPEC_FASE_M.md, M1 a M5). */}
             <SegmentBar segments={v.segs} total={c.total} unit="itens" selected={state.filter} onSelect={(estado) => ws.setFilter(filtroAoClicar(state.filter, estado))} />
             <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
@@ -114,6 +109,7 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
                 );
               })}
             </div>
+            </>}
           </div>
           {/* Busca à esquerda e filtro à direita, na mesma linha (SPEC_FASE_L.md, B13); no celular, o filtro vai abaixo (B17). */}
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>

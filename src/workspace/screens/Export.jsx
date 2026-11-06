@@ -38,7 +38,8 @@ export function Export({ v, ws, state, pad, isMobile }) {
           <ProgressBar value={x.pct} />
           {x.filled ? null : <div style={{ color: "var(--n-400)", lineHeight: 1.6 }}>O arquivo traz, na ordem original, a pergunta, o ID do item, a resposta aprovada com as edições do revisor e as fontes usadas. Itens de resposta manual mostram “Resposta manual, sem fonte na base”. Formato: planilha (.xlsx).</div>}
           <div style={{ display: "flex", alignItems: "center", gap: "12px 16px", flexWrap: "wrap" }}>
-            <Button icon="download" disabled={x.disabled} onClick={x.doExport}>{x.btn}</Button>
+            <Button icon="download" disabled={x.disabled} onClick={x.doExport} aria-label={`Baixar ${x.title}`}>{x.btn}</Button>
+            <Button variant="secondary" iconEnd="arrow-right" onClick={x.openTask}>Ver tarefa</Button>
             {x.blocked ? <Button variant="secondary" iconEnd="arrow-right" onClick={x.goReview}>Ir para revisão</Button> : null}
             <span style={{ fontSize: 13, color: "var(--n-900)" }}>{x.reason}</span>
           </div>

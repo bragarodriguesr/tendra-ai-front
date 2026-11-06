@@ -108,6 +108,17 @@ A geração, a classificação por área e a regra de download (fase J) não mud
   - O filtro "Tarefas", as colunas, a seta que abre o registro, o menu colapsável e as listas sem "Itens" foram conferidos pelo grupo no teste manual. São mudanças de tela, sem registro no banco.
   - Nenhum evento de item gravado no período.
 
+## Ajustes de 06/11/2026: menu sem contadores, Exportação e detalhes da tarefa completa
+
+- **Menu lateral:** sem contadores em Tarefas (e nos subitens), Revisão e Base de conhecimento. Os números ficam nos títulos das telas.
+- **Exportação:** o botão é "Baixar" em todos os cartões, com "Ver tarefa" ao lado, que abre os detalhes da tarefa.
+- **Detalhes da tarefa pronta ou finalizada:**
+  - sai o cartão "Pronta para exportar", e os botões ficam no lugar de sempre;
+  - "Abrir revisão" passa ao estilo de "Ver detalhes", e "Ir para exportação", em tinta, fica ao lado dele;
+  - o cartão de progresso mostra só o número de aprovados e a barra em 100%, sem os estados zerados nem a legenda.
+- **Testes:** 82 de ponta a ponta, com os testes do menu, da jornada e do ciclo da tarefa ajustados e as verificações novas.
+- **Situação:** implementado, aguardando merge e publicação.
+
 ## Checklist de aceite
 
 | Cenário | Como conferir |
