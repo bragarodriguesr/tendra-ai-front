@@ -102,7 +102,11 @@ A geração, a classificação por área e a regra de download (fase J) não mud
   - saem a coluna com a resposta (ou o nome da RFP), a coluna da idade (que mostrava "hoje" em todos os itens, porque a idade dos itens do servidor não era calculada) e a linha que se expandia;
   - no lugar da expansão, uma seta abre o registro: a pergunta na Revisão ou a tarefa nos detalhes. Na tarefa excluída e nos registros importados, a seta fica desabilitada, com o motivo na dica.
 - **Testes:** 387 no backend, no PGlite e no Postgres; 82 de ponta a ponta.
-- **Situação:** implementado, aguardando merge e publicação.
+- **Situação (06/11/2026): implementado e conferido no ambiente publicado.**
+  - **Deploy:** merge do PR #91 às 21:23 UTC de 05/11, com a Vercel e o Render no ar às 21:24 e a migração 013 conferida no Supabase (tabela `eventos_de_tarefa` com RLS). Merge do PR #92 (Histórico em colunas) às 12:00 UTC de 06/11, no ar às 12:02.
+  - **Teste manual do grupo, registrado no Histórico (O18):** o User Teste 3 (Aprovador, Pulse Benefícios) reativou a RFP-04 de 05/11 às 21:42:14 UTC e a arquivou de novo às 21:42:23. Os dois eventos estão em `eventos_de_tarefa`, com a tarefa, a empresa (Grupo GasBras Complemento), a pessoa e o papel. A RFP-04 segue arquivada.
+  - O filtro "Tarefas", as colunas, a seta que abre o registro, o menu colapsável e as listas sem "Itens" foram conferidos pelo grupo no teste manual. São mudanças de tela, sem registro no banco.
+  - Nenhum evento de item gravado no período.
 
 ## Checklist de aceite
 
