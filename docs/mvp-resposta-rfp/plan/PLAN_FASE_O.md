@@ -117,7 +117,10 @@ A geração, a classificação por área e a regra de download (fase J) não mud
   - "Abrir revisão" passa ao estilo de "Ver detalhes", e "Ir para exportação", em tinta, fica ao lado dele;
   - o cartão de progresso mostra só o número de aprovados e a barra em 100%, sem os estados zerados nem a legenda.
 - **Testes:** 82 de ponta a ponta, com os testes do menu, da jornada e do ciclo da tarefa ajustados e as verificações novas.
-- **Situação:** implementado, aguardando merge e publicação.
+- **Situação (06/11/2026): implementado e conferido no ambiente publicado.**
+  - Merge do PR #93 às 13:04 UTC, com a conta dona do time na Vercel; Vercel e Render no ar às 13:05. Sem migração.
+  - Conferido pelo grupo no teste manual: o menu sem contadores, a Exportação com "Baixar" e "Ver tarefa" e os detalhes da tarefa pronta ou finalizada.
+  - São mudanças de tela: nenhum evento de item nem de tarefa ficou gravado depois do deploy.
 
 ## Checklist de aceite
 
