@@ -98,6 +98,7 @@ A geração das respostas não muda.
     - edição, restauração e revisão do item 3.
   - **Primeira tarefa nova classificada no processamento (05/11/2026, N2):** a RFP-04 da Pulse Benefícios, enviada às 17:22 UTC, ficou pronta em 15 s com as 5 perguntas classificadas (Produto 2, Tecnologia 2, Comercial 1) e a marca `areas_classificadas_em` no fim do processamento.
   - **Ponto em aberto mantido:** nenhuma das organizações publicadas tem C-Level. Na Pulse, as perguntas de Produto, Comercial e Jurídico (40 nas duas tarefas) não têm quem as aprove nem quem troque a área.
+  - **Resolvido na Pulse (06/11/2026):** `userteste4@gmail.com` (User Teste 4) foi cadastrado no banco como Aprovador C-Level da Pulse Benefícios. A organização passa a ter quem aprove e troque a área das perguntas de Produto, Comercial e Jurídico. A Vereda Documental segue sem C-Level.
 
 ## Checklist de aceite
 
