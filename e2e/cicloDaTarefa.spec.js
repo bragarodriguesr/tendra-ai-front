@@ -77,11 +77,8 @@ const link = (page, nome) => menu(page).getByRole("link", { name: new RegExp(`^$
 test("O8 a O13 e O15: submenus, arquivar, só leitura, reativar e contadores", async ({ page }) => {
   const estado = await entrar(page);
 
-  // O8, O15: contagens por situação; Revisão sem os itens das encerradas (1 sugerido na em revisão).
-  await expect(link(page, "Em andamento")).toContainText("2");
-  await expect(link(page, "Finalizadas")).toContainText("1");
-  await expect(link(page, "Arquivadas")).toContainText("1");
-  await expect(link(page, "Revisão")).toContainText("1");
+  // O8: sem contadores no menu (ajuste de 06/11/2026); as contagens ficam nos títulos das telas.
+  for (const nome of ["Em andamento", "Finalizadas", "Arquivadas", "Revisão"]) await expect(link(page, nome)).toHaveText(nome);
 
   // O9: Em andamento sem o cartão de alertas, com Arquivar e Excluir.
   await link(page, "Tarefas").click();
@@ -99,8 +96,6 @@ test("O8 a O13 e O15: submenus, arquivar, só leitura, reativar e contadores", a
   await expect(page.getByText("RFP arquivada", { exact: true })).toBeVisible();
   expect(estado.pedidos).toEqual([`arquivar ${id(3)}`]);
   await expect(page.getByRole("heading", { level: 1, name: "1 RFPs e RFIs em andamento" })).toBeVisible();
-  await expect(link(page, "Arquivadas")).toContainText("2");
-  await expect(link(page, "Revisão")).toContainText("0");
 
   // O8, O13: Finalizadas sem Excluir, com quem finalizou e quando.
   await link(page, "Finalizadas").click();
@@ -112,9 +107,16 @@ test("O8 a O13 e O15: submenus, arquivar, só leitura, reativar e contadores", a
   // O11: a finalizada abre só para leitura, sem download nos detalhes (O14) e sem reativar.
   await page.getByRole("row", { name: "Abrir RFI Entregue" }).click();
   await expect(page.getByText(/RFI finalizada por Carla Diretora em \d{2}\/\d{2}\/2026: só leitura\./)).toBeVisible();
-  await expect(page.getByRole("button", { name: "Baixar planilha preenchida" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Baixar / })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /^Reativar/ })).toHaveCount(0);
   await expect(link(page, "Finalizadas")).toHaveAttribute("aria-current", "page");
+  // Ajuste de 06/11/2026: sem o cartão "Pronta para exportar"; "Abrir revisão" secundário e "Ir para exportação" ao lado;
+  // a barra fica só em 100%, sem a legenda dos estados.
+  await expect(page.getByText("Pronta para exportar")).toHaveCount(0);
+  const acoes = page.getByRole("button", { name: /^(Ver detalhes|Abrir revisão|Ir para exportação)$/ });
+  await expect(acoes).toHaveText(["Ver detalhes", "Abrir revisão", "Ir para exportação"]);
+  await expect(page.getByRole("button", { name: /^aprovada: / })).toHaveCount(0);
+  await expect(page.locator("main").getByText("100%", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Abrir revisão" }).click();
   await expect(page.getByRole("note").filter({ hasText: "só leitura" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Editar resposta" })).toHaveCount(0);
@@ -131,8 +133,9 @@ test("O8 a O13 e O15: submenus, arquivar, só leitura, reativar e contadores", a
   await expect(page.getByText("RFP reativada", { exact: true })).toBeVisible();
   expect(estado.pedidos).toEqual([`arquivar ${id(3)}`, `reativar ${id(3)}`]);
   await expect(page.getByRole("button", { name: "Reativar RFP" })).toHaveCount(0);
-  await expect(link(page, "Em andamento")).toContainText("2");
   await expect(link(page, "Em andamento")).toHaveAttribute("aria-current", "page");
+  await link(page, "Em andamento").click();
+  await expect(page.getByRole("heading", { level: 1, name: "2 RFPs e RFIs em andamento" })).toBeVisible();
 });
 
 test("O4 a O7: Exportação com ordem, filtro, busca e o box de conclusão", async ({ page }) => {
@@ -160,27 +163,35 @@ test("O4 a O7: Exportação com ordem, filtro, busca e o box de conclusão", asy
   await page.getByRole("button", { name: /^Todos/ }).first().click();
   await expect(titulos).toHaveCount(4);
 
+  // Ajuste de 06/11/2026: "Baixar" em todos os cartões e "Ver tarefa" ao lado, que abre os detalhes.
+  await expect(page.locator("main").getByRole("button", { name: /^Baixar / })).toHaveText(["Baixar", "Baixar", "Baixar", "Baixar"]);
+  await page.locator("main > div > div").filter({ hasText: "RFP Desistida" }).last().getByRole("button", { name: "Ver tarefa" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "RFP Desistida" })).toBeVisible();
+  await link(page, "Exportação").click();
+
   // O6: baixar a pronta abre o box; "Agora não" fecha sem mudar nada.
   const box = page.getByRole("alertdialog", { name: "RFP concluída. Parabéns pelo trabalho!" });
   const pronta = page.locator("main > div > div").filter({ hasText: "RFP Pronta" }).last();
-  await Promise.all([page.waitForEvent("download"), pronta.getByRole("button", { name: "Baixar planilha preenchida" }).click()]);
+  await Promise.all([page.waitForEvent("download"), pronta.getByRole("button", { name: /^Baixar / }).click()]);
   await expect(box).toBeVisible();
   await box.getByRole("button", { name: "Agora não" }).click();
   await expect(box).toBeHidden();
   expect(estado.pedidos).toEqual([]);
 
   // O7: finalizar; o cartão vai para o fim com o selo, e o título deixa de contá-la.
-  await Promise.all([page.waitForEvent("download"), pronta.getByRole("button", { name: "Baixar planilha preenchida" }).click()]);
+  await Promise.all([page.waitForEvent("download"), pronta.getByRole("button", { name: /^Baixar / }).click()]);
   await box.getByRole("button", { name: "Finalizar RFP" }).click();
   await expect(page.getByText("RFP finalizada", { exact: true })).toBeVisible();
   expect(estado.pedidos).toEqual([`finalizar ${id(4)}`]);
   await expect(page.getByRole("heading", { level: 1, name: "1 tarefa para baixar · 0 prontas" })).toBeVisible();
   await expect(titulos).toHaveText(["RFP Em Revisão", "RFP Pronta", "RFI Entregue", "RFP Desistida"]);
   await expect(page.getByText("Finalizada por Carla Diretora · 05/11/2026")).toBeVisible();
-  await expect(link(page, "Finalizadas")).toContainText("2");
+  await link(page, "Finalizadas").click();
+  await expect(page.getByRole("heading", { level: 1, name: "2 RFPs e RFIs finalizadas" })).toBeVisible();
+  await link(page, "Exportação").click();
 
   // A em revisão não abre o box (O6): o download pede a confirmação de sempre.
-  await page.locator("main > div > div").filter({ hasText: "RFP Em Revisão" }).last().getByRole("button", { name: "Baixar planilha preenchida" }).click();
+  await page.locator("main > div > div").filter({ hasText: "RFP Em Revisão" }).last().getByRole("button", { name: /^Baixar / }).click();
   await expect(page.getByRole("alertdialog", { name: "A revisão ainda não foi finalizada." })).toBeVisible();
 });
 

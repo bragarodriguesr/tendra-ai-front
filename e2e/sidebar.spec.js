@@ -119,7 +119,8 @@ test('US2: recolhimento, atalhos e dicas em portal', async ({ page }, testInfo) 
   await item.hover();
   await expect(page.getByRole('tooltip')).toContainText('Tarefas');
   expect((await page.getByRole('tooltip').boundingBox()).x).toBeGreaterThanOrEqual(64);
-  await expect(item).toHaveAttribute('aria-label', /Tarefas \(\d+\)/);
+  // Sem contadores no menu (ajuste de 06/11/2026): o rótulo recolhido é só o nome.
+  await expect(item).toHaveAttribute('aria-label', 'Tarefas');
   await item.click();
   await page.getByRole('button', { name: 'Nova RFP/RFI', exact: true }).click();
   await page.locator('#nt-company').focus();
@@ -129,10 +130,11 @@ test('US2: recolhimento, atalhos e dicas em portal', async ({ page }, testInfo) 
 
 test('US4: demo aprova itens e mantém ação recolhida acessível', async ({ page }) => {
   await enter(page);
+  // Sem contadores no menu (ajuste de 06/11/2026): só o nome.
   const review = link(page, 'Revisão');
-  await expect(review).not.toHaveText('Revisão0');
+  await expect(review).toHaveText('Revisão');
   await page.getByRole('button', { name: 'Aprovar todos os itens', exact: true }).click();
-  await expect(review).toContainText('0');
+  await expect(page.getByText('Todos os itens aprovados e sem alerta pendente.', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Recolher menu', exact: true }).click();
   const action = page.getByRole('button', { name: 'Painel de demo: aprovar todos os itens', exact: true });
   await page.keyboard.press('Tab');
@@ -151,7 +153,7 @@ test('US4: servidor, base vazia e ambiente compartilhado', async ({ page }) => {
   expect(await style()).toMatchObject({ image: expect.stringContaining('linear-gradient'), animation: 'none' });
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   expect(await style()).toMatchObject({ image: expect.stringContaining('linear-gradient'), animation: 'tdr-ai-flow' });
-  await expect(link(page, 'Base de conhecimento')).toContainText('0');
+  await expect(link(page, 'Base de conhecimento')).toHaveText('Base de conhecimento');
 });
 
 for (const viewport of [{ width: 360, height: 640 }, { width: 768, height: 1024 }, { width: 1280, height: 720 }, { width: 1440, height: 900 }]) {
@@ -173,7 +175,7 @@ for (const viewport of [{ width: 360, height: 640 }, { width: 768, height: 1024 
   });
 }
 
-test('DS: contagem longa e pouca altura preservam links e rodapé', async ({ page }) => {
+test('DS: base grande e pouca altura preservam links e rodapé, sem contadores no menu', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 360 });
   await enter(page);
   await link(page, 'Base de conhecimento').scrollIntoViewIfNeeded();
@@ -181,10 +183,10 @@ test('DS: contagem longa e pouca altura preservam links e rodapé', async ({ pag
   await enter(page, { server: true, documents: 1000 });
   const base = link(page, 'Base de conhecimento');
   await base.scrollIntoViewIfNeeded();
-  await expect(base).toContainText('1000');
+  await expect(base).toHaveText('Base de conhecimento');
   expect(await base.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
   await page.getByRole('button', { name: 'Recolher menu', exact: true }).click();
-  await expect(link(page, 'Base de conhecimento')).toHaveAttribute('aria-label', 'Base de conhecimento (1000)');
+  await expect(link(page, 'Base de conhecimento')).toHaveAttribute('aria-label', 'Base de conhecimento');
 });
 
 test('Barra superior e saída continuam funcionando', async ({ page }) => {
@@ -233,7 +235,7 @@ test('Tarefas colapsável: a seta abre e recolhe os subitens, e a escolha fica n
   await expect(recolher).toHaveAttribute('aria-expanded', 'true');
   expect((await recolher.boundingBox()).height).toBeGreaterThanOrEqual(36);
 
-  // Em Finalizadas, recolhido: os subitens somem e o pai fica marcado, com a contagem de Em andamento.
+  // Em Finalizadas, recolhido: os subitens somem e o pai fica marcado.
   await link(page, 'Finalizadas').click();
   await recolher.click();
   const mostrar = page.getByRole('button', { name: 'Mostrar Tarefas', exact: true });
@@ -241,7 +243,6 @@ test('Tarefas colapsável: a seta abre e recolhe os subitens, e a escolha fica n
   await expect(link(page, 'Em andamento')).toHaveCount(0);
   await expect(link(page, 'Finalizadas')).toHaveCount(0);
   await expect(link(page, 'Tarefas')).toHaveAttribute('aria-current', 'page');
-  await expect(link(page, 'Tarefas')).toContainText(/\d/);
 
   // Clicar em Tarefas abre Em andamento, sem reabrir os subitens; a escolha sobrevive a recarregar.
   await link(page, 'Tarefas').click();

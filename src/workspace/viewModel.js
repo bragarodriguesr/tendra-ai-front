@@ -154,6 +154,7 @@ export function buildView(s, ws) {
   const arquivadasIds = taskIds.filter((id) => (ws.taskInfo(id, s) || {}).isArchived);
   const pend = tarefasComItens.reduce((n, id) => n + ws.itemsOf(id, s).filter((i) => i.st !== "revisada" && i.st !== "aprovada").length, 0);
   const go = (sc) => (e) => { e && e.preventDefault && e.preventDefault(); ws.go(sc); };
+  // Sem contadores no menu (ajuste de 06/11/2026): os números ficam nas próprias telas.
   const navGroups = [
     { label: "Início", items: [
       // Base vazia: Primeiros passos fica em destaque, com o gradiente limão em movimento do "Revisar com IA".
@@ -162,17 +163,17 @@ export function buildView(s, ws) {
     ] },
     { label: "Trabalho", items: [
       // Fase O (PO8): Tarefas com Em andamento, Finalizadas e Arquivadas; o item pai abre Em andamento.
-      { value: "tarefas", label: "Tarefas", icon: "layout-grid", count: andamentoIds.length, onClick: go("tasks"), expanded: s.tarefasAbertas !== false, onToggle: (e) => { e.preventDefault(); ws.toggleTasksMenu(); }, items: [
-        { value: "tasks", label: "Em andamento", count: andamentoIds.length, onClick: go("tasks") },
-        { value: "finalizadas", label: "Finalizadas", count: finalizadasIds.length, onClick: go("finalizadas") },
-        { value: "arquivadas", label: "Arquivadas", count: arquivadasIds.length, onClick: go("arquivadas") }
+      { value: "tarefas", label: "Tarefas", icon: "layout-grid", onClick: go("tasks"), expanded: s.tarefasAbertas !== false, onToggle: (e) => { e.preventDefault(); ws.toggleTasksMenu(); }, items: [
+        { value: "tasks", label: "Em andamento", onClick: go("tasks") },
+        { value: "finalizadas", label: "Finalizadas", onClick: go("finalizadas") },
+        { value: "arquivadas", label: "Arquivadas", onClick: go("arquivadas") }
       ] },
-      { value: "review", label: "Revisão", icon: "eye", count: pend, onClick: go("review") },
+      { value: "review", label: "Revisão", icon: "eye", onClick: go("review") },
       { value: "export", label: "Exportação", icon: "download", onClick: (e) => { e.preventDefault(); ws.go("export", online ? {} : { taskId: "t1" }); } },
       { value: "history", label: "Histórico", icon: "history", onClick: go("history") }
     ] },
     { label: "Base", items: [
-      { value: "base", label: "Base de conhecimento", icon: "database", count: s.docs.length, onClick: go("base") }
+      { value: "base", label: "Base de conhecimento", icon: "database", onClick: go("base") }
     ] }
   ];
   // Nos detalhes da tarefa, o menu marca a lista da situação dela.
@@ -323,6 +324,8 @@ export function buildView(s, ws) {
   const task = {
     ...task0, sTxt: tkr.status, sTone: tkr.tone, sIcon: tkr.icon, hasItems: !!task0.hasItems, isReady: !!task0.isReady, podeBaixar: podeBaixar(task0),
     // Fase O: reativar a arquivada (O12), só o Aprovador; faixa de só leitura da encerrada (O11).
+    // Pronta (100% aprovada, sem alerta) ou finalizada: sem o cartão de exportação e com a barra só em 100%.
+    completa: !!task0.hasItems && (!!task0.isReady || !!task0.isFinal),
     canReactivate: !!task0.isArchived && podeArquivar, reactivate: () => ws.reactivateTask(task0.id), reactivateLabel: `Reativar ${ws.kindOf(task0.id)}`,
     closedNote: task0.isClosed ? `${ws.kindOf(task0.id)} ${task0.isFinal ? "finalizada" : "arquivada"} por ${task0.closedBy} em ${task0.closedAt}: só leitura.` : null
   };
@@ -471,7 +474,8 @@ export function buildView(s, ws) {
       id, company, title, count: approved + " de " + total + " itens aprovados", pct: Math.round((approved / total) * 100), blocked,
       badge: blocked ? "Bloqueada" : exp ? "Exportada" : "Pronta", tone: blocked ? "neutral" : "approved", icon: blocked ? "lock" : exp ? "check-check" : "circle-check",
       // Revisor e Aprovador exportam a tarefa pronta (26/10/2026).
-      disabled: blocked, btn: exp ? "Baixar novamente" : "Exportar documento",
+      // "Baixar" em todos os casos (ajuste de 06/11/2026).
+      disabled: blocked, btn: "Baixar", openTask: () => ws.go("task", { taskId: id }),
       reason: blocked ? total - approved + " de " + total + " itens ainda não foram aprovados. Exportação bloqueada até 100% aprovado."
         : "Todos os itens estão aprovados e sem alerta pendente.",
       exported: exp, doExport: onExp, goReview: openItem(t1Pending[0] ? t1Pending[0].id : "r1", "t1")
@@ -486,7 +490,8 @@ export function buildView(s, ws) {
     return {
       id: t.id, company: t.company, title: t.title, count: t.shortProg, pct: t.pct, blocked: false, filled: true,
       badge: t.status, tone: t.tone, icon: t.icon, isReady: !!t.isReady, isClosed: !!t.isClosed,
-      disabled: !pode, btn: t.isFinal ? "Baixar novamente" : "Baixar planilha preenchida", doExport: () => ws.askDownload(t.id),
+      // "Baixar" em todos os casos, com "Ver tarefa" ao lado (ajuste de 06/11/2026).
+      disabled: !pode, btn: "Baixar", doExport: () => ws.askDownload(t.id), openTask: () => ws.go("task", { taskId: t.id }),
       reason: t.isClosed
         ? (pode ? `${t.isFinal ? "Finalizada" : "Arquivada"}: a planilha traz o estado da revisão no ${t.isFinal ? "fim" : "arquivamento"}, só para leitura.` : "O Revisor baixa a planilha quando a tarefa estiver pronta: todos os itens aprovados e nenhum alerta pendente.")
         : pode

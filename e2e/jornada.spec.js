@@ -67,14 +67,14 @@ test("da base à resposta aprovada, mantida depois de recarregar", async ({ page
   await detalhes.getByRole("button", { name: "Fechar", exact: true }).click();
   await expect(page.getByRole("button", { name: "Abrir revisão" })).toBeVisible({ timeout: 120_000 });
   // O download fica só na Exportação (fase O, cenário O14).
-  await expect(page.getByRole("button", { name: "Baixar planilha preenchida" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Baixar/ })).toHaveCount(0);
   await menu(page, "Exportação");
   // Revisão ainda não finalizada: o download pede confirmação; "Voltar para revisão" não baixa.
   const confirmacao = page.getByRole("alertdialog", { name: "A revisão ainda não foi finalizada." });
-  await page.getByRole("button", { name: "Baixar planilha preenchida" }).click();
+  await page.getByRole("button", { name: "Baixar RFP-01-Rede-Varejo-Alfa" }).click();
   await confirmacao.getByRole("button", { name: "Voltar para revisão" }).click();
   await expect(confirmacao).toBeHidden();
-  await page.getByRole("button", { name: "Baixar planilha preenchida" }).click();
+  await page.getByRole("button", { name: "Baixar RFP-01-Rede-Varejo-Alfa" }).click();
   const [download] = await Promise.all([page.waitForEvent("download"), confirmacao.getByRole("button", { name: "Baixar mesmo assim" }).click()]);
   await expect(confirmacao).toBeHidden();
   expect(download.suggestedFilename()).toBe("RFP-01-Rede-Varejo-Alfa-preenchida.xlsx");

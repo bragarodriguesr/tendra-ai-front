@@ -980,6 +980,7 @@ Pedida em 05/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 **Situação (05/11/2026): implementada e conferida no ambiente publicado.**
 - Merge do PR #90 às 19:30 UTC; migração 012 conferida no Supabase.
 - No teste manual do grupo, a RFP-04 de 24/10 foi finalizada pelo box da Exportação; a outra RFP-04 foi arquivada, reativada e arquivada de novo.
+- Ajustes de 05 e 06/11 (Histórico das tarefas com o filtro "Tarefas" e em colunas, menu Tarefas colapsável, listas sem "Itens"; PRs #91 e #92) conferidos no publicado: reativação e arquivamento da RFP-04 registrados no Histórico.
 - Detalhes em `plan/PLAN_FASE_O.md`.
 
 ## Definição de pronto (proposta, P10)
