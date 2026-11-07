@@ -1,6 +1,6 @@
 # Arquitetura essencial: backend do MVP, do fluxo local à publicação compartilhada
 
-*Proposta de 21/10/2026, reescrita em 21/10/2026 para combinar este caminho (risco primeiro, local) com as partes úteis de `docs/referencia/mvp-proposta-1/` (revisão persistida, métrica de aceitação e, no fim, login e hospedagem). Atualizada em 02/11/2026 com o que foi implementado até a fase M: decisões pendentes já tomadas, fases novas, itens que saíram de "Fora do MVP" e a situação das exceções. Status: `draft`.*
+*Proposta de 21/10/2026, reescrita em 21/10/2026 para combinar este caminho (risco primeiro, local) com as partes úteis de `docs/referencia/mvp-proposta-1/` (revisão persistida, métrica de aceitação e, no fim, login e hospedagem). Atualizada em 02/11/2026 com o que foi implementado até a fase M: decisões pendentes já tomadas, fases novas, itens que saíram de "Fora do MVP" e a situação das exceções. Revista em 07/11/2026 com as fases N (áreas), O (ciclo de vida da tarefa) e P (ordenação nos detalhes da tarefa), as migrações 011 a 013 e novos pontos de atenção. Status: `draft`.*
 
 ## Objetivo
 
@@ -25,7 +25,7 @@ Tudo o que não serve a esses três objetivos fica de fora (seção 6).
 
 ## 1. Visão geral
 
-*Descrição de 02/11/2026 da arquitetura em funcionamento, feita a partir do código: `vercel.json`, `render.yaml`, `vite.config.js`, `src/api.js`, `backend/src/`, `backend/migracoes/` e `.github/workflows/`. Os pontos de atenção estão na seção 11.*
+*Descrição de 02/11/2026, revista em 07/11/2026, da arquitetura em funcionamento, feita a partir do código: `vercel.json`, `render.yaml`, `vite.config.js`, `src/api.js`, `backend/src/`, `backend/migracoes/` e `.github/workflows/`. Os pontos de atenção estão na seção 11.*
 
 ### 1.1 As partes da aplicação
 
@@ -71,7 +71,7 @@ Para o navegador, tudo parece vir de um endereço só: `tendra-ai-front.vercel.a
 
 **O que não faz:** não guarda dados, não roda regras de negócio e não fala com o Supabase nem com a Anthropic. Ela só entrega arquivos e repassa pedidos.
 
-**Ponto de atenção:** só geram deploy os commits de autores com acesso à equipe da Vercel. Commits de outros autores ficam com a verificação "Vercel" falhando; o deploy acontece quando o merge é feito por alguém da equipe (com "Create a merge commit").
+**Ponto de atenção:** só geram deploy os commits de autores com acesso à equipe da Vercel. Commits de outros autores ficam com a verificação "Vercel" falhando ("Deployment was blocked"). Isso vale também para o commit de merge na `main`, que sai no nome de quem fez o merge: o deploy de produção só acontece quando o merge é feito por alguém da equipe (com "Create a merge commit") ou quando alguém da equipe dispara o redeploy pelo painel. Conferido em 07/11/2026, no merge do PR #95, bloqueado.
 
 #### Render: servidor do backend
 
@@ -91,8 +91,11 @@ Para o navegador, tudo parece vir de um endereço só: `tendra-ai-front.vercel.a
 - separação dos dados por organização;
 - carga e validação dos documentos `.md` da base de conhecimento;
 - leitura da planilha da RFP e identificação das perguntas;
+- classificação da área de cada pergunta e aprovação só pela área (fase N);
 - geração das respostas com citações, pela API da Anthropic;
 - revisão, aprovação e alertas de cada item;
+- ciclo de vida da tarefa: finalizar, arquivar e reativar, com a tarefa encerrada só para leitura (fase O);
+- histórico das ações sobre as tarefas (importar, finalizar, arquivar, reativar e excluir);
 - planilha preenchida para download.
 
 **Ponto de atenção:** no plano gratuito, o serviço "dorme" depois de um tempo sem acesso. A primeira chamada depois disso demora, enquanto ele acorda.
@@ -105,7 +108,7 @@ A Tendra.ai usa três serviços do Supabase, sempre a partir do backend. O front
 
 | Serviço | Papel | O que guarda ou faz |
 |---|---|---|
-| **Postgres** (banco de dados) | Guarda os dados da aplicação | Organizações, perfis, sessões e tentativas de login; documentos da base e os blocos citáveis de cada um; tarefas, itens, respostas, fontes, alertas e o histórico da revisão; empresas e contatos. A estrutura é criada pelas migrações em `backend/migracoes/` (001 a 010), aplicadas pelo backend ao iniciar |
+| **Postgres** (banco de dados) | Guarda os dados da aplicação | Organizações, perfis (com as áreas do Aprovador), sessões e tentativas de login; documentos da base e os blocos citáveis de cada um; tarefas (com a situação: em andamento, finalizada ou arquivada), itens (com a área), respostas, fontes, alertas e o histórico da revisão; o histórico das ações sobre as tarefas; empresas e contatos. São 16 tabelas, criadas pelas migrações em `backend/migracoes/` (001 a 013), aplicadas pelo backend ao iniciar |
 | **Storage** (arquivos) | Guarda as planilhas | Bucket privado `rfps`, com as planilhas enviadas e as preenchidas, separadas por organização. Só o backend lê e grava, com a chave de serviço |
 | **Auth** (autenticação) | Confere e-mail e senha | O backend pergunta ao Supabase se o par confere e recebe o id da conta. **A senha nunca é guardada pela Tendra.ai.** As contas são criadas no painel do Supabase e ligadas a um perfil (nome, papel e organização) pelo comando `cadastrar-perfil` |
 
@@ -123,6 +126,7 @@ A Tendra.ai usa três serviços do Supabase, sempre a partir do backend. O front
 | Identificação de perguntas quando a regra da coluna falha | `TENDRA_MODELO_IDENTIFICACAO` | `claude-haiku-5-5` |
 | Conflitos entre fontes | `TENDRA_MODELO_CONFLITO` | `claude-sonnet-5-5` |
 | "Revisar com IA" das respostas manuais (só redação) | `TENDRA_MODELO_REVISAO_TEXTO` | `claude-haiku-5-5` |
+| Classificação da área de cada pergunta (fase N) | `TENDRA_MODELO_CLASSIFICACAO` | `claude-haiku-5-5` |
 
 As perguntas vão em lotes (`TENDRA_TAMANHO_LOTE`, padrão 10). Não há banco vetorial nem embeddings: os blocos da base vão no contexto da chamada, com citações (decisão em `DECISAO_RAG.md`). Sem a chave, `TENDRA_API_SIMULADA=1` liga respostas fictícias, marcadas como "[Resposta simulada]".
 
@@ -137,7 +141,7 @@ As perguntas vão em lotes (`TENDRA_TAMANHO_LOTE`, padrão 10). Não há banco v
 | `front.yml` | Build do front e a jornada de ponta a ponta no navegador (Playwright), com o backend usando a API simulada |
 | `backend.yml` | Tipos do TypeScript e testes do backend no PGlite e num Postgres 16; varredura de segredos (gitleaks) |
 
-O `front.yml` ainda não roda os testes unitários do front (`npm test`).
+O `front.yml` ainda não roda os testes unitários do front (`npm test`, 27 testes em 07/11/2026). Os pull requests também mostram as verificações das integrações da Vercel ("Vercel" e "Vercel Preview Comments") e do Supabase ("Supabase Preview", hoje pulada).
 
 ### 1.4 Modo local (desenvolvimento)
 
@@ -302,9 +306,9 @@ A checagem é **determinística** e acontece em dois momentos.
 | **IA?** | Não nas decisões: a IA não aprova, não revisa e não escolhe nada. Exceção de apoio (fase I, 26/10/2026): "Revisar com IA" no editor da resposta manual (item sem rascunho), que corrige só a redação (gramática, norma escrita, coerência, clareza) com um modelo próprio, o Haiku 5.5 (`TENDRA_MODELO_REVISAO_TEXTO`), sem mudar os modelos das outras etapas. O texto revisado volta para o editor e a pessoa decide se fica; o código recusa a revisão que traz número novo ou cresce mais de 50%. A requisição entra no registro da tarefa, sem o texto. |
 | **Quem age** | Nas fases A a C não há login. A pessoa é uma das pessoas sintéticas do front (Kadu Mendes, Marcelo Vieira), enviada em cada requisição e validada contra uma lista de configuração. **Desde a fase D**, no modo compartilhado, a pessoa vem da sessão e o backend ignora a enviada; o modo local continua com a lista. Ver exceção E1. |
 | **Situação da tarefa** | Fase O (05/11/2026, `spec/SPEC_FASE_O.md`): `tarefas.situacao` é `em_andamento`, `finalizada` (pronta, baixada e finalizada pelo box da Exportação) ou `arquivada` (abandonada pelo Aprovador), com quem e quando (migração 012). É separada do `estado` do processamento. Tarefa encerrada é só leitura: toda mudança de item passa por `itemDaTarefa`, que trava a linha da tarefa e recusa com 409; a reclassificação de áreas não a toca. A finalizada não é excluída nem reativada; a arquivada volta a em andamento pelo Aprovador. |
-| **Eventos** | Uma tabela de eventos só de inclusão registra edição, restauração, aprovação, remoção de aprovação, avaliação, alerta reconhecido, fonte escolhida e revisão. Os eventos só são apagados junto com a tarefa excluída. |
+| **Eventos** | Uma tabela de eventos só de inclusão registra edição, restauração, aprovação, remoção de aprovação, avaliação, alerta reconhecido, fonte escolhida e revisão. Os eventos só são apagados junto com a tarefa excluída. **Desde a fase O (migração 013)**, uma segunda tabela, `eventos_de_tarefa`, registra as ações sobre a tarefa (importar, finalizar, arquivar, reativar e excluir), com o nome da tarefa e da empresa no momento da ação e sem chave estrangeira para `tarefas`, para o registro da exclusão sobreviver à tarefa. Um gatilho do banco recusa alteração e exclusão nessa tabela. O Histórico lê esses registros por `GET /api/historico/tarefas`. |
 | **Taxa de aceitação** | Relatório por tarefa: itens com rascunho, aprovados sem nenhuma edição, porcentagem média de texto alterado, itens sem rascunho e avaliações positivas e negativas. Consulta por rota (`GET /api/tarefas/:id/aceitacao`) e por comando. **Implementado na fase B; a taxa ainda não foi medida** (pendência da fase A, registrada no `PLAN.md`). |
-| **Fica fora** | Auditoria completa: está em "Após a versão 1" de `docs/referencia/mvp-proposta-1/SPEC.md`. **Entraram depois:** o bloqueio por papel (fase D, revisto na fase J); reconhecimento de alerta, escolha de fonte e revisão persistidos (fase E, 24/10/2026); planilha preenchida com o estado da revisão (fase F), baixada pelo Revisor só com a tarefa pronta (fase J); histórico de aprovações e revisões lido do banco. |
+| **Fica fora** | Auditoria completa: está em "Após a versão 1" de `docs/referencia/mvp-proposta-1/SPEC.md`. **Entraram depois:** o bloqueio por papel (fase D, revisto na fase J); reconhecimento de alerta, escolha de fonte e revisão persistidos (fase E, 24/10/2026); planilha preenchida com o estado da revisão (fase F), baixada pelo Revisor só com a tarefa pronta (fase J); histórico de aprovações e revisões lido do banco; histórico das ações sobre as tarefas (fase O). |
 
 ---
 
@@ -348,10 +352,13 @@ A organização das pastas está no `PLAN.md`.
 | **K. Organizações** | Segregação lógica dos dados por empresa usuária (multi-tenant), ver a seção 9.3 | Suíte `organizacoes.test.ts` com todas as rotas |
 | **L. Busca de perguntas** | Busca por palavras na Revisão e nos detalhes da tarefa (só front) | Testes unitários e de ponta a ponta (B1 a B17) |
 | **M. Filtro pelo progresso** | Barra e legenda de estados dos detalhes da tarefa acionam o filtro (só front) | Testes unitários e de ponta a ponta (M1 a M13) |
+| **N. Áreas** | Área de cada pergunta classificada pela IA (Haiku 5.5); só o Aprovador da área ou C-Level aprova; "Minha área primeiro" na Revisão (migração 011) | Testes de integração e de ponta a ponta; conferida no ambiente publicado, menos a avaliação da classificação (N4), que espera a rotulação do gabarito |
+| **O. Ciclo de vida da tarefa** | Situação da tarefa (em andamento, finalizada, arquivada), tarefa encerrada só para leitura, Exportação com finalizar e histórico das ações sobre as tarefas (migrações 012 e 013) | Testes de integração e de ponta a ponta; conferida no ambiente publicado |
+| **P. Cabeçalho dos detalhes** | Cabeçalho com ordenação na tabela dos detalhes da tarefa, com os alertas na coluna Status (só front) | Testes unitários e de ponta a ponta (P1 a P11) |
 
 A fase A sozinha mostra se a ideia funciona. Se a qualidade das respostas não atingir os critérios, o ajuste acontece antes de investir em servidor, tela ou hospedagem. A fase D só começa depois de A, B e C aceitas.
 
-**Desvio (23/10/2026):** a fase D começou com exceção, por decisão do grupo, com duas pendências da fase A ainda abertas: a taxa de aceitação, que continua sem medição, e a lista de fidelidade, conferida depois só em amostra (portão da fase A fechado por decisão do grupo em 24/10/2026). As fases E a M foram pedidas pelo grupo depois da publicação.
+**Desvio (23/10/2026):** a fase D começou com exceção, por decisão do grupo, com duas pendências da fase A ainda abertas: a taxa de aceitação, que continua sem medição, e a lista de fidelidade, conferida depois só em amostra (portão da fase A fechado por decisão do grupo em 24/10/2026). As fases E a P foram pedidas pelo grupo depois da publicação.
 
 ---
 
@@ -379,7 +386,7 @@ Sem eles o fluxo não pode ser testado nem avaliado.
 |---|---|
 | Formatos além de `.md` na base (com conversão automática), exclusão de documentos e entrada de RFP além de `.xlsx` | Fase 2 do PRD v3, depois da validação |
 | ~~Reconhecimento de alerta persistido e bloqueio de aprovação por papel~~ | **Implementados:** bloqueio por papel na fase D (revisto na fase J); reconhecimento de alerta persistido na fase E |
-| Auditoria | Depois da versão 1. **Exportação e histórico já entraram:** planilha preenchida com o estado da revisão (fases F e J) e histórico de aprovações e revisões lido do banco |
+| Auditoria | Depois da versão 1. **Exportação e histórico já entraram:** planilha preenchida com o estado da revisão (fases F e J), histórico de aprovações e revisões lido do banco e histórico das ações sobre as tarefas, só de inclusão (fase O) |
 | Tela da taxa de aceitação | Depois da versão 1; no MVP, por rota e por comando |
 | Busca vetorial (pgvector ou GBrain) | Quando a base não couber numa requisição |
 | ~~Retomada automática do processamento após reinício~~ | **Implementada na fase D (etapa D8)**, no modo compartilhado; a conferência no ambiente publicado (cenário D15) continua pendente |
@@ -408,6 +415,8 @@ Sem eles o fluxo não pode ser testado nem avaliado.
 | Modelo da geração: recomendação da A10, Opus 5.5 com esforço `medium` e lote de 10; aplicado temporariamente o Sonnet 5.5, por custo, até o teste da qualidade das respostas | Etapa A10 e decisão do grupo de 24/10/2026; `PLAN.md`, P8 (antiga pendência 1) |
 | Hospedagem: front na Vercel, backend no Render, banco, arquivos e contas no Supabase | 23/10/2026; `PLAN.md`, P11 e `plan/PLAN_FASE_D.md` (antiga pendência 7) |
 | Multi-tenant com segregação lógica: banco único, cada registro pertence a uma organização | Fase K, 28/10/2026 (seção 9.3) |
+| Área só para o Aprovador; área da pergunta classificada pela IA, com "Geral" quando a IA falha; reclassificação das tarefas em aberto na migração | Fase N, decisões PN1 a PN9 validadas em 04/11/2026 (`spec/SPEC_FASE_N.md`) |
+| Situação da tarefa separada do estado do processamento; tarefa finalizada ou arquivada só para leitura; histórico das ações sobre as tarefas só de inclusão | Fase O, 05/11/2026 (`spec/SPEC_FASE_O.md`) |
 | Respostas sempre em português, qualquer que seja o idioma da RFP; tradução é evolução futura | Decisão de 21/10/2026; cenário 50 do SPEC |
 
 ### Pendentes
@@ -420,7 +429,9 @@ As pendências 1, 2, 3, 4, 5 e 7 da versão anterior foram decididas e passaram 
 | 8 | Fluxo de revisão de código e proteção da `main` exigindo a integração contínua | Branch + pull request com CI obrigatória. O fluxo por branch e pull request é usado, mas a `main` não tem regra de proteção: com o repositório privado, o GitHub só oferece essa regra em plano pago (verificado em 02/11/2026) |
 | 9 | Estudo da política de dados do provedor de IA | Não bloqueia o uso com dados sintéticos |
 | 10 | Formato do valor sugerido nas RFPs com valores permitidos | `PLAN.md`, P12: uma linha `Valor: <valor>` depois do marcador, conferida contra a lista |
-| 11 | Configuração do ambiente publicado | Certificado do banco em `TENDRA_BANCO_CA` no Render; função `public.rls_auto_enable()` apontada pelo advisor de segurança do Supabase; plano gratuito da Vercel (PD7); região Brasil para o produto (PD8). Registradas no `PLAN.md` em 24/10/2026 |
+| 11 | Configuração do ambiente publicado | Certificado do banco em `TENDRA_BANCO_CA` no Render; função `public.rls_auto_enable()` apontada pelo advisor de segurança do Supabase; plano gratuito da Vercel (PD7); região Brasil para o produto (PD8). Registradas no `PLAN.md` em 24/10/2026; continuam abertas em 07/11/2026 |
+| 12 | Avaliação da classificação de áreas (fase N, N4) | Rotular as três RFPs do gabarito por área e medir a concordância da IA; até lá, a classificação roda sem essa medida (`plan/PLAN_FASE_N.md`) |
+| 13 | Deploy do front quando o merge é feito por quem não tem acesso à Vercel | Dar acesso ao projeto na Vercel a quem faz merge na `main`, ou combinar que o merge seja feito por alguém da equipe (seção 1.3, Vercel) |
 
 ---
 
@@ -507,7 +518,7 @@ A exceção E5 da versão anterior deste documento (edição e aprovação não 
 
 ## 11. Pontos de atenção
 
-Riscos da arquitetura em funcionamento (seção 1), levantados em 02/11/2026.
+Riscos da arquitetura em funcionamento (seção 1), levantados em 02/11/2026 e revistos em 07/11/2026.
 
 | Ponto | Por que importa |
 |---|---|
@@ -517,3 +528,6 @@ Riscos da arquitetura em funcionamento (seção 1), levantados em 02/11/2026.
 | Deploys independentes | Uma mudança de contrato precisa funcionar com a versão anterior do outro lado, ou ser publicada nos dois ao mesmo tempo |
 | Plano gratuito do Render | A primeira chamada depois de um tempo parado é lenta |
 | Mensagem de erro do modo local | "Inicie-o com npm run servidor" aparece também no site publicado quando o Render está dormindo |
+| Tela de login no modo local enquanto o backend acorda | O front começa no modo local até `GET /api/auth/me` responder. Nesse intervalo, "Entrar na Tendra.ai" abre o Workspace sem conferir a senha. Desde 07/11/2026 (PR #97) os campos abrem vazios, mas o botão continua habilitado |
+| Deploy de produção bloqueado pelo autor do merge | O commit de merge sai no nome de quem fez o merge; sem acesso à Vercel, a `main` fica à frente do site publicado sem nenhum aviso além da verificação falhando no GitHub (seção 1.3) |
+| Duas tabelas de eventos | Os eventos dos itens e os das tarefas ficam em tabelas diferentes, com regras de exclusão diferentes (os dos itens saem com a tarefa; os das tarefas não saem). Uma auditoria futura precisa juntar as duas |
