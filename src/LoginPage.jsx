@@ -6,15 +6,14 @@ import { MENSAGEM_DADOS_SINTETICOS } from "./api.js";
 /**
  * Tela de login. No modo compartilhado (fase D, D9), e-mail e senha de verdade, conferidos pelo
  * backend, com as mensagens de recusa (401, 429, 503) e o aviso de dados sintéticos (D12). No modo
- * local, o login continua ilustrativo: "Entrar na Tendra.ai" leva ao Dashboard do Workspace.
+ * local, o login continua ilustrativo: "Entrar na Tendra.ai" leva ao Dashboard do Workspace, mesmo com
+ * os campos vazios. Os campos abrem vazios nos dois modos, sem e-mail nem senha de demonstração.
  * À esquerda, o banner da marca; à direita, o formulário.
  */
 export function LoginPage({ ws, onEnter, onSite }) {
   const [loading, setLoading] = React.useState(false);
   const [erro, setErro] = React.useState(null);
   const compartilhado = ws.s.modo === "compartilhado";
-  const name = ws.name();
-  const email = name.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(" ", ".") + "@empresa.com.br";
 
   const enter = async (e) => {
     e.preventDefault();
@@ -55,17 +54,10 @@ export function LoginPage({ ws, onEnter, onSite }) {
             </div>
             {compartilhado ? <AvisoDeDadosSinteticos /> : null}
             <form onSubmit={enter} noValidate style={{ display: "grid", gap: 16 }}>
-              {compartilhado ? (
-                <>
-                  <Field label="E-mail" htmlFor="lg-mail"><Input id="lg-mail" name="email" type="email" autoComplete="username" required /></Field>
-                  <Field label="Senha" htmlFor="lg-pass"><Input id="lg-pass" name="senha" type="password" icon="lock" autoComplete="current-password" required /></Field>
-                </>
-              ) : (
-                <>
-                  <Field label="E-mail" htmlFor="lg-mail"><Input key={email} id="lg-mail" type="email" autoComplete="username" defaultValue={email} /></Field>
-                  <Field label="Senha" htmlFor="lg-pass"><Input id="lg-pass" type="password" icon="lock" autoComplete="current-password" defaultValue="demonstracao" /></Field>
-                </>
-              )}
+              {/* Campos sempre vazios ao abrir, nos dois modos: a tela começa no modo local enquanto o
+                  backend publicado acorda, e não deve mostrar e-mail nem senha de demonstração. */}
+              <Field label="E-mail" htmlFor="lg-mail"><Input id="lg-mail" name="email" type="email" autoComplete="username" required={compartilhado} /></Field>
+              <Field label="Senha" htmlFor="lg-pass"><Input id="lg-pass" name="senha" type="password" icon="lock" autoComplete="current-password" required={compartilhado} /></Field>
               {erro ? <div role="alert" style={{ fontSize: 14, color: "var(--danger)" }}>{erro}</div> : null}
               <Button type="submit" fullWidth loading={loading} iconEnd="arrow-right">Entrar na Tendra.ai</Button>
             </form>
