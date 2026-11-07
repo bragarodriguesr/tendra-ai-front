@@ -57,6 +57,105 @@ Render ─────── roda o backend (Node 24 + Fastify)
 
 Para o navegador, tudo parece vir de um endereço só: `tendra-ai-front.vercel.app`. Quem separa o que é front e o que é backend é a Vercel, pelo caminho do pedido.
 
+#### Diagrama dos componentes
+
+O GitHub mostra os diagramas abaixo como imagem. As setas contínuas são o uso do sistema; as tracejadas, a publicação.
+
+```mermaid
+flowchart LR
+  pessoa["Pessoa no navegador<br/>Revisor ou Aprovador"]
+
+  subgraph vercel["Vercel"]
+    front["Front React 18 + Vite<br/>arquivos estáticos"]
+    rewrite["Repasse /api/*"]
+  end
+
+  subgraph render["Render · plano gratuito · Virginia"]
+    backend["Backend Node 24 + Fastify<br/>login e sessão · organizações<br/>base de conhecimento · tarefas<br/>revisão e aprovação · histórico"]
+    processamento["Processamento em segundo plano<br/>leitura da planilha · áreas<br/>respostas com citações · conflitos"]
+  end
+
+  subgraph supabase["Supabase"]
+    postgres[("Postgres<br/>16 tabelas · migrações 001 a 013")]
+    storage[("Storage<br/>bucket privado rfps")]
+    auth["Auth<br/>e-mail e senha"]
+  end
+
+  subgraph anthropic["Anthropic"]
+    sonnet["Sonnet 5.5<br/>respostas e conflitos"]
+    haiku["Haiku 5.5<br/>perguntas, áreas e Revisar com IA"]
+  end
+
+  subgraph github["GitHub"]
+    repo["Repositório privado<br/>branch main"]
+    ci["GitHub Actions<br/>build, testes e segredos"]
+  end
+
+  pessoa -->|"HTTPS"| front
+  front -->|"/api/... com cookie de sessão"| rewrite
+  rewrite -->|"HTTPS"| backend
+  backend --> processamento
+  backend -->|"SQL"| postgres
+  backend -->|"planilhas"| storage
+  backend -->|"confere a senha"| auth
+  processamento -->|"SQL"| postgres
+  processamento -->|"API com a chave do cofre"| sonnet
+  processamento --> haiku
+  backend -->|"Revisar com IA"| haiku
+
+  repo -.->|"pull request"| ci
+  repo -.->|"deploy a cada merge"| vercel
+  repo -.->|"autoDeploy"| render
+  backend -.->|"migrações ao iniciar"| postgres
+```
+
+#### Fluxo de uma RFP, do envio ao download
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor P as Pessoa
+  participant F as Front (Vercel)
+  participant B as Backend (Render)
+  participant DB as Supabase Postgres
+  participant S as Supabase Storage
+  participant IA as Anthropic
+
+  P->>F: Entra com e-mail e senha
+  F->>B: POST /api/auth/login
+  B->>B: Confere a senha no Supabase Auth e cria a sessão
+  B-->>F: Cookie de sessão
+
+  P->>F: Nova RFP (.xlsx)
+  F->>B: POST /api/tarefas
+  B->>S: Guarda a planilha
+  B->>DB: Cria a tarefa em processamento
+  B-->>F: Tarefa criada
+
+  Note over B,IA: Em segundo plano, lote a lote
+  B->>DB: Lê os blocos da base ativa da organização
+  B->>IA: Classifica a área das perguntas (Haiku)
+  B->>IA: Gera respostas com citações (Sonnet)
+  B->>IA: Aponta conflitos entre fontes (Sonnet)
+  B->>B: Confere citações e cria alertas
+  B->>DB: Grava itens e progresso
+
+  F->>B: GET /api/tarefas/:id (a cada poucos segundos)
+  B-->>F: Progresso e itens
+
+  P->>F: Revisa, edita e aprova
+  F->>B: Ações da revisão
+  B->>DB: Grava a ação com quem e quando
+
+  P->>F: Baixa a planilha preenchida
+  F->>B: GET /api/tarefas/:id/planilha
+  B->>S: Lê a planilha original
+  B-->>F: Planilha com o estado da revisão
+  P->>F: Finaliza a tarefa na Exportação
+  F->>B: POST /api/tarefas/:id/finalizar
+  B->>DB: Situação finalizada e registro no histórico
+```
+
 ### 1.3 O papel de cada ferramenta
 
 #### Vercel: entrega do front
