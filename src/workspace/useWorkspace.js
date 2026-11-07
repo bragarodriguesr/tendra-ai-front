@@ -41,7 +41,7 @@ const initialState = ({ initialScreen, role }) => ({
   // Cartão de fontes em conflito mostrado e item com o histórico de alertas aberto (todos tratados).
   srcAt: { id: null, i: 0 }, alertsOpen: null,
   screen: initialScreen, role,
-  items: seedItems(), itemsTask: "t1", store: {}, sel: "r4", filter: "todos", busca: "",
+  items: seedItems(), itemsTask: "t1", store: {}, sel: "r4", filter: "todos", busca: "", ordenacaoDetalhes: null,
   edit: false, showOrig: false, drawer: null, dialog: false, toast: null, reviewPane: "list",
   // Base: lista de exemplo até o servidor responder; depois, os documentos do banco.
   docs: seedDocs(), baseOrigem: "exemplo", enviando: false, envio: null, sort: "idade", taskId: "t1",
@@ -261,7 +261,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         const next = api.itemsOf(tid, s), ordenados = ordenarPorArea(next, areasPreferidas(s));
         const first = ordenados.find((i) => i.st !== "aprovada") || ordenados[0];
         const store = s.itemsTask ? { ...s.store, [s.itemsTask]: s.items } : s.store;
-        return { items: next, store, itemsTask: tid, sel: first ? first.id : null, filter: "todos", busca: "" };
+        return { items: next, store, itemsTask: tid, sel: first ? first.id : null, filter: "todos", busca: "", ordenacaoDetalhes: null };
       },
       go(screen, extra = {}) {
         api.flushSaves();
@@ -313,6 +313,8 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
       setFilter(v) { setState({ filter: v }); },
       // Busca de perguntas na lista da Revisão (SPEC_FASE_L.md): só filtra as linhas.
       setBusca(v) { setState({ busca: v }); },
+      /** Ordenação da tabela dos detalhes da tarefa (SPEC_FASE_P.md): null é a ordem padrão. Não afeta a Revisão. */
+      setOrdenacaoDetalhes(v) { setState({ ordenacaoDetalhes: v }); },
       pendingCount: (i) => i.alerts.filter(alertaPendente).length,
 
       addDocs(list) {
@@ -613,7 +615,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
           if (t.estado === "falha") api.toast("A tarefa falhou", `${nome(t)}: ${t.motivo || "sem motivo registrado"}`, "danger");
         }
         // Ao conectar, os itens de exemplo saem da Revisão (uma vez só, mesmo com duas leituras ao mesmo tempo).
-        setState((x) => ({ tarefas, tarefasOrigem: "servidor", ...(x.tarefasOrigem !== "servidor" ? { items: [], itemsTask: null, store: {}, sel: null, busca: "" } : null) }));
+        setState((x) => ({ tarefas, tarefasOrigem: "servidor", ...(x.tarefasOrigem !== "servidor" ? { items: [], itemsTask: null, store: {}, sel: null, busca: "", ordenacaoDetalhes: null } : null) }));
         // Itens das tarefas prontas ainda não lidos: os contadores e o histórico dependem deles.
         const c = ref.current;
         for (const t of tarefas) if (t.estado === "pronta" && t.id !== c.itemsTask && !c.store[t.id]) await api.loadItems(t.id);
@@ -814,7 +816,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
           const aberta = x.itemsTask === id;
           return {
             excluindo: false, deleting: null, store, tarefas: x.tarefas.filter((t) => t.id !== id),
-            ...(aberta ? { items: [], itemsTask: null, sel: null, busca: "" } : null),
+            ...(aberta ? { items: [], itemsTask: null, sel: null, busca: "", ordenacaoDetalhes: null } : null),
             ...((x.screen === "task" || x.screen === "review" || x.screen === "export") && (x.taskId === id || aberta) ? { screen: "tasks" } : null)
           };
         });

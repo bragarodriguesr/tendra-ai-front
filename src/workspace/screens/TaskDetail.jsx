@@ -2,12 +2,12 @@ import React from "react";
 import { Badge, Button, EmptyState, Icon, Input, ProgressBar, FilterMenu } from "../../ds/index.js";
 import { ClickRow, DISPLAY, ESMAECIDO, Page, SegmentBar, bigNumber, card, h1Style, legendDot, mono } from "../ui.jsx";
 import { filtroAoClicar } from "../filtroPeloProgresso.js";
+import { proximaOrdenacao } from "../ordenacaoDaTabela.js";
 
 const statusCard = (accent, compact) => card(16, {
   padding: compact ? 20 : 32, display: "flex", flexDirection: "column", gap: 16, maxWidth: 640,
   ...(accent ? { border: "1px solid var(--danger)", borderTop: "3px solid var(--danger)" } : null)
 });
-const COLUNAS_DOS_ITENS = "120px minmax(0,1fr) 170px 150px 150px";
 const cardTitle = { fontFamily: DISPLAY, fontWeight: 600, fontSize: 24, color: "var(--n-900)" };
 
 /** Faixa da tarefa encerrada (fase O, PO11): quem, quando e que é só para leitura. */
@@ -16,6 +16,34 @@ export function ReadOnlyNote({ text, archived }) {
     <div role="note" style={card(12, { padding: "12px 16px", display: "flex", gap: 10, alignItems: "center", background: "var(--n-050)" })}>
       <Icon name={archived ? "archive" : "lock"} size={16} />
       <span style={{ fontSize: 14, color: "var(--n-700)" }}>{text}</span>
+    </div>
+  );
+}
+
+// Tabela de perguntas no computador: Código, Pergunta, Área e Status, com os alertas no Status (SPEC_FASE_P.md, P1 e P2).
+const linhaDaTabela = { display: "grid", minWidth: 980, gridTemplateColumns: "120px minmax(0,1fr) 170px 240px", gap: 16, alignItems: "center" };
+const TITULOS = [["codigo", "Código"], ["pergunta", "Pergunta"], ["area", "Área"], ["status", "Status"]];
+
+/** Cabeçalho no estilo das tabelas de Tarefas e da Base; cada título ordena a tabela (P4 e P8). */
+function Cabecalho({ ordenacao, onOrdenar }) {
+  return (
+    <div role="row" style={{ ...linhaDaTabela, padding: "12px 20px", background: "var(--n-050)", borderBottom: "1px solid var(--n-200)", ...mono(11, "var(--n-500)"), letterSpacing: ".1em", textTransform: "uppercase" }}>
+      {TITULOS.map(([coluna, titulo]) => {
+        const direcao = ordenacao && ordenacao.coluna === coluna ? ordenacao.direcao : null;
+        return (
+          <div key={coluna} role="columnheader" aria-sort={direcao === "asc" ? "ascending" : direcao === "desc" ? "descending" : "none"}>
+            <button
+              type="button" onClick={() => onOrdenar(coluna)}
+              aria-label={`Ordenar por ${titulo}${direcao ? `, ordem ${direcao === "asc" ? "crescente" : "decrescente"}` : ""}`}
+              style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: 0, border: 0, background: "transparent", font: "inherit", letterSpacing: "inherit", textTransform: "inherit", color: "inherit", cursor: "pointer" }}
+            >
+              {titulo}
+              {/* O DS só tem a seta para baixo: girada, indica a ordem crescente. */}
+              {direcao ? <Icon name="chevron-down" size="sm" style={direcao === "asc" ? { transform: "rotate(180deg)" } : undefined} /> : null}
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -125,16 +153,13 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
             </div>
           </div>
           <div style={card(14, { overflowX: "auto", overflowY: "hidden" })}>
+            {/* Cabeçalho só no computador, visível também com a busca sem resultado (P9 e P10). */}
+            {isMobile ? null : <Cabecalho ordenacao={state.ordenacaoDetalhes} onOrdenar={(coluna) => ws.setOrdenacaoDetalhes(proximaOrdenacao(state.ordenacaoDetalhes, coluna))} />}
             {v.buscaSemResultado ? (
               <EmptyState icon="search" title="Nenhuma pergunta encontrada." description="Confira as palavras ou limpe a busca." />
             ) : null}
-            {/* Cabeçalho das colunas, no mesmo estilo da tabela de Tarefas (revisão de design de 05/11/2026). */}
-            {!isMobile && v.rowsDaBusca.length > 0 ? (
-              <div aria-hidden="true" style={{ display: "grid", minWidth: 980, gridTemplateColumns: COLUNAS_DOS_ITENS, gap: 16, padding: "12px 20px", background: "var(--n-050)", borderBottom: "1px solid var(--n-200)", ...mono(11, "var(--n-500)"), letterSpacing: ".1em", textTransform: "uppercase" }}>
-                <span>Código</span><span>Pergunta</span><span>Área</span><span>Estado</span><span>Alertas</span>
-              </div>
-            ) : null}
-            {v.rowsDaBusca.map((r) => (
+            {/* No celular, os cartões seguem a ordem padrão (P9). */}
+            {(isMobile ? v.rowsDaBusca : v.linhasDosDetalhes).map((r) => (
               isMobile ? (
                 <ClickRow key={r.id} onClick={r.openFromTask} style={{ display: "flex", flexDirection: "column", gap: 8, padding: "14px 16px", borderTop: "1px solid var(--n-100)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
@@ -148,17 +173,20 @@ export function TaskDetail({ v, ws, state, pad, isMobile }) {
                   </div>
                 </ClickRow>
               ) : (
-                <ClickRow key={r.id} onClick={r.openFromTask} style={{ display: "grid", minWidth: 980, gridTemplateColumns: COLUNAS_DOS_ITENS, gap: 16, alignItems: "center", padding: "14px 20px", borderTop: "1px solid var(--n-100)" }}>
+                <ClickRow key={r.id} onClick={r.openFromTask} style={{ ...linhaDaTabela, padding: "14px 20px", borderTop: "1px solid var(--n-100)" }}>
                   <span style={mono(12)}>{r.code}</span>
                   <span style={{ color: "var(--n-900)" }}>{r.q}</span>
                   {/* Coluna "Área" (fase N, cenário N11). */}
                   <span style={{ fontSize: 13, color: "var(--n-700)" }}>{r.area}</span>
-                  <div><Badge tone={r.tone} icon={r.icon}>{r.st}</Badge></div>
-                  {r.hasAlert ? (
-                    <span style={{ display: "flex", alignItems: "center", gap: 6, color: r.alertTone === "warning" ? "var(--warning)" : "var(--danger)", fontSize: 13, fontWeight: 500 }}>
-                      <Icon name="triangle-alert" size="sm" />{r.alertText}
-                    </span>
-                  ) : <span />}
+                  {/* Status com os alertas na mesma célula (P2). */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <Badge tone={r.tone} icon={r.icon}>{r.st}</Badge>
+                    {r.hasAlert ? (
+                      <span style={{ display: "flex", alignItems: "center", gap: 6, color: r.alertTone === "warning" ? "var(--warning)" : "var(--danger)", fontSize: 13, fontWeight: 500 }}>
+                        <Icon name="triangle-alert" size="sm" />{r.alertText}
+                      </span>
+                    ) : null}
+                  </div>
                 </ClickRow>
               )
             ))}
