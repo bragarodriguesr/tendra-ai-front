@@ -22,7 +22,7 @@ async function enter(page, { server = false, shared = false, documents = 0 } = {
   if (shared) await page.getByRole('button', { name: 'Entrar', exact: true }).first().click();
   else {
     await page.getByRole('button', { name: 'Entrar', exact: true }).first().click();
-    await page.getByRole('button', { name: 'Entrar no Tendra.ai' }).click();
+    await page.getByRole('button', { name: 'Entrar na Tendra.ai' }).click();
   }
   if ((await page.viewportSize()).width < 900) await page.getByRole('button', { name: 'Abrir menu', exact: true }).click();
   await expect(nav(page)).toBeVisible();
@@ -200,7 +200,7 @@ test('Barra superior e saída continuam funcionando', async ({ page }) => {
   await page.getByRole('link', { name: 'Tendra.ai — voltar ao site' }).click();
   await expect(nav(page)).toBeHidden();
   await page.getByRole('button', { name: 'Entrar', exact: true }).first().click();
-  await page.getByRole('button', { name: 'Entrar no Tendra.ai' }).click();
+  await page.getByRole('button', { name: 'Entrar na Tendra.ai' }).click();
   await expect(nav(page)).toBeVisible();
   await page.getByRole('button', { name: 'Sair', exact: true }).click();
   await expect(nav(page)).toBeHidden();

@@ -10,7 +10,7 @@ async function entrar(page) {
   await page.route("**/api/**", (route) => route.fulfill({ status: 503, json: { erro: "Offline" } }));
   await page.goto("/");
   await page.getByRole("button", { name: "Entrar", exact: true }).first().click();
-  await page.getByRole("button", { name: "Entrar no Tendra.ai" }).click();
+  await page.getByRole("button", { name: "Entrar na Tendra.ai" }).click();
 }
 
 async function irPara(page, tela) {

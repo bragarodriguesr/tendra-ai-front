@@ -21,7 +21,7 @@ const arquivosDaBase = readdirSync(path.join(PULSE, "base"), { recursive: true }
 async function entrar(page) {
   await page.goto("/");
   await page.getByRole("button", { name: "Entrar", exact: true }).first().click();
-  await page.getByRole("button", { name: "Entrar no Tendra.ai" }).click();
+  await page.getByRole("button", { name: "Entrar na Tendra.ai" }).click();
   await expect(page.getByRole("navigation", { name: "Workspace" })).toBeVisible({ timeout: 20_000 });
 }
 

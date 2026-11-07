@@ -573,7 +573,7 @@ export function buildView(s, ws) {
     kindIcon: h.kind === "tarefa" ? (ICONE_DA_ACAO[h.action] || "layout-grid") : h.kind === "revisao" ? "check" : "shield-check",
     imported: !!h.imported,
     goLabel: h.kind === "tarefa" ? `Abrir a tarefa ${h.q}` : `Abrir a pergunta ${h.q}`, goTip: h.kind === "tarefa" ? "Abrir tarefa" : "Abrir pergunta",
-    go: h.go || null, goOff: h.go ? null : h.goOff || "Registro importado: a tarefa de origem não está no Tendra.ai."
+    go: h.go || null, goOff: h.go ? null : h.goOff || "Registro importado: a tarefa de origem não está na Tendra.ai."
   }));
 
   // Alertas do sino: tarefas e base de conhecimento (nunca os alertas de itens da Revisão).

@@ -6,7 +6,7 @@ import { MENSAGEM_DADOS_SINTETICOS } from "./api.js";
 /**
  * Tela de login. No modo compartilhado (fase D, D9), e-mail e senha de verdade, conferidos pelo
  * backend, com as mensagens de recusa (401, 429, 503) e o aviso de dados sintéticos (D12). No modo
- * local, o login continua ilustrativo: "Entrar no Tendra.ai" leva ao Dashboard do Workspace.
+ * local, o login continua ilustrativo: "Entrar na Tendra.ai" leva ao Dashboard do Workspace.
  * À esquerda, o banner da marca; à direita, o formulário.
  */
 export function LoginPage({ ws, onEnter, onSite }) {
@@ -67,7 +67,7 @@ export function LoginPage({ ws, onEnter, onSite }) {
                 </>
               )}
               {erro ? <div role="alert" style={{ fontSize: 14, color: "var(--danger)" }}>{erro}</div> : null}
-              <Button type="submit" fullWidth loading={loading} iconEnd="arrow-right">Entrar no Tendra.ai</Button>
+              <Button type="submit" fullWidth loading={loading} iconEnd="arrow-right">Entrar na Tendra.ai</Button>
             </form>
             <a href="#" onClick={(e) => { e.preventDefault(); onSite(); }} style={{ fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
               <Icon name="chevron-left" size="sm" />Voltar para o site

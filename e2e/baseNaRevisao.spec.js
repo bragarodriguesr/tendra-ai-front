@@ -12,7 +12,7 @@ for (const failure of [false, true]) {
     });
     await page.goto("/");
     await page.getByRole("button", { name: "Entrar", exact: true }).first().click();
-    await page.getByRole("button", { name: "Entrar no Tendra.ai" }).click();
+    await page.getByRole("button", { name: "Entrar na Tendra.ai" }).click();
     await page.getByRole("navigation", { name: "Workspace" }).getByText("Revisão", { exact: true }).click();
     await page.getByText("Onde os dados ficam hospedados e quais sub-processadores têm acesso?", { exact: true }).first().click();
     const actions = page.getByRole("group", { name: "Ações da resposta sem fonte" });

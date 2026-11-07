@@ -9,7 +9,7 @@ async function abrirRevisao(page) {
   await page.route("**/api/**", (route) => route.fulfill({ status: 503, json: { erro: "Offline" } }));
   await page.goto("/");
   await page.getByRole("button", { name: "Entrar", exact: true }).first().click();
-  await page.getByRole("button", { name: "Entrar no Tendra.ai" }).click();
+  await page.getByRole("button", { name: "Entrar na Tendra.ai" }).click();
   // No celular, o menu lateral fica atrás do botão "Abrir menu".
   if ((await page.viewportSize()).width < 900) await page.getByRole("button", { name: "Abrir menu", exact: true }).click();
   await page.getByRole("navigation", { name: "Workspace" }).getByText("Revisão", { exact: true }).click();
@@ -158,7 +158,7 @@ async function abrirDetalhes(page) {
   await page.route("**/api/**", (route) => route.fulfill({ status: 503, json: { erro: "Offline" } }));
   await page.goto("/");
   await page.getByRole("button", { name: "Entrar", exact: true }).first().click();
-  await page.getByRole("button", { name: "Entrar no Tendra.ai" }).click();
+  await page.getByRole("button", { name: "Entrar na Tendra.ai" }).click();
   if ((await page.viewportSize()).width < 900) await page.getByRole("button", { name: "Abrir menu", exact: true }).click();
   await page.getByRole("navigation", { name: "Workspace" }).getByText("Tarefas", { exact: true }).click();
   // No computador a lista de tarefas é uma tabela; no celular, cartões clicáveis.
