@@ -3,6 +3,7 @@ import { AL, ST, code, plural, ITEM_TASKS, TODAY_ISO, OWN } from "./data.js";
 import { correspondeABusca, termosDaBusca } from "./buscaDePerguntas.js";
 import { numeroDoCartao } from "./filtroPeloProgresso.js";
 import { correspondeAExportacao, ordenarParaExportacao } from "./cicloDaTarefa.js";
+import { ordenarLinhas } from "./ordenacaoDaTabela.js";
 import { hojeIso, contarPalavras, MINIMO_DE_PALAVRAS_DA_REVISAO } from "../api.js";
 import { cnpjSemMascara, cnpjValido } from "./cnpj.js";
 import { AREAS_DOS_ITENS, areaDoItem, areasDaSessao, areasPreferidas, motivoDeAreaRestrita, podeAprovarArea } from "./areas.js";
@@ -359,6 +360,8 @@ export function buildView(s, ws) {
     return {
       id: i.id, code: code(i), q: i.q.length > 68 ? i.q.slice(0, 66) + "…" : i.q, st: st.l, icon: st.i, tone: st.tone, area: areaDoItem(i),
       hasAlert: p > 0, alertText: p + " " + plural(p, "alerta", "alertas"), alertTone: tomDosAlertas(i.alerts), active: i.id === s.sel,
+      // Dados da ordenação dos detalhes (SPEC_FASE_P.md, P5): o número é o mesmo do código; a pergunta, o texto completo.
+      ordem: { numero: parseInt(i.id.slice(1)), pergunta: i.q, area: areaDoItem(i), estado: i.st },
       // A linha vem da tabela já filtrada: abre a Revisão com o mesmo filtro (SPEC_FASE_M.md, M6).
       open: () => ws.select(i.id), openFromTask: () => ws.go("review", { taskId: s.itemsTask, sel: i.id })
     };
@@ -367,6 +370,8 @@ export function buildView(s, ws) {
   // mudam; o item aberto, a navegação e os números do filtro seguem o filtro por estado (cenários B9 e B14).
   const termos = termosDaBusca(s.busca);
   const rowsDaBusca = termos.length === 0 ? rows : rows.filter((r, n) => correspondeABusca({ pergunta: vis[n].q, codigo: r.code }, termos));
+  // Só a tabela dos detalhes usa a ordenação escolhida no cabeçalho; a Revisão segue `rows` (SPEC_FASE_P.md, P7).
+  const linhasDosDetalhes = ordenarLinhas(rowsDaBusca, s.ordenacaoDetalhes);
 
   // item atual na revisão
   const it = vis.find((i) => i.id === s.sel) || null;
@@ -651,7 +656,7 @@ export function buildView(s, ws) {
     taskList, readOnlyNote, exportFilterTabs, exportSemResultado,
     docDetails: s.docDetails ? docs.find((d) => d.id === s.docDetails) || null : null,
     docs, readyDocs, onb, tasks, taskAlerts: bellAlerts, alertsUnread, dash, task, counts: c, segs, destaqueDoCartao, filterTabs, rows,
-    rowsDaBusca, buscaSemResultado: termos.length > 0 && rowsDaBusca.length === 0,
+    rowsDaBusca, linhasDosDetalhes, buscaSemResultado: termos.length > 0 && rowsDaBusca.length === 0,
     revTask: (ws.taskInfo(s.itemsTask, s) || {}).name, cur, savedText, drawer, exportCards, exportTitle, history, historyTabs, form
   };
 }

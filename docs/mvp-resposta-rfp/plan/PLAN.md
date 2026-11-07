@@ -23,6 +23,7 @@ Chegar a um backend que **prove a hipótese central do MVP** (a pessoa aceita as
 | **K. Organizações** | Segregação lógica dos dados por empresa usuária (multi-tenant): base, tarefas, revisão, métricas, usuários e arquivos de cada organização | 66 a 79 |
 | **L. Busca de perguntas** | Barra de busca por palavras na Revisão e nos detalhes da tarefa, a mesma nas duas telas, junto com o filtro por estado | B1 a B17 de `SPEC_FASE_L.md` |
 | **M. Filtro pelo progresso** | Barra e legenda de estados dos detalhes da tarefa acionam o filtro por estado; o número do cartão segue o filtro | M1 a M12 de `SPEC_FASE_M.md` |
+| **P. Cabeçalho dos detalhes** | Cabeçalho com ordenação na tabela dos detalhes da tarefa (Código, Pergunta, Área e Status), com os alertas na coluna Status | P1 a P11 de `SPEC_FASE_P.md` |
 
 > **Situação da fase A (23/10/2026):** A1 feita e execuções reais da A5 a A10 concluídas (`gerar-amostra`, `responder` e `avaliar` com Sonnet 5.5 e Opus 5.5). Com as instruções `geracao-v3` e `conflito-v2` e a checagem por parágrafo (cenário 18 revisto), o Opus 5.5 atinge todos os critérios medidos pelo código na RFP-01 e na RFP-02 (3 execuções). Falta só a lista de fidelidade preenchida por uma pessoa para fechar o portão e registrar o modelo em P8.
 
@@ -982,6 +983,47 @@ Pedida em 05/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 - No teste manual do grupo, a RFP-04 de 24/10 foi finalizada pelo box da Exportação; a outra RFP-04 foi arquivada, reativada e arquivada de novo.
 - Ajustes de 05 e 06/11 (Histórico das tarefas com o filtro "Tarefas" e em colunas, menu Tarefas colapsável, listas sem "Itens"; PRs #91 e #92) conferidos no publicado: reativação e arquivamento da RFP-04 registrados no Histórico.
 - Detalhes em `plan/PLAN_FASE_O.md`.
+
+## Fase P: cabeçalho com ordenação na tabela dos detalhes da tarefa
+
+Pedida em 04/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/spec/SPEC_FASE_P.md` (cenários P1 a P11, `approved`), e o plano detalhado, em `docs/mvp-resposta-rfp/plan/PLAN_FASE_P.md`. Só front: nenhum arquivo do backend muda, e ordenar não faz requisições. Escrita como "fase O" e renomeada para P em 07/11/2026, ao trazer a `main`, que já tinha a fase O (ciclo de vida da tarefa).
+
+**Objetivo:**
+- o cabeçalho da tabela dos detalhes da tarefa passa a ter "Código", "Pergunta", "Área" e "Status" e substitui o cabeçalho fixo da revisão de design de 05/11/2026;
+- clicar num título ordena por aquela coluna;
+- os alertas passam para a coluna Status.
+
+### Decisões
+
+| Tema | Decisão | Cenários |
+|---|---|---|
+| Ordem padrão | Número do requisito; para o Aprovador com área, "Minha área primeiro" (fase N, N8) continua | P3 |
+| Cliques no título | Crescente, decrescente e, no terceiro clique, ordem padrão | P4 |
+| Critérios | Código pelo número; Pergunta e Área em ordem alfabética, sem acentos; Status na ordem alfabética do filtro (M13); empate pelo número | P5 |
+| Escopo | Só os detalhes da tarefa: a Revisão e a navegação anterior/próximo não mudam; a ordenação continua ao voltar para a mesma tarefa e volta para a padrão ao abrir outra | P7 |
+| Celular | Sem cabeçalho nem ordenação; cartões na ordem padrão | P9 |
+| Busca sem resultado | Cabeçalho visível, com a mensagem abaixo | P10 |
+
+### Etapas
+
+### P1. Funções puras
+- `proximaOrdenacao` e `ordenarLinhas`, com testes unitários (`npm test`).
+
+### P2. Estado
+- `ordenacaoDetalhes` no `useWorkspace`, limpo ao trocar de tarefa.
+
+### P3. `viewModel`
+- Dados da ordenação em cada linha e `linhasDosDetalhes`.
+
+### P4. Cabeçalho e coluna Status
+- Cabeçalho no computador, tabela ordenada e alertas na coluna Status, com o tom dos alertas da `main` (aviso ou perigo).
+
+### P5. Testes de ponta a ponta
+- `e2e/ordenacaoDosDetalhes.spec.js`, um teste por cenário (P1 a P11), e um com um Aprovador do Jurídico numa API simulada pelo teste.
+
+### Situação (07/11/2026): implementada, sem commit
+- Implementada sobre a `main` de 07/11/2026 (até o PR #94), com os conflitos em `TaskDetail.jsx` e `viewModel.js` resolvidos.
+- 7 testes unitários novos (`npm test`, 27 no total) e 12 de ponta a ponta da fase P passando; suíte de ponta a ponta completa verde (94 testes).
 
 ## Definição de pronto (proposta, P10)
 
