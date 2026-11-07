@@ -51,7 +51,7 @@ async function abrir(page, conectado = false) {
   await page.clock.install({ time: new Date("2026-10-29T12:00:00Z") });
   await page.goto("/");
   await page.getByRole("button", { name: "Entrar", exact: true }).first().click();
-  await page.getByRole("button", { name: "Entrar no Tendra.ai" }).click();
+  await page.getByRole("button", { name: "Entrar na Tendra.ai" }).click();
   await page.clock.runFor(8000);
   const nav = page.getByRole("navigation", { name: "Workspace" });
   await expect(nav).toBeVisible();
@@ -117,7 +117,7 @@ for (const conectado of [false, true]) {
     }
     await page.reload();
     await page.getByRole("button", { name: "Entrar", exact: true }).first().click();
-    await page.getByRole("button", { name: "Entrar no Tendra.ai" }).click();
+    await page.getByRole("button", { name: "Entrar na Tendra.ai" }).click();
     await page.clock.runFor(8000);
     await page.getByRole("navigation", { name: "Workspace" }).getByText("Revisão", { exact: true }).click();
     await expect(label(page)).toHaveText("Salvamento automático");
