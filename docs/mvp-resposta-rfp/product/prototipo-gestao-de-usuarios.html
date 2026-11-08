@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Usuários · protótipo</title>
+<!-- Protótipo navegável da tela "Usuários" (fase Q, docs/mvp-resposta-rfp/spec/SPEC_FASE_Q.md). Só ilustra o
+     comportamento com dados fictícios: não chama a API. Cores, fontes e componentes imitam o design system
+     de src/ds (tokens de colors.css e typography.css; Badge, Button, Switch e o menu do FilterMenu). -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@600&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+body{margin:0;background:#EDEFE7;padding:24px 16px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.tdr{--paper:#F5F6F1;--card:#FFFFFF;--sunk:#EDEFE7;--b1:#E3E6DC;--b2:#C6CBBC;--ink:#12140F;--body:#3E4238;--meta:#5D6157;--n500:#4B5046;--lime:#C8F73D;--lwash:rgba(200,247,61,.16);--sage:#6E7268;--danger:#A8402E;max-width:760px;margin:0 auto;font-family:"IBM Plex Sans",sans-serif;color:var(--body);background:var(--paper);border-radius:16px;padding:22px 20px}
+.tdr .mono{font-family:"IBM Plex Mono",monospace}
+.tdr .lbl{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--n500)}
+.tdr .badge{display:inline-flex;align-items:center;gap:5px;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.03em;text-transform:uppercase;padding:4px 8px;border-radius:6px;white-space:nowrap;background:var(--sunk);border:1px solid var(--b2);color:var(--body);margin:0 4px 4px 0}
+.tdr .badge.ok{background:var(--lwash);border-color:var(--lime);color:var(--n500)}
+.tdr .btn{font-family:"IBM Plex Sans",sans-serif;font-weight:600;font-size:14px;border-radius:9px;padding:8px 14px;min-height:36px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--b2);background:transparent;color:var(--ink)}
+.tdr .btn.pri{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.tdr .btn.dng{border-color:var(--danger);color:var(--danger)}
+.tdr .btn.sm{font-size:13px;padding:5px 10px;min-height:30px}
+.tdr .btn[disabled],.tdr select[disabled]{opacity:.42;cursor:not-allowed}
+.tdr input,.tdr select{font-family:"IBM Plex Sans",sans-serif;font-size:14px;height:36px;border:1px solid var(--b2);border-radius:8px;background:var(--card);color:var(--ink);padding:0 10px;box-sizing:border-box}
+.tdr input:focus,.tdr select:focus,.tdr .btn:focus-visible,.tdr .sw:focus-visible{outline:none;border-color:var(--sage);box-shadow:0 0 0 3px rgba(110,114,104,.18)}
+.tdr .row{display:grid;grid-template-columns:minmax(0,1.25fr) 108px minmax(0,1.55fr) 84px 52px;gap:12px;align-items:start;padding:12px 16px;border-top:1px solid #EDEFE7}
+.tdr .opt{display:flex;align-items:center;gap:8px;width:100%;min-height:34px;padding:5px 8px;border:0;border-radius:8px;background:transparent;font-family:"IBM Plex Sans",sans-serif;font-size:14px;color:var(--ink);cursor:pointer;text-align:left}
+.tdr .opt:hover{background:#F4F7EE}
+.tdr .box{width:16px;height:16px;border-radius:4px;border:1px solid var(--b2);display:inline-flex;align-items:center;justify-content:center;background:var(--card);flex:none;font-size:12px}
+.tdr .box.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.tdr .sw{width:44px;height:26px;border-radius:99px;padding:3px;border:0;display:flex;cursor:pointer;box-sizing:border-box;transition:background .2s}
+.tdr .sw span{width:20px;height:20px;border-radius:99px;display:block}
+.tdr .sw[disabled]{opacity:.45;cursor:not-allowed}
+</style>
+</head>
+<body>
+<h2 class="sr-only">Protótipo da tela Usuários da Tendra.ai: áreas do Aprovador numa lista suspensa, só as áreas ativas em verde, a situação Ativo ou Inativo numa coluna e o toggle de acesso na coluna Ações, como na Base de conhecimento.</h2>
+<div class="tdr">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap">
+    <div style="display:grid;gap:6px">
+      <span class="lbl" style="color:var(--meta)">Administração</span>
+      <span style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:30px;letter-spacing:-.02em;color:var(--ink);line-height:1.15">Usuários</span>
+      <span id="sub" style="font-size:14px;color:var(--meta)"></span>
+    </div>
+    <button class="btn pri" id="abrir"><i class="ti ti-user-plus" aria-hidden="true"></i>Adicionar pessoa</button>
+  </div>
+
+  <div style="margin-top:16px;background:var(--card);border:1px solid var(--b1);border-radius:14px;padding:14px 16px;display:grid;gap:8px">
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) auto;gap:10px;align-items:end">
+      <label style="display:grid;gap:5px;font-size:13px;font-weight:500;color:var(--ink)">Nome<input id="fn" placeholder="Ana Souza"></label>
+      <label style="display:grid;gap:5px;font-size:13px;font-weight:500;color:var(--ink)">E-mail da conta<input id="fe" placeholder="ana.souza@pulse.com.br"></label>
+      <button class="btn pri" id="add">Adicionar</button>
+    </div>
+    <div id="ferr" style="font-size:13px;color:var(--danger);min-height:18px"></div>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--meta)"><i class="ti ti-info-circle" aria-hidden="true"></i>A conta precisa existir no painel do Supabase. O acesso nasce como Revisor, área <span class="badge" style="margin:0">Geral</span></div>
+  </div>
+
+  <div style="margin-top:16px;background:var(--card);border:1px solid var(--b1);border-radius:14px">
+    <div class="row" style="background:var(--paper);border-top:0;border-bottom:1px solid var(--b1);border-radius:14px 14px 0 0;align-items:center">
+      <span class="lbl">Pessoa</span><span class="lbl">Papel</span><span class="lbl">Áreas</span><span class="lbl">Situação</span><span class="lbl">Ações</span>
+    </div>
+    <div id="lista"></div>
+  </div>
+  <div id="aviso" style="margin-top:12px;min-height:44px"></div>
+</div>
+<script>
+const AREAS = ["Produto", "Tecnologia", "Segurança e privacidade", "Comercial", "Jurídico", "C-Level"];
+const EU = "Marcelo Vieira";
+let pessoas = [
+  { nome: "Carla Diretora", email: "carla@pulse.com.br", papel: "Aprovador", areas: ["C-Level"], ativo: true },
+  { nome: "Kadu Mendes", email: "kadu@pulse.com.br", papel: "Revisor", areas: [], ativo: true },
+  { nome: "Marcelo Vieira", email: "marcelo@pulse.com.br", papel: "Aprovador", areas: ["Jurídico", "Comercial"], ativo: true },
+  { nome: "Paula Rocha", email: "paula@pulse.com.br", papel: "Revisor", areas: [], ativo: false }
+];
+let aberto = null;
+const $ = (id) => document.getElementById(id);
+const ativosAprov = () => pessoas.filter((p) => p.ativo && p.papel === "Aprovador").length;
+const DICA = "Peça a outro Aprovador para mudar o seu acesso.";
+
+function toast(txt, erro) {
+  $("aviso").innerHTML = `<div role="status" style="display:flex;gap:10px;align-items:center;background:${erro ? "#fff" : "#12140F"};color:${erro ? "#A8402E" : "#F5F6F1"};border:1px solid ${erro ? "#A8402E" : "#12140F"};border-radius:12px;padding:10px 14px;font-size:14px"><i class="ti ${erro ? "ti-alert-triangle" : "ti-circle-check"}" aria-hidden="true" style="color:${erro ? "#A8402E" : "#C8F73D"}"></i>${txt}</div>`;
+}
+function confirmar(txt, acao, rotulo) {
+  $("aviso").innerHTML = `<div role="alertdialog" style="background:#fff;border:1px solid #E3E6DC;border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap"><span style="font-size:14px;color:#12140F">${txt}</span><span style="display:flex;gap:8px"><button class="btn" id="cn">Cancelar</button><button class="btn dng" id="cs">${rotulo}</button></span></div>`;
+  $("cn").onclick = () => { $("aviso").innerHTML = ""; render(); };
+  $("cs").onclick = acao;
+}
+function celulaDeAreas(p, i) {
+  if (p.papel !== "Aprovador") return `<span class="badge">Geral</span><div style="font-size:12px;color:#5D6157">Revisor revisa todas as áreas</div>`;
+  const ativas = p.areas.length ? p.areas.map((a) => `<span class="badge ok">${a}</span>`).join("") : `<span class="badge">Geral</span>`;
+  const nota = p.areas.length ? "" : `<div style="font-size:12px;color:#5D6157;margin-bottom:4px">Sem área: aprova só as perguntas Geral.</div>`;
+  const menu = aberto === i
+    ? `<div role="group" aria-label="Áreas de ${p.nome}" style="margin-top:6px;border:1px solid #E3E6DC;border-radius:12px;padding:6px;background:#fff">${AREAS.map((a) => `<button class="opt" role="menuitemcheckbox" aria-checked="${p.areas.includes(a)}" data-i="${i}" data-a="${a}"><span class="box ${p.areas.includes(a) ? "on" : ""}">${p.areas.includes(a) ? '<i class="ti ti-check" aria-hidden="true"></i>' : ""}</span>${a}</button>`).join("")}<div style="font-size:12px;color:#5D6157;padding:4px 8px 2px">C-Level vale por todas e não se combina com outras.</div></div>`
+    : "";
+  return `<div>${ativas}</div>${nota}<button class="btn sm" data-menu="${i}" aria-haspopup="true" aria-expanded="${aberto === i}" ${p.ativo ? "" : "disabled"}>Áreas<i class="ti ti-chevron-${aberto === i ? "up" : "down"}" aria-hidden="true"></i></button>${menu}`;
+}
+// Toggle no padrão do Switch do DS (Base de conhecimento): ligado em tinta com o botão limão; desligado em cinza.
+function toggle(p, i, mim) {
+  const rotulo = mim ? DICA : p.ativo ? "Desativar acesso" : "Reativar acesso";
+  return `<button class="sw" role="switch" aria-checked="${p.ativo}" aria-label="${rotulo} de ${p.nome}" title="${rotulo}" data-at="${i}" ${mim ? "disabled" : ""} style="background:${p.ativo ? "#12140F" : "#C6CBBC"};justify-content:${p.ativo ? "flex-end" : "flex-start"}"><span style="background:${p.ativo ? "#C8F73D" : "#fff"}"></span></button>`;
+}
+function render() {
+  pessoas.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  $("sub").textContent = `${pessoas.filter((p) => p.ativo).length} pessoas com acesso · Pulse Benefícios`;
+  $("lista").innerHTML = pessoas.map((p, i) => {
+    const mim = p.nome === EU, ap = p.papel === "Aprovador";
+    return `<div class="row" style="${p.ativo ? "" : "background:#F5F6F1"}">
+      <div style="min-width:0;display:grid;gap:2px;padding-top:6px">
+        <span style="font-weight:600;font-size:14px;color:${p.ativo ? "#12140F" : "#5D6157"};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.nome}${mim ? ' <span style="font-weight:400;color:#5D6157">(você)</span>' : ""}</span>
+        <span class="mono" style="font-size:12px;color:#5D6157;overflow:hidden;text-overflow:ellipsis">${p.email}</span>
+      </div>
+      <select data-pp="${i}" aria-label="Papel de ${p.nome}" ${mim || !p.ativo ? "disabled" : ""} title="${mim ? DICA : ""}"><option ${ap ? "" : "selected"}>Revisor</option><option ${ap ? "selected" : ""}>Aprovador</option></select>
+      <div style="min-width:0;padding-top:4px">${celulaDeAreas(p, i)}</div>
+      <div style="padding-top:5px"><span class="badge ${p.ativo ? "ok" : ""}">${p.ativo ? "Ativo" : "Inativo"}</span></div>
+      <div style="padding-top:5px">${toggle(p, i, mim)}</div>
+    </div>`;
+  }).join("");
+}
+$("lista").addEventListener("click", (e) => {
+  const m = e.target.closest("[data-menu]");
+  if (m) { aberto = aberto === +m.dataset.menu ? null : +m.dataset.menu; render(); return; }
+  const o = e.target.closest("[data-a]");
+  if (o) {
+    const p = pessoas[o.dataset.i], a = o.dataset.a;
+    if (p.areas.includes(a)) p.areas = p.areas.filter((x) => x !== a);
+    else p.areas = a === "C-Level" ? ["C-Level"] : [...p.areas.filter((x) => x !== "C-Level"), a];
+    toast(`Áreas de ${p.nome}: ${p.areas.length ? p.areas.join(", ") : "Geral"}.`); render(); return;
+  }
+  const b = e.target.closest("[data-at]");
+  if (!b || b.disabled) return;
+  const p = pessoas[b.dataset.at];
+  if (p.ativo) {
+    if (p.papel === "Aprovador" && ativosAprov() <= 1) { toast("A organização precisa de ao menos um Aprovador ativo.", true); return; }
+    confirmar(`Desativar o acesso de ${p.nome}? As sessões terminam na hora.`, () => { p.ativo = false; aberto = null; toast(`Acesso de ${p.nome} desativado.`); render(); }, "Desativar acesso");
+  } else { p.ativo = true; toast(`Acesso de ${p.nome} reativado, com o papel e as áreas de antes.`); render(); }
+});
+$("lista").addEventListener("change", (e) => {
+  const i = e.target.dataset.pp; if (i === undefined) return;
+  const p = pessoas[i];
+  if (e.target.value === "Revisor") {
+    if (ativosAprov() <= 1) { toast("A organização precisa de ao menos um Aprovador ativo.", true); render(); return; }
+    confirmar(`As áreas de ${p.nome} serão removidas e ela passará a ver tudo como Revisor.`, () => { p.papel = "Revisor"; p.areas = []; aberto = null; toast(`${p.nome} agora é Revisor, área Geral.`); render(); }, "Mudar para Revisor");
+    return;
+  }
+  p.papel = "Aprovador"; toast(`${p.nome} agora é Aprovador. Escolha as áreas em "Áreas"; sem área, aprova só as perguntas Geral.`); render();
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && aberto !== null) { aberto = null; render(); } });
+$("abrir").onclick = () => $("fn").focus();
+const limpar = () => { $("ferr").textContent = ""; };
+$("fn").oninput = limpar; $("fe").oninput = limpar;
+$("add").onclick = () => {
+  const n = $("fn").value.trim(), m = $("fe").value.trim().toLowerCase();
+  if (!n) { $("ferr").textContent = "Informe o nome da pessoa."; return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m)) { $("ferr").textContent = "Informe um e-mail válido."; return; }
+  if (pessoas.some((p) => p.email === m)) { $("ferr").textContent = "Esta pessoa já está na lista."; return; }
+  // No protótipo, um e-mail @semconta.com.br simula a conta que não existe no Supabase Auth (Q4).
+  if (m.endsWith("@semconta.com.br")) { $("ferr").textContent = "Não há conta com este e-mail. Crie a conta no painel do Supabase e tente de novo."; return; }
+  pessoas.push({ nome: n, email: m, papel: "Revisor", areas: [], ativo: true });
+  $("fn").value = ""; $("fe").value = "";
+  toast(`${n} entrou como Revisor, área Geral.`); render();
+};
+render();
+</script>
+</body>
+</html>
