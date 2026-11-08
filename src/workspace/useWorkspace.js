@@ -6,6 +6,8 @@ import {
 , entrar, obterSessao, quandoPerderASessao, sair} from "../api.js";
 
 import { areaDoItem, areasPreferidas, ordenarPorArea } from "./areas.js";
+import { USUARIOS_DE_EXEMPLO, aprovadoresAtivos, areasAoMarcar, novoUsuario, recusaDoNovoUsuario } from "./usuarios.js";
+import { proximaOrdenacao } from "./ordenacaoDaTabela.js";
 
 let contactSeq = 0;
 // Estado dos alertas no navegador, por dono: com login, organização e pessoa da sessão (fase K, cenário 75).
@@ -51,6 +53,9 @@ const initialState = ({ initialScreen, role }) => ({
   tarefas: [], tarefasOrigem: "exemplo", criando: false, pessoas: [],
   // Usuários da plataforma (campo "Responsável") e barra lateral "Ver detalhes" da tarefa (cenários 62 e 64).
   usuarios: [], detalhes: null,
+  // Painel de Usuários (fase Q): dados de exemplo só no navegador, ordenação, lista de áreas aberta (e-mail),
+  // formulário de adicionar e mudança à espera de confirmação ({ tipo: "desativar" | "revisor", email }).
+  painelUsuarios: USUARIOS_DE_EXEMPLO, painelOrdem: null, painelAreasAbertas: null, painelAdicionando: false, painelConfirmacao: null,
   // Tarefa à espera da confirmação de exclusão e exclusão em andamento (cenário 60).
   deleting: null, excluindo: false,
   // Fase D: "compartilhado" quando o backend tem login; a sessão traz nome e papel da pessoa e, na fase K, o nome da organização.
@@ -316,6 +321,55 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
       /** Ordenação da tabela dos detalhes da tarefa (SPEC_FASE_P.md): null é a ordem padrão. Não afeta a Revisão. */
       setOrdenacaoDetalhes(v) { setState({ ordenacaoDetalhes: v }); },
       pendingCount: (i) => i.alerts.filter(alertaPendente).length,
+
+      // Painel de Usuários (SPEC_FASE_Q.md). Dados de exemplo: as mudanças ficam só nesta aba.
+      ordenarPainel(coluna) { setState((s) => ({ painelOrdem: proximaOrdenacao(s.painelOrdem, coluna) })); },
+      abrirAdicionarUsuario(sim) { setState({ painelAdicionando: sim, painelAreasAbertas: null }); },
+      /** Devolve a recusa do formulário (Q4) ou null quando a pessoa entrou como Revisor, área Geral (Q3). */
+      adicionarUsuario(nome, email) {
+        const recusa = recusaDoNovoUsuario(ref.current.painelUsuarios, nome, email);
+        if (recusa) return recusa;
+        const novo = novoUsuario(nome, email);
+        setState((s) => ({ painelUsuarios: [...s.painelUsuarios, novo], painelAdicionando: false }));
+        api.toast("Usuário adicionado", `${novo.nome} entrou como Revisor, área Geral.`);
+        return null;
+      },
+      abrirAreasDoUsuario(email) { setState((s) => ({ painelAreasAbertas: s.painelAreasAbertas === email ? null : email })); },
+      marcarAreaDoUsuario(email, area) {
+        setState((s) => ({ painelUsuarios: s.painelUsuarios.map((u) => (u.email === email ? { ...u, areas: areasAoMarcar(u.areas, area) } : u)) }));
+      },
+      /** Revisor → Aprovador na hora; Aprovador → Revisor pede confirmação, porque as áreas saem (Q5). */
+      mudarPapelDoUsuario(email, papel) {
+        const s = ref.current, u = s.painelUsuarios.find((x) => x.email === email);
+        if (!u || u.papel === papel) return;
+        if (papel === "Revisor") {
+          if (aprovadoresAtivos(s.painelUsuarios) <= 1) { api.toast("Papel não alterado", "A organização precisa de ao menos um Aprovador ativo.", "danger"); return; }
+          setState({ painelConfirmacao: { tipo: "revisor", email }, painelAreasAbertas: null });
+          return;
+        }
+        setState({ painelUsuarios: s.painelUsuarios.map((x) => (x.email === email ? { ...x, papel } : x)) });
+        api.toast("Papel alterado", `${u.nome} agora é Aprovador. Escolha as áreas na coluna Áreas; sem área, aprova só as perguntas Geral.`);
+      },
+      /** Toggle do acesso (Q7): desligar pede confirmação; ligar reativa na hora, com o papel e as áreas de antes. */
+      alternarAcessoDoUsuario(email) {
+        const s = ref.current, u = s.painelUsuarios.find((x) => x.email === email);
+        if (!u) return;
+        if (!u.ativo) {
+          setState({ painelUsuarios: s.painelUsuarios.map((x) => (x.email === email ? { ...x, ativo: true } : x)) });
+          api.toast("Acesso reativado", `${u.nome} voltou com o papel e as áreas de antes.`);
+          return;
+        }
+        if (u.papel === "Aprovador" && aprovadoresAtivos(s.painelUsuarios) <= 1) { api.toast("Acesso não desativado", "A organização precisa de ao menos um Aprovador ativo.", "danger"); return; }
+        setState({ painelConfirmacao: { tipo: "desativar", email }, painelAreasAbertas: null });
+      },
+      confirmarMudancaDeUsuario() {
+        const { painelConfirmacao: c, painelUsuarios } = ref.current;
+        if (!c) return;
+        const u = painelUsuarios.find((x) => x.email === c.email);
+        const muda = c.tipo === "revisor" ? { papel: "Revisor", areas: [] } : { ativo: false };
+        setState({ painelUsuarios: painelUsuarios.map((x) => (x.email === c.email ? { ...x, ...muda } : x)), painelConfirmacao: null });
+        api.toast(c.tipo === "revisor" ? "Papel alterado" : "Acesso desativado", c.tipo === "revisor" ? `${u.nome} agora é Revisor, área Geral.` : `${u.nome} não entra mais na Tendra.ai.`);
+      },
 
       addDocs(list) {
         const base = Date.now();
@@ -891,6 +945,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
       if (e.key === "Escape" && s.detalhes) { ws.setState({ detalhes: null }); return; }
       if (e.key === "Escape" && s.confirmDownload) { ws.setState({ confirmDownload: null }); return; }
       if (e.key === "Escape" && (s.finishing || s.archiving || s.baseHint || s.docDetails)) { ws.setState({ finishing: null, archiving: null, baseHint: false, docDetails: null }); return; }
+      if (e.key === "Escape" && (s.painelConfirmacao || s.painelAreasAbertas)) { ws.setState({ painelConfirmacao: null, painelAreasAbertas: null }); return; }
       if (t === "INPUT" || t === "TEXTAREA" || t === "SELECT" || s.view !== "app" || s.screen !== "review" || s.drawer) return;
       if (e.key === "j" || e.key === "J") ws.step(1);
       if (e.key === "k" || e.key === "K") ws.step(-1);

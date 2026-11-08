@@ -222,6 +222,22 @@ export function ConfirmArchiveTaskDialog({ task, busy, onCancel, onConfirm }) {
   );
 }
 
+/** Painel de Usuários (fase Q): confirmação antes de desativar o acesso (Q7) ou de passar para Revisor (Q5). */
+export function ConfirmUserChangeDialog({ confirmacao: c, onCancel, onConfirm }) {
+  const nome = c.usuario ? c.usuario.nome : "";
+  const desativar = c.tipo === "desativar";
+  return (
+    <Confirm id="tdr-usr" title={desativar ? `Desativar o acesso de ${nome}?` : `Mudar ${nome} para Revisor?`} actions={<>
+      <Button variant="secondary" onClick={onCancel} autoFocus>Cancelar</Button>
+      <Button variant={desativar ? "danger" : "primary"} onClick={onConfirm}>{desativar ? "Desativar acesso" : "Mudar para Revisor"}</Button>
+    </>}>
+      {desativar
+        ? "As sessões terminam na hora e a pessoa não entra mais. O histórico dela continua como está, e o acesso pode ser reativado depois."
+        : `As áreas de ${nome} serão removidas e ela passará a ver tudo como Revisor, área Geral.`}
+    </Confirm>
+  );
+}
+
 export function ToastHost({ toast, onClose, isMobile }) {
   return (
     <>
