@@ -1,7 +1,7 @@
 import React from "react";
 import { seedItems, seedDocs, genItems, nowStr, ITEM_TASKS, GENERATED, TASKS, TASK_IDS } from "./data.js";
 import {
-  MENSAGEM_FORMATO_DA_RFP, aprovarItemNaApi, avaliarItemNaApi, criarTarefa, editarTextoDoItem, listarAvaliacoes, listarPessoas, restaurarItem, dataHoraDaTela, definirDocumentoAtivo, enderecoDaPlanilha, enviarDocumentosDaBase, hojeIso, listarDocumentosDaBase, listarItensDaTarefa,
+  MENSAGEM_FORMATO_DA_RFP, listarUsuariosDaGestao, adicionarUsuarioNaGestao, alterarUsuarioNaGestao, aprovarItemNaApi, avaliarItemNaApi, criarTarefa, editarTextoDoItem, listarAvaliacoes, listarPessoas, restaurarItem, dataHoraDaTela, definirDocumentoAtivo, enderecoDaPlanilha, enviarDocumentosDaBase, hojeIso, listarDocumentosDaBase, listarItensDaTarefa,
   listarTarefas, paraDocumentoDaTela, paraItemDaTela, reconhecerAlertaNaApi, escolherFonteNaApi, revisarItemNaApi, trocarAreaNaApi, revisarTextoComIa, excluirTarefa, obterEmpresaDaTarefa, listarUsuarios, finalizarTarefa, arquivarTarefa, reativarTarefa, listarEventosDeTarefas
 , entrar, obterSessao, quandoPerderASessao, sair} from "../api.js";
 
@@ -53,9 +53,12 @@ const initialState = ({ initialScreen, role }) => ({
   tarefas: [], tarefasOrigem: "exemplo", criando: false, pessoas: [],
   // Usuários da plataforma (campo "Responsável") e barra lateral "Ver detalhes" da tarefa (cenários 62 e 64).
   usuarios: [], detalhes: null,
-  // Painel de Usuários (fase Q): dados de exemplo só no navegador, ordenação, lista de áreas aberta (e-mail),
-  // formulário de adicionar e mudança à espera de confirmação ({ tipo: "desativar" | "revisor", email }).
-  painelUsuarios: USUARIOS_DE_EXEMPLO, painelOrdem: null, painelAreasAbertas: null, painelAdicionando: false, painelConfirmacao: null,
+  // Painel de Usuários (fase Q): dados de exemplo do modo local e lista do backend (null até carregar),
+  // áreas válidas vindas do backend, carregamento e erro da lista, pessoa com mudança em gravação,
+  // ordenação, lista de áreas aberta (id), formulário de adicionar e mudança à espera de confirmação
+  // ({ tipo: "desativar" | "revisor", id }).
+  painelUsuarios: USUARIOS_DE_EXEMPLO, painelDoServidor: null, painelAreasValidas: null, painelCarregando: false, painelErro: null, painelOcupado: null,
+  painelOrdem: null, painelAreasAbertas: null, painelAdicionando: false, painelConfirmacao: null,
   // Tarefa à espera da confirmação de exclusão e exclusão em andamento (cenário 60).
   deleting: null, excluindo: false,
   // Fase D: "compartilhado" quando o backend tem login; a sessão traz nome e papel da pessoa e, na fase K, o nome da organização.
@@ -290,6 +293,8 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         // No celular a Revisão tem duas etapas: abre na lista, ou direto no item quando ele vem escolhido.
         const reviewPane = screen === "review" && extra.sel ? "item" : "list";
         setState({ screen, navOpen: false, drawer: null, detalhes: null, edit: false, showOrig: false, antesDaIa: null, reviewPane, ...sw, ...extra });
+        // Painel de Usuários: a lista do backend é recarregada a cada abertura da tela (DF8).
+        if (screen === "usuarios") api.carregarPainel();
       },
       showView(view) { setState({ view }); window.scrollTo(0, 0); },
       toast(title, desc, tone = "success") {
@@ -322,53 +327,99 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
       setOrdenacaoDetalhes(v) { setState({ ordenacaoDetalhes: v }); },
       pendingCount: (i) => i.alerts.filter(alertaPendente).length,
 
-      // Painel de Usuários (SPEC_FASE_Q.md). Dados de exemplo: as mudanças ficam só nesta aba.
+      // Painel de Usuários (SPEC_FASE_Q.md). No modo compartilhado, a lista vem do backend e só muda com a
+      // resposta da rota (DF5); no local, os dados de exemplo mudam só nesta aba (DF1). Linhas pelo id (DF4).
+      painelNoServidor: (s = ref.current) => s.modo === "compartilhado",
+      usuariosDoPainel(s = ref.current) { return api.painelNoServidor(s) ? s.painelDoServidor || [] : s.painelUsuarios; },
+      /** Troca a pessoa da lista que tem esse id (pela resposta da rota ou pela mudança local). */
+      trocarUsuarioDoPainel(id, novo) {
+        const chave = api.painelNoServidor() ? "painelDoServidor" : "painelUsuarios";
+        setState((s) => ({ [chave]: (s[chave] || []).map((u) => (u.id === id ? novo : u)) }));
+      },
+      /** Carrega a lista do backend ao abrir a tela e depois do login (DF8). No modo local, nada a carregar. */
+      async carregarPainel() {
+        if (!api.painelNoServidor()) return;
+        setState({ painelCarregando: true, painelErro: null });
+        try {
+          const { usuarios, areasDoAprovador } = await listarUsuariosDaGestao();
+          setState({ painelDoServidor: usuarios, painelAreasValidas: areasDoAprovador, painelCarregando: false });
+        } catch (e) {
+          setState({ painelCarregando: false, painelErro: e.message });
+        }
+      },
+      /** Grava a mudança no backend (ou só nesta aba, no modo local) e atualiza a linha com o resultado. */
+      async gravarMudancaDeUsuario(u, mudanca, aviso) {
+        if (!api.painelNoServidor()) {
+          const novo = { ...u, ...mudanca, ...(mudanca.papel === "Revisor" ? { areas: [] } : null) };
+          api.trocarUsuarioDoPainel(u.id, novo);
+          if (aviso) api.toast(aviso[0], aviso[1](novo));
+          return;
+        }
+        setState({ painelOcupado: u.id });
+        try {
+          const { usuario } = await alterarUsuarioNaGestao(u.id, mudanca);
+          api.trocarUsuarioDoPainel(u.id, usuario);
+          if (aviso) api.toast(aviso[0], aviso[1](usuario));
+        } catch (e) {
+          api.toast("Mudança não gravada", e.message, "danger");
+        } finally {
+          setState({ painelOcupado: null });
+        }
+      },
       ordenarPainel(coluna) { setState((s) => ({ painelOrdem: proximaOrdenacao(s.painelOrdem, coluna) })); },
       abrirAdicionarUsuario(sim) { setState({ painelAdicionando: sim, painelAreasAbertas: null }); },
-      /** Devolve a recusa do formulário (Q4) ou null quando a pessoa entrou como Revisor, área Geral (Q3). */
-      adicionarUsuario(nome, email) {
-        const recusa = recusaDoNovoUsuario(ref.current.painelUsuarios, nome, email);
+      /** Devolve a recusa (Q4) ou null quando a pessoa entrou como Revisor, área Geral (Q3). */
+      async adicionarUsuario(nome, email) {
+        const recusa = recusaDoNovoUsuario(api.usuariosDoPainel(), nome, email);
         if (recusa) return recusa;
-        const novo = novoUsuario(nome, email);
-        setState((s) => ({ painelUsuarios: [...s.painelUsuarios, novo], painelAdicionando: false }));
+        let novo;
+        if (api.painelNoServidor()) {
+          try {
+            novo = (await adicionarUsuarioNaGestao(nome, email)).usuario;
+          } catch (e) {
+            return e.message;
+          }
+        } else novo = novoUsuario(nome, email);
+        const chave = api.painelNoServidor() ? "painelDoServidor" : "painelUsuarios";
+        setState((s) => ({ [chave]: [...(s[chave] || []), novo], painelAdicionando: false }));
         api.toast("Usuário adicionado", `${novo.nome} entrou como Revisor, área Geral.`);
         return null;
       },
-      abrirAreasDoUsuario(email) { setState((s) => ({ painelAreasAbertas: s.painelAreasAbertas === email ? null : email })); },
-      marcarAreaDoUsuario(email, area) {
-        setState((s) => ({ painelUsuarios: s.painelUsuarios.map((u) => (u.email === email ? { ...u, areas: areasAoMarcar(u.areas, area) } : u)) }));
+      abrirAreasDoUsuario(id) { setState((s) => ({ painelAreasAbertas: s.painelAreasAbertas === id ? null : id })); },
+      marcarAreaDoUsuario(id, area) {
+        const u = api.usuariosDoPainel().find((x) => x.id === id);
+        if (u) api.gravarMudancaDeUsuario(u, { areas: areasAoMarcar(u.areas, area) });
       },
-      /** Revisor → Aprovador na hora; Aprovador → Revisor pede confirmação, porque as áreas saem (Q5). */
-      mudarPapelDoUsuario(email, papel) {
-        const s = ref.current, u = s.painelUsuarios.find((x) => x.email === email);
+      /** Revisor → Aprovador direto; Aprovador → Revisor pede confirmação, porque as áreas saem (Q5). */
+      mudarPapelDoUsuario(id, papel) {
+        const lista = api.usuariosDoPainel(), u = lista.find((x) => x.id === id);
         if (!u || u.papel === papel) return;
         if (papel === "Revisor") {
-          if (aprovadoresAtivos(s.painelUsuarios) <= 1) { api.toast("Papel não alterado", "A organização precisa de ao menos um Aprovador ativo.", "danger"); return; }
-          setState({ painelConfirmacao: { tipo: "revisor", email }, painelAreasAbertas: null });
+          if (aprovadoresAtivos(lista) <= 1) { api.toast("Papel não alterado", "A organização precisa de ao menos um Aprovador ativo.", "danger"); return; }
+          setState({ painelConfirmacao: { tipo: "revisor", id }, painelAreasAbertas: null });
           return;
         }
-        setState({ painelUsuarios: s.painelUsuarios.map((x) => (x.email === email ? { ...x, papel } : x)) });
-        api.toast("Papel alterado", `${u.nome} agora é Aprovador. Escolha as áreas na coluna Áreas; sem área, aprova só as perguntas Geral.`);
+        api.gravarMudancaDeUsuario(u, { papel }, ["Papel alterado", (n) => `${n.nome} agora é Aprovador. Escolha as áreas no lápis da coluna Áreas; sem área, aprova só as perguntas Geral.`]);
       },
-      /** Toggle do acesso (Q7): desligar pede confirmação; ligar reativa na hora, com o papel e as áreas de antes. */
-      alternarAcessoDoUsuario(email) {
-        const s = ref.current, u = s.painelUsuarios.find((x) => x.email === email);
+      /** Toggle do acesso (Q7): desligar pede confirmação; ligar reativa direto, com o papel e as áreas de antes. */
+      alternarAcessoDoUsuario(id) {
+        const lista = api.usuariosDoPainel(), u = lista.find((x) => x.id === id);
         if (!u) return;
         if (!u.ativo) {
-          setState({ painelUsuarios: s.painelUsuarios.map((x) => (x.email === email ? { ...x, ativo: true } : x)) });
-          api.toast("Acesso reativado", `${u.nome} voltou com o papel e as áreas de antes.`);
+          api.gravarMudancaDeUsuario(u, { ativo: true }, ["Acesso reativado", (n) => `${n.nome} voltou com o papel e as áreas de antes.`]);
           return;
         }
-        if (u.papel === "Aprovador" && aprovadoresAtivos(s.painelUsuarios) <= 1) { api.toast("Acesso não desativado", "A organização precisa de ao menos um Aprovador ativo.", "danger"); return; }
-        setState({ painelConfirmacao: { tipo: "desativar", email }, painelAreasAbertas: null });
+        if (u.papel === "Aprovador" && aprovadoresAtivos(lista) <= 1) { api.toast("Acesso não desativado", "A organização precisa de ao menos um Aprovador ativo.", "danger"); return; }
+        setState({ painelConfirmacao: { tipo: "desativar", id }, painelAreasAbertas: null });
       },
       confirmarMudancaDeUsuario() {
-        const { painelConfirmacao: c, painelUsuarios } = ref.current;
+        const c = ref.current.painelConfirmacao;
         if (!c) return;
-        const u = painelUsuarios.find((x) => x.email === c.email);
-        const muda = c.tipo === "revisor" ? { papel: "Revisor", areas: [] } : { ativo: false };
-        setState({ painelUsuarios: painelUsuarios.map((x) => (x.email === c.email ? { ...x, ...muda } : x)), painelConfirmacao: null });
-        api.toast(c.tipo === "revisor" ? "Papel alterado" : "Acesso desativado", c.tipo === "revisor" ? `${u.nome} agora é Revisor, área Geral.` : `${u.nome} não entra mais na Tendra.ai.`);
+        const u = api.usuariosDoPainel().find((x) => x.id === c.id);
+        setState({ painelConfirmacao: null });
+        if (!u) return;
+        if (c.tipo === "revisor") api.gravarMudancaDeUsuario(u, { papel: "Revisor" }, ["Papel alterado", (n) => `${n.nome} agora é Revisor, área Geral.`]);
+        else api.gravarMudancaDeUsuario(u, { ativo: false }, ["Acesso desativado", (n) => `${n.nome} não entra mais na Tendra.ai.`]);
       },
 
       addDocs(list) {

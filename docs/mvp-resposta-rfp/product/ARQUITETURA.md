@@ -622,7 +622,7 @@ Riscos da arquitetura em funcionamento (seção 1), levantados em 02/11/2026 e r
 | Ponto | Por que importa |
 |---|---|
 | Contrato sem tipos compartilhados | O backend é TypeScript e o front é JavaScript. Uma rota que muda de formato só aparece com o sistema rodando, ou num teste de ponta a ponta que cubra o caso |
-| Regras repetidas no front e no backend | O limite de 10 MB, a mensagem de formato `.xlsx` e o mínimo de 30 palavras do "Revisar com IA" precisam mudar juntos. O front só antecipa a recusa; quem decide é o backend |
+| Regras repetidas no front e no backend | O limite de 10 MB, a mensagem de formato `.xlsx` e o mínimo de 30 palavras do "Revisar com IA" precisam mudar juntos. Na gestão de usuários (fase Q), as recusas do formulário e a lista das áreas do Aprovador também existem no front (`src/workspace/usuarios.js`), só para o modo local e para antecipar as recusas; no publicado, a lista de áreas vem do backend. O front só antecipa a recusa; quem decide é o backend |
 | Endereços fixos na configuração | Trocar o domínio do front (`render.yaml`) ou o nome do serviço no Render (`vercel.json`) quebra o login ou as chamadas, sem erro de build |
 | Deploys independentes | Uma mudança de contrato precisa funcionar com a versão anterior do outro lado, ou ser publicada nos dois ao mesmo tempo |
 | Plano gratuito do Render | A primeira chamada depois de um tempo parado é lenta |

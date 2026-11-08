@@ -156,6 +156,10 @@ const ROTAS_SEM_ID = [
   "GET /api/historico/tarefas",
   "GET /api/pessoas",
   "GET /api/usuarios",
+  // Painel de Usuários (fase Q): a pessoa de outra organização responde 404 (abaixo e em gestaoDeUsuarios.test.ts).
+  "GET /api/gestao/usuarios",
+  "POST /api/gestao/usuarios",
+  "PATCH /api/gestao/usuarios/:id",
 ];
 
 describe("Cenário 79 · isolamento comprovado por teste", () => {
@@ -308,6 +312,17 @@ describe("Cenários 72 a 75 · tarefas, empresas, usuários e números da organi
       dados: { nome: "RFP de B", responsavel: DE_A.nome },
     });
     expect({ status: comResponsavelDeA.statusCode, erro: comResponsavelDeA.json().erro }).toEqual({ status: 400, erro: "Responsável inválido: escolha um usuário da organização." });
+  });
+
+  it("gestão de usuários: B lista só os próprios perfis e não altera nem adiciona os de A (fase Q, Q10)", async () => {
+    const cookie = await cookieDe(DE_B);
+    const lista = (await pedir(cookie, "GET", "/api/gestao/usuarios")).json().usuarios as { email: string }[];
+    expect(lista.map((u) => u.email)).toEqual([DE_B.email, REVISOR_DE_B.email]);
+    const alterar = await pedir(cookie, "PATCH", `/api/gestao/usuarios/${DE_A.id}`, { ativo: false });
+    expect({ status: alterar.statusCode, erro: alterar.json().erro }).toEqual({ status: 404, erro: "Pessoa não encontrada." });
+    const adicionar = await pedir(cookie, "POST", "/api/gestao/usuarios", { nome: "Marcelo", email: DE_A.email });
+    expect({ status: adicionar.statusCode, erro: adicionar.json().erro }).toEqual({ status: 409, erro: "Este e-mail não pode ser usado nesta organização." });
+    expect((await banco.query<{ ativo: boolean }>("SELECT ativo FROM perfis WHERE id = $1", [DE_A.id])).rows[0]?.ativo).toBe(true);
   });
 });
 

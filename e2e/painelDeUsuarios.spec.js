@@ -150,3 +150,117 @@ test("Cenário Q11: celular em cartões, sem rolagem lateral", async ({ page }) 
   const rolagemLateral = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   expect(rolagemLateral).toBe(false);
 });
+
+// Modo compartilhado (etapa Q4 de plan/PLAN_FASE_Q.md): a API é respondida pelo teste, como em
+// e2e/areas.spec.js. A lista vem de /api/gestao/usuarios; os dados de exemplo não aparecem.
+const EU = { id: "11111111-1111-4111-8111-111111111111", nome: "Antônio Carlos", email: "antonio@vereda.test", papel: "Aprovador", areas: ["Jurídico"], ativo: true, propria: true };
+const HOMONIMO = { id: "22222222-2222-4222-8222-222222222222", nome: "Antônio Carlos", email: "antonio.c@vereda.test", papel: "Aprovador", areas: [], ativo: true, propria: false };
+const REVISORA = { id: "33333333-3333-4333-8333-333333333333", nome: "Beatriz Lima", email: "beatriz@vereda.test", papel: "Revisor", areas: [], ativo: true, propria: false };
+// Áreas vindas da rota (DF7): sem Produto, para provar que a lista suspensa usa a resposta.
+const AREAS_DA_ROTA = ["Tecnologia", "Comercial", "Jurídico", "C-Level"];
+
+async function entrarNoPublicado(page, { falharLista = false } = {}) {
+  const estado = { usuarios: [EU, HOMONIMO, REVISORA].map((u) => ({ ...u })), alteracoes: [], adicoes: [], falharPatch: false, falharLista };
+  await page.route("**/api/**", async (route) => {
+    const url = new URL(route.request().url()), caminho = url.pathname, metodo = route.request().method();
+    if (caminho === "/api/auth/me") return route.fulfill({ json: { pessoa: { nome: EU.nome, papel: "Aprovador", areas: EU.areas }, organizacao: { nome: "Vereda Documental" } } });
+    if (caminho === "/api/gestao/usuarios" && metodo === "GET") {
+      if (estado.falharLista) return route.fulfill({ status: 503, json: { erro: "O serviço está fora do ar." } });
+      return route.fulfill({ json: { usuarios: estado.usuarios, areasDoAprovador: AREAS_DA_ROTA } });
+    }
+    if (caminho === "/api/gestao/usuarios" && metodo === "POST") {
+      const corpo = route.request().postDataJSON();
+      estado.adicoes.push(corpo);
+      if (corpo.email === "sem.conta@vereda.test") return route.fulfill({ status: 404, json: { erro: "Não há conta com este e-mail. Crie a conta no painel do Supabase (Authentication → Add user) e tente de novo." } });
+      if (corpo.email === "outra@vereda.test") return route.fulfill({ status: 409, json: { erro: "Este e-mail não pode ser usado nesta organização." } });
+      const novo = { id: "44444444-4444-4444-8444-444444444444", nome: corpo.nome.trim(), email: corpo.email, papel: "Revisor", areas: [], ativo: true, propria: false };
+      estado.usuarios.push(novo);
+      return route.fulfill({ status: 201, json: { usuario: novo } });
+    }
+    const patch = /^\/api\/gestao\/usuarios\/([^/]+)$/.exec(caminho);
+    if (patch && metodo === "PATCH") {
+      const mudanca = route.request().postDataJSON();
+      estado.alteracoes.push({ id: patch[1], mudanca });
+      if (estado.falharPatch) return route.fulfill({ status: 503, json: { erro: "O serviço está fora do ar." } });
+      estado.usuarios = estado.usuarios.map((u) => (u.id === patch[1] ? { ...u, ...mudanca, ...(mudanca.papel === "Revisor" ? { areas: [] } : null) } : u));
+      return route.fulfill({ json: { usuario: estado.usuarios.find((u) => u.id === patch[1]) } });
+    }
+    if (caminho === "/api/tarefas") return route.fulfill({ json: { tarefas: [] } });
+    if (caminho === "/api/base/documentos") return route.fulfill({ json: { documentos: [{ id: 1, nome: "politica.md", titulo: "Política", tipo: "documento", atualizadoEm: "2026-10-01", ativo: true }] } });
+    if (caminho === "/api/pessoas") return route.fulfill({ json: { pessoas: [{ nome: EU.nome, papel: "Aprovador", areas: EU.areas }] } });
+    if (caminho === "/api/usuarios") return route.fulfill({ json: { usuarios: [] } });
+    if (caminho === "/api/historico/tarefas") return route.fulfill({ json: { eventos: [] } });
+    return route.fulfill({ status: 404, json: { erro: "Sem resposta no teste." } });
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Entrar", exact: true }).first().click();
+  await expect(menu(page)).toBeVisible({ timeout: 20_000 });
+  await abrirPainel(page);
+  return estado;
+}
+
+const linhaPorEmail = (page, email) => page.getByRole("row").filter({ hasText: email });
+
+test("Publicado Q2 e Q8: lista da rota, sem dados de exemplo, e a própria linha pelo perfil da sessão", async ({ page }) => {
+  await entrarNoPublicado(page);
+  await expect(linhaPorEmail(page, REVISORA.email)).toBeVisible();
+  await expect(page.getByText("Carla Diretora")).toHaveCount(0);
+  await expect(page.getByText("Paula Rocha")).toHaveCount(0);
+  await expect(page.getByText(/^Dados de exemplo/)).toHaveCount(0);
+  await expect(page.getByText("3 pessoas com acesso", { exact: true })).toBeVisible();
+  // Dois "Antônio Carlos": só a linha da sessão fica bloqueada (DF3).
+  await expect(linhaPorEmail(page, EU.email).getByRole("switch")).toBeDisabled();
+  await expect(linhaPorEmail(page, HOMONIMO.email).getByRole("switch")).toBeEnabled();
+});
+
+test("Publicado Q3, Q4 e Q13: adicionar pela rota, com as recusas do backend", async ({ page }) => {
+  const estado = await entrarNoPublicado(page);
+  await page.getByRole("button", { name: "Adicionar usuário" }).click();
+  await page.getByLabel("Nome").fill("Sem Conta");
+  await page.getByLabel("E-mail da conta").fill("sem.conta@vereda.test");
+  await page.getByRole("button", { name: "Adicionar", exact: true }).click();
+  await expect(page.getByRole("alert")).toHaveText(/Não há conta com este e-mail/);
+  await page.getByLabel("E-mail da conta").fill("outra@vereda.test");
+  await page.getByRole("button", { name: "Adicionar", exact: true }).click();
+  await expect(page.getByRole("alert")).toHaveText("Este e-mail não pode ser usado nesta organização.");
+  await page.getByLabel("Nome").fill("Ana Souza");
+  await page.getByLabel("E-mail da conta").fill("ana@vereda.test");
+  await page.getByRole("button", { name: "Adicionar", exact: true }).click();
+  await expect(linhaPorEmail(page, "ana@vereda.test")).toContainText("Geral");
+  await expect(page.getByLabel("Nome")).toHaveCount(0);
+  expect(estado.adicoes.map((a) => a.email)).toEqual(["sem.conta@vereda.test", "outra@vereda.test", "ana@vereda.test"]);
+});
+
+test("Publicado Q5, Q6 e Q7: papel, áreas da rota e acesso gravados pela rota", async ({ page }) => {
+  const estado = await entrarNoPublicado(page);
+  await linhaPorEmail(page, REVISORA.email).getByLabel("Papel de Beatriz Lima").selectOption("Aprovador");
+  await expect(page.getByRole("button", { name: "Editar áreas de Beatriz Lima" })).toBeVisible();
+  await page.getByRole("button", { name: "Editar áreas de Beatriz Lima" }).click();
+  const lista = page.getByRole("group", { name: "Áreas de Beatriz Lima" });
+  // A lista suspensa usa as áreas da rota (DF7).
+  await expect(lista.getByText("Produto", { exact: true })).toHaveCount(0);
+  await lista.getByText("Comercial", { exact: true }).click();
+  await expect(linhaPorEmail(page, REVISORA.email)).toContainText("Comercial");
+  await page.keyboard.press("Escape");
+  await linhaPorEmail(page, HOMONIMO.email).getByRole("switch").click({ force: true });
+  await page.getByRole("button", { name: "Desativar acesso" }).click();
+  await expect(linhaPorEmail(page, HOMONIMO.email)).toContainText("Inativo");
+  expect(estado.alteracoes).toEqual([
+    { id: REVISORA.id, mudanca: { papel: "Aprovador" } },
+    { id: REVISORA.id, mudanca: { areas: ["Comercial"] } },
+    { id: HOMONIMO.id, mudanca: { ativo: false } }
+  ]);
+});
+
+test("Publicado Q13: erro ao gravar não muda a linha; erro ao listar mostra a mensagem e tenta de novo", async ({ page }) => {
+  const estado = await entrarNoPublicado(page, { falharLista: true });
+  await expect(page.getByText("Não foi possível carregar os usuários.", { exact: true })).toBeVisible();
+  estado.falharLista = false;
+  await page.getByRole("button", { name: "Tentar de novo" }).click();
+  await expect(linhaPorEmail(page, REVISORA.email)).toBeVisible();
+  estado.falharPatch = true;
+  await linhaPorEmail(page, REVISORA.email).getByLabel("Papel de Beatriz Lima").selectOption("Aprovador");
+  // O aviso aparece na tela e na região lida pelos leitores de tela.
+  await expect(page.getByText("Mudança não gravada").first()).toBeVisible();
+  await expect(linhaPorEmail(page, REVISORA.email).getByLabel("Papel de Beatriz Lima")).toHaveValue("Revisor");
+});

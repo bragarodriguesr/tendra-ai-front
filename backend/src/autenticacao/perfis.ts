@@ -13,20 +13,40 @@ export class ErroDeCadastro extends Error {
   override name = "ErroDeCadastro";
 }
 
-/** Procura o id da conta pelo e-mail na API de administração do Supabase Auth. */
-export async function idDaContaNoSupabase(opcoes: { supabaseUrl: string; chaveDeServico: string; email: string; fetch?: typeof fetch }): Promise<string> {
+/** O Supabase Auth não respondeu como esperado: a consulta das contas não pôde ser feita (fase Q, Q13). */
+export class ErroDoProvedorDeContas extends ErroDeCadastro {
+  override name = "ErroDoProvedorDeContas";
+}
+
+/**
+ * Id da conta com esse e-mail na API de administração do Supabase Auth, ou null quando não há conta.
+ * Percorre até 20 páginas de 200 contas (pendência PQ3 da fase Q).
+ */
+export async function procurarContaNoSupabase(opcoes: { supabaseUrl: string; chaveDeServico: string; email: string; fetch?: typeof fetch }): Promise<string | null> {
   const buscar = opcoes.fetch ?? fetch;
   const cabecalhos: Record<string, string> = { apikey: opcoes.chaveDeServico };
   if (opcoes.chaveDeServico.startsWith("eyJ")) cabecalhos.Authorization = `Bearer ${opcoes.chaveDeServico}`;
   for (let pagina = 1; pagina <= 20; pagina++) {
-    const resposta = await buscar(`${opcoes.supabaseUrl}/auth/v1/admin/users?page=${pagina}&per_page=200`, { headers: cabecalhos });
-    if (!resposta.ok) throw new ErroDeCadastro(`O Supabase Auth recusou a consulta das contas (${resposta.status}).`);
+    let resposta: Response;
+    try {
+      resposta = await buscar(`${opcoes.supabaseUrl}/auth/v1/admin/users?page=${pagina}&per_page=200`, { headers: cabecalhos });
+    } catch {
+      throw new ErroDoProvedorDeContas("Falha de comunicação com o Supabase Auth.");
+    }
+    if (!resposta.ok) throw new ErroDoProvedorDeContas(`O Supabase Auth recusou a consulta das contas (${resposta.status}).`);
     const { users } = (await resposta.json()) as { users: { id: string; email?: string }[] };
     const conta = users.find((usuario) => usuario.email?.toLowerCase() === opcoes.email);
     if (conta !== undefined) return conta.id;
     if (users.length < 200) break;
   }
-  throw new ErroDeCadastro(`Nenhuma conta com o e-mail ${opcoes.email} no Supabase Auth. Crie-a antes no painel (Authentication → Add user).`);
+  return null;
+}
+
+/** Procura o id da conta pelo e-mail na API de administração do Supabase Auth (comando cadastrar-perfil). */
+export async function idDaContaNoSupabase(opcoes: { supabaseUrl: string; chaveDeServico: string; email: string; fetch?: typeof fetch }): Promise<string> {
+  const id = await procurarContaNoSupabase(opcoes);
+  if (id === null) throw new ErroDeCadastro(`Nenhuma conta com o e-mail ${opcoes.email} no Supabase Auth. Crie-a antes no painel (Authentication → Add user).`);
+  return id;
 }
 
 /**

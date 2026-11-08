@@ -24,7 +24,7 @@ Chegar a um backend que **prove a hipótese central do MVP** (a pessoa aceita as
 | **L. Busca de perguntas** | Barra de busca por palavras na Revisão e nos detalhes da tarefa, a mesma nas duas telas, junto com o filtro por estado | B1 a B17 de `SPEC_FASE_L.md` |
 | **M. Filtro pelo progresso** | Barra e legenda de estados dos detalhes da tarefa acionam o filtro por estado; o número do cartão segue o filtro | M1 a M12 de `SPEC_FASE_M.md` |
 | **P. Cabeçalho dos detalhes** | Cabeçalho com ordenação na tabela dos detalhes da tarefa (Código, Pergunta, Área e Status), com os alertas na coluna Status | P1 a P11 de `SPEC_FASE_P.md` |
-| **Q. Gestão de usuários** | "Painel de Usuários" no menu "Gestão de acessos", só para o Aprovador, com dados de exemplo no navegador | Q1 a Q8 e Q11 de `SPEC_FASE_Q.md` |
+| **Q. Gestão de usuários** | "Painel de Usuários" no menu "Gestão de acessos", só para o Aprovador: primeiro com dados de exemplo; depois ligado ao banco (`/api/gestao/usuarios`), ainda sem o histórico | Q1 a Q11 e Q13 de `SPEC_FASE_Q.md`; plano em `plan/PLAN_FASE_Q.md` |
 
 > **Situação da fase A (23/10/2026):** A1 feita e execuções reais da A5 a A10 concluídas (`gerar-amostra`, `responder` e `avaliar` com Sonnet 5.5 e Opus 5.5). Com as instruções `geracao-v3` e `conflito-v2` e a checagem por parágrafo (cenário 18 revisto), o Opus 5.5 atinge todos os critérios medidos pelo código na RFP-01 e na RFP-02 (3 execuções). Falta só a lista de fidelidade preenchida por uma pessoa para fechar o portão e registrar o modelo em P8.
 
@@ -1062,6 +1062,10 @@ Pedida em 08/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 - 7 testes unitários novos (`npm test`, 34 no total) e 7 de ponta a ponta da fase Q passando; suíte de ponta a ponta completa verde (103 testes).
 - O teste do menu lateral (`e2e/sidebar.spec.js`, US1) passou a contar 11 links: a pessoa padrão do modo local é Aprovador e vê "Usuários".
 - Conferida no navegador no computador.
+
+### Segunda parte: conexão com o banco (08/11/2026)
+- Plano em `plan/PLAN_FASE_Q.md` (etapas Q0 a Q7), com o inventário dos dados fixos da tela (DF1 a DF10) e as pendências do Supabase, do Render e da Vercel (PQ1 a PQ5). Spec revisado e aprovado (Q0).
+- **Situação: etapas Q0 a Q4 feitas, sem commit.** Rotas `/api/gestao/usuarios` no backend, só com login e só para o Aprovador; o front usa as rotas no modo compartilhado e os dados de exemplo no local. Q5 (conferência com o backend real), Q6 (pendências PQ1 a PQ5) e Q7 (publicação) continuam pendentes. O registro das mudanças no Histórico segue como alteração futura.
 
 ## Definição de pronto (proposta, P10)
 

@@ -647,15 +647,22 @@ export function buildView(s, ws) {
   };
 
   // Painel de Usuários (fase Q): linhas na ordenação escolhida; a própria linha não muda papel nem acesso (Q8).
+  // No modo compartilhado, a lista, a própria linha (pelo id do perfil, DF3) e as áreas vêm do backend; no
+  // local, os dados de exemplo, com a própria linha pelo nome da pessoa escolhida em "Trocar usuário".
+  const noServidor = ws.painelNoServidor(s);
+  const usuariosDoPainel = ws.usuariosDoPainel(s);
   const eu = ws.name();
   const painel = {
-    ativos: s.painelUsuarios.filter((u) => u.ativo).length,
-    ordem: s.painelOrdem, adicionando: s.painelAdicionando, areasDoAprovador: AREAS_DO_APROVADOR,
-    linhas: ordenarUsuarios(s.painelUsuarios, s.painelOrdem).map((u) => ({
-      ...u, propria: u.nome === eu, areasAbertas: s.painelAreasAbertas === u.email,
-      areasNaTela: u.areas.length ? u.areas : ["Geral"]
+    noServidor, exemplo: !noServidor,
+    carregando: noServidor && s.painelCarregando && !s.painelDoServidor, erro: noServidor ? s.painelErro : null,
+    ativos: usuariosDoPainel.filter((u) => u.ativo).length,
+    ordem: s.painelOrdem, adicionando: s.painelAdicionando,
+    areasDoAprovador: noServidor && s.painelAreasValidas ? s.painelAreasValidas : AREAS_DO_APROVADOR,
+    linhas: ordenarUsuarios(usuariosDoPainel, s.painelOrdem).map((u) => ({
+      ...u, propria: noServidor ? !!u.propria : u.nome === eu, areasAbertas: s.painelAreasAbertas === u.id,
+      ocupado: s.painelOcupado === u.id, areasNaTela: u.areas.length ? u.areas : ["Geral"]
     })),
-    confirmacao: s.painelConfirmacao ? { ...s.painelConfirmacao, usuario: s.painelUsuarios.find((u) => u.email === s.painelConfirmacao.email) } : null
+    confirmacao: s.painelConfirmacao ? { ...s.painelConfirmacao, usuario: usuariosDoPainel.find((u) => u.id === s.painelConfirmacao.id) } : null
   };
 
   return {

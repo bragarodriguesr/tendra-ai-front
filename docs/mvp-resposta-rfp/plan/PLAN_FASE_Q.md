@@ -1,7 +1,7 @@
 ---
 feature: gestao-de-usuarios
 status: draft
-spec: docs/mvp-resposta-rfp/spec/SPEC_FASE_Q.md (status approved, com os dados de exemplo; precisa da revisão da etapa Q0)
+spec: docs/mvp-resposta-rfp/spec/SPEC_FASE_Q.md (revisado na etapa Q0 em 08/11/2026; status draft, aguardando aprovação)
 constitution: 1.0.0
 ---
 
@@ -95,6 +95,7 @@ Cada etapa termina com uma verificação que pode ser feita sem ler código.
 ### Q0. Revisão do spec
 - Trazer de volta para os cenários do `SPEC_FASE_Q.md` o que estava em "Alterações futuras", menos o registro no Histórico: adicionar com o Supabase Auth (Q3 e Q4), efeito nas sessões (Q9), isolamento (Q10) e falhas (Q13). O status volta para `draft` até a nova aprovação.
 - **Verificação:** o grupo aprova o spec revisado.
+- **Situação (08/11/2026): spec revisado e aprovado.** Voltaram os cenários Q3, Q4, Q9, Q10 e Q13, com os ajustes do inventário DF1 a DF10 (dados de exemplo só no modo local, própria linha pelo perfil da sessão, áreas vindas do backend, mudanças só com a resposta). O registro no Histórico (antigo Q12) segue como alteração futura.
 
 ### Q1. Regras da gestão no backend
 - `gestaoDeUsuarios.ts`: listar, adicionar, mudar papel, mudar áreas, desativar e reativar, com as recusas da tabela de rotas.
@@ -107,12 +108,14 @@ Cada etapa termina com uma verificação que pode ser feita sem ler código.
   - nunca fica sem Aprovador ativo, inclusive com duas mudanças ao mesmo tempo;
   - desativar apaga as sessões.
 - **Verificação:** `npm test` do backend passa.
+- **Situação (08/11/2026): feita.** `backend/src/autenticacao/gestaoDeUsuarios.ts`, com 14 testes de integração. A busca da conta ganhou `procurarContaNoSupabase` em `perfis.ts`, que separa conta inexistente (null) de Supabase Auth fora do ar (`ErroDoProvedorDeContas`, 503); `idDaContaNoSupabase` (comando `cadastrar-perfil`) passa a usá-la, com as mesmas mensagens.
 
 ### Q2. Rotas
 - `rotasDeGestaoDeUsuarios.ts`, registradas só com login, com validação de corpo (`additionalProperties: false`).
 - `organizacoes.test.ts`: as três rotas entram na lista de rotas comparada com a do servidor, com o teste de que a pessoa de outra organização responde 404.
 - Testes de rota: 403 para o Revisor, 401 sem sessão, mudança de papel valendo no pedido seguinte da outra pessoa e sessão encerrada ao desativar.
 - **Verificação:** `npm test` e `npm run typecheck` do backend passam; a lista de rotas do teste de organizações bate com a do servidor.
+- **Situação (08/11/2026): feita.** `backend/src/http/rotasDeGestaoDeUsuarios.ts`, registradas no `servidor.ts` só com login; `procurarConta` nas opções da autenticação, ligada ao Supabase no `cli/servidor.ts`. Tipos sem erro; 399 testes do backend passando. Três testes falham no Windows também na `main`, sem estas mudanças (caminhos com barra invertida em `organizacoes`, `carga` e `tarefasPersistidas`); o CI roda em Linux.
 
 ### Q3. Front ligado à API
 - `src/api.js` com as três funções; `useWorkspace` usando a API no modo compartilhado e os dados de exemplo no local.
@@ -129,14 +132,22 @@ Cada etapa termina com uma verificação que pode ser feita sem ler código.
   - no modo local, a tela continua igual;
   - com a API simulada pelo teste, a lista vem da rota, nenhum nome de exemplo aparece e o aviso de dados de exemplo some;
   - uma busca por `USUARIOS_DE_EXEMPLO` no código mostra que ele só é usado no caminho do modo local.
+- **Situação (08/11/2026): feita.**
+  - `src/api.js` com `listarUsuariosDaGestao`, `adicionarUsuarioNaGestao` e `alterarUsuarioNaGestao`.
+  - `useWorkspace`: lista do backend em `painelDoServidor` (carregada ao abrir a tela) e os dados de exemplo em `painelUsuarios`, escolhidos pelo modo; mudanças só com a resposta da rota, com a linha bloqueada enquanto grava.
+  - `Users.jsx`: carregamento, erro com "Tentar de novo", aviso de exemplo só no modo local e "Adicionar" esperando a resposta.
+  - `USUARIOS_DE_EXEMPLO` só entra no estado `painelUsuarios`, que o modo compartilhado não lê.
+  - Lista de áreas repetida registrada em `product/ARQUITETURA.md`, seção 11.
 
 ### Q4. Testes de ponta a ponta
 - `e2e/painelDeUsuarios.spec.js` ganha um bloco com a API respondida pelo teste (como `e2e/areas.spec.js`): lista da rota, adicionar com as recusas 404 e 409, mudar papel e áreas, desativar e reativar, e erro 503 sem mudar a lista.
 - **Verificação:** `npm run e2e` passa, inclusive os testes que já existiam.
+- **Situação (08/11/2026): feita.** 4 testes novos do modo publicado (lista sem dados de exemplo e própria linha com nomes iguais; adicionar com as recusas; papel, áreas da rota e acesso; erros ao listar e ao gravar). Suíte completa verde: 107 testes. Testes unitários do front: 34.
 
 ### Q5. Conferência local com o backend
 - `npm run servidor` com `TENDRA_MODO=compartilhado` apontando para um banco de teste e o Supabase Auth simulado, ou com um projeto Supabase de teste, se houver.
 - **Verificação:** a tela lista, adiciona, muda e desativa pessoas, e a pessoa desativada perde a sessão.
+- **Situação (08/11/2026): pendente.** O modo compartilhado do servidor exige `SUPABASE_URL`, a chave de serviço e um Postgres; não há projeto Supabase de teste separado. Os testes de integração (rotas com o Supabase Auth simulado) e de ponta a ponta (API simulada) cobrem o comportamento; a conferência com o backend real fica para o ambiente publicado (Q7), depois das pendências PQ1 a PQ5.
 
 ### Q6. Pendências de confirmação
 - Resolver PQ1 a PQ5 com o grupo.
