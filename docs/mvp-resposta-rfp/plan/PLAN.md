@@ -1039,7 +1039,7 @@ Pedida em 08/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 | Quem gere | Qualquer Aprovador; sem papel novo de Administrador | Q1 |
 | Áreas | Só o Aprovador tem área (PN3 da fase N); o Revisor aparece com "Geral" | Q2, Q6 |
 | Cadastro | A conta e a senha continuam no painel do Supabase; a tela só adiciona a pessoa pelo e-mail da conta | Q3 |
-| Lista de áreas | Etiquetas sem borda; o clique abre a lista por cima delas, como o seletor de Papel | Q6 |
+| Lista de áreas | Etiquetas sem borda e, para o Aprovador ativo, o lápis "Editar áreas", que abre a lista por cima delas, como o seletor de Papel (ajuste de 08/11/2026, para deixar claro o que pode ser alterado) | Q6 |
 | Acesso | Toggle na coluna Ações, como na Base; desativar pede confirmação | Q7 |
 | Proteções | O Aprovador não muda o próprio papel nem o próprio acesso; a organização mantém ao menos um Aprovador ativo | Q8 |
 | Escopo | Dados de exemplo; gravar no backend, consultar o Supabase Auth, efeito nas sessões, isolamento, registro no Histórico e falhas ficam como alterações futuras do spec | — |

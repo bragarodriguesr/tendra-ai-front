@@ -1,5 +1,5 @@
 import React from "react";
-import { Badge, Button, Checkbox, EmptyState, Field, Icon, Input, Select, Switch, Tooltip } from "../../ds/index.js";
+import { Badge, Button, Checkbox, EmptyState, Field, Icon, IconButton, Input, Select, Switch, Tooltip } from "../../ds/index.js";
 import { Page, PageHeader, card, mono } from "../ui.jsx";
 
 /**
@@ -37,8 +37,8 @@ function Cabecalho({ ordem, onOrdenar }) {
 }
 
 /**
- * Áreas (Q6): fechada, só as etiquetas, sem borda nem seta, como o "Geral" do Revisor; o clique nelas
- * abre a lista, que as cobre como a lista de um seletor. Fecha com um clique fora ou com Esc.
+ * Áreas (Q6): só as etiquetas, como o "Geral" do Revisor; quem pode ter as áreas alteradas (Aprovador
+ * ativo) ganha o lápis, que abre a lista por cima das etiquetas. Fecha com um clique fora ou com Esc.
  */
 function Areas({ u, areas, ws }) {
   const raiz = React.useRef(null);
@@ -49,18 +49,17 @@ function Areas({ u, areas, ws }) {
     return () => document.removeEventListener("mousedown", fora);
   }, [u.areasAbertas, u.email, ws]);
 
-  const etiquetas = u.areasNaTela.map((a) => <Badge key={a} tone={a === "Geral" ? "neutral" : "approved"}>{a}</Badge>);
-  if (u.papel !== "Aprovador") return <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>{etiquetas}</div>;
+  const etiquetas = <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>{u.areasNaTela.map((a) => <Badge key={a} tone={a === "Geral" ? "neutral" : "approved"}>{a}</Badge>)}</div>;
+  // Revisor (sem área, PN3) e pessoa inativa: só as etiquetas, sem o lápis.
+  if (u.papel !== "Aprovador" || !u.ativo) return etiquetas;
   return (
-    <div ref={raiz} style={{ position: "relative" }}>
-      <Tooltip content="Escolher as áreas" placement="top">
-        <button
-          type="button" className="tdr-areas" disabled={!u.ativo} onClick={() => ws.abrirAreasDoUsuario(u.email)}
-          aria-haspopup="true" aria-expanded={u.areasAbertas} aria-label={`Áreas de ${u.nome}: ${u.areasNaTela.join(", ")}. Escolher as áreas`}
-          style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: 2, margin: -2, border: "1px solid transparent", borderRadius: "var(--radius-sm)", background: "transparent", cursor: u.ativo ? "pointer" : "not-allowed", textAlign: "left" }}
-        >
-          {etiquetas}
-        </button>
+    <div ref={raiz} style={{ position: "relative", display: "flex", alignItems: "center", gap: 6 }}>
+      {etiquetas}
+      <Tooltip content="Editar áreas" placement="top">
+        <IconButton
+          icon="pencil" label={`Editar áreas de ${u.nome}`} variant="ghost" size="sm" onClick={() => ws.abrirAreasDoUsuario(u.email)}
+          aria-haspopup="true" aria-expanded={u.areasAbertas}
+        />
       </Tooltip>
       {u.areasAbertas ? (
         <div role="group" aria-label={`Áreas de ${u.nome}`} style={{ position: "absolute", top: 0, left: 0, zIndex: 70, width: 260, boxSizing: "border-box", padding: 8, display: "grid", background: "var(--surface-card)", border: "1px solid var(--border-default)", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-popover)" }}>

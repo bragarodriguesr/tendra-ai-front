@@ -23,7 +23,7 @@ constitution: 1.0.0
   - **PN3:** só o Aprovador tem área. Na tela, a pessoa sem área aparece como **"Geral"**: o Revisor sempre, e o Aprovador sem área, que só aprova as perguntas "Geral".
   - **PN1 e PN2:** áreas do Aprovador: Produto, Tecnologia, Segurança e privacidade, Comercial, Jurídico e C-Level. C-Level vale por todas e não se combina com outras.
 - **Protótipo navegável:** `docs/mvp-resposta-rfp/product/prototipo-gestao-de-usuarios.html`, que abre direto no navegador.
-- **Padrão do design system:** cabeçalho de página com rótulo e título; tabela no padrão de Tarefas e da Base; `Badge` para área e situação (áreas ativas e "Ativo" no tom `approved`, de limão; "Geral" e "Inativo" no tom neutro); `Select` para o papel; lista de áreas com `Checkbox`, no padrão do menu do `FilterMenu`; `Switch` com `Tooltip` na coluna Ações, como na Base de conhecimento; `Button`, `Field`, `Input` e `EmptyState`; confirmação no padrão dos diálogos já usados (excluir tarefa, arquivar). Sem cores, fontes nem componentes novos.
+- **Padrão do design system:** cabeçalho de página com rótulo e título; tabela no padrão de Tarefas e da Base; `Badge` para área e situação (áreas ativas e "Ativo" no tom `approved`, de limão; "Geral" e "Inativo" no tom neutro); `Select` para o papel; `IconButton` de lápis para editar as áreas; lista de áreas com `Checkbox`, no padrão do menu do `FilterMenu`; `Switch` com `Tooltip` na coluna Ações, como na Base de conhecimento; `Button`, `Field`, `Input` e `EmptyState`; confirmação no padrão dos diálogos já usados (excluir tarefa, arquivar). Sem cores, fontes nem componentes novos.
 - **Como reproduzir:** não se aplica (funcionalidade nova).
 
 ## Dependências de infraestrutura
@@ -80,7 +80,7 @@ Verificação feita em 08/11/2026, no código.
 ### Cenário Q5: mudar o papel
 - **Given** uma pessoa ativa com papel Revisor
 - **When** o Aprovador muda o papel para Aprovador
-- **Then** o papel muda e a etiqueta "Geral" passa a abrir a lista de áreas
+- **Then** o papel muda e o lápis de editar áreas aparece ao lado da etiqueta "Geral"
 - **When** o Aprovador muda uma pessoa de Aprovador para Revisor
 - **Then** a tela pede confirmação ("Mudar {nome} para Revisor?", com "As áreas de {nome} serão removidas e ela passará a ver tudo como Revisor, área Geral.") e, confirmado, o papel muda e as áreas voltam para "Geral"
 - **And** cancelar mantém o papel e as áreas
@@ -88,15 +88,15 @@ Verificação feita em 08/11/2026, no código.
 ### Cenário Q6: áreas do Aprovador
 - **Given** uma pessoa com papel Aprovador
 - **When** a linha é exibida
-- **Then** com a lista fechada, a coluna Áreas mostra só as etiquetas das áreas ativas, em verde, sem borda de campo nem seta, como a etiqueta "Geral" do Revisor
-- **And** as etiquetas são clicáveis: ao passar o mouse ou com o foco, a borda delas escurece, e a dica é "Escolher as áreas"
-- **When** o Aprovador clica nas etiquetas
-- **Then** a lista abre por cima delas, como a lista do seletor de Papel, com as seis áreas em caixas de seleção e as ativas marcadas
+- **Then** com a lista fechada, a coluna Áreas mostra as etiquetas das áreas ativas, em verde, sem borda de campo nem seta, como a etiqueta "Geral" do Revisor
+- **And** ao lado das etiquetas há o ícone de lápis (`IconButton` do DS, dica "Editar áreas", nome acessível "Editar áreas de {nome}"), que deixa claro que as áreas podem ser alteradas (ajuste de 08/11/2026)
+- **When** o Aprovador clica no lápis
+- **Then** a lista abre por cima das etiquetas, como a lista do seletor de Papel, com as seis áreas em caixas de seleção e as ativas marcadas
 - **And** marcar ou desmarcar uma área muda as áreas na hora; a lista continua aberta para outras escolhas e fecha com um clique fora dela ou com Esc, mostrando as etiquetas atualizadas
 - **And** marcar C-Level desmarca as demais, e marcar outra área desmarca C-Level; a lista mostra a nota "C-Level vale por todas e não se combina com outras. Sem área, aprova só as perguntas Geral."
-- **And** desmarcar todas deixa a etiqueta neutra "Geral", também clicável para abrir a lista
-- **And** para o Revisor a coluna mostra só a etiqueta neutra "Geral", sem abrir lista
-- **And** para a pessoa inativa as etiquetas não abrem a lista
+- **And** desmarcar todas deixa a etiqueta neutra "Geral", com o lápis ao lado
+- **And** o lápis só aparece para quem pode ter as áreas alteradas: o Aprovador ativo, inclusive na própria linha (Q8)
+- **And** para o Revisor e para a pessoa inativa a coluna mostra só as etiquetas, sem o lápis
 
 ### Cenário Q7: desativar e reativar
 - **Given** a coluna Ações, com o toggle do acesso de cada pessoa no padrão da Base de conhecimento (`Switch` do DS com dica: ligado para Ativo, desligado para Inativo)

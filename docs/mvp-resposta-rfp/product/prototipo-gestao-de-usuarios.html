@@ -115,15 +115,15 @@ function confirmar(txt, acao, rotulo) {
   $("cn").onclick = () => { $("aviso").innerHTML = ""; render(); };
   $("cs").onclick = acao;
 }
-// Áreas: fechada, só as etiquetas das áreas ativas, sem borda nem seta, como a etiqueta "Geral" do
-// Revisor; um clique nelas abre a lista, que cobre as etiquetas como a lista de um Select.
+// Áreas: só as etiquetas das áreas ativas, como a etiqueta "Geral" do Revisor; para o Aprovador ativo,
+// o lápis "Editar áreas" abre a lista, que cobre as etiquetas como a lista de um Select.
 function celulaDeAreas(p) {
-  if (p.papel !== "Aprovador") return `<span class="badge">Geral</span>`;
-  const etiquetas = p.areas.length ? p.areas.map((a) => `<span class="badge ok">${a}</span>`).join("") : `<span class="badge">Geral</span>`;
+  const etiquetas = p.papel === "Aprovador" && p.areas.length ? p.areas.map((a) => `<span class="badge ok">${a}</span>`).join("") : `<span class="badge">Geral</span>`;
+  if (p.papel !== "Aprovador" || !p.ativo) return `<div style="display:flex;flex-wrap:wrap;gap:4px">${etiquetas}</div>`;
   const lista = aberto === p.email
     ? `<div class="lista" role="group" aria-label="Áreas de ${p.nome}">${AREAS.map((a) => `<button class="opt" role="menuitemcheckbox" aria-checked="${p.areas.includes(a)}" data-email="${p.email}" data-a="${a}"><span class="box ${p.areas.includes(a) ? "on" : ""}">${p.areas.includes(a) ? '<i class="ti ti-check" aria-hidden="true"></i>' : ""}</span>${a}</button>`).join("")}<div style="font-size:12px;color:#5D6157;padding:4px 8px 2px">C-Level vale por todas e não se combina com outras. Sem área, aprova só as perguntas Geral.</div></div>`
     : "";
-  return `<div style="position:relative"><button class="campo" data-menu="${p.email}" aria-haspopup="true" aria-expanded="${aberto === p.email}" aria-label="Áreas de ${p.nome}: ${p.areas.length ? p.areas.join(", ") : "Geral"}. Clique para escolher." title="Escolher as áreas" ${p.ativo ? "" : "disabled"}>${etiquetas}</button>${lista}</div>`;
+  return `<div style="position:relative;display:flex;align-items:center;gap:6px;flex-wrap:wrap">${etiquetas}<button class="btn" data-menu="${p.email}" aria-haspopup="true" aria-expanded="${aberto === p.email}" aria-label="Editar áreas de ${p.nome}" title="Editar áreas" style="width:30px;min-height:30px;padding:0;justify-content:center;border-color:transparent"><i class="ti ti-pencil" aria-hidden="true"></i></button>${lista}</div>`;
 }
 // Toggle no padrão do Switch do DS (Base de conhecimento): ligado em tinta com o botão limão; desligado em cinza.
 function toggle(p, mim) {

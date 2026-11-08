@@ -89,27 +89,35 @@ test("Cenários Q3 e Q4: formulário só depois do clique, recusas e usuário no
 test("Cenários Q5 e Q6: papel e áreas do Aprovador numa lista sobre as etiquetas", async ({ page }) => {
   await entrar(page);
   await abrirPainel(page);
+  // Revisor: só a etiqueta Geral, sem o lápis.
+  const lapis = (nome) => page.getByRole("button", { name: `Editar áreas de ${nome}` });
+  await expect(lapis("Kadu Mendes")).toHaveCount(0);
   await linha(page, "Kadu Mendes").getByLabel("Papel de Kadu Mendes").selectOption("Aprovador");
-  const etiquetas = page.getByRole("button", { name: /^Áreas de Kadu Mendes/ });
-  await expect(etiquetas).toContainText("Geral");
-  await etiquetas.click();
+  await expect(linha(page, "Kadu Mendes")).toContainText("Geral");
+  await lapis("Kadu Mendes").click();
   const lista = page.getByRole("group", { name: "Áreas de Kadu Mendes" });
   await lista.getByText("Jurídico", { exact: true }).click();
   await lista.getByText("Comercial", { exact: true }).click();
   await page.keyboard.press("Escape");
   await expect(lista).toHaveCount(0);
-  await expect(etiquetas).toHaveAccessibleName(/Jurídico, Comercial/);
+  await expect(linha(page, "Kadu Mendes")).toContainText("Jurídico");
+  await expect(linha(page, "Kadu Mendes")).toContainText("Comercial");
   // C-Level não se combina com outras.
-  await etiquetas.click();
+  await lapis("Kadu Mendes").click();
   await lista.getByText("C-Level", { exact: true }).click();
   await page.mouse.click(5, 5);
-  await expect(etiquetas).toHaveAccessibleName(/Áreas de Kadu Mendes: C-Level\./);
-  // Aprovador → Revisor pede confirmação e remove as áreas.
+  await expect(lista).toHaveCount(0);
+  await expect(linha(page, "Kadu Mendes")).toContainText("C-Level");
+  await expect(linha(page, "Kadu Mendes")).not.toContainText("Jurídico");
+  // Inativa: sem lápis. A própria linha (Marcelo Vieira) pode mudar as próprias áreas.
+  await expect(lapis("Paula Rocha")).toHaveCount(0);
+  await expect(lapis("Marcelo Vieira")).toBeVisible();
+  // Aprovador → Revisor pede confirmação, remove as áreas e o lápis.
   await linha(page, "Kadu Mendes").getByLabel("Papel de Kadu Mendes").selectOption("Revisor");
   await expect(page.getByRole("alertdialog")).toContainText("Mudar Kadu Mendes para Revisor?");
   await page.getByRole("button", { name: "Mudar para Revisor" }).click();
   await expect(linha(page, "Kadu Mendes")).toContainText("Geral");
-  await expect(page.getByRole("button", { name: /^Áreas de Kadu Mendes/ })).toHaveCount(0);
+  await expect(lapis("Kadu Mendes")).toHaveCount(0);
 });
 
 test("Cenários Q7 e Q8: toggle do acesso e a própria linha protegida", async ({ page }) => {
