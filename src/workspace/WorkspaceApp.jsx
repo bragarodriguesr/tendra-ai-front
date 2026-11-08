@@ -5,7 +5,7 @@ import { buildView } from "./viewModel.js";
 import { MENSAGEM_DADOS_SINTETICOS } from "../api.js";
 import { UserMenu } from "./UserMenu.jsx";
 import { AlertsMenu } from "./AlertsMenu.jsx";
-import { ConfirmArchiveTaskDialog, ConfirmDeleteTaskDialog, ConfirmDownloadDialog, ConfirmEditDialog, FinishTaskDialog, SourceDrawer, TaskDetailsDrawer, ToastHost } from "./overlays.jsx";
+import { ConfirmArchiveTaskDialog, ConfirmDeleteTaskDialog, ConfirmDownloadDialog, ConfirmEditDialog, ConfirmUserChangeDialog, FinishTaskDialog, SourceDrawer, TaskDetailsDrawer, ToastHost } from "./overlays.jsx";
 import { Dashboard } from "./screens/Dashboard.jsx";
 import { Tasks } from "./screens/Tasks.jsx";
 import { NewTask } from "./screens/NewTask.jsx";
@@ -15,11 +15,12 @@ import { Export } from "./screens/Export.jsx";
 import { History } from "./screens/History.jsx";
 import { Base } from "./screens/Base.jsx";
 import { Onboarding } from "./screens/Onboarding.jsx";
+import { Users } from "./screens/Users.jsx";
 
 const TOPBAR_H = BRAND_BAR_H;
 const MOBILE_BELOW = 900;
 
-const SCREENS = { dashboard: Dashboard, tasks: Tasks, finalizadas: Tasks, arquivadas: Tasks, new: NewTask, task: TaskDetail, export: Export, history: History, base: Base, onboarding: Onboarding };
+const SCREENS = { dashboard: Dashboard, tasks: Tasks, finalizadas: Tasks, arquivadas: Tasks, new: NewTask, task: TaskDetail, export: Export, history: History, base: Base, onboarding: Onboarding, usuarios: Users };
 
 function WorkspaceSidebar({ v, ws, state, collapsed, onSite }) {
   const { isMobile, closeReason } = useSidebar();
@@ -98,6 +99,7 @@ function WorkspaceLayout({ state, ws, onSite, onLogout }) {
           {v.downloadTask ? <ConfirmDownloadDialog task={v.downloadTask} onCancel={() => ws.setState({ confirmDownload: null })} onConfirm={ws.confirmDownloadSheet} /> : null}
           {v.finishingTask ? <FinishTaskDialog task={v.finishingTask} busy={state.mudandoSituacao} onCancel={() => ws.setState({ finishing: null })} onConfirm={ws.finishTask} /> : null}
           {v.archivingTask ? <ConfirmArchiveTaskDialog task={v.archivingTask} busy={state.mudandoSituacao} onCancel={() => ws.setState({ archiving: null })} onConfirm={ws.archiveTask} /> : null}
+          {v.painel.confirmacao ? <ConfirmUserChangeDialog confirmacao={v.painel.confirmacao} onCancel={() => ws.setState({ painelConfirmacao: null })} onConfirm={ws.confirmarMudancaDeUsuario} /> : null}
         </div>
       </div>
     </div>

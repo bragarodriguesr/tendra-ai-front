@@ -24,6 +24,7 @@ Chegar a um backend que **prove a hipótese central do MVP** (a pessoa aceita as
 | **L. Busca de perguntas** | Barra de busca por palavras na Revisão e nos detalhes da tarefa, a mesma nas duas telas, junto com o filtro por estado | B1 a B17 de `SPEC_FASE_L.md` |
 | **M. Filtro pelo progresso** | Barra e legenda de estados dos detalhes da tarefa acionam o filtro por estado; o número do cartão segue o filtro | M1 a M12 de `SPEC_FASE_M.md` |
 | **P. Cabeçalho dos detalhes** | Cabeçalho com ordenação na tabela dos detalhes da tarefa (Código, Pergunta, Área e Status), com os alertas na coluna Status | P1 a P11 de `SPEC_FASE_P.md` |
+| **Q. Gestão de usuários** | "Painel de Usuários" no menu "Gestão de acessos", só para o Aprovador, com dados de exemplo no navegador | Q1 a Q8 e Q11 de `SPEC_FASE_Q.md` |
 
 > **Situação da fase A (23/10/2026):** A1 feita e execuções reais da A5 a A10 concluídas (`gerar-amostra`, `responder` e `avaliar` com Sonnet 5.5 e Opus 5.5). Com as instruções `geracao-v3` e `conflito-v2` e a checagem por parágrafo (cenário 18 revisto), o Opus 5.5 atinge todos os critérios medidos pelo código na RFP-01 e na RFP-02 (3 execuções). Falta só a lista de fidelidade preenchida por uma pessoa para fechar o portão e registrar o modelo em P8.
 
@@ -1024,6 +1025,43 @@ Pedida em 04/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 ### Situação (07/11/2026): implementada, sem commit
 - Implementada sobre a `main` de 07/11/2026 (até o PR #94), com os conflitos em `TaskDetail.jsx` e `viewModel.js` resolvidos.
 - 7 testes unitários novos (`npm test`, 27 no total) e 12 de ponta a ponta da fase P passando; suíte de ponta a ponta completa verde (94 testes).
+
+## Fase Q: gestão de usuários pelo Aprovador
+
+Pedida em 08/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/spec/SPEC_FASE_Q.md` (cenários Q1 a Q8 e Q11, `approved`), e o protótipo navegável, em `docs/mvp-resposta-rfp/product/prototipo-gestao-de-usuarios.html`. Só front, com **dados de exemplo no navegador**: nada é gravado e nenhuma requisição é feita.
+
+**Objetivo:** o Aprovador vê e gere os acessos da organização no "Painel de Usuários", no menu "Gestão de acessos" (abaixo da Base de conhecimento, só para o Aprovador): adicionar usuário (nasce Revisor, área Geral), mudar papel e áreas, desativar e reativar o acesso.
+
+### Decisões
+
+| Tema | Decisão | Cenários |
+|---|---|---|
+| Quem gere | Qualquer Aprovador; sem papel novo de Administrador | Q1 |
+| Áreas | Só o Aprovador tem área (PN3 da fase N); o Revisor aparece com "Geral" | Q2, Q6 |
+| Cadastro | A conta e a senha continuam no painel do Supabase; a tela só adiciona a pessoa pelo e-mail da conta | Q3 |
+| Lista de áreas | Etiquetas sem borda; o clique abre a lista por cima delas, como o seletor de Papel | Q6 |
+| Acesso | Toggle na coluna Ações, como na Base; desativar pede confirmação | Q7 |
+| Proteções | O Aprovador não muda o próprio papel nem o próprio acesso; a organização mantém ao menos um Aprovador ativo | Q8 |
+| Escopo | Dados de exemplo; gravar no backend, consultar o Supabase Auth, efeito nas sessões, isolamento, registro no Histórico e falhas ficam como alterações futuras do spec | — |
+
+### Etapas
+
+### Q1. Regras puras
+- `src/workspace/usuarios.js`: dados de exemplo, novo usuário, recusas do formulário, áreas ao marcar, ordenação e contagem de Aprovadores ativos, com testes unitários (`test/usuarios.test.js`).
+
+### Q2. Estado e ações
+- `painelUsuarios`, `painelOrdem`, `painelAreasAbertas`, `painelAdicionando` e `painelConfirmacao` no `useWorkspace`, com as ações da tela; Esc fecha a lista de áreas e a confirmação.
+
+### Q3. Menu e tela
+- Grupo "Gestão de acessos" no `viewModel`, só para o Aprovador; `screens/Users.jsx`; `ConfirmUserChangeDialog` em `overlays.jsx`.
+
+### Q4. Testes de ponta a ponta
+- `e2e/painelDeUsuarios.spec.js`, com os cenários Q1 a Q8 e Q11.
+
+### Situação (08/11/2026): implementada
+- 7 testes unitários novos (`npm test`, 34 no total) e 7 de ponta a ponta da fase Q passando; suíte de ponta a ponta completa verde (103 testes).
+- O teste do menu lateral (`e2e/sidebar.spec.js`, US1) passou a contar 11 links: a pessoa padrão do modo local é Aprovador e vê "Usuários".
+- Conferida no navegador no computador.
 
 ## Definição de pronto (proposta, P10)
 

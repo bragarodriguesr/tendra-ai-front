@@ -4,6 +4,7 @@ import { correspondeABusca, termosDaBusca } from "./buscaDePerguntas.js";
 import { numeroDoCartao } from "./filtroPeloProgresso.js";
 import { correspondeAExportacao, ordenarParaExportacao } from "./cicloDaTarefa.js";
 import { ordenarLinhas } from "./ordenacaoDaTabela.js";
+import { AREAS_DO_APROVADOR, ordenarUsuarios } from "./usuarios.js";
 import { hojeIso, contarPalavras, MINIMO_DE_PALAVRAS_DA_REVISAO } from "../api.js";
 import { cnpjSemMascara, cnpjValido } from "./cnpj.js";
 import { AREAS_DOS_ITENS, areaDoItem, areasDaSessao, areasPreferidas, motivoDeAreaRestrita, podeAprovarArea } from "./areas.js";
@@ -175,7 +176,11 @@ export function buildView(s, ws) {
     ] },
     { label: "Base", items: [
       { value: "base", label: "Base de conhecimento", icon: "database", onClick: go("base") }
-    ] }
+    ] },
+    // Fase Q (Q1): só para o Aprovador, abaixo da Base de conhecimento.
+    ...(isA ? [{ label: "Gestão de acessos", items: [
+      { value: "usuarios", label: "Usuários", icon: "users", onClick: go("usuarios") }
+    ] }] : [])
   ];
   // Nos detalhes da tarefa, o menu marca a lista da situação dela.
   const navValue = s.screen === "task" ? (((t) => (t && t.isFinal ? "finalizadas" : t && t.isArchived ? "arquivadas" : "tasks"))(ws.taskInfo(s.taskId, s))) : s.screen;
@@ -641,7 +646,20 @@ export function buildView(s, ws) {
     errFile: f.fileError || (tried && !f.file ? "Selecione a planilha de perguntas (.xlsx)." : null)
   };
 
+  // Painel de Usuários (fase Q): linhas na ordenação escolhida; a própria linha não muda papel nem acesso (Q8).
+  const eu = ws.name();
+  const painel = {
+    ativos: s.painelUsuarios.filter((u) => u.ativo).length,
+    ordem: s.painelOrdem, adicionando: s.painelAdicionando, areasDoAprovador: AREAS_DO_APROVADOR,
+    linhas: ordenarUsuarios(s.painelUsuarios, s.painelOrdem).map((u) => ({
+      ...u, propria: u.nome === eu, areasAbertas: s.painelAreasAbertas === u.email,
+      areasNaTela: u.areas.length ? u.areas : ["Geral"]
+    })),
+    confirmacao: s.painelConfirmacao ? { ...s.painelConfirmacao, usuario: s.painelUsuarios.find((u) => u.email === s.painelConfirmacao.email) } : null
+  };
+
   return {
+    painel,
     isA, online, podeExportar, userName: ws.name(), navGroups, navValue,
     // Áreas do Aprovador da sessão, no menu do usuário (fase N, cenário N1).
     userAreas: areasDaSessao(s) || [],

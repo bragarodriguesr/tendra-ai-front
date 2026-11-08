@@ -29,11 +29,12 @@ async function enter(page, { server = false, shared = false, documents = 0 } = {
 }
 
 // Fase O (PO8): Tarefas tem três subitens; aberto, o item pai abre Em andamento, que fica marcado.
-const expandedLabels = ['Primeiros passos', 'Dashboard', 'Em andamento', 'Finalizadas', 'Arquivadas', 'Revisão', 'Exportação', 'Histórico', 'Base de conhecimento'];
+// Fase Q (Q1): a pessoa padrão do modo local é Aprovador, que vê também "Usuários", em Gestão de acessos.
+const expandedLabels = ['Primeiros passos', 'Dashboard', 'Em andamento', 'Finalizadas', 'Arquivadas', 'Revisão', 'Exportação', 'Histórico', 'Base de conhecimento', 'Usuários'];
 
 test('US1: sete destinos, três subitens de Tarefas, seleção, contadores e alvos do DS', async ({ page }) => {
   await enter(page);
-  await expect(nav(page).getByRole('link')).toHaveCount(10);
+  await expect(nav(page).getByRole('link')).toHaveCount(11);
   await link(page, 'Tarefas').click();
   await expect(link(page, 'Em andamento')).toHaveAttribute('aria-current', 'page');
   await expect(link(page, 'Tarefas')).not.toHaveAttribute('aria-current', 'page');
