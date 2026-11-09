@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  MENSAGEM_APROVADOR_SEM_AREA, MENSAGEM_SELECIONE_AREA,
   MENSAGEM_EMAIL_INVALIDO, MENSAGEM_JA_NA_LISTA, MENSAGEM_NOME_VAZIO, MENSAGEM_OUTRA_ORGANIZACAO, MENSAGEM_PESSOA_NAO_ENCONTRADA, MENSAGEM_PROPRIO_ACESSO,
   MENSAGEM_PROVEDOR_FORA, MENSAGEM_SEM_APROVADOR, MENSAGEM_SEM_CONTA, MENSAGEM_SO_APROVADOR, alterarUsuario,
 } from "../../src/autenticacao/gestaoDeUsuarios.ts";
@@ -127,10 +128,49 @@ describe("Cenários Q3, Q4 e Q13 · adicionar usuário", () => {
   });
 });
 
+describe("Fase T · cenários T1.7 e T1.8 · o Aprovador precisa de pelo menos uma área", () => {
+  const recusa = async (corpo: object, id: string) => {
+    const resposta = await pedir(await entrar(MARCELO), "PATCH", `/api/gestao/usuarios/${id}`, corpo);
+    return { status: resposta.statusCode, erro: resposta.json().erro };
+  };
+
+  it("promover sem áreas, ou com a lista vazia, é recusado e nada é gravado", async () => {
+    expect(await perfil(KADU.id)).toEqual({ papel: "Revisor", areas: [], ativo: true });
+    for (const corpo of [{ papel: "Aprovador" }, { papel: "Aprovador", areas: [] }, { papel: "Aprovador", areas: ["  "] }]) {
+      expect(await recusa(corpo, KADU.id)).toEqual({ status: 400, erro: MENSAGEM_SELECIONE_AREA });
+    }
+    expect(await perfil(KADU.id)).toEqual({ papel: "Revisor", areas: [], ativo: true });
+  });
+
+  it("o Aprovador com área não fica sem nenhuma; trocar C-Level por outra área continua aceito", async () => {
+    expect(await perfil(CARLA.id)).toEqual({ papel: "Aprovador", areas: ["C-Level"], ativo: true });
+    expect(await recusa({ areas: [] }, CARLA.id)).toEqual({ status: 400, erro: MENSAGEM_APROVADOR_SEM_AREA });
+    expect(await perfil(CARLA.id)).toEqual({ papel: "Aprovador", areas: ["C-Level"], ativo: true });
+    const cookie = await entrar(MARCELO);
+    expect((await pedir(cookie, "PATCH", `/api/gestao/usuarios/${CARLA.id}`, { areas: ["Produto"] })).json().usuario.areas).toEqual(["Produto"]);
+    expect((await pedir(cookie, "PATCH", `/api/gestao/usuarios/${CARLA.id}`, { areas: ["C-Level"] })).json().usuario.areas).toEqual(["C-Level"]);
+  });
+
+  it("quem já é Aprovador sem área: acesso e rebaixamento continuam aceitos, e a primeira área entra", async () => {
+    const semArea = "99999999-9999-4999-8999-9999999999a1";
+    await gravarPerfil(banco, { id: semArea, email: "sem.area@tendra.test", nome: "Sem Área", papel: "Aprovador", organizacaoId: ORGANIZACAO_INICIAL });
+    const cookie = await entrar(MARCELO);
+    expect((await pedir(cookie, "PATCH", `/api/gestao/usuarios/${semArea}`, { ativo: false })).json().usuario).toMatchObject({ papel: "Aprovador", areas: [], ativo: false });
+    expect((await pedir(cookie, "PATCH", `/api/gestao/usuarios/${semArea}`, { ativo: true })).json().usuario).toMatchObject({ papel: "Aprovador", areas: [], ativo: true });
+    expect((await pedir(cookie, "PATCH", `/api/gestao/usuarios/${semArea}`, { areas: ["Comercial"] })).json().usuario.areas).toEqual(["Comercial"]);
+    expect(await recusa({ areas: [] }, semArea)).toEqual({ status: 400, erro: MENSAGEM_APROVADOR_SEM_AREA });
+    // De volta a sem área, direto no banco: rebaixar continua aceito.
+    await banco.query("UPDATE perfis SET areas = '{}' WHERE id = $1", [semArea]);
+    expect((await pedir(cookie, "PATCH", `/api/gestao/usuarios/${semArea}`, { papel: "Revisor" })).json().usuario).toMatchObject({ papel: "Revisor", areas: [] });
+    await banco.query("DELETE FROM perfis WHERE id = $1", [semArea]);
+  });
+});
+
 describe("Cenários Q5, Q6 e Q8 · papel e áreas", () => {
   it("Revisor vira Aprovador e recebe áreas; C-Level combinado e área no Revisor são recusados", async () => {
     const cookie = await entrar(MARCELO);
-    expect((await pedir(cookie, "PATCH", `/api/gestao/usuarios/${KADU.id}`, { papel: "Aprovador" })).json().usuario).toMatchObject({ papel: "Aprovador", areas: [] });
+    // Fase T (T1.4): o papel e as áreas entram juntos, num só pedido.
+    expect((await pedir(cookie, "PATCH", `/api/gestao/usuarios/${KADU.id}`, { papel: "Aprovador", areas: ["Jurídico"] })).json().usuario).toMatchObject({ papel: "Aprovador", areas: ["Jurídico"] });
     expect((await pedir(cookie, "PATCH", `/api/gestao/usuarios/${KADU.id}`, { areas: ["Jurídico", "Comercial"] })).json().usuario.areas).toEqual(["Jurídico", "Comercial"]);
     const combinado = await pedir(cookie, "PATCH", `/api/gestao/usuarios/${KADU.id}`, { areas: ["C-Level", "Jurídico"] });
     expect(combinado.statusCode).toBe(400);
@@ -193,7 +233,7 @@ describe("Cenários Q7 e Q9 · acesso e efeito nas sessões", () => {
   it("a mudança de papel vale no próximo pedido da pessoa, sem novo login", async () => {
     const cookieDaNova = await entrar(NOVA);
     expect((await pedir(cookieDaNova, "GET", "/api/gestao/usuarios")).statusCode).toBe(403);
-    await pedir(await entrar(MARCELO), "PATCH", `/api/gestao/usuarios/${NOVA.id}`, { papel: "Aprovador" });
+    await pedir(await entrar(MARCELO), "PATCH", `/api/gestao/usuarios/${NOVA.id}`, { papel: "Aprovador", areas: ["Produto"] });
     expect((await pedir(cookieDaNova, "GET", "/api/gestao/usuarios")).statusCode).toBe(200);
   });
 

@@ -25,6 +25,19 @@ export function areasAoMarcar(areas, area) {
   return area === C_LEVEL ? [C_LEVEL] : [...areas.filter((a) => a !== C_LEVEL), area];
 }
 
+/**
+ * Fase T (docs/mvp-resposta-rfp/spec/SPEC_FASE_T.md): o Aprovador precisa de pelo menos uma área. As
+ * mensagens são as mesmas do backend (backend/src/autenticacao/gestaoDeUsuarios.ts), que é quem decide.
+ */
+export const MENSAGEM_SELECIONE_AREA = "Selecione pelo menos uma área.";
+export const MENSAGEM_APROVADOR_SEM_AREA = "O Aprovador precisa de pelo menos uma área.";
+
+/** T1.6: quem tem área não fica sem nenhuma. Quem já está sem área (T1.7) não é afetado. */
+export const ficariaSemArea = (areasAtuais, areasNovas) => areasAtuais.length > 0 && areasNovas.length === 0;
+
+/** Áreas no texto dos avisos: "Jurídico", "Jurídico e Comercial", "Produto, Jurídico e Comercial". */
+export const areasEmTexto = (areas) => (areas.length <= 1 ? areas.join("") : `${areas.slice(0, -1).join(", ")} e ${areas[areas.length - 1]}`);
+
 const texto = (a, b) => a.localeCompare(b, "pt-BR", { sensitivity: "base" });
 
 /** Valor de cada coluna ordenável (Q2b); a coluna Ações não ordena. */

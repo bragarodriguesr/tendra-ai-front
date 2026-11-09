@@ -1142,8 +1142,14 @@ Pedida em 09/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 - **Etapa T1:** T1-A backend; T1-B confirmação; T1-C lista do lápis; T1-D testes do front; T1-E publicação e conferência.
 - **Etapa T2:** T2-A backend; T2-B formulário; T2-C testes do front; T2-D publicação e conferência.
 
-### Situação (09/11/2026): planejada
-- Spec aprovado; implementação ainda não iniciada.
+### Situação (09/11/2026): etapa T1 implementada (T1-A a T1-D), sem commit
+- Spec e plano no `main` (PR #107).
+- **T1-A (backend):** `alterarUsuario` recusa com 400 a promoção sem área ("Selecione pelo menos uma área.") e a lista de áreas vazia para o Aprovador ("O Aprovador precisa de pelo menos uma área."). A recusa só vale quando o pedido promove ou envia áreas: quem já é Aprovador sem área continua podendo ser desativado, reativado ou rebaixado. 3 testes novos em `gestaoDeUsuarios.test.ts` e 2 ajustados (promoção com áreas no mesmo pedido).
+- **T1-B (confirmação):** escolher "Aprovador" abre "Mudar {nome} para Aprovador?" com as áreas em caixas de seleção; sem área, o erro aparece e a confirmação continua aberta; com área, papel e áreas vão num só pedido, com o aviso "{nome} agora é Aprovador de {áreas}."
+- **T1-C (lápis):** desmarcar a única área mostra o aviso "Área não removida" e não grava; a nota da lista mudou.
+- **T1-D (testes):** 3 testes unitários novos (`npm test`, 39 no total); em `e2e/painelDeUsuarios.spec.js`, 4 testes novos (T1.1 a T1.9) e 3 da fase Q ajustados para a promoção pela confirmação.
+- Conferida no navegador no modo local.
+- T1-E (publicação e conferência) e a etapa T2 pendentes.
 
 ## Definição de pronto (proposta, P10)
 

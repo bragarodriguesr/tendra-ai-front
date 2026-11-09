@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { USUARIOS_DE_EXEMPLO, aprovadoresAtivos, areasAoMarcar, novoUsuario, ordenarUsuarios, recusaDoNovoUsuario } from "../src/workspace/usuarios.js";
+import { MENSAGEM_APROVADOR_SEM_AREA, MENSAGEM_SELECIONE_AREA, USUARIOS_DE_EXEMPLO, aprovadoresAtivos, areasAoMarcar, areasEmTexto, ficariaSemArea, novoUsuario, ordenarUsuarios, recusaDoNovoUsuario } from "../src/workspace/usuarios.js";
 
 const nomes = (lista) => lista.map((u) => u.nome);
 
@@ -47,5 +47,28 @@ describe("Cenário Q8 · ao menos um Aprovador ativo", () => {
   it("conta só os Aprovadores ativos", () => {
     assert.equal(aprovadoresAtivos(USUARIOS_DE_EXEMPLO), 2);
     assert.equal(aprovadoresAtivos(USUARIOS_DE_EXEMPLO.map((u) => (u.nome === "Carla Diretora" ? { ...u, ativo: false } : u))), 1);
+  });
+});
+
+describe("Fase T · cenário T1.6 · o Aprovador não fica sem área", () => {
+  it("quem tem área não fica sem nenhuma; quem já está sem área não é afetado (T1.7)", () => {
+    assert.equal(ficariaSemArea(["Jurídico"], areasAoMarcar(["Jurídico"], "Jurídico")), true);
+    assert.equal(ficariaSemArea(["Jurídico", "Comercial"], areasAoMarcar(["Jurídico", "Comercial"], "Jurídico")), false);
+    assert.equal(ficariaSemArea(["C-Level"], areasAoMarcar(["C-Level"], "Produto")), false);
+    assert.equal(ficariaSemArea([], areasAoMarcar([], "Produto")), false);
+    assert.equal(ficariaSemArea([], []), false);
+  });
+
+  it("as mensagens são as do backend", () => {
+    assert.equal(MENSAGEM_SELECIONE_AREA, "Selecione pelo menos uma área.");
+    assert.equal(MENSAGEM_APROVADOR_SEM_AREA, "O Aprovador precisa de pelo menos uma área.");
+  });
+});
+
+describe("Fase T · cenário T1.4 · áreas no aviso", () => {
+  it("uma, duas e três áreas", () => {
+    assert.equal(areasEmTexto(["Jurídico"]), "Jurídico");
+    assert.equal(areasEmTexto(["Jurídico", "Comercial"]), "Jurídico e Comercial");
+    assert.equal(areasEmTexto(["Produto", "Jurídico", "Comercial"]), "Produto, Jurídico e Comercial");
   });
 });

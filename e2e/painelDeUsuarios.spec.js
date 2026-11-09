@@ -21,6 +21,15 @@ async function abrirPainel(page) {
 }
 
 const linha = (page, nome) => page.getByRole("row").filter({ hasText: nome });
+const dialogo = (page) => page.getByRole("alertdialog");
+/** Fase T (T1.1 a T1.4): Revisor → Aprovador pela confirmação, marcando as áreas. */
+async function promover(page, nome, areas) {
+  await page.getByLabel(`Papel de ${nome}`).selectOption("Aprovador");
+  await expect(dialogo(page)).toContainText(`Mudar ${nome} para Aprovador?`);
+  for (const area of areas) await dialogo(page).getByText(area, { exact: true }).click();
+  await dialogo(page).getByRole("button", { name: "Mudar para Aprovador" }).click();
+  await expect(dialogo(page)).toHaveCount(0);
+}
 const nomes = async (page) => (await page.getByRole("row").filter({ has: page.locator("span") }).allInnerTexts())
   .map((t) => t.split("\n")[0]).filter((t) => !/^Pessoa/i.test(t));
 
@@ -92,11 +101,11 @@ test("Cenários Q5 e Q6: papel e áreas do Aprovador numa lista sobre as etiquet
   // Revisor: só a etiqueta Geral, sem o lápis.
   const lapis = (nome) => page.getByRole("button", { name: `Editar áreas de ${nome}` });
   await expect(lapis("Kadu Mendes")).toHaveCount(0);
-  await linha(page, "Kadu Mendes").getByLabel("Papel de Kadu Mendes").selectOption("Aprovador");
-  await expect(linha(page, "Kadu Mendes")).toContainText("Geral");
+  // Fase T (T1.1 a T1.4): a promoção passa pela confirmação, já com uma área.
+  await promover(page, "Kadu Mendes", ["Jurídico"]);
+  await expect(linha(page, "Kadu Mendes")).toContainText("Jurídico");
   await lapis("Kadu Mendes").click();
-  const lista = page.getByRole("group", { name: "Áreas de Kadu Mendes" });
-  await lista.getByText("Jurídico", { exact: true }).click();
+  const lista = page.getByRole("group", { name: "Áreas de Kadu Mendes" }).last();
   await lista.getByText("Comercial", { exact: true }).click();
   await page.keyboard.press("Escape");
   await expect(lista).toHaveCount(0);
@@ -182,6 +191,7 @@ async function entrarNoPublicado(page, { falharLista = false } = {}) {
       const mudanca = route.request().postDataJSON();
       estado.alteracoes.push({ id: patch[1], mudanca });
       if (estado.falharPatch) return route.fulfill({ status: 503, json: { erro: "O serviço está fora do ar." } });
+      if (estado.recusaDoPatch) return route.fulfill({ status: estado.recusaDoPatch.status, json: { erro: estado.recusaDoPatch.erro } });
       estado.usuarios = estado.usuarios.map((u) => (u.id === patch[1] ? { ...u, ...mudanca, ...(mudanca.papel === "Revisor" ? { areas: [] } : null) } : u));
       return route.fulfill({ json: { usuario: estado.usuarios.find((u) => u.id === patch[1]) } });
     }
@@ -233,21 +243,25 @@ test("Publicado Q3, Q4 e Q13: adicionar pela rota, com as recusas do backend", a
 
 test("Publicado Q5, Q6 e Q7: papel, áreas da rota e acesso gravados pela rota", async ({ page }) => {
   const estado = await entrarNoPublicado(page);
-  await linhaPorEmail(page, REVISORA.email).getByLabel("Papel de Beatriz Lima").selectOption("Aprovador");
-  await expect(page.getByRole("button", { name: "Editar áreas de Beatriz Lima" })).toBeVisible();
+  // Fase T (T1.1 e T1.4): a confirmação usa as áreas da rota (DF7) e grava papel e áreas num só pedido.
+  await page.getByLabel("Papel de Beatriz Lima").selectOption("Aprovador");
+  await expect(dialogo(page).getByText("Produto", { exact: true })).toHaveCount(0);
+  await dialogo(page).getByText("Comercial", { exact: true }).click();
+  await dialogo(page).getByRole("button", { name: "Mudar para Aprovador" }).click();
+  await expect(linhaPorEmail(page, REVISORA.email)).toContainText("Comercial");
   await page.getByRole("button", { name: "Editar áreas de Beatriz Lima" }).click();
   const lista = page.getByRole("group", { name: "Áreas de Beatriz Lima" });
-  // A lista suspensa usa as áreas da rota (DF7).
+  // A lista do lápis também usa as áreas da rota.
   await expect(lista.getByText("Produto", { exact: true })).toHaveCount(0);
-  await lista.getByText("Comercial", { exact: true }).click();
-  await expect(linhaPorEmail(page, REVISORA.email)).toContainText("Comercial");
+  await lista.getByText("Tecnologia", { exact: true }).click();
+  await expect(linhaPorEmail(page, REVISORA.email)).toContainText("Tecnologia");
   await page.keyboard.press("Escape");
   await linhaPorEmail(page, HOMONIMO.email).getByRole("switch").click({ force: true });
   await page.getByRole("button", { name: "Desativar acesso" }).click();
   await expect(linhaPorEmail(page, HOMONIMO.email)).toContainText("Inativo");
   expect(estado.alteracoes).toEqual([
-    { id: REVISORA.id, mudanca: { papel: "Aprovador" } },
-    { id: REVISORA.id, mudanca: { areas: ["Comercial"] } },
+    { id: REVISORA.id, mudanca: { papel: "Aprovador", areas: ["Comercial"] } },
+    { id: REVISORA.id, mudanca: { areas: ["Comercial", "Tecnologia"] } },
     { id: HOMONIMO.id, mudanca: { ativo: false } }
   ]);
 });
@@ -259,8 +273,148 @@ test("Publicado Q13: erro ao gravar não muda a linha; erro ao listar mostra a m
   await page.getByRole("button", { name: "Tentar de novo" }).click();
   await expect(linhaPorEmail(page, REVISORA.email)).toBeVisible();
   estado.falharPatch = true;
-  await linhaPorEmail(page, REVISORA.email).getByLabel("Papel de Beatriz Lima").selectOption("Aprovador");
+  await page.getByLabel("Papel de Beatriz Lima").selectOption("Aprovador");
+  await dialogo(page).getByText("Comercial", { exact: true }).click();
+  await dialogo(page).getByRole("button", { name: "Mudar para Aprovador" }).click();
   // O aviso aparece na tela e na região lida pelos leitores de tela.
   await expect(page.getByText("Mudança não gravada").first()).toBeVisible();
   await expect(linhaPorEmail(page, REVISORA.email).getByLabel("Papel de Beatriz Lima")).toHaveValue("Revisor");
+});
+
+// Fase T, etapa T1 (docs/mvp-resposta-rfp/spec/SPEC_FASE_T.md): confirmação com áreas ao mudar para
+// Aprovador e o mínimo de uma área.
+const AREAS = ["Produto", "Tecnologia", "Segurança e privacidade", "Comercial", "Jurídico", "C-Level"];
+const marcadas = async (grupo) => {
+  const nomes = [];
+  for (const area of AREAS) if (await grupo.getByRole("checkbox", { name: area, exact: true }).isChecked()) nomes.push(area);
+  return nomes;
+};
+
+test("Fase T · T1.1 a T1.5: confirmação com áreas ao mudar para Aprovador, erro sem área e cancelar", async ({ page }) => {
+  await entrar(page);
+  await abrirPainel(page);
+  const papel = page.getByLabel("Papel de Kadu Mendes");
+  const confirmar = dialogo(page).getByRole("button", { name: "Mudar para Aprovador" });
+
+  // T1.1: nada é gravado ao escolher; a confirmação traz as seis áreas, todas desmarcadas.
+  await papel.selectOption("Aprovador");
+  await expect(dialogo(page)).toContainText("Mudar Kadu Mendes para Aprovador?");
+  await expect(dialogo(page)).toContainText("Escolha as áreas que Kadu Mendes vai aprovar.");
+  await expect(dialogo(page)).toContainText("C-Level vale por todas e não se combina com outras.");
+  await expect(dialogo(page).getByRole("checkbox")).toHaveCount(6);
+  expect(await marcadas(dialogo(page))).toEqual([]);
+  await expect(dialogo(page).getByRole("button", { name: "Cancelar" })).toBeFocused();
+  await expect(papel).toHaveValue("Revisor");
+
+  // T1.2: sem área, o erro aparece, a confirmação continua aberta e nada muda.
+  await confirmar.click();
+  await expect(dialogo(page).getByRole("alert")).toHaveText("Selecione pelo menos uma área.");
+  await expect(papel).toHaveValue("Revisor");
+
+  // T1.2 e T1.3: marcar limpa o erro; C-Level não se combina com outras.
+  await dialogo(page).getByText("Jurídico", { exact: true }).click();
+  await expect(dialogo(page).getByRole("alert")).toHaveCount(0);
+  await dialogo(page).getByText("C-Level", { exact: true }).click();
+  expect(await marcadas(dialogo(page))).toEqual(["C-Level"]);
+  await dialogo(page).getByText("Comercial", { exact: true }).click();
+  expect(await marcadas(dialogo(page))).toEqual(["Comercial"]);
+
+  // T1.5: cancelar não grava; reabrir começa sem áreas; Esc também fecha.
+  await dialogo(page).getByRole("button", { name: "Cancelar" }).click();
+  await expect(dialogo(page)).toHaveCount(0);
+  await expect(papel).toHaveValue("Revisor");
+  await expect(page.getByRole("button", { name: "Editar áreas de Kadu Mendes" })).toHaveCount(0);
+  await papel.selectOption("Aprovador");
+  expect(await marcadas(dialogo(page))).toEqual([]);
+  await page.keyboard.press("Escape");
+  await expect(dialogo(page)).toHaveCount(0);
+  await expect(papel).toHaveValue("Revisor");
+
+  // T1.4: com áreas, o papel e as etiquetas mudam juntos, com o aviso.
+  await promover(page, "Kadu Mendes", ["Jurídico", "Comercial"]);
+  await expect(papel).toHaveValue("Aprovador");
+  await expect(linha(page, "Kadu Mendes")).toContainText("Jurídico");
+  await expect(linha(page, "Kadu Mendes")).toContainText("Comercial");
+  await expect(page.getByRole("button", { name: "Editar áreas de Kadu Mendes" })).toBeVisible();
+  await expect(page.getByText("Kadu Mendes agora é Aprovador de Jurídico e Comercial.").first()).toBeVisible();
+});
+
+test("Fase T · T1.6: a única área do Aprovador não sai pela lista do lápis", async ({ page }) => {
+  await entrar(page);
+  await abrirPainel(page);
+  // Carla Diretora só tem C-Level: desmarcar avisa e a caixa continua marcada.
+  await page.getByRole("button", { name: "Editar áreas de Carla Diretora" }).click();
+  const lista = page.getByRole("group", { name: "Áreas de Carla Diretora" });
+  await expect(lista).toContainText("C-Level vale por todas e não se combina com outras. O Aprovador precisa de pelo menos uma área.");
+  await lista.getByText("C-Level", { exact: true }).click();
+  await expect(page.getByText("Área não removida").first()).toBeVisible();
+  expect(await marcadas(lista)).toEqual(["C-Level"]);
+  // Trocar C-Level por outra área continua valendo: a pessoa nunca fica sem área.
+  await lista.getByText("Produto", { exact: true }).click();
+  expect(await marcadas(lista)).toEqual(["Produto"]);
+  await page.keyboard.press("Escape");
+  await expect(linha(page, "Carla Diretora")).toContainText("Produto");
+
+  // Marcelo Vieira (a própria linha) tem duas áreas: uma sai, a última não.
+  await page.getByRole("button", { name: "Editar áreas de Marcelo Vieira" }).click();
+  const minhas = page.getByRole("group", { name: "Áreas de Marcelo Vieira" });
+  await minhas.getByText("Jurídico", { exact: true }).click();
+  expect(await marcadas(minhas)).toEqual(["Comercial"]);
+  await minhas.getByText("Comercial", { exact: true }).click();
+  expect(await marcadas(minhas)).toEqual(["Comercial"]);
+});
+
+test("Fase T · publicado T1.7 e T1.8: quem já está sem área segue valendo; a recusa da rota aparece no aviso", async ({ page }) => {
+  const estado = await entrarNoPublicado(page);
+  // T1.7: o Aprovador sem área aparece com "Geral" e o lápis; a primeira área entra, e daí não sai mais.
+  await expect(linhaPorEmail(page, HOMONIMO.email)).toContainText("Geral");
+  await linhaPorEmail(page, HOMONIMO.email).getByRole("button", { name: "Editar áreas de Antônio Carlos" }).click();
+  const lista = page.getByRole("group", { name: "Áreas de Antônio Carlos" });
+  await lista.getByText("Tecnologia", { exact: true }).click();
+  await expect(linhaPorEmail(page, HOMONIMO.email)).toContainText("Tecnologia");
+  await lista.getByText("Tecnologia", { exact: true }).click();
+  await expect(page.getByText("Área não removida").first()).toBeVisible();
+  await page.keyboard.press("Escape");
+  expect(estado.alteracoes).toEqual([{ id: HOMONIMO.id, mudanca: { areas: ["Tecnologia"] } }]);
+
+  // T1.8: a rota recusa (400) e a pessoa continua Revisor, com o motivo no aviso.
+  estado.recusaDoPatch = { status: 400, erro: "Selecione pelo menos uma área." };
+  await page.getByLabel("Papel de Beatriz Lima").selectOption("Aprovador");
+  await dialogo(page).getByText("Comercial", { exact: true }).click();
+  await dialogo(page).getByRole("button", { name: "Mudar para Aprovador" }).click();
+  await expect(page.getByText("Mudança não gravada").first()).toBeVisible();
+  await expect(page.getByLabel("Papel de Beatriz Lima")).toHaveValue("Revisor");
+  expect(estado.alteracoes.at(-1)).toEqual({ id: REVISORA.id, mudanca: { papel: "Aprovador", areas: ["Comercial"] } });
+});
+
+test("Fase T · T1.9: confirmação só com o teclado e no celular, sem rolagem lateral", async ({ page }) => {
+  await entrar(page);
+  await abrirPainel(page);
+  // Teclado: o foco começa em "Cancelar"; Shift+Tab volta às áreas, Espaço marca, Tab chega ao botão.
+  await page.getByLabel("Papel de Kadu Mendes").selectOption("Aprovador");
+  await expect(dialogo(page).getByRole("button", { name: "Cancelar" })).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(dialogo(page).getByRole("checkbox", { name: "C-Level", exact: true })).toBeFocused();
+  await page.keyboard.press("Space");
+  expect(await marcadas(dialogo(page))).toEqual(["C-Level"]);
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await expect(dialogo(page).getByRole("button", { name: "Mudar para Aprovador" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(dialogo(page)).toHaveCount(0);
+  await expect(linha(page, "Kadu Mendes")).toContainText("C-Level");
+
+  // Celular: a confirmação cabe na tela.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByLabel("Papel de Kadu Mendes").selectOption("Revisor");
+  await dialogo(page).getByRole("button", { name: "Mudar para Revisor" }).click();
+  await page.getByLabel("Papel de Kadu Mendes").selectOption("Aprovador");
+  await expect(dialogo(page)).toBeVisible();
+  const caixa = await dialogo(page).boundingBox();
+  expect(caixa.x).toBeGreaterThanOrEqual(0);
+  expect(caixa.x + caixa.width).toBeLessThanOrEqual(390);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await dialogo(page).getByText("Jurídico", { exact: true }).click();
+  await dialogo(page).getByRole("button", { name: "Mudar para Aprovador" }).click();
+  await expect(page.getByText("Kadu Mendes agora é Aprovador de Jurídico.").first()).toBeVisible();
 });

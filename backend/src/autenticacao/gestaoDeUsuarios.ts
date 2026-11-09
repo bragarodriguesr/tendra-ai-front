@@ -18,6 +18,9 @@ export const MENSAGEM_PROVEDOR_FORA = "Não foi possível consultar as contas no
 export const MENSAGEM_PROPRIO_ACESSO = "Peça a outro Aprovador para mudar o seu acesso.";
 export const MENSAGEM_SEM_APROVADOR = "A organização precisa de ao menos um Aprovador ativo.";
 export const MENSAGEM_PESSOA_NAO_ENCONTRADA = "Pessoa não encontrada.";
+// Fase T (T1.2, T1.6 e T1.8): o Aprovador precisa de pelo menos uma área, na promoção e na troca de áreas.
+export const MENSAGEM_SELECIONE_AREA = "Selecione pelo menos uma área.";
+export const MENSAGEM_APROVADOR_SEM_AREA = "O Aprovador precisa de pelo menos uma área.";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const TAMANHO_MAXIMO_DO_NOME = 120;
@@ -146,6 +149,12 @@ export async function alterarUsuario(
     } catch (erro) {
       if (erro instanceof ErroDeArea) throw new ErroDaGestao(400, erro.message);
       throw erro;
+    }
+    // Fase T (T1.8): só recusa quando o pedido promove ou envia áreas. Quem já é Aprovador sem área
+    // continua podendo ter o acesso ou o papel mudados (T1.7).
+    if (papel === "Aprovador" && areas.length === 0) {
+      if (atual.papel !== "Aprovador") throw new ErroDaGestao(400, MENSAGEM_SELECIONE_AREA);
+      if (mudanca.areas !== undefined) throw new ErroDaGestao(400, MENSAGEM_APROVADOR_SEM_AREA);
     }
 
     const aprovadoresDepois = perfis.filter((perfil) => (perfil.id === atual.id ? ativo && papel === "Aprovador" : perfil.ativo && perfil.papel === "Aprovador")).length;

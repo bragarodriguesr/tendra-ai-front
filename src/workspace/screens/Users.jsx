@@ -73,7 +73,7 @@ function Areas({ u, areas, ws }) {
           {areas.map((a) => (
             <Checkbox key={a} label={a} checked={u.areas.includes(a)} disabled={u.ocupado} onChange={() => ws.marcarAreaDoUsuario(u.id, a)} style={{ minHeight: 36, padding: "0 4px" }} />
           ))}
-          <span style={{ fontSize: 12, lineHeight: 1.45, color: "var(--text-meta)", padding: "6px 4px 2px" }}>C-Level vale por todas e não se combina com outras. Sem área, aprova só as perguntas Geral.</span>
+          <span style={{ fontSize: 12, lineHeight: 1.45, color: "var(--text-meta)", padding: "6px 4px 2px" }}>C-Level vale por todas e não se combina com outras. O Aprovador precisa de pelo menos uma área.</span>
         </div>
       ) : null}
     </div>

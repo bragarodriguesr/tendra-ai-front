@@ -6,7 +6,7 @@ import {
 , entrar, obterSessao, quandoPerderASessao, sair} from "../api.js";
 
 import { areaDoItem, areasPreferidas, ordenarPorArea } from "./areas.js";
-import { USUARIOS_DE_EXEMPLO, aprovadoresAtivos, areasAoMarcar, novoUsuario, recusaDoNovoUsuario } from "./usuarios.js";
+import { MENSAGEM_APROVADOR_SEM_AREA, MENSAGEM_SELECIONE_AREA, USUARIOS_DE_EXEMPLO, aprovadoresAtivos, areasAoMarcar, areasEmTexto, ficariaSemArea, novoUsuario, recusaDoNovoUsuario } from "./usuarios.js";
 import { proximaOrdenacao } from "./ordenacaoDaTabela.js";
 
 let contactSeq = 0;
@@ -392,9 +392,16 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
       abrirAreasDoUsuario(id) { setState((s) => ({ painelAreasAbertas: s.painelAreasAbertas === id ? null : id })); },
       marcarAreaDoUsuario(id, area) {
         const u = api.usuariosDoPainel().find((x) => x.id === id);
-        if (u) api.gravarMudancaDeUsuario(u, { areas: areasAoMarcar(u.areas, area) });
+        if (!u) return;
+        const areas = areasAoMarcar(u.areas, area);
+        // Fase T (T1.6): a única área não sai; a caixa continua marcada e nada é gravado.
+        if (ficariaSemArea(u.areas, areas)) { api.toast("Área não removida", MENSAGEM_APROVADOR_SEM_AREA, "danger"); return; }
+        api.gravarMudancaDeUsuario(u, { areas });
       },
-      /** Revisor → Aprovador direto; Aprovador → Revisor pede confirmação, porque as áreas saem (Q5). */
+      /**
+       * Aprovador → Revisor pede confirmação, porque as áreas saem (Q5). Revisor → Aprovador também pede
+       * (fase T, T1.1): a confirmação traz as áreas, e sem pelo menos uma a mudança não é concluída.
+       */
       mudarPapelDoUsuario(id, papel) {
         const lista = api.usuariosDoPainel(), u = lista.find((x) => x.id === id);
         if (!u || u.papel === papel) return;
@@ -403,7 +410,13 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
           setState({ painelConfirmacao: { tipo: "revisor", id }, painelAreasAbertas: null });
           return;
         }
-        api.gravarMudancaDeUsuario(u, { papel }, ["Papel alterado", (n) => `${n.nome} agora é Aprovador. Escolha as áreas no lápis da coluna Áreas; sem área, aprova só as perguntas Geral.`]);
+        setState({ painelConfirmacao: { tipo: "aprovador", id, areas: [], erro: null }, painelAreasAbertas: null });
+      },
+      /** Marca ou desmarca uma área na confirmação de Revisor → Aprovador (T1.3); a escolha limpa o erro. */
+      marcarAreaDaConfirmacao(area) {
+        setState((s) => (s.painelConfirmacao && s.painelConfirmacao.tipo === "aprovador"
+          ? { painelConfirmacao: { ...s.painelConfirmacao, areas: areasAoMarcar(s.painelConfirmacao.areas, area), erro: null } }
+          : {}));
       },
       /** Toggle do acesso (Q7): desligar pede confirmação; ligar reativa direto, com o papel e as áreas de antes. */
       alternarAcessoDoUsuario(id) {
@@ -420,8 +433,12 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         const c = ref.current.painelConfirmacao;
         if (!c) return;
         const u = api.usuariosDoPainel().find((x) => x.id === c.id);
+        // Fase T (T1.2): sem área, a confirmação continua aberta, com o erro, e nada é gravado.
+        if (c.tipo === "aprovador" && c.areas.length === 0) { setState({ painelConfirmacao: { ...c, erro: MENSAGEM_SELECIONE_AREA } }); return; }
         setState({ painelConfirmacao: null });
         if (!u) return;
+        // T1.4: o papel e as áreas vão juntos, num só pedido.
+        if (c.tipo === "aprovador") { api.gravarMudancaDeUsuario(u, { papel: "Aprovador", areas: c.areas }, ["Papel alterado", (n) => `${n.nome} agora é Aprovador de ${areasEmTexto(n.areas)}.`]); return; }
         if (c.tipo === "revisor") api.gravarMudancaDeUsuario(u, { papel: "Revisor" }, ["Papel alterado", (n) => `${n.nome} agora é Revisor, área Geral.`]);
         else api.gravarMudancaDeUsuario(u, { ativo: false }, ["Acesso desativado", (n) => `${n.nome} não entra mais na Tendra.ai.`]);
       },
