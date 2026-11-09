@@ -184,6 +184,15 @@ Cada etapa termina com uma verificação que pode ser feita sem ler código.
   - desativar e conferir que a sessão dela termina;
   - conferir que um Revisor não vê o menu e recebe 403 nas rotas.
 - **Verificação:** checklist abaixo conferido no publicado.
+- **Situação (09/11/2026): publicada; falta a conferência.**
+  - Merge do PR #102 às 19:19 UTC pela conta dona do time.
+  - Render no ar às 19:20, no commit `f790825`. A Vercel também às 19:20, pelo redeploy de produção da mesma conta, porque o deploy automático dos merges anteriores tinha sido bloqueado (PQ5).
+  - Nenhuma migração nova: a fase Q usa as colunas de `perfis` que já existiam (PQ2).
+  - Para conferir no publicado:
+    - adicionar uma conta de teste já criada no Supabase Auth; isso confirma a PQ1;
+    - promover, marcar áreas e rebaixar;
+    - desativar com a pessoa logada;
+    - conferir o Revisor sem o menu.
 
 ## Checklist de aceite
 

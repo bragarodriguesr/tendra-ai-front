@@ -1022,8 +1022,12 @@ Pedida em 04/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 ### P5. Testes de ponta a ponta
 - `e2e/ordenacaoDosDetalhes.spec.js`, um teste por cenário (P1 a P11), e um com um Aprovador do Jurídico numa API simulada pelo teste.
 
-### Situação (07/11/2026): implementada, sem commit
+### Situação (09/11/2026): implementada, no `main` (PR #95, merge em 07/11/2026) e publicada; falta a conferência do grupo
 - Implementada sobre a `main` de 07/11/2026 (até o PR #94), com os conflitos em `TaskDetail.jsx` e `viewModel.js` resolvidos.
+- **Revalidada em 09/11/2026 na `main` com as fases Q e S:**
+  - os cenários P1 a P11 têm teste de ponta a ponta (`e2e/ordenacaoDosDetalhes.spec.js`, 12 testes), e a suíte completa está verde (110 testes);
+  - 36 testes unitários e 387 do backend, no PGlite e no Postgres.
+- **Publicação:** os deploys de produção da Vercel de 07 e 08/11 ficaram bloqueados (commit de autor fora do time; PQ5 da fase Q). Foram refeitos pela conta dona do time em 09/11/2026, às 19:20 UTC, no commit do merge do PR #102 (`f790825`), junto com as fases Q e S. O Render estava no mesmo commit desde as 19:20.
 - 7 testes unitários novos (`npm test`, 27 no total) e 12 de ponta a ponta da fase P passando; suíte de ponta a ponta completa verde (94 testes).
 
 ## Fase Q: gestão de usuários pelo Aprovador
@@ -1065,7 +1069,7 @@ Pedida em 08/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 
 ### Segunda parte: conexão com o banco (08/11/2026)
 - Plano em `plan/PLAN_FASE_Q.md` (etapas Q0 a Q7), com o inventário dos dados fixos da tela (DF1 a DF10) e as pendências do Supabase, do Render e da Vercel (PQ1 a PQ5). Spec revisado e aprovado (Q0).
-- **Situação (09/11/2026): etapas Q0 a Q6 feitas (PR #102); falta a Q7, a publicação.**
+- **Situação (09/11/2026): etapas Q0 a Q6 feitas (PR #102, merge às 19:19 UTC). Q7: publicada (Vercel e Render às 19:20 UTC, commit `f790825`); falta a conferência no publicado, com a PQ1.**
   - Rotas `/api/gestao/usuarios` no backend, só com login e só para o Aprovador. O front usa as rotas no modo compartilhado e os dados de exemplo no local.
   - Q5 conferida com o backend real e o Supabase Auth simulado: todos os cenários de Q1 a Q13.
   - Q6: PQ2 a PQ5 confirmadas. PQ1 (chave de serviço do Render na API de contas) se confere na Q7.
@@ -1100,7 +1104,11 @@ Pedida em 08/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 - **S4.** Testes de ponta a ponta (`e2e/areas.spec.js` atualizado e `e2e/areaNaRevisao.spec.js`).
 - **S5.** Publicação e conferência.
 
-### Situação (08/11/2026): etapas S1 a S4 feitas (PRs #103 e #104)
+### Situação (09/11/2026): etapas S1 a S4 feitas e no `main` (PRs #103 e #104, merge em 09/11/2026); publicada, falta a conferência do grupo (S5)
+- **Revalidada em 09/11/2026:** os cenários S1 a S9 e SA1 têm teste de ponta a ponta (`e2e/areaNaRevisao.spec.js`, com `e2e/areas.spec.js`), e a suíte completa está verde.
+- **S5 (publicação):** o front foi publicado na Vercel em 09/11/2026, às 19:20 UTC, pela conta dona do time, junto com as fases P e Q (o deploy automático de 09/11 tinha sido bloqueado, PQ5 da fase Q). Falta a conferência do checklist no publicado.
+
+Histórico das etapas:
 - S1: "Editado" com `history`; "Resposta manual", a linha "escrita por …" e o alerta `manual` (`data.js`) com `file-text`. Conferida no navegador no modo local; `npm test` e `e2e/jornada.spec.js` passando.
 - S2: `areaAberta` ("tarefa/item") e `trocandoArea` no `useWorkspace`, com `abrirAreaDoItem` e `fecharAreaDoItem`. A lista fecha ao trocar de item ou de tela e com Esc. `changeArea` ignora a área atual e uma segunda escolha durante a gravação, e fecha a lista com a resposta. `viewModel` com `areaAberta` e `trocandoArea` no item aberto. A lista suspensa atual continua trocando a área; `npm test`, `e2e/areas.spec.js` e `e2e/jornada.spec.js` passando.
 - S3: `AreaDoItem` em `Review.jsx` no lugar da lista suspensa: o nome da área para todos e, para quem pode trocá-la, o lápis "Trocar área", que abre a lista (`listbox` "Área da pergunta") por cima do nome, com a atual marcada. Fecha com Esc, clique fora ou Tab; setas, Home, End e Enter escolhem; o foco volta ao lápis. No celular, a lista fica dentro da tela. Conferida no navegador (computador e celular): troca pelo mouse e pelo teclado, item aprovado sem lápis. `npm test` e `e2e/jornada.spec.js` passando; `e2e/areas.spec.js` falha onde procura a lista suspensa antiga e é atualizado na S4.
