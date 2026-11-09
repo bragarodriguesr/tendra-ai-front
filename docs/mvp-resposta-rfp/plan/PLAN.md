@@ -1063,6 +1063,37 @@ Pedida em 08/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 - O teste do menu lateral (`e2e/sidebar.spec.js`, US1) passou a contar 11 links: a pessoa padrão do modo local é Aprovador e vê "Usuários".
 - Conferida no navegador no computador.
 
+## Fase S: exibição da área e das etiquetas do item na Revisão
+
+Pedida em 08/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/spec/SPEC_FASE_S.md` (cenários S1 a S9, `approved`), e o plano detalhado, em `docs/mvp-resposta-rfp/plan/PLAN_FASE_S.md`. Só front: a troca de área continua pela rota da fase N, e nenhum arquivo do backend muda.
+
+**Objetivo:**
+- a área da pergunta aparece igual para todos no cabeçalho do item;
+- quem pode trocar a área (PN7) ganha o lápis, que abre a lista de áreas, no padrão do "Painel de Usuários";
+- "Editado" passa a usar o ícone `history`, e a resposta manual, `file-text`, para que o lápis indique só a troca de área.
+
+### Decisões
+
+| Tema | Decisão | Cenários |
+|---|---|---|
+| Exibição da área | Ícone de prédio e nome para todos; a lista suspensa sempre visível sai | S1 |
+| Lápis | Só para quem pode trocar a área, com a dica "Trocar área" | S2 |
+| Lista | Por cima do nome, uma área por pergunta, com a atual marcada; fecha com clique fora ou Esc | S3, S5 |
+| Troca | Mesma rota e mesmo aviso de hoje; a área atual só fecha a lista; sem segunda escolha enquanto grava | S4 |
+| Ícones das etiquetas | "Editado" com `history`; "Resposta manual" com `file-text` | S7 a S9 |
+
+### Etapas
+
+- **S0.** Spec aprovado.
+- **S1.** Ícones das etiquetas.
+- **S2.** Estado e ações da lista no `useWorkspace` e no `viewModel`.
+- **S3.** Área no cabeçalho do item (`Review.jsx`).
+- **S4.** Testes de ponta a ponta (`e2e/areas.spec.js` atualizado e `e2e/areaNaRevisao.spec.js`).
+- **S5.** Publicação e conferência.
+
+### Situação (08/11/2026): planejada
+- Spec aprovado; implementação ainda não iniciada.
+
 ## Definição de pronto (proposta, P10)
 
 Uma etapa só é concluída quando:
