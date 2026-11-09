@@ -1,7 +1,7 @@
 ---
 feature: gestao-de-usuarios
 status: draft
-spec: docs/mvp-resposta-rfp/spec/SPEC_FASE_Q.md (status approved, com os dados de exemplo; precisa da revisão da etapa Q0)
+spec: docs/mvp-resposta-rfp/spec/SPEC_FASE_Q.md (revisado na etapa Q0 em 08/11/2026; status draft, aguardando aprovação)
 constitution: 1.0.0
 ---
 
@@ -95,6 +95,7 @@ Cada etapa termina com uma verificação que pode ser feita sem ler código.
 ### Q0. Revisão do spec
 - Trazer de volta para os cenários do `SPEC_FASE_Q.md` o que estava em "Alterações futuras", menos o registro no Histórico: adicionar com o Supabase Auth (Q3 e Q4), efeito nas sessões (Q9), isolamento (Q10) e falhas (Q13). O status volta para `draft` até a nova aprovação.
 - **Verificação:** o grupo aprova o spec revisado.
+- **Situação (08/11/2026): spec revisado e aprovado.** Voltaram os cenários Q3, Q4, Q9, Q10 e Q13, com os ajustes do inventário DF1 a DF10 (dados de exemplo só no modo local, própria linha pelo perfil da sessão, áreas vindas do backend, mudanças só com a resposta). O registro no Histórico (antigo Q12) segue como alteração futura.
 
 ### Q1. Regras da gestão no backend
 - `gestaoDeUsuarios.ts`: listar, adicionar, mudar papel, mudar áreas, desativar e reativar, com as recusas da tabela de rotas.
@@ -107,12 +108,14 @@ Cada etapa termina com uma verificação que pode ser feita sem ler código.
   - nunca fica sem Aprovador ativo, inclusive com duas mudanças ao mesmo tempo;
   - desativar apaga as sessões.
 - **Verificação:** `npm test` do backend passa.
+- **Situação (08/11/2026): feita.** `backend/src/autenticacao/gestaoDeUsuarios.ts`, com 14 testes de integração. A busca da conta ganhou `procurarContaNoSupabase` em `perfis.ts`, que separa conta inexistente (null) de Supabase Auth fora do ar (`ErroDoProvedorDeContas`, 503); `idDaContaNoSupabase` (comando `cadastrar-perfil`) passa a usá-la, com as mesmas mensagens.
 
 ### Q2. Rotas
 - `rotasDeGestaoDeUsuarios.ts`, registradas só com login, com validação de corpo (`additionalProperties: false`).
 - `organizacoes.test.ts`: as três rotas entram na lista de rotas comparada com a do servidor, com o teste de que a pessoa de outra organização responde 404.
 - Testes de rota: 403 para o Revisor, 401 sem sessão, mudança de papel valendo no pedido seguinte da outra pessoa e sessão encerrada ao desativar.
 - **Verificação:** `npm test` e `npm run typecheck` do backend passam; a lista de rotas do teste de organizações bate com a do servidor.
+- **Situação (08/11/2026): feita.** `backend/src/http/rotasDeGestaoDeUsuarios.ts`, registradas no `servidor.ts` só com login; `procurarConta` nas opções da autenticação, ligada ao Supabase no `cli/servidor.ts`. Tipos sem erro; 399 testes do backend passando. Três testes falham no Windows também na `main`, sem estas mudanças (caminhos com barra invertida em `organizacoes`, `carga` e `tarefasPersistidas`); o CI roda em Linux.
 
 ### Q3. Front ligado à API
 - `src/api.js` com as três funções; `useWorkspace` usando a API no modo compartilhado e os dados de exemplo no local.
@@ -129,18 +132,49 @@ Cada etapa termina com uma verificação que pode ser feita sem ler código.
   - no modo local, a tela continua igual;
   - com a API simulada pelo teste, a lista vem da rota, nenhum nome de exemplo aparece e o aviso de dados de exemplo some;
   - uma busca por `USUARIOS_DE_EXEMPLO` no código mostra que ele só é usado no caminho do modo local.
+- **Situação (08/11/2026): feita.**
+  - `src/api.js` com `listarUsuariosDaGestao`, `adicionarUsuarioNaGestao` e `alterarUsuarioNaGestao`.
+  - `useWorkspace`: lista do backend em `painelDoServidor` (carregada ao abrir a tela) e os dados de exemplo em `painelUsuarios`, escolhidos pelo modo; mudanças só com a resposta da rota, com a linha bloqueada enquanto grava.
+  - `Users.jsx`: carregamento, erro com "Tentar de novo", aviso de exemplo só no modo local e "Adicionar" esperando a resposta.
+  - `USUARIOS_DE_EXEMPLO` só entra no estado `painelUsuarios`, que o modo compartilhado não lê.
+  - Lista de áreas repetida registrada em `product/ARQUITETURA.md`, seção 11.
 
 ### Q4. Testes de ponta a ponta
 - `e2e/painelDeUsuarios.spec.js` ganha um bloco com a API respondida pelo teste (como `e2e/areas.spec.js`): lista da rota, adicionar com as recusas 404 e 409, mudar papel e áreas, desativar e reativar, e erro 503 sem mudar a lista.
 - **Verificação:** `npm run e2e` passa, inclusive os testes que já existiam.
+- **Situação (08/11/2026): feita.** 4 testes novos do modo publicado (lista sem dados de exemplo e própria linha com nomes iguais; adicionar com as recusas; papel, áreas da rota e acesso; erros ao listar e ao gravar). Suíte completa verde: 107 testes. Testes unitários do front: 34.
 
 ### Q5. Conferência local com o backend
 - `npm run servidor` com `TENDRA_MODO=compartilhado` apontando para um banco de teste e o Supabase Auth simulado, ou com um projeto Supabase de teste, se houver.
 - **Verificação:** a tela lista, adiciona, muda e desativa pessoas, e a pessoa desativada perde a sessão.
+- **Situação (09/11/2026): feita.**
+  - **Como:** o backend real (`criarServidor` com login, PGlite) com o Supabase Auth simulado no lugar de `procurarConta`, e o front em `vite` apontando para ele, conduzido no navegador. Pessoas da Pulse Benefícios (C-Level, Aprovador de Tecnologia, Revisora), uma conta só no Auth (`novo@`) e uma Aprovadora de outra organização.
+  - **Resultado:** cada item conferido no navegador e pela rota:
+    - **Q1:** o Revisor não vê o menu, e a rota responde 403;
+    - **Q2:** a lista vem do banco, sem nomes de exemplo, sem o aviso e sem a pessoa da outra organização;
+    - **Q4:** as recusas "sem conta" (404), "outra organização" e "já na lista" (409) aparecem com as mensagens do spec;
+    - **Q13:** com o Auth fora do ar, a resposta é 503 com a mensagem do spec;
+    - **Q3:** `novo@` entra como Revisor, área Geral;
+    - **Q5 e Q6:** promover, marcar Jurídico e Comercial, C-Level substituindo as outras e rebaixar (áreas zeradas);
+    - **Q9:** a pessoa promovida vê o menu sem novo login, e depois de rebaixada recebe 403 no pedido seguinte;
+    - **Q7:** desativar com ela logada: `/api/auth/me` passa a 401 e, ao recarregar, volta ao login;
+    - **Q8:** a própria linha fica sem o toggle, e a rota recusa com 403 "Peça a outro Aprovador…";
+    - **Q10:** a Aprovadora da outra organização recebe 404 e só vê a si mesma;
+    - **Q11:** no celular, sem rolagem lateral.
+- **Correção no teste de concorrência (09/11/2026):** o teste "dois Aprovadores rebaixando um ao outro ao mesmo tempo" falhava no Postgres do CI. A causa é a corrida dos dois pedidos, e não um defeito da regra.
+  - Com o Postgres real, o pedido que chega depois da primeira gravação pode já encontrar a pessoa como Revisora e receber 403 ("Só o Aprovador…"). Também pode esbarrar no bloqueio dos perfis e receber 409. No PGlite, com uma conexão só, é sempre 409.
+  - O teste passou a conferir a regra: um pedido passa, o outro é recusado (403 ou 409) e a organização fica com exatamente um Aprovador ativo. O 409 determinístico continua coberto pelo teste do Aprovador único.
+  - 402 testes do backend no PGlite e no Postgres (três rodadas); 36 unitários e 114 de ponta a ponta no front.
 
 ### Q6. Pendências de confirmação
 - Resolver PQ1 a PQ5 com o grupo.
 - **Verificação:** cada pendência marcada como confirmada neste plano, com a data.
+- **Situação (09/11/2026):**
+  - **PQ2, confirmada:** consulta somente leitura no Supabase publicado. `perfis` tem `id`, `nome`, `email`, `papel`, `areas` (array), `ativo`, `organizacao_id` e `criado_em`.
+  - **PQ3, confirmada:** há 7 contas no Supabase Auth, todas com perfil, bem abaixo das 4.000 que a busca percorre. Basta para o MVP.
+  - **PQ4, confirmada no código e no teste local:** a lista mostra "Carregando as pessoas da organização…" e, durante a gravação, a linha fica desabilitada (papel, toggle e áreas), sem repetir a ação por um segundo clique. A conferência com o Render "dormindo" fica para a Q7.
+  - **PQ5, combinada:** o merge e o deploy de produção da Vercel são feitos pela conta dona do time (bragarodriguesr). Os deploys dos merges de 07 e 08/11 (PRs #95 a #104) ficaram bloqueados e são refeitos pela mesma conta.
+  - **PQ1, pendente da Q7:** a chave de serviço do Render já é usada pelo armazenamento. A consulta `auth/v1/admin/users` só se confirma com a rota de adicionar no publicado, com uma conta de teste. Se falhar, a rota responde 503 sem gravar nada.
 
 ### Q7. Publicação e conferência
 - Merge, deploy do backend no Render e do front na Vercel.

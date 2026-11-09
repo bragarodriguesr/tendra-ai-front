@@ -9,6 +9,8 @@ import { registrarAutenticacao, type OpcoesDaAutenticacao } from "./rotasDeAuten
 import { ErroDeRevisao } from "../revisao/revisao.ts";
 import { registrarRotasDeRevisao } from "./rotasDeRevisao.ts";
 import { registrarRotasDeTarefas, type OpcoesDasTarefas } from "./rotasDeTarefas.ts";
+import { ErroDaGestao } from "../autenticacao/gestaoDeUsuarios.ts";
+import { registrarRotasDeGestaoDeUsuarios } from "./rotasDeGestaoDeUsuarios.ts";
 
 /** Soma dos arquivos de um envio pela tela da Base, depois de decodificados. */
 export const LIMITE_DO_ENVIO_EM_BYTES = 10 * 1024 * 1024;
@@ -107,7 +109,7 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
   };
 
   servidor.setErrorHandler((erro: FastifyError, pedido, resposta) => {
-    if (erro instanceof ErroDaRota || erro instanceof ErroDeRevisao) return resposta.status(erro.statusCode).send({ erro: erro.message });
+    if (erro instanceof ErroDaRota || erro instanceof ErroDeRevisao || erro instanceof ErroDaGestao) return resposta.status(erro.statusCode).send({ erro: erro.message });
     if (erro.validation) return resposta.status(400).send({ erro: "Pedido inválido." });
     if (erro.code === "FST_ERR_CTP_BODY_TOO_LARGE") {
       return resposta.status(413).send({ erro: mensagemDeEnvioGrande() });
@@ -141,7 +143,12 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
   }
   // Antes das rotas: a organização do pedido e a conferência do dono das tarefas (fase K).
   registrarOrganizacao(servidor, { banco, comLogin: opcoes.autenticacao !== undefined });
-  if (opcoes.autenticacao !== undefined) registrarAutenticacao(servidor, { banco, autenticacao: opcoes.autenticacao });
+  if (opcoes.autenticacao !== undefined) {
+    registrarAutenticacao(servidor, { banco, autenticacao: opcoes.autenticacao });
+    // Painel de Usuários (fase Q): só com login; no modo local a tela usa os dados de exemplo.
+    const { procurarConta } = opcoes.autenticacao;
+    registrarRotasDeGestaoDeUsuarios(servidor, { banco, procurarConta: procurarConta ?? (async () => { throw new Error("Consulta de contas não configurada."); }) });
+  }
   servidor.get("/api/saude", async () => ({ ok: true }));
 
   servidor.get("/api/base/documentos", async (pedido) => ({

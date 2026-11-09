@@ -17,6 +17,11 @@ export interface OpcoesDaAutenticacao {
   horasSemUso: number;
   /** Cookie só por HTTPS (modo compartilhado). Nos testes locais, sem HTTPS, fica falso. */
   cookieSeguro: boolean;
+  /**
+   * Id da conta com o e-mail no Supabase Auth, ou null sem conta (Painel de Usuários, fase Q). Sem ela,
+   * adicionar responde 503, como o Supabase Auth fora do ar.
+   */
+  procurarConta?: (email: string) => Promise<string | null>;
 }
 
 declare module "fastify" {

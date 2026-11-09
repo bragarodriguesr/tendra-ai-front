@@ -99,6 +99,14 @@ export const enderecoDaPlanilha = (id) => `/api/tarefas/${id}/planilha`;
 export const excluirTarefa = (id) => pedir(`/tarefas/${id}`, { method: "DELETE" });
 /** Ações sobre as tarefas da organização para o Histórico (fase O, cenário O19): `{ eventos }`. */
 export const listarEventosDeTarefas = () => pedir("/historico/tarefas");
+
+// Painel de Usuários (fase Q): só no modo compartilhado e só para o Aprovador.
+/** Pessoas da organização e as áreas válidas para o Aprovador: `{ usuarios, areasDoAprovador }`. */
+export const listarUsuariosDaGestao = () => pedir("/gestao/usuarios");
+/** Adiciona a pessoa cuja conta já existe no Supabase Auth, como Revisor, área Geral: `{ usuario }`. */
+export const adicionarUsuarioNaGestao = (nome, email) => pedir("/gestao/usuarios", { method: "POST", corpo: { nome, email } });
+/** Muda papel, áreas ou acesso (`{ papel?, areas?, ativo? }`): `{ usuario }`. */
+export const alterarUsuarioNaGestao = (id, mudanca) => pedir(`/gestao/usuarios/${id}`, { method: "PATCH", corpo: mudanca });
 /**
  * Fase O: situação da tarefa (cenários O7, O10 e O12). Devolve `{ tarefa }` com a situação nova.
  * `pessoa` é o id da lista de configuração no modo local; com login, o backend usa a sessão.

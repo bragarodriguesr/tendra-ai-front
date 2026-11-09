@@ -24,7 +24,7 @@ Chegar a um backend que **prove a hipótese central do MVP** (a pessoa aceita as
 | **L. Busca de perguntas** | Barra de busca por palavras na Revisão e nos detalhes da tarefa, a mesma nas duas telas, junto com o filtro por estado | B1 a B17 de `SPEC_FASE_L.md` |
 | **M. Filtro pelo progresso** | Barra e legenda de estados dos detalhes da tarefa acionam o filtro por estado; o número do cartão segue o filtro | M1 a M12 de `SPEC_FASE_M.md` |
 | **P. Cabeçalho dos detalhes** | Cabeçalho com ordenação na tabela dos detalhes da tarefa (Código, Pergunta, Área e Status), com os alertas na coluna Status | P1 a P11 de `SPEC_FASE_P.md` |
-| **Q. Gestão de usuários** | "Painel de Usuários" no menu "Gestão de acessos", só para o Aprovador, com dados de exemplo no navegador | Q1 a Q8 e Q11 de `SPEC_FASE_Q.md` |
+| **Q. Gestão de usuários** | "Painel de Usuários" no menu "Gestão de acessos", só para o Aprovador: primeiro com dados de exemplo; depois ligado ao banco (`/api/gestao/usuarios`), ainda sem o histórico | Q1 a Q11 e Q13 de `SPEC_FASE_Q.md`; plano em `plan/PLAN_FASE_Q.md` |
 
 > **Situação da fase A (23/10/2026):** A1 feita e execuções reais da A5 a A10 concluídas (`gerar-amostra`, `responder` e `avaliar` com Sonnet 5.5 e Opus 5.5). Com as instruções `geracao-v3` e `conflito-v2` e a checagem por parágrafo (cenário 18 revisto), o Opus 5.5 atinge todos os critérios medidos pelo código na RFP-01 e na RFP-02 (3 execuções). Falta só a lista de fidelidade preenchida por uma pessoa para fechar o portão e registrar o modelo em P8.
 
@@ -1063,6 +1063,15 @@ Pedida em 08/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 - O teste do menu lateral (`e2e/sidebar.spec.js`, US1) passou a contar 11 links: a pessoa padrão do modo local é Aprovador e vê "Usuários".
 - Conferida no navegador no computador.
 
+### Segunda parte: conexão com o banco (08/11/2026)
+- Plano em `plan/PLAN_FASE_Q.md` (etapas Q0 a Q7), com o inventário dos dados fixos da tela (DF1 a DF10) e as pendências do Supabase, do Render e da Vercel (PQ1 a PQ5). Spec revisado e aprovado (Q0).
+- **Situação (09/11/2026): etapas Q0 a Q6 feitas (PR #102); falta a Q7, a publicação.**
+  - Rotas `/api/gestao/usuarios` no backend, só com login e só para o Aprovador. O front usa as rotas no modo compartilhado e os dados de exemplo no local.
+  - Q5 conferida com o backend real e o Supabase Auth simulado: todos os cenários de Q1 a Q13.
+  - Q6: PQ2 a PQ5 confirmadas. PQ1 (chave de serviço do Render na API de contas) se confere na Q7.
+  - O teste de concorrência que falhava no Postgres do CI foi corrigido: a regra não mudou, o teste é que esperava um só dos dois códigos válidos.
+  - O registro das mudanças no Histórico segue como alteração futura.
+
 ## Fase S: exibição da área e das etiquetas do item na Revisão
 
 Pedida em 08/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/spec/SPEC_FASE_S.md` (cenários S1 a S9, `approved`), e o plano detalhado, em `docs/mvp-resposta-rfp/plan/PLAN_FASE_S.md`. Só front: a troca de área continua pela rota da fase N, e nenhum arquivo do backend muda.
@@ -1091,7 +1100,7 @@ Pedida em 08/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 - **S4.** Testes de ponta a ponta (`e2e/areas.spec.js` atualizado e `e2e/areaNaRevisao.spec.js`).
 - **S5.** Publicação e conferência.
 
-### Situação (08/11/2026): etapas S1 a S4 feitas, sem commit
+### Situação (08/11/2026): etapas S1 a S4 feitas (PRs #103 e #104)
 - S1: "Editado" com `history`; "Resposta manual", a linha "escrita por …" e o alerta `manual` (`data.js`) com `file-text`. Conferida no navegador no modo local; `npm test` e `e2e/jornada.spec.js` passando.
 - S2: `areaAberta` ("tarefa/item") e `trocandoArea` no `useWorkspace`, com `abrirAreaDoItem` e `fecharAreaDoItem`. A lista fecha ao trocar de item ou de tela e com Esc. `changeArea` ignora a área atual e uma segunda escolha durante a gravação, e fecha a lista com a resposta. `viewModel` com `areaAberta` e `trocandoArea` no item aberto. A lista suspensa atual continua trocando a área; `npm test`, `e2e/areas.spec.js` e `e2e/jornada.spec.js` passando.
 - S3: `AreaDoItem` em `Review.jsx` no lugar da lista suspensa: o nome da área para todos e, para quem pode trocá-la, o lápis "Trocar área", que abre a lista (`listbox` "Área da pergunta") por cima do nome, com a atual marcada. Fecha com Esc, clique fora ou Tab; setas, Home, End e Enter escolhem; o foco volta ao lápis. No celular, a lista fica dentro da tela. Conferida no navegador (computador e celular): troca pelo mouse e pelo teclado, item aprovado sem lápis. `npm test` e `e2e/jornada.spec.js` passando; `e2e/areas.spec.js` falha onde procura a lista suspensa antiga e é atualizado na S4.

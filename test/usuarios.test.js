@@ -6,7 +6,7 @@ const nomes = (lista) => lista.map((u) => u.nome);
 
 describe("Cenário Q3 · usuário novo", () => {
   it("nasce Revisor, área Geral (sem área) e ativo", () => {
-    assert.deepEqual(novoUsuario("  Ana Souza ", " Ana.Souza@Pulse.com.br "), { nome: "Ana Souza", email: "ana.souza@pulse.com.br", papel: "Revisor", areas: [], ativo: true });
+    assert.deepEqual(novoUsuario("  Ana Souza ", " Ana.Souza@Pulse.com.br "), { id: "exemplo-ana.souza@pulse.com.br", nome: "Ana Souza", email: "ana.souza@pulse.com.br", papel: "Revisor", areas: [], ativo: true });
   });
 });
 

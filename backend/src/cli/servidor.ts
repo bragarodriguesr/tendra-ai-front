@@ -1,6 +1,7 @@
 import { criarArmazenamento } from "../armazenamento/armazenamento.ts";
 import { criarArmazenamentoSupabase } from "../armazenamento/armazenamentoSupabase.ts";
 import { criarVerificadorSupabase } from "../autenticacao/verificadorSupabase.ts";
+import { procurarContaNoSupabase } from "../autenticacao/perfis.ts";
 import { carregarCabecalhos } from "../config/cabecalhos.ts";
 import { carregarConfiguracaoDoServidor, ErroDeConfiguracao } from "../config/config.ts";
 import { carregarPessoas } from "../config/pessoas.ts";
@@ -44,7 +45,13 @@ async function executar(): Promise<void> {
     log,
     ...(modo.tipo === "compartilhado"
       ? {
-          autenticacao: { verificador: criarVerificadorSupabase(modo), horasSemUso: modo.horasDeSessao, cookieSeguro: true },
+          autenticacao: {
+            verificador: criarVerificadorSupabase(modo),
+            horasSemUso: modo.horasDeSessao,
+            cookieSeguro: true,
+            // Painel de Usuários (fase Q): a conta é procurada com a chave de serviço (pendência PQ1).
+            procurarConta: (email: string) => procurarContaNoSupabase({ supabaseUrl: modo.supabaseUrl, chaveDeServico: modo.chaveDeServico, email }),
+          },
           transporte: { origemDoFront: modo.origemDoFront },
         }
       : {}),
