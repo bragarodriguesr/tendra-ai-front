@@ -4,7 +4,111 @@ import { AlertDeck, ClickRow, DISPLAY, card, mono } from "../ui.jsx";
 import { SendResult } from "./Base.jsx";
 import { ReadOnlyNote } from "./TaskDetail.jsx";
 
-const FB_REASONS = ["Fonte incorreta", "Texto impreciso", "Informação desatualizada", "Outro"];
+/** Uma área na lista do cabeçalho do item, no estilo das opções do `FilterMenu` (fase S, S3). */
+function OpcaoDeArea({ area, atual, desabilitada, onEscolher, onTeclado }) {
+  const [destaque, setDestaque] = React.useState(false);
+  return (
+    <button
+      type="button" role="option" aria-selected={atual} aria-disabled={desabilitada || undefined} tabIndex={atual ? 0 : -1}
+      data-area={area} onClick={() => { if (!desabilitada) onEscolher(area); }} onKeyDown={onTeclado}
+      onMouseEnter={() => setDestaque(true)} onMouseLeave={() => setDestaque(false)} onFocus={() => setDestaque(true)} onBlur={() => setDestaque(false)}
+      style={{
+        display: "flex", alignItems: "center", gap: "var(--space-2)", width: "100%", minHeight: 36, padding: "6px 10px",
+        border: 0, borderRadius: "var(--radius-sm)", background: destaque ? "var(--n-075)" : "transparent",
+        fontFamily: "var(--font-sans)", fontSize: "var(--text-ui-size)", fontWeight: atual ? "var(--weight-semibold)" : "var(--weight-regular)",
+        color: "var(--text-strong)", textAlign: "left", cursor: desabilitada ? "progress" : "pointer", opacity: desabilitada && !atual ? 0.6 : 1,
+        transition: "background var(--duration-fast) var(--ease-out)"
+      }}
+    >
+      <span style={{ width: 16, display: "inline-flex" }}>{atual ? <Icon name="check" size={14} /> : null}</span>
+      <span style={{ flex: 1 }}>{area}</span>
+    </button>
+  );
+}
+
+/**
+ * Área da pergunta no cabeçalho do item (fase S, S1 a S6): o mesmo nome para todos; quem pode trocar a
+ * área (PN7) ganha o botão "Alterar área", com o lápis, que abre a lista por cima do nome, como no Painel
+ * de Usuários. Fecha com um clique fora ou com Esc, e o foco volta ao botão.
+ */
+function AreaDoItem({ cur, ws }) {
+  const raiz = React.useRef(null), lista = React.useRef(null);
+  const [deslocamento, setDeslocamento] = React.useState(0);
+  const [porCima, setPorCima] = React.useState(false);
+  // O botão some e volta ao trocar de item ou de permissão: o fundo preto não pode ficar preso.
+  React.useEffect(() => { setPorCima(false); }, [cur.id, cur.canChangeArea]);
+  const lapis =() => raiz.current && raiz.current.querySelector("[data-lapis] button");
+  const fechar = () => { ws.fecharAreaDoItem(); const b = lapis(); if (b) b.focus(); };
+
+  React.useEffect(() => {
+    if (!cur.areaAberta) return undefined;
+    const fora = (e) => { if (raiz.current && !raiz.current.contains(e.target)) fechar(); };
+    document.addEventListener("mousedown", fora);
+    return () => document.removeEventListener("mousedown", fora);
+  }, [cur.areaAberta]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Ao abrir: foco na área atual e, no celular, a lista empurrada para dentro da tela (S6).
+  React.useLayoutEffect(() => {
+    if (!cur.areaAberta || !lista.current) { setDeslocamento(0); return; }
+    const caixa = lista.current.getBoundingClientRect(), sobra = window.innerWidth - 16 - caixa.right;
+    if (sobra < 0) setDeslocamento((d) => d + sobra);
+    const atual = lista.current.querySelector('[aria-selected="true"]');
+    if (atual) atual.focus();
+  }, [cur.areaAberta]);
+
+  // Setas percorrem as áreas, Home e End vão às pontas, Esc fecha (S5). Enter e Espaço escolhem pelo clique do botão.
+  const teclado = (e) => {
+    const opcoes = [...lista.current.querySelectorAll('[role="option"]')], i = opcoes.indexOf(document.activeElement);
+    const ir = (n) => { e.preventDefault(); opcoes[(n + opcoes.length) % opcoes.length].focus(); };
+    if (e.key === "ArrowDown") ir(i + 1);
+    else if (e.key === "ArrowUp") ir(i - 1);
+    else if (e.key === "Home") ir(0);
+    else if (e.key === "End") ir(opcoes.length - 1);
+    else if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); fechar(); }
+    else if (e.key === "Tab") fechar();
+  };
+  const escolher = async (area) => {
+    await ws.changeArea(cur.id, area);
+    const b = lapis();
+    if (b) b.focus();
+  };
+
+  return (
+    <div ref={raiz} style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: 4 }}>
+      <span aria-label={`Área: ${cur.area}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--n-700)" }}><Icon name="building-2" size="sm" />{cur.area}</span>
+      {cur.canChangeArea ? (
+        <span data-lapis style={{ display: "inline-flex", marginLeft: 8 }}>
+          {/* Botão "Alterar área" (proposta A de 08/11/2026): contorno cinza como os botões secundários da
+              tela ("Editar resposta") e fundo preto ao passar o mouse. O texto dispensa a dica. */}
+          <Button
+            variant="secondary" size="sm" icon="pencil" onClick={() => ws.abrirAreaDoItem(cur.id)}
+            onMouseEnter={() => setPorCima(true)} onMouseLeave={() => setPorCima(false)}
+            style={porCima ? { background: "var(--action-primary-bg)", borderColor: "var(--action-primary-bg)", color: "var(--action-primary-fg)" } : undefined}
+            aria-haspopup="listbox" aria-expanded={!!cur.areaAberta}
+          >
+            Alterar área
+          </Button>
+        </span>
+      ) : null}
+      {cur.areaAberta ? (
+        <div
+          ref={lista} role="listbox" aria-label="Área da pergunta" aria-busy={cur.trocandoArea || undefined}
+          style={{
+            position: "absolute", top: 0, left: deslocamento, zIndex: 70, width: "min(260px, calc(100vw - 32px))", boxSizing: "border-box", padding: 6,
+            display: "grid", background: "var(--surface-card)", border: "1px solid var(--border-default)",
+            borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-popover)", animation: "tdr-rise var(--duration-fast) var(--ease-out)"
+          }}
+        >
+          {cur.areaOptions.map((a) => (
+            <OpcaoDeArea key={a} area={a} atual={a === cur.area} desabilitada={cur.trocandoArea} onEscolher={escolher} onTeclado={teclado} />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+const FB_REASONS =["Fonte incorreta", "Texto impreciso", "Informação desatualizada", "Outro"];
 const fbStyle = (on) => ({
   display: "flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 9, cursor: "pointer",
   ...(on ? { background: "var(--n-900)", color: "var(--n-050)", border: "1px solid var(--n-900)" } : { background: "var(--n-000)", color: "var(--n-900)", border: "1px solid var(--n-350)" })
@@ -201,7 +305,7 @@ function Answer({ v, ws, state, cur }) {
       {cur.noSource && !cur.readOnly ? <AddKnowledge key={cur.id} ws={ws} state={state} editAction={editAction} /> : null}
       {cur.hasManual ? (
         <div style={{ ...mono(12, "var(--n-500)"), display: "flex", alignItems: "center", gap: 6 }}>
-          <Icon name="pencil" size="sm" />Resposta manual, sem fonte na base · escrita por {cur.manualBy}
+          <Icon name="file-text" size="sm" />Resposta manual, sem fonte na base · escrita por {cur.manualBy}
         </div>
       ) : null}
       {cur.isApproved ? (
@@ -337,14 +441,11 @@ export function Review({ v, ws, state, height, isMobile }) {
                 <div style={{ display: "flex", alignItems: "center", gap: "8px 12px", flexWrap: "wrap", flex: 1, minWidth: 0 }}>
                   <span style={{ ...mono(13), fontWeight: 500 }}>{cur.code}</span>
                   <Badge tone={cur.tone} icon={cur.icon}>{cur.st}</Badge>
-                  {cur.edited ? <Badge tone="neutral" icon="pencil">Editado</Badge> : null}
-                  {cur.hasManual ? <Badge tone="accent" icon="pencil">Resposta manual</Badge> : null}
-                  {/* Área da pergunta (fase N): quem pode aprová-la troca a área enquanto não aprovada (N10). */}
-                  {cur.canChangeArea ? (
-                    <div style={{ width: 220 }}>
-                      <Select options={cur.areaOptions} size="sm" aria-label="Área da pergunta" value={cur.area} onChange={(e) => ws.changeArea(cur.id, e.target.value)} />
-                    </div>
-                  ) : <span aria-label={`Área: ${cur.area}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--n-700)" }}><Icon name="building-2" size="sm" />{cur.area}</span>}
+                  {/* Fase S (S7 a S9): o lápis fica só para a ação de trocar a área; as etiquetas usam outros ícones. */}
+                  {cur.edited ? <Badge tone="neutral" icon="history">Editado</Badge> : null}
+                  {cur.hasManual ? <Badge tone="accent" icon="file-text">Resposta manual</Badge> : null}
+                  {/* Área da pergunta (fase N, N10; fase S): o mesmo nome para todos e o lápis para quem pode trocá-la. */}
+                  <AreaDoItem cur={cur} ws={ws} />
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 4, flex: "none" }}>
                   <Tooltip content="Item anterior (K)" placement="bottom">

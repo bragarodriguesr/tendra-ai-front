@@ -11,6 +11,9 @@ const COLS = "minmax(170px,1.3fr) 140px minmax(170px,1.6fr) 96px 64px";
 const rowGrid = { display: "grid", gridTemplateColumns: COLS, gap: 12, alignItems: "center" };
 const TITULOS = [["pessoa", "Pessoa"], ["papel", "Papel"], ["areas", "Áreas"], ["situacao", "Situação"]];
 const DICA_PROPRIA = "Peça a outro Aprovador para mudar o seu acesso.";
+// Lápis das áreas (fase S, apêndice SA1): contorno cinza dos botões secundários e, com o mouse por cima, fundo preto.
+const LAPIS = { borderColor: "var(--action-secondary-border)", color: "var(--action-secondary-fg)" };
+const LAPIS_POR_CIMA = { background: "var(--action-primary-bg)", borderColor: "var(--action-primary-bg)", color: "var(--action-primary-fg)" };
 
 /** Cabeçalho no padrão das tabelas de Tarefas e da Base; os títulos ordenam, menos Ações (Q2b). */
 function Cabecalho({ ordem, onOrdenar }) {
@@ -42,6 +45,7 @@ function Cabecalho({ ordem, onOrdenar }) {
  */
 function Areas({ u, areas, ws }) {
   const raiz = React.useRef(null);
+  const [porCima, setPorCima] = React.useState(false);
   React.useEffect(() => {
     if (!u.areasAbertas) return undefined;
     const fora = (e) => { if (raiz.current && !raiz.current.contains(e.target)) ws.abrirAreasDoUsuario(u.email); };
@@ -59,6 +63,9 @@ function Areas({ u, areas, ws }) {
         <IconButton
           icon="pencil" label={`Editar áreas de ${u.nome}`} variant="ghost" size="sm" onClick={() => ws.abrirAreasDoUsuario(u.email)}
           aria-haspopup="true" aria-expanded={u.areasAbertas}
+          // Fase S (apêndice SA1): contorno cinza, como os botões secundários, e fundo preto com o mouse por cima, como "Alterar área" da Revisão.
+          onMouseEnter={() => setPorCima(true)} onMouseLeave={() => setPorCima(false)}
+          style={porCima ? LAPIS_POR_CIMA : LAPIS}
         />
       </Tooltip>
       {u.areasAbertas ? (

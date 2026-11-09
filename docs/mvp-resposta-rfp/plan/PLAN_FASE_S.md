@@ -50,7 +50,7 @@ A publicação na Vercel segue a mesma observação da fase Q (PQ5 em `PLAN_FASE
 |---|---|---|
 | Estado da lista | `areaAberta` (id do item com a lista aberta) e `trocandoArea` (bool) no `useWorkspace`. `areaAberta` volta a `null` ao trocar de item, de tarefa ou de tela | Mesmo padrão de `painelAreasAbertas` da fase Q; a lista não fica aberta num item que não está na tela |
 | Ações | `abrirAreaDoItem(id)` alterna a lista; `fecharAreaDoItem()`; `changeArea(id, area)` fecha a lista, ignora a área atual e liga `trocandoArea` até a resposta | S3 e S4 |
-| Componente | `AreaDoItem` em `Review.jsx`, como o `Areas` de `Users.jsx`: nome da área, `Tooltip` "Trocar área" no `IconButton` de lápis (`variant="ghost"`, `size="sm"`, `aria-label` "Trocar a área da pergunta", `aria-haspopup="listbox"` e `aria-expanded`) e a lista com `position: absolute; top: 0` sobre o nome | Mesmo padrão visual do "Painel de Usuários" |
+| Componente | `AreaDoItem` em `Review.jsx`, como o `Areas` de `Users.jsx`: nome da área e o botão "Alterar área" com o lápis (`Button variant="secondary"`, `size="sm"`, contorno cinza e fundo preto com o mouse por cima, `aria-haspopup="listbox"` e `aria-expanded`; proposta A de 08/11/2026) e a lista com `position: absolute; top: 0` sobre o nome | Mesmo padrão visual do "Painel de Usuários" |
 | Lista | `role="listbox"` com nome "Área da pergunta" e uma opção por área (`role="option"`, `aria-selected` na atual, com o ícone `check`). Setas mudam a opção em foco; Enter escolhe; Esc fecha | S5. Uma área por pergunta (PN4), por isso opções e não `Checkbox` como no painel |
 | Fechar | `mousedown` fora fecha; Esc fecha; em ambos o foco volta ao lápis | S3, como no painel |
 | Durante a troca | Lista com `aria-busy` e opções desabilitadas | S4: sem segunda escolha enquanto grava |
@@ -123,3 +123,13 @@ Cada etapa termina com uma verificação que pode ser feita sem ler código.
 | Lista cortada pelo painel com rolagem do item | Conferir no navegador (S3); se cortar, abrir a lista para baixo do nome, ainda dentro do cabeçalho |
 | Testes antigos presos ao `Select` | `e2e/areas.spec.js` atualizado na etapa S4 |
 | Duas trocas seguidas | `trocandoArea` desabilita as opções até a resposta |
+
+## Apêndice: lápis das áreas no Painel de Usuários (SA1)
+
+Pedido de 08/11/2026, depois da validação manual da Revisão.
+
+- `src/workspace/screens/Users.jsx`: o `IconButton` de lápis do componente `Areas` ganha o contorno cinza (`--action-secondary-border`) e, com o mouse por cima, o fundo preto (`--action-primary-bg`) com o ícone claro (`--action-primary-fg`). As novas propriedades ficam em linhas próprias, sem mexer na linha do `onClick`, que o PR da fase Q (#102) altera (`u.email` para `u.id`).
+- `src/workspace/useWorkspace.js`: o fechamento da lista de áreas ao trocar de tela (S2) passou para antes do `setState` de `go()`, porque o PR da fase Q acrescenta uma linha logo depois dele.
+- Teste em `e2e/areaNaRevisao.spec.js` (modo local, dados de exemplo): contorno sem o mouse, fundo preto com o mouse por cima, volta ao sair e o clique abre a lista. Fica fora de `e2e/painelDeUsuarios.spec.js`, que o PR da fase Q também altera.
+- **Conflitos com a fase Q (simulados em 08/11/2026):** `Users.jsx`, `useWorkspace.js`, `viewModel.js` e `Review.jsx` se juntam sem conflito; só o `PLAN.md` conflita, como já previsto no PR #103.
+- **Verificação:** no navegador, o lápis com contorno e o fundo preto com o mouse por cima; `e2e/areaNaRevisao.spec.js` e `e2e/painelDeUsuarios.spec.js` passando.

@@ -20,8 +20,8 @@ constitution: 1.0.0
 - **Comportamento esperado:**
   - **Área da pergunta:**
     - Todos veem a área da mesma forma que o Revisor.
-    - Quem pode trocar a área ganha, ao lado dela, o ícone de lápis. O clique no lápis abre a lista com as áreas.
-    - O padrão é o mesmo do "Painel de Usuários" (fase Q, cenário Q6): etiqueta, lápis com `Tooltip` e lista aberta por cima da etiqueta.
+    - Quem pode trocar a área ganha, ao lado dela, o botão "Alterar área" com o ícone de lápis. O clique no botão abre a lista com as áreas.
+    - A lista segue o padrão do "Painel de Usuários" (fase Q, cenário Q6): aberta por cima da etiqueta.
   - **Etiquetas do item:**
     - O lápis passa a indicar só uma ação: trocar a área.
     - Por isso, "Editado" passa a usar o ícone `history`, e a resposta manual passa a usar `file-text`.
@@ -35,7 +35,7 @@ constitution: 1.0.0
     - Em todos os casos, só enquanto o item não está aprovado e a tarefa não está só para leitura.
   - **N10:** a troca registra o evento `area` no Histórico. A API recusa com 403 quem não pode trocar e com 409 o item já aprovado.
 - **Padrão do design system:**
-  - `IconButton` de lápis (`variant="ghost"`, `size="sm"`) com `Tooltip`;
+  - botão "Alterar área" com o ícone de lápis (`Button variant="secondary"`, `size="sm"`), com o contorno cinza dos botões secundários da tela, como "Editar resposta". Com o mouse por cima, o fundo fica preto (`--action-primary-bg`) e o texto claro (`--action-primary-fg`), um ajuste só deste botão. Escolhido em 08/11/2026 (proposta A), no lugar do lápis sozinho; o texto dispensa a dica;
   - lista no padrão do menu do `FilterMenu` (`--surface-card`, `--border-default`, `--radius-lg` e `--shadow-popover`), como no "Painel de Usuários";
   - ícones `history` e `file-text`, que já existem no design system.
   - Sem cores, fontes, ícones nem componentes novos.
@@ -60,30 +60,30 @@ Verificação feita em 08/11/2026, no código.
 - **Then** a área aparece da mesma forma para todos: o ícone de prédio e o nome da área, como hoje para o Revisor
 - **And** a lista suspensa "Área da pergunta" sempre visível deixa de existir
 
-### Cenário S2: lápis só para quem pode trocar a área
+### Cenário S2: botão "Alterar área" só para quem pode trocar a área
 - **Given** uma pergunta aberta na Revisão
 - **When** a pessoa pode trocar a área dela (PN7)
-- **Then** um lápis aparece ao lado do nome da área
-- **And** o lápis tem a dica "Trocar área" e é anunciado aos leitores de tela como "Trocar a área da pergunta"
-- **And** não há lápis para:
+- **Then** o botão "Alterar área", com o ícone de lápis e o contorno cinza, aparece ao lado do nome da área
+- **And** com o mouse por cima, o botão fica com o fundo preto
+- **And** não há o botão para:
   - o Revisor;
   - o Aprovador de outra área;
   - o item já aprovado;
   - a tarefa só para leitura.
 
 ### Cenário S3: abrir a lista
-- **Given** o lápis ao lado da área
+- **Given** o botão "Alterar área" ao lado da área
 - **When** a pessoa clica nele
 - **Then** a lista abre por cima da área, como no "Painel de Usuários"
 - **And** a lista mostra as seis áreas de pergunta (PN4), na ordem de hoje, com a área atual marcada
-- **And** a lista fecha com um clique fora dela ou com Esc, sem trocar a área, e o foco volta ao lápis
+- **And** a lista fecha com um clique fora dela ou com Esc, sem trocar a área, e o foco volta ao botão
 
 ### Cenário S4: trocar a área
 - **Given** a lista aberta
 - **When** a pessoa escolhe outra área
 - **Then** a lista fecha e a pergunta passa para a área escolhida
 - **And** aparece o aviso "Área alterada" ("A pergunta passou para X."), e o Histórico registra o evento `area`, como hoje (N10)
-- **And** se a pessoa deixa de poder aprovar a pergunta na nova área, o lápis some e a aprovação fica bloqueada, como hoje
+- **And** se a pessoa deixa de poder aprovar a pergunta na nova área, o botão some e a aprovação fica bloqueada, como hoje
 - **And** escolher a área atual só fecha a lista
 - **And** enquanto a troca é gravada, a lista não aceita outra escolha
 - **And** se a gravação falha, a área anterior continua e o aviso mostra o motivo (por exemplo, a recusa 403 ou 409)
@@ -91,9 +91,9 @@ Verificação feita em 08/11/2026, no código.
 ### Cenário S5: teclado e leitores de tela
 - **Given** a pergunta aberta na Revisão
 - **When** a pessoa usa só o teclado
-- **Then** ela chega ao lápis com Tab e abre a lista com Enter ou Espaço
+- **Then** ela chega ao botão "Alterar área" com Tab e abre a lista com Enter ou Espaço
 - **And** ela percorre as áreas com as setas e escolhe com Enter
-- **And** o lápis informa se a lista está aberta (`aria-expanded`)
+- **And** o botão informa se a lista está aberta (`aria-expanded`)
 - **And** a lista tem o nome "Área da pergunta"
 
 ### Cenário S6: celular
@@ -116,7 +116,7 @@ Verificação feita em 08/11/2026, no código.
 ### Cenário S9: lápis com um só sentido
 - **Given** um item aberto na Revisão, editado, com resposta manual, ou ambos
 - **When** a pessoa vê o cabeçalho do item
-- **Then** o lápis aparece só como a ação de trocar a área (S2), e nunca como ícone de etiqueta
+- **Then** o lápis aparece só no botão "Alterar área" (S2), e nunca como ícone de etiqueta
 
 ## Fora de escopo
 
@@ -128,3 +128,15 @@ Verificação feita em 08/11/2026, no código.
 - Os botões "Editar resposta" e "Nenhuma, vou escrever". Eles são ações, ficam fora do cabeçalho do item e continuam com o lápis.
 - O "Painel de Usuários" (fase Q).
 - Componentes, cores, fontes ou ícones novos no design system.
+
+## Apêndice: lápis das áreas no Painel de Usuários (08/11/2026)
+
+Pedido depois da validação manual da Revisão: o mesmo realce do botão "Alterar área" no lápis que abre a lista de áreas do "Painel de Usuários" (fase Q, cenário Q6), sem texto. Só front; não muda as regras, a lista nem as rotas da fase Q.
+
+### Cenário SA1: lápis das áreas com contorno e realce
+- **Given** o "Painel de Usuários" aberto por um Aprovador
+- **When** uma linha mostra o lápis "Editar áreas" (Aprovador ativo, Q6)
+- **Then** o lápis tem o contorno cinza dos botões secundários da tela, sem texto, e mantém a dica "Editar áreas"
+- **And** com o mouse por cima, o fundo fica preto e o ícone claro, como o botão "Alterar área" da Revisão
+- **And** ao tirar o mouse, volta ao contorno cinza
+- **And** o clique continua abrindo a lista de áreas, como hoje (Q6)

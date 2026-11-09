@@ -1077,7 +1077,7 @@ Pedida em 08/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 | Tema | Decisão | Cenários |
 |---|---|---|
 | Exibição da área | Ícone de prédio e nome para todos; a lista suspensa sempre visível sai | S1 |
-| Lápis | Só para quem pode trocar a área, com a dica "Trocar área" | S2 |
+| Botão | "Alterar área" com o lápis, só para quem pode trocar a área: contorno cinza, como "Editar resposta", e fundo preto com o mouse por cima (proposta A, escolhida em 08/11/2026 no lugar do lápis sozinho, que tinha a dica cortada pelo topo do painel) | S2 |
 | Lista | Por cima do nome, uma área por pergunta, com a atual marcada; fecha com clique fora ou Esc | S3, S5 |
 | Troca | Mesma rota e mesmo aviso de hoje; a área atual só fecha a lista; sem segunda escolha enquanto grava | S4 |
 | Ícones das etiquetas | "Editado" com `history`; "Resposta manual" com `file-text` | S7 a S9 |
@@ -1091,8 +1091,14 @@ Pedida em 08/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 - **S4.** Testes de ponta a ponta (`e2e/areas.spec.js` atualizado e `e2e/areaNaRevisao.spec.js`).
 - **S5.** Publicação e conferência.
 
-### Situação (08/11/2026): planejada
-- Spec aprovado; implementação ainda não iniciada.
+### Situação (08/11/2026): etapas S1 a S4 feitas, sem commit
+- S1: "Editado" com `history`; "Resposta manual", a linha "escrita por …" e o alerta `manual` (`data.js`) com `file-text`. Conferida no navegador no modo local; `npm test` e `e2e/jornada.spec.js` passando.
+- S2: `areaAberta` ("tarefa/item") e `trocandoArea` no `useWorkspace`, com `abrirAreaDoItem` e `fecharAreaDoItem`. A lista fecha ao trocar de item ou de tela e com Esc. `changeArea` ignora a área atual e uma segunda escolha durante a gravação, e fecha a lista com a resposta. `viewModel` com `areaAberta` e `trocandoArea` no item aberto. A lista suspensa atual continua trocando a área; `npm test`, `e2e/areas.spec.js` e `e2e/jornada.spec.js` passando.
+- S3: `AreaDoItem` em `Review.jsx` no lugar da lista suspensa: o nome da área para todos e, para quem pode trocá-la, o lápis "Trocar área", que abre a lista (`listbox` "Área da pergunta") por cima do nome, com a atual marcada. Fecha com Esc, clique fora ou Tab; setas, Home, End e Enter escolhem; o foco volta ao lápis. No celular, a lista fica dentro da tela. Conferida no navegador (computador e celular): troca pelo mouse e pelo teclado, item aprovado sem lápis. `npm test` e `e2e/jornada.spec.js` passando; `e2e/areas.spec.js` falha onde procura a lista suspensa antiga e é atualizado na S4.
+- S4: `e2e/areas.spec.js` troca a área pelo lápis e confere que não há lápis na pergunta de outra área. Novo `e2e/areaNaRevisao.spec.js` com 6 testes (S1 a S9): Aprovador, Revisor e tarefa arquivada; abrir e fechar pelo mouse e pelo teclado; área atual; lista ocupada durante a gravação e recusa 409; celular; ícones das etiquetas. Novo `test/iconesDaRevisao.test.js` (alerta da resposta manual com `file-text`, nenhum alerta com o lápis). `npm test` com 36 testes e a suíte de ponta a ponta completa verde (109 testes).
+- Ajustes depois da validação manual: o lápis sozinho virou o botão "Alterar área" (contorno cinza e fundo preto com o mouse por cima, proposta A), sem a dica.
+- Apêndice SA1: o lápis das áreas do "Painel de Usuários" com o mesmo contorno e realce, sem texto. Teste em `e2e/areaNaRevisao.spec.js`. Conflitos com o PR da fase Q simulados: só o `PLAN.md`.
+- S5 (publicação e conferência) pendente.
 
 ## Definição de pronto (proposta, P10)
 
