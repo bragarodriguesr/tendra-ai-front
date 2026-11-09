@@ -42,6 +42,8 @@ const initialState = ({ initialScreen, role }) => ({
   view: "site", hfilter: "todos", alertAt: { id: null, i: 0 },
   // Cartão de fontes em conflito mostrado e item com o histórico de alertas aberto (todos tratados).
   srcAt: { id: null, i: 0 }, alertsOpen: null,
+  // Fase S: lista de áreas aberta no cabeçalho do item ("tarefa/item") e troca de área em andamento.
+  areaAberta: null, trocandoArea: false,
   screen: initialScreen, role,
   items: seedItems(), itemsTask: "t1", store: {}, sel: "r4", filter: "todos", busca: "", ordenacaoDetalhes: null,
   edit: false, showOrig: false, drawer: null, dialog: false, toast: null, reviewPane: "list",
@@ -277,6 +279,8 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
           const pronta = st.tarefas.find((t) => t.estado === "pronta" && (t.situacao || "em_andamento") === "em_andamento");
           if (pronta) { tid = pronta.id; extra = { ...extra, taskId: tid }; }
         }
+        // Fase S: a lista de áreas do item fecha ao trocar de tela.
+        extra = { areaAberta: null, ...extra };
         let sw = {};
         if ((screen === "task" || screen === "review") && tid && tid !== st.itemsTask) {
           if (api.hasItems(tid)) sw = api.swapTo(tid);
@@ -507,7 +511,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
       /** Escolhe o item na Revisão, gravando antes o texto pendente. */
       select(id) {
         api.flushSaves();
-        setState({ sel: id, edit: false, showOrig: false, antesDaIa: null });
+        setState({ sel: id, edit: false, showOrig: false, antesDaIa: null, areaAberta: null });
       },
       /**
        * Ação de revisão gravada no backend (cenários 57 a 59): grava antes o texto pendente do item
@@ -612,14 +616,37 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
         api.upd(id, (i) => { i.st = "revisada"; i.rby = by; i.rat = at; return i; });
         api.toast("Item revisado", "Pronto para aprovação.");
       },
-      /** Troca da área do item (fase N, cenário N10). */
+      /**
+       * Lista de áreas do cabeçalho do item (fase S, cenário S3): abre ou fecha a do item `id` da tarefa
+       * aberta. Guarda "tarefa/item", para não reabrir em outro item nem em outra tarefa.
+       */
+      abrirAreaDoItem(id) {
+        setState((s) => {
+          const chave = (s.itemsTask || "") + "/" + id;
+          return { areaAberta: s.areaAberta === chave ? null : chave };
+        });
+      },
+      fecharAreaDoItem() { setState({ areaAberta: null }); },
+      /**
+       * Troca da área do item (fase N, cenário N10; fase S, cenário S4). A área atual só fecha a lista;
+       * enquanto a troca é gravada, outra escolha é ignorada; a lista fecha com a resposta, certa ou não.
+       */
       async changeArea(id, area) {
+        const s = ref.current, item = s.items.find((i) => i.id === id);
+        if (s.trocandoArea) return;
+        if (!item || areaDoItem(item) === area) { setState({ areaAberta: null }); return; }
         if (api.isServerItem()) {
-          const item = await api.serverAction(id, (tid, n, p) => trocarAreaNaApi(tid, n, p, area), "Área não alterada");
-          if (item) api.toast("Área alterada", `A pergunta passou para ${item.area}.`, "neutral");
+          setState({ trocandoArea: true });
+          try {
+            const novo = await api.serverAction(id, (tid, n, p) => trocarAreaNaApi(tid, n, p, area), "Área não alterada");
+            if (novo) api.toast("Área alterada", `A pergunta passou para ${novo.area}.`, "neutral");
+          } finally {
+            setState({ trocandoArea: false, areaAberta: null });
+          }
           return;
         }
         api.upd(id, (i) => { i.area = area; return i; });
+        setState({ areaAberta: null });
         api.toast("Área alterada", `A pergunta passou para ${area}.`, "neutral");
       },
       async restore(id) {
@@ -946,6 +973,7 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
       if (e.key === "Escape" && s.confirmDownload) { ws.setState({ confirmDownload: null }); return; }
       if (e.key === "Escape" && (s.finishing || s.archiving || s.baseHint || s.docDetails)) { ws.setState({ finishing: null, archiving: null, baseHint: false, docDetails: null }); return; }
       if (e.key === "Escape" && (s.painelConfirmacao || s.painelAreasAbertas)) { ws.setState({ painelConfirmacao: null, painelAreasAbertas: null }); return; }
+      if (e.key === "Escape" && s.areaAberta) { ws.setState({ areaAberta: null }); return; }
       if (t === "INPUT" || t === "TEXTAREA" || t === "SELECT" || s.view !== "app" || s.screen !== "review" || s.drawer) return;
       if (e.key === "j" || e.key === "J") ws.step(1);
       if (e.key === "k" || e.key === "K") ws.step(-1);
