@@ -63,7 +63,8 @@ test("Aprovador do Jurídico: as da área primeiro, filtro Minha área, outra á
   await expect(linhas.first()).toContainText("REQ-002/004");
   expect((await linhas.allInnerTexts()).map((t) => /REQ-(\d{3})/.exec(t)[1])).toEqual(["002", "004", "001", "003"]);
   await expect(page.getByRole("heading", { name: "A empresa aceita multa por descumprimento contratual?" })).toBeVisible();
-  await expect(page.getByLabel("Área da pergunta")).toHaveValue("Jurídico");
+  await expect(page.getByLabel("Área: Jurídico")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Alterar área" })).toBeVisible();
 
   // N9: filtro "Minha área".
   await page.getByRole("button", { name: /Filtrar/ }).first().click();
@@ -76,13 +77,16 @@ test("Aprovador do Jurídico: as da área primeiro, filtro Minha área, outra á
   await linhas.filter({ hasText: "REQ-001/004" }).click();
   await expect(page.getByText("Só a área Tecnologia ou C-Level aprova esta resposta.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Aprovar resposta" })).toBeDisabled();
-  await expect(page.getByLabel("Área da pergunta")).toHaveCount(0);
+  await expect(page.getByLabel("Área: Tecnologia")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Alterar área" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Marcar como revisado" })).toBeEnabled();
 
   // N10: troca a área de uma pergunta da própria área; depois não aprova mais.
   await linhas.filter({ hasText: "REQ-002/004" }).click();
   await expect(page.getByRole("button", { name: "Aprovar resposta" })).toBeEnabled();
-  await page.getByLabel("Área da pergunta").selectOption("Comercial");
+  // Fase S: a troca é pelo botão "Alterar área", que abre a lista de áreas.
+  await page.getByRole("button", { name: "Alterar área" }).click();
+  await page.getByRole("listbox", { name: "Área da pergunta" }).getByRole("option", { name: "Comercial" }).click();
   await expect(page.getByText("Só a área Comercial ou C-Level aprova esta resposta.")).toBeVisible();
   expect(trocas).toEqual([{ numero: 2, area: "Comercial" }]);
   await expect(page.getByRole("button", { name: "Aprovar resposta" })).toBeDisabled();

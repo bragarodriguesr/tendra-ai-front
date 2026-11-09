@@ -49,7 +49,7 @@ export const AL = {
  old:{l:'Fonte antiga',i:'clock'},
  critical:{l:'Termo crítico · nível alto',i:'circle-alert',x:'Requer validação do Jurídico. A pergunta envolve responsabilização civil, multa ou garantia jurídica.'},
  nocontext:{l:'Sem contexto',i:'search',x:'Informação não localizada na base. Preenchimento manual obrigatório.'},
- manual:{l:'Resposta manual sem fonte',i:'pencil',x:'Resposta escrita à mão, sem fonte na base. Confirme o conteúdo antes de aprovar.'},
+ manual:{l:'Resposta manual sem fonte',i:'file-text',x:'Resposta escrita à mão, sem fonte na base. Confirme o conteúdo antes de aprovar.'},
 };
 export const ST = {
  'sem-rascunho':{l:'Sem rascunho',i:'minus',tone:'neutral'},

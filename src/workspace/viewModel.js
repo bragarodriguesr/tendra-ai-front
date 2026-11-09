@@ -462,6 +462,9 @@ export function buildView(s, ws) {
       // Área da pergunta (fase N): todos veem; só quem pode aprovar troca, enquanto não aprovado (N10).
       area: areaDoItem(it), areaOptions: AREAS_DOS_ITENS,
       canChangeArea: isA && daMinhaArea && it.st !== "aprovada" && !readOnly,
+      // Fase S (S3 e S4): lista de áreas aberta neste item e troca em andamento.
+      areaAberta: isA && daMinhaArea && it.st !== "aprovada" && !readOnly && s.areaAberta === (s.itemsTask || "") + "/" + it.id,
+      trocandoArea: !!s.trocandoArea,
       stateHint: it.st === "aprovada" ? "Editar remove a aprovação." : "Pronta para aprovação."
     };
   }
