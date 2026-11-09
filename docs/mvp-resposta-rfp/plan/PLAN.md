@@ -1065,7 +1065,12 @@ Pedida em 08/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 
 ### Segunda parte: conexão com o banco (08/11/2026)
 - Plano em `plan/PLAN_FASE_Q.md` (etapas Q0 a Q7), com o inventário dos dados fixos da tela (DF1 a DF10) e as pendências do Supabase, do Render e da Vercel (PQ1 a PQ5). Spec revisado e aprovado (Q0).
-- **Situação: etapas Q0 a Q4 feitas (PR #102).** Rotas `/api/gestao/usuarios` no backend, só com login e só para o Aprovador; o front usa as rotas no modo compartilhado e os dados de exemplo no local. Q5 (conferência com o backend real), Q6 (pendências PQ1 a PQ5) e Q7 (publicação) continuam pendentes. O registro das mudanças no Histórico segue como alteração futura.
+- **Situação (09/11/2026): etapas Q0 a Q6 feitas (PR #102); falta a Q7, a publicação.**
+  - Rotas `/api/gestao/usuarios` no backend, só com login e só para o Aprovador. O front usa as rotas no modo compartilhado e os dados de exemplo no local.
+  - Q5 conferida com o backend real e o Supabase Auth simulado: todos os cenários de Q1 a Q13.
+  - Q6: PQ2 a PQ5 confirmadas. PQ1 (chave de serviço do Render na API de contas) se confere na Q7.
+  - O teste de concorrência que falhava no Postgres do CI foi corrigido: a regra não mudou, o teste é que esperava um só dos dois códigos válidos.
+  - O registro das mudanças no Histórico segue como alteração futura.
 
 ## Fase S: exibição da área e das etiquetas do item na Revisão
 

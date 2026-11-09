@@ -177,7 +177,13 @@ describe("Cenários Q5, Q6 e Q8 · papel e áreas", () => {
       pedir(cookieX, "PATCH", `/api/gestao/usuarios/${y.id}`, { papel: "Revisor" }),
       pedir(cookieY, "PATCH", `/api/gestao/usuarios/${x.id}`, { papel: "Revisor" }),
     ]);
-    expect(respostas.map((r) => r.statusCode).sort()).toEqual([200, 409]);
+    // Um passa e o outro é recusado. No Postgres, o pedido que chega depois do primeiro gravar pode já
+    // encontrar a pessoa como Revisora (403, "Só o Aprovador…") ou esbarrar no bloqueio dos perfis
+    // (409, "ao menos um Aprovador"); no PGlite, com uma conexão só, é sempre 409. As duas recusas
+    // mantêm a regra: a organização fica com exatamente um Aprovador ativo.
+    const codigos = respostas.map((r) => r.statusCode).sort();
+    expect(codigos[0]).toBe(200);
+    expect([403, 409]).toContain(codigos[1]);
     const { rows } = await banco.query<{ n: number }>("SELECT count(*)::int AS n FROM perfis WHERE organizacao_id = $1 AND ativo AND papel = 'Aprovador'", [organizacaoD]);
     expect(rows[0]?.n).toBe(1);
   });

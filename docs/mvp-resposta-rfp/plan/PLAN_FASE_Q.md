@@ -147,11 +147,34 @@ Cada etapa termina com uma verificação que pode ser feita sem ler código.
 ### Q5. Conferência local com o backend
 - `npm run servidor` com `TENDRA_MODO=compartilhado` apontando para um banco de teste e o Supabase Auth simulado, ou com um projeto Supabase de teste, se houver.
 - **Verificação:** a tela lista, adiciona, muda e desativa pessoas, e a pessoa desativada perde a sessão.
-- **Situação (08/11/2026): pendente.** O modo compartilhado do servidor exige `SUPABASE_URL`, a chave de serviço e um Postgres; não há projeto Supabase de teste separado. Os testes de integração (rotas com o Supabase Auth simulado) e de ponta a ponta (API simulada) cobrem o comportamento; a conferência com o backend real fica para o ambiente publicado (Q7), depois das pendências PQ1 a PQ5.
+- **Situação (09/11/2026): feita.**
+  - **Como:** o backend real (`criarServidor` com login, PGlite) com o Supabase Auth simulado no lugar de `procurarConta`, e o front em `vite` apontando para ele, conduzido no navegador. Pessoas da Pulse Benefícios (C-Level, Aprovador de Tecnologia, Revisora), uma conta só no Auth (`novo@`) e uma Aprovadora de outra organização.
+  - **Resultado:** cada item conferido no navegador e pela rota:
+    - **Q1:** o Revisor não vê o menu, e a rota responde 403;
+    - **Q2:** a lista vem do banco, sem nomes de exemplo, sem o aviso e sem a pessoa da outra organização;
+    - **Q4:** as recusas "sem conta" (404), "outra organização" e "já na lista" (409) aparecem com as mensagens do spec;
+    - **Q13:** com o Auth fora do ar, a resposta é 503 com a mensagem do spec;
+    - **Q3:** `novo@` entra como Revisor, área Geral;
+    - **Q5 e Q6:** promover, marcar Jurídico e Comercial, C-Level substituindo as outras e rebaixar (áreas zeradas);
+    - **Q9:** a pessoa promovida vê o menu sem novo login, e depois de rebaixada recebe 403 no pedido seguinte;
+    - **Q7:** desativar com ela logada: `/api/auth/me` passa a 401 e, ao recarregar, volta ao login;
+    - **Q8:** a própria linha fica sem o toggle, e a rota recusa com 403 "Peça a outro Aprovador…";
+    - **Q10:** a Aprovadora da outra organização recebe 404 e só vê a si mesma;
+    - **Q11:** no celular, sem rolagem lateral.
+- **Correção no teste de concorrência (09/11/2026):** o teste "dois Aprovadores rebaixando um ao outro ao mesmo tempo" falhava no Postgres do CI. A causa é a corrida dos dois pedidos, e não um defeito da regra.
+  - Com o Postgres real, o pedido que chega depois da primeira gravação pode já encontrar a pessoa como Revisora e receber 403 ("Só o Aprovador…"). Também pode esbarrar no bloqueio dos perfis e receber 409. No PGlite, com uma conexão só, é sempre 409.
+  - O teste passou a conferir a regra: um pedido passa, o outro é recusado (403 ou 409) e a organização fica com exatamente um Aprovador ativo. O 409 determinístico continua coberto pelo teste do Aprovador único.
+  - 402 testes do backend no PGlite e no Postgres (três rodadas); 36 unitários e 114 de ponta a ponta no front.
 
 ### Q6. Pendências de confirmação
 - Resolver PQ1 a PQ5 com o grupo.
 - **Verificação:** cada pendência marcada como confirmada neste plano, com a data.
+- **Situação (09/11/2026):**
+  - **PQ2, confirmada:** consulta somente leitura no Supabase publicado. `perfis` tem `id`, `nome`, `email`, `papel`, `areas` (array), `ativo`, `organizacao_id` e `criado_em`.
+  - **PQ3, confirmada:** há 7 contas no Supabase Auth, todas com perfil, bem abaixo das 4.000 que a busca percorre. Basta para o MVP.
+  - **PQ4, confirmada no código e no teste local:** a lista mostra "Carregando as pessoas da organização…" e, durante a gravação, a linha fica desabilitada (papel, toggle e áreas), sem repetir a ação por um segundo clique. A conferência com o Render "dormindo" fica para a Q7.
+  - **PQ5, combinada:** o merge e o deploy de produção da Vercel são feitos pela conta dona do time (bragarodriguesr). Os deploys dos merges de 07 e 08/11 (PRs #95 a #104) ficaram bloqueados e são refeitos pela mesma conta.
+  - **PQ1, pendente da Q7:** a chave de serviço do Render já é usada pelo armazenamento. A consulta `auth/v1/admin/users` só se confirma com a rota de adicionar no publicado, com uma conta de teste. Se falhar, a rota responde 503 sem gravar nada.
 
 ### Q7. Publicação e conferência
 - Merge, deploy do backend no Render e do front na Vercel.
