@@ -184,7 +184,7 @@ Cada etapa termina com uma verificação que pode ser feita sem ler código.
   - desativar e conferir que a sessão dela termina;
   - conferir que um Revisor não vê o menu e recebe 403 nas rotas.
 - **Verificação:** checklist abaixo conferido no publicado.
-- **Situação (09/11/2026): publicada; falta a conferência.**
+- **Situação (09/11/2026): publicada e conferida pelo grupo, menos Q3, Q4 e PQ1.**
   - Merge do PR #102 às 19:19 UTC pela conta dona do time.
   - Render no ar às 19:20, no commit `f790825`. A Vercel também às 19:20, pelo redeploy de produção da mesma conta, porque o deploy automático dos merges anteriores tinha sido bloqueado (PQ5).
   - Nenhuma migração nova: a fase Q usa as colunas de `perfis` que já existiam (PQ2).
@@ -193,6 +193,19 @@ Cada etapa termina com uma verificação que pode ser feita sem ler código.
     - promover, marcar áreas e rebaixar;
     - desativar com a pessoa logada;
     - conferir o Revisor sem o menu.
+- **Conferência do grupo (09/11/2026, entre 20:51 e 21:34 UTC): concluída, menos a adição de pessoa (Q3, Q4) e a PQ1.**
+  - Logs do Render:
+    - o painel carregou pelas rotas reais: 8 consultas a `GET /api/gestao/usuarios`, todas 200;
+    - 5 alterações por `PATCH /api/gestao/usuarios/:id`, todas 200;
+    - vários logins e logouts entre as contas de teste, para conferir o efeito nas sessões (Q7, Q9);
+    - nenhum erro 5xx nem 409 no período.
+  - Estado final no banco (Pulse Benefícios):
+    - User Teste 2 promovido a Aprovador, área Produto (Q5, Q6);
+    - User Teste 3 rebaixado a Revisor, com as áreas zeradas (antes Aprovador de Segurança e privacidade e Tecnologia) (Q5);
+    - User Teste 1 com duas alterações, desativado e reativado, e ativo no fim (Q7);
+    - User Teste 4 segue Aprovador C-Level: a organização mantém Aprovadores ativos (Q8).
+  - **Pendente:** nenhuma chamada a `POST /api/gestao/usuarios`. A adição de uma conta de teste (Q3), as recusas do formulário (Q4) e a **PQ1** (chave de serviço do Render na API de contas do Supabase Auth) ainda não foram conferidas no publicado.
+  - Efeito da mudança: na Pulse, as perguntas de Segurança e privacidade e de Tecnologia passam a depender do User Teste 4 (C-Level) para aprovação e troca de área.
 
 ## Checklist de aceite
 
