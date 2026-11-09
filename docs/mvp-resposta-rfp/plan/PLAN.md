@@ -25,6 +25,7 @@ Chegar a um backend que **prove a hipótese central do MVP** (a pessoa aceita as
 | **M. Filtro pelo progresso** | Barra e legenda de estados dos detalhes da tarefa acionam o filtro por estado; o número do cartão segue o filtro | M1 a M12 de `SPEC_FASE_M.md` |
 | **P. Cabeçalho dos detalhes** | Cabeçalho com ordenação na tabela dos detalhes da tarefa (Código, Pergunta, Área e Status), com os alertas na coluna Status | P1 a P11 de `SPEC_FASE_P.md` |
 | **Q. Gestão de usuários** | "Painel de Usuários" no menu "Gestão de acessos", só para o Aprovador: primeiro com dados de exemplo; depois ligado ao banco (`/api/gestao/usuarios`), ainda sem o histórico | Q1 a Q11 e Q13 de `SPEC_FASE_Q.md`; plano em `plan/PLAN_FASE_Q.md` |
+| **T. Papéis e cadastro** | Confirmação com áreas ao mudar para Aprovador, mínimo de uma área para o Aprovador, e Papel, Áreas e Situação no formulário "Adicionar usuário" | T1.1 a T1.9 e T2.1 a T2.8 de `SPEC_FASE_T.md`; plano em `plan/PLAN_FASE_T.md` |
 
 > **Situação da fase A (23/10/2026):** A1 feita e execuções reais da A5 a A10 concluídas (`gerar-amostra`, `responder` e `avaliar` com Sonnet 5.5 e Opus 5.5). Com as instruções `geracao-v3` e `conflito-v2` e a checagem por parágrafo (cenário 18 revisto), o Opus 5.5 atinge todos os critérios medidos pelo código na RFP-01 e na RFP-02 (3 execuções). Falta só a lista de fidelidade preenchida por uma pessoa para fechar o portão e registrar o modelo em P8.
 
@@ -1116,6 +1117,33 @@ Histórico das etapas:
 - Ajustes depois da validação manual: o lápis sozinho virou o botão "Alterar área" (contorno cinza e fundo preto com o mouse por cima, proposta A), sem a dica.
 - Apêndice SA1: o lápis das áreas do "Painel de Usuários" com o mesmo contorno e realce, sem texto. Teste em `e2e/areaNaRevisao.spec.js`. Conflitos com o PR da fase Q simulados: só o `PLAN.md`.
 - S5 (publicação e conferência) pendente.
+
+## Fase T: evolução da alteração de papéis e do cadastro de usuários
+
+Pedida em 09/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/spec/SPEC_FASE_T.md` (cenários T1.1 a T1.9 e T2.1 a T2.8, `approved`), e o plano detalhado, em `docs/mvp-resposta-rfp/plan/PLAN_FASE_T.md`. Front e backend, sem migração de banco. Muda os cenários Q3, Q5 e Q6 da fase Q.
+
+**Objetivo, em duas etapas:**
+- **T1:** mudar de Revisor para Aprovador pede confirmação com as áreas e exige pelo menos uma; na lista do lápis, o Aprovador não fica sem área;
+- **T2:** o formulário "Adicionar usuário" ganha Papel, Áreas (lista suspensa) e Situação.
+
+### Decisões
+
+| Tema | Decisão | Cenários |
+|---|---|---|
+| Promoção | Confirmação "Mudar {nome} para Aprovador?" com as áreas; papel e áreas gravados num só pedido | T1.1 a T1.5 |
+| Mínimo de uma área | Vale na promoção, no lápis e no cadastro; desmarcar a única área avisa e não grava | T1.2, T1.6, T2.3 |
+| Aprovador já sem área | Continua valendo e aprova só "Geral"; sem correção automática. O comando `cadastrar-perfil` não muda | T1.7 |
+| Cadastro | Papel (Revisor por padrão), Áreas em lista suspensa só para o Aprovador, Situação (Ativo por padrão) | T2.1 a T2.5 |
+| Rotas | `PATCH` recusa a promoção sem área; `POST` aceita `papel`, `areas` e `ativo`, opcionais | T1.8, T2.7 |
+
+### Etapas
+
+- **T0.** Spec aprovado.
+- **Etapa T1:** T1-A backend; T1-B confirmação; T1-C lista do lápis; T1-D testes do front; T1-E publicação e conferência.
+- **Etapa T2:** T2-A backend; T2-B formulário; T2-C testes do front; T2-D publicação e conferência.
+
+### Situação (09/11/2026): planejada
+- Spec aprovado; implementação ainda não iniciada.
 
 ## Definição de pronto (proposta, P10)
 
