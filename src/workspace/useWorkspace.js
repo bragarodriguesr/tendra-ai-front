@@ -6,7 +6,7 @@ import {
 , entrar, obterSessao, quandoPerderASessao, sair} from "../api.js";
 
 import { areaDoItem, areasPreferidas, ordenarPorArea } from "./areas.js";
-import { MENSAGEM_APROVADOR_SEM_AREA, MENSAGEM_SELECIONE_AREA, USUARIOS_DE_EXEMPLO, aprovadoresAtivos, areasAoMarcar, areasEmTexto, ficariaSemArea, novoUsuario, recusaDoNovoUsuario } from "./usuarios.js";
+import { MENSAGEM_APROVADOR_SEM_AREA, MENSAGEM_SELECIONE_AREA, USUARIOS_DE_EXEMPLO, aprovadoresAtivos, areasAoMarcar, areasEmTexto, avisoDoNovoUsuario, ficariaSemArea, novoUsuario, recusaDoNovoUsuario } from "./usuarios.js";
 import { proximaOrdenacao } from "./ordenacaoDaTabela.js";
 
 let contactSeq = 0;
@@ -373,20 +373,21 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
       ordenarPainel(coluna) { setState((s) => ({ painelOrdem: proximaOrdenacao(s.painelOrdem, coluna) })); },
       abrirAdicionarUsuario(sim) { setState({ painelAdicionando: sim, painelAreasAbertas: null }); },
       /** Devolve a recusa (Q4) ou null quando a pessoa entrou como Revisor, área Geral (Q3). */
-      async adicionarUsuario(nome, email) {
-        const recusa = recusaDoNovoUsuario(api.usuariosDoPainel(), nome, email);
+      /** Fase T (T2.4): `dados` traz o papel, as áreas e a situação escolhidos no formulário. */
+      async adicionarUsuario(nome, email, dados = {}) {
+        const recusa = recusaDoNovoUsuario(api.usuariosDoPainel(), nome, email, dados);
         if (recusa) return recusa;
         let novo;
         if (api.painelNoServidor()) {
           try {
-            novo = (await adicionarUsuarioNaGestao(nome, email)).usuario;
+            novo = (await adicionarUsuarioNaGestao(nome, email, dados)).usuario;
           } catch (e) {
             return e.message;
           }
-        } else novo = novoUsuario(nome, email);
+        } else novo = novoUsuario(nome, email, dados);
         const chave = api.painelNoServidor() ? "painelDoServidor" : "painelUsuarios";
         setState((s) => ({ [chave]: [...(s[chave] || []), novo], painelAdicionando: false }));
-        api.toast("Usuário adicionado", `${novo.nome} entrou como Revisor, área Geral.`);
+        api.toast("Usuário adicionado", avisoDoNovoUsuario(novo));
         return null;
       },
       abrirAreasDoUsuario(id) { setState((s) => ({ painelAreasAbertas: s.painelAreasAbertas === id ? null : id })); },

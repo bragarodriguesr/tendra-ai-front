@@ -30,7 +30,8 @@ export function registrarRotasDeGestaoDeUsuarios(servidor: FastifyInstance, opco
     return { usuarios: await listarUsuariosDaGestao(banco, organizacaoDo(pedido), sessao), areasDoAprovador: areasDoAprovador() };
   });
 
-  servidor.post<{ Body: { nome: string; email: string } }>(
+  // Fase T (T2.7): papel, áreas e situação opcionais; sem eles, Revisor, sem área, ativo (Q3).
+  servidor.post<{ Body: { nome: string; email: string; papel?: string; areas?: string[]; ativo?: boolean } }>(
     "/api/gestao/usuarios",
     {
       schema: {
@@ -38,13 +39,20 @@ export function registrarRotasDeGestaoDeUsuarios(servidor: FastifyInstance, opco
           type: "object",
           required: ["nome", "email"],
           additionalProperties: false,
-          properties: { nome: { type: "string", maxLength: 200 }, email: { type: "string", maxLength: 254 } },
+          properties: {
+            nome: { type: "string", maxLength: 200 },
+            email: { type: "string", maxLength: 254 },
+            papel: { type: "string", enum: [...PAPEIS] },
+            areas: { type: "array", maxItems: AREAS_DO_APROVADOR.length, items: { type: "string", maxLength: 60 } },
+            ativo: { type: "boolean" },
+          },
         },
       },
     },
     async (pedido, resposta) => {
       const sessao = idDaSessao(pedido);
-      const usuario = await adicionarUsuario(banco, { organizacaoId: organizacaoDo(pedido), idDaSessao: sessao, nome: pedido.body.nome, email: pedido.body.email, procurarConta });
+      const { nome, email, papel, areas, ativo } = pedido.body;
+      const usuario = await adicionarUsuario(banco, { organizacaoId: organizacaoDo(pedido), idDaSessao: sessao, nome, email, papel, areas, ativo, procurarConta });
       return resposta.status(201).send({ usuario });
     },
   );

@@ -73,17 +73,34 @@ export async function listarUsuariosDaGestao(banco: Consultas, organizacaoId: st
 }
 
 /**
- * Adiciona a pessoa cuja conta já existe no Supabase Auth (Q3), como Revisor, sem área, ativa.
- * Pessoa já nesta organização não muda; de outra organização é recusada sem dizer qual (Q4, PK5).
+ * Adiciona a pessoa cuja conta já existe no Supabase Auth (Q3). Sem papel, áreas e situação, ela entra
+ * como Revisor, sem área, ativa; com eles (fase T, T2.7), entra já com esses valores, validados antes de
+ * consultar o Supabase. Pessoa já nesta organização não muda; de outra organização é recusada sem dizer
+ * qual (Q4, PK5).
  */
 export async function adicionarUsuario(
   banco: Banco,
-  opcoes: { organizacaoId: string; idDaSessao: string; nome: string; email: string; procurarConta: (email: string) => Promise<string | null> },
+  opcoes: {
+    organizacaoId: string; idDaSessao: string; nome: string; email: string; papel?: string; areas?: string[]; ativo?: boolean;
+    procurarConta: (email: string) => Promise<string | null>;
+  },
 ): Promise<UsuarioDaGestao> {
   const nome = opcoes.nome.trim();
   const email = opcoes.email.trim().toLowerCase();
   if (nome === "" || nome.length > TAMANHO_MAXIMO_DO_NOME) throw new ErroDaGestao(400, MENSAGEM_NOME_VAZIO);
   if (!EMAIL.test(email)) throw new ErroDaGestao(400, MENSAGEM_EMAIL_INVALIDO);
+  const papel = opcoes.papel ?? "Revisor";
+  if (!PAPEIS.some((valido) => valido === papel)) throw new ErroDaGestao(400, `Papel inválido. Use ${PAPEIS.join(" ou ")}.`);
+  let areas: string[];
+  try {
+    areas = validarAreasDoPerfil(papel, opcoes.areas ?? []);
+  } catch (erro) {
+    if (erro instanceof ErroDeArea) throw new ErroDaGestao(400, erro.message);
+    throw erro;
+  }
+  // T2.3 e T2.7: o Aprovador entra com pelo menos uma área.
+  if (papel === "Aprovador" && areas.length === 0) throw new ErroDaGestao(400, MENSAGEM_SELECIONE_AREA);
+  const ativo = opcoes.ativo ?? true;
   await recusarSeJaExiste(banco, opcoes.organizacaoId, { email });
 
   let id: string | null;
@@ -97,9 +114,9 @@ export async function adicionarUsuario(
   await recusarSeJaExiste(banco, opcoes.organizacaoId, { id });
 
   const { rows } = await banco.query<LinhaDoPerfil>(
-    `INSERT INTO perfis (id, email, nome, papel, organizacao_id, areas) VALUES ($1, $2, $3, 'Revisor', $4, '{}')
+    `INSERT INTO perfis (id, email, nome, papel, organizacao_id, areas, ativo) VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING id, nome, email, papel, areas, ativo`,
-    [id, email, nome, opcoes.organizacaoId],
+    [id, email, nome, papel, opcoes.organizacaoId, areas, ativo],
   );
   const linha = rows[0];
   if (linha === undefined) throw new Error("Perfil não gravado.");

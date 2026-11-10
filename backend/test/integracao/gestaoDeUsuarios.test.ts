@@ -24,7 +24,10 @@ const PAULA = conta("44444444-4444-4444-8444-444444444444", "paula@tendra.test",
 const BRUNA = conta("55555555-5555-4555-8555-555555555555", "bruna@tendra.test", "Bruna Costa", "Aprovador", "s-bruna");
 const NOVA = conta("66666666-6666-4666-8666-666666666666", "nova@tendra.test", "Ana Souza", "Revisor", "s-nova");
 const HOMONIMO = conta("77777777-7777-4777-8777-777777777777", "outro.marcelo@tendra.test", "Marcelo Vieira", "Aprovador", "s-homonimo");
-const CONTAS = [MARCELO, CARLA, KADU, PAULA, BRUNA, NOVA, HOMONIMO];
+// Fase T (T2.4, T2.5 e T2.7): contas que existem no Supabase Auth e ainda não têm perfil.
+const LUCAS = conta("66666666-6666-4666-8666-6666666666b1", "lucas@tendra.test", "Lucas Prado", "Aprovador", "s-lucas");
+const RITA = conta("66666666-6666-4666-8666-6666666666b2", "rita@tendra.test", "Rita Moura", "Revisor", "s-rita");
+const CONTAS = [MARCELO, CARLA, KADU, PAULA, BRUNA, NOVA, HOMONIMO, LUCAS, RITA];
 
 let banco: Banco;
 let servidor: FastifyInstance;
@@ -125,6 +128,50 @@ describe("Cenários Q3, Q4 e Q13 · adicionar usuário", () => {
     expect(resposta.json().usuario).toEqual({ id: NOVA.id, nome: "Ana Souza", email: NOVA.email, papel: "Revisor", areas: [], ativo: true, propria: false });
     const login = await servidor.inject({ method: "POST", url: "/api/auth/login", payload: { email: NOVA.email, senha: NOVA.senha } });
     expect(login.json().organizacao).toEqual({ nome: expect.any(String) });
+  });
+});
+
+describe("Fase T · cenários T2.4, T2.5 e T2.7 · adicionar com papel, áreas e situação", () => {
+  const adicionar = async (corpo: object) => {
+    const resposta = await pedir(await entrar(MARCELO), "POST", "/api/gestao/usuarios", corpo);
+    return { status: resposta.statusCode, json: resposta.json() };
+  };
+
+  it("recusa, antes de gravar, as combinações inválidas", async () => {
+    const casos: [object, string][] = [
+      [{ papel: "Aprovador" }, MENSAGEM_SELECIONE_AREA],
+      [{ papel: "Aprovador", areas: [] }, MENSAGEM_SELECIONE_AREA],
+      [{ papel: "Revisor", areas: ["Jurídico"] }, "Só o Aprovador tem área."],
+      [{ areas: ["Jurídico"] }, "Só o Aprovador tem área."],
+      [{ papel: "Aprovador", areas: ["Marketing"] }, 'Área inválida "Marketing". Use Produto, Tecnologia, Segurança e privacidade, Comercial, Jurídico, C-Level.'],
+      [{ papel: "Aprovador", areas: ["C-Level", "Jurídico"] }, "C-Level já vale por todas as áreas: não combine com outras."],
+    ];
+    for (const [extra, erro] of casos) {
+      const resposta = await adicionar({ nome: "Lucas Prado", email: LUCAS.email, ...extra });
+      expect({ status: resposta.status, erro: resposta.json.erro }).toEqual({ status: 400, erro });
+    }
+    // Papel fora da lista é barrado pelo esquema da rota.
+    expect((await adicionar({ nome: "Lucas Prado", email: LUCAS.email, papel: "Administrador" })).status).toBe(400);
+    expect(await perfil(LUCAS.id)).toBeUndefined();
+  });
+
+  it("adiciona o Aprovador já com as áreas, e ele já entra como Aprovador", async () => {
+    const resposta = await adicionar({ nome: "Lucas Prado", email: LUCAS.email, papel: "Aprovador", areas: ["jurídico", "Comercial"], ativo: true });
+    expect(resposta.status).toBe(201);
+    expect(resposta.json.usuario).toEqual({ id: LUCAS.id, nome: "Lucas Prado", email: LUCAS.email, papel: "Aprovador", areas: ["Jurídico", "Comercial"], ativo: true, propria: false });
+    expect(await perfil(LUCAS.id)).toEqual({ papel: "Aprovador", areas: ["Jurídico", "Comercial"], ativo: true });
+    expect((await pedir(await entrar(LUCAS), "GET", "/api/gestao/usuarios")).statusCode).toBe(200);
+  });
+
+  it("adiciona com a situação Inativo: a pessoa fica na lista, mas não entra", async () => {
+    const resposta = await adicionar({ nome: "Rita Moura", email: RITA.email, ativo: false });
+    expect(resposta.status).toBe(201);
+    expect(resposta.json.usuario).toMatchObject({ papel: "Revisor", areas: [], ativo: false });
+    const login = await servidor.inject({ method: "POST", url: "/api/auth/login", payload: { email: RITA.email, senha: RITA.senha } });
+    expect(login.statusCode).toBe(401);
+    // Reativar pelo toggle da linha (Q7) devolve o acesso.
+    await pedir(await entrar(MARCELO), "PATCH", `/api/gestao/usuarios/${RITA.id}`, { ativo: true });
+    await entrar(RITA);
   });
 });
 

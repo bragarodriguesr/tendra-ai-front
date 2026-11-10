@@ -1149,7 +1149,15 @@ Pedida em 09/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 - **T1-C (lápis):** desmarcar a única área mostra o aviso "Área não removida" e não grava; a nota da lista mudou.
 - **T1-D (testes):** 3 testes unitários novos (`npm test`, 39 no total); em `e2e/painelDeUsuarios.spec.js`, 4 testes novos (T1.1 a T1.9) e 3 da fase Q ajustados para a promoção pela confirmação.
 - Conferida no navegador no modo local.
-- T1-E (publicação e conferência) e a etapa T2 pendentes.
+- T1-E (publicação e conferência) pendente. PR #108.
+
+### Situação (09/11/2026): etapa T2 implementada (T2-A a T2-C), sem commit
+- Branch criada sobre a da etapa T1 (PR #108 ainda aberto).
+- **T2-A (backend):** `POST /api/gestao/usuarios` aceita `papel`, `areas` e `ativo`, opcionais; sem eles, grava Revisor, sem área, ativo, como antes. Recusa com 400, antes de consultar o Supabase: Aprovador sem área, Revisor com área, área inválida, C-Level combinado e papel inválido. 3 testes novos em `gestaoDeUsuarios.test.ts`.
+- **T2-B (formulário):** Papel (Revisor por padrão), Áreas em lista suspensa (desabilitada com "Geral" para o Revisor; caixas de seleção para o Aprovador, com o C-Level exclusivo) e Situação (toggle, Ativo por padrão). Aprovador sem área marca o campo e mostra "Selecione pelo menos uma área."; as recusas mantêm o formulário preenchido. Aviso conforme o papel, as áreas e a situação.
+- **T2-C (testes):** 3 testes unitários novos (`npm test`, 42 no total) e 4 de ponta a ponta em `e2e/painelDeUsuarios.spec.js` (T2.1 a T2.8, no modo local, com a API simulada, no celular e pelo teclado).
+- Conferida no navegador no modo local, no computador e no celular.
+- T2-D (publicação e conferência) pendente.
 
 ## Definição de pronto (proposta, P10)
 

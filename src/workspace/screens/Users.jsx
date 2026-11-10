@@ -1,6 +1,7 @@
 import React from "react";
 import { Badge, Button, Checkbox, EmptyState, Field, Icon, IconButton, Input, Select, Switch, Tooltip } from "../../ds/index.js";
 import { Page, PageHeader, card, mono } from "../ui.jsx";
+import { MENSAGEM_SELECIONE_AREA, areasAoMarcar } from "../usuarios.js";
 
 /**
  * Painel de Usuários (fase Q, docs/mvp-resposta-rfp/spec/SPEC_FASE_Q.md): só para o Aprovador. Nesta fase,
@@ -109,31 +110,109 @@ function Pessoa({ u }) {
 }
 
 /** Formulário de adicionar (Q3 e Q4): só aparece depois do clique em "Adicionar usuário". */
-function Adicionar({ ws, isMobile }) {
+/**
+ * Campo Áreas do formulário (fase T, T2.2): aparência do `Select` do design system e, ao abrir, a lista
+ * de áreas em caixas de seleção, no estilo da lista do lápis. Fecha com um clique fora ou com Esc, e o
+ * foco volta ao campo. Com Revisor, fica desabilitado e mostra "Geral".
+ */
+function CampoDeAreas({ id, opcoes, areas, habilitado, invalido, onMarcar }) {
+  const raiz = React.useRef(null), campo = React.useRef(null), lista = React.useRef(null);
+  const [aberta, setAberta] = React.useState(false);
+  const fechar = (foco = true) => { setAberta(false); if (foco && campo.current) campo.current.focus(); };
+  React.useEffect(() => { if (!habilitado) setAberta(false); }, [habilitado]);
+  React.useEffect(() => {
+    if (!aberta) return undefined;
+    const fora = (e) => { if (raiz.current && !raiz.current.contains(e.target)) fechar(false); };
+    document.addEventListener("mousedown", fora);
+    const primeira = lista.current && lista.current.querySelector("input");
+    if (primeira) primeira.focus();
+    return () => document.removeEventListener("mousedown", fora);
+  }, [aberta]);
+  const texto = !habilitado ? "Geral" : areas.length ? areas.join(", ") : "Selecione as áreas";
+  const vazio = habilitado && !areas.length;
+  return (
+    <div ref={raiz} style={{ position: "relative", minWidth: 0 }} onKeyDown={(e) => { if (e.key === "Escape" && aberta) { e.preventDefault(); e.stopPropagation(); fechar(); } }}>
+      <button
+        ref={campo} id={id} type="button" disabled={!habilitado} onClick={() => setAberta((a) => !a)}
+        aria-haspopup="true" aria-expanded={aberta} aria-invalid={invalido || undefined}
+        style={{
+          width: "100%", minHeight: 36, boxSizing: "border-box", padding: "8px 36px 8px 12px", position: "relative", textAlign: "left",
+          fontFamily: "var(--font-sans)", fontSize: "var(--text-sm-size)", lineHeight: 1.4,
+          color: vazio ? "var(--text-meta)" : "var(--text-strong)",
+          background: habilitado ? "var(--surface-card)" : "var(--surface-sunken)",
+          border: `1px solid ${invalido ? "var(--danger)" : "var(--border-strong)"}`, borderRadius: "var(--radius-sm)",
+          cursor: habilitado ? "pointer" : "not-allowed", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
+        }}
+      >
+        {texto}
+        <span style={{ position: "absolute", right: 13, top: "50%", transform: "translateY(-50%)", display: "flex", color: "var(--text-meta)" }}><Icon name="chevron-down" size="md" /></span>
+      </button>
+      {aberta ? (
+        <div ref={lista} role="group" aria-label="Áreas do novo usuário" style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 70, width: "min(260px, calc(100vw - 32px))", boxSizing: "border-box", padding: 8, display: "grid", background: "var(--surface-card)", border: "1px solid var(--border-default)", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-popover)" }}>
+          {opcoes.map((a) => <Checkbox key={a} label={a} checked={areas.includes(a)} onChange={() => onMarcar(a)} style={{ minHeight: 36, padding: "0 4px" }} />)}
+          <span style={{ fontSize: 12, lineHeight: 1.45, color: "var(--text-meta)", padding: "6px 4px 2px" }}>C-Level vale por todas e não se combina com outras.</span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * Formulário de adicionar (Q3 e Q4): só aparece depois do clique em "Adicionar usuário". Na fase T
+ * (T2.1 a T2.6), também Papel (Revisor por padrão), Áreas (só para o Aprovador) e Situação (Ativo).
+ */
+function Adicionar({ ws, isMobile, opcoesDeAreas }) {
   const [nome, setNome] = React.useState("");
   const [email, setEmail] = React.useState("");
+  const [papel, setPapel] = React.useState("Revisor");
+  const [areas, setAreas] = React.useState([]);
+  const [ativo, setAtivo] = React.useState(true);
   const [erro, setErro] = React.useState(null);
+  const [erroDasAreas, setErroDasAreas] = React.useState(null);
   const [enviando, setEnviando] = React.useState(false);
+  const limpar = () => { setErro(null); setErroDasAreas(null); };
   // No modo compartilhado, espera a resposta do backend (Q3); um segundo clique não repete o pedido (PQ4).
   const enviar = async (e) => {
     e.preventDefault();
     if (enviando) return;
     setEnviando(true);
-    const recusa = await ws.adicionarUsuario(nome, email);
+    const recusa = await ws.adicionarUsuario(nome, email, { papel, areas: papel === "Aprovador" ? areas : [], ativo });
     setEnviando(false);
-    if (recusa) setErro(recusa);
+    // T2.3: a falta de área marca o campo Áreas; as demais recusas ficam abaixo dos campos (Q4).
+    if (recusa === MENSAGEM_SELECIONE_AREA) setErroDasAreas(recusa);
+    else if (recusa) setErro(recusa);
   };
+  const mudarPapel = (novo) => { setPapel(novo); if (novo !== "Aprovador") setAreas([]); limpar(); };
+  const marcar = (a) => { setAreas((atuais) => areasAoMarcar(atuais, a)); limpar(); };
   return (
-    <form onSubmit={enviar} noValidate aria-label="Adicionar usuário" style={card(14, { padding: "16px 20px", display: "grid", gap: 10 })}>
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "minmax(0,1fr) minmax(0,1.2fr) auto auto", gap: 12, alignItems: "end" }}>
-        <Field label="Nome" htmlFor="us-nome"><Input id="us-nome" size="sm" autoFocus placeholder="Ana Souza" value={nome} onChange={(e) => { setNome(e.target.value); setErro(null); }} /></Field>
-        <Field label="E-mail da conta" htmlFor="us-email"><Input id="us-email" size="sm" type="email" placeholder="ana.souza@empresa.com.br" value={email} onChange={(e) => { setEmail(e.target.value); setErro(null); }} /></Field>
-        <Button size="sm" variant="secondary" onClick={() => ws.abrirAdicionarUsuario(false)} disabled={enviando}>Cancelar</Button>
-        <Button size="sm" type="submit" loading={enviando}>Adicionar</Button>
+    <form onSubmit={enviar} noValidate aria-label="Adicionar usuário" style={card(14, { padding: "16px 20px", display: "grid", gap: 12 })}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "minmax(0,1fr) minmax(0,1.2fr)", gap: 12 }}>
+        <Field label="Nome" htmlFor="us-nome"><Input id="us-nome" size="sm" autoFocus placeholder="Ana Souza" value={nome} onChange={(e) => { setNome(e.target.value); limpar(); }} /></Field>
+        <Field label="E-mail da conta" htmlFor="us-email"><Input id="us-email" size="sm" type="email" placeholder="ana.souza@empresa.com.br" value={email} onChange={(e) => { setEmail(e.target.value); limpar(); }} /></Field>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "150px minmax(0,1fr) 140px", gap: 12, alignItems: "start" }}>
+        <Field label="Papel" htmlFor="us-papel"><Select id="us-papel" size="sm" options={["Revisor", "Aprovador"]} value={papel} onChange={(e) => mudarPapel(e.target.value)} /></Field>
+        <Field label="Áreas" htmlFor="us-areas">
+          <CampoDeAreas id="us-areas" opcoes={opcoesDeAreas} areas={areas} habilitado={papel === "Aprovador"} invalido={!!erroDasAreas} onMarcar={marcar} />
+          {erroDasAreas ? (
+            <div role="alert" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "var(--text-sm-size)", color: "var(--danger)" }}>
+              <Icon name="circle-alert" size="sm" />{erroDasAreas}
+            </div>
+          ) : null}
+        </Field>
+        <Field label="Situação">
+          <Switch checked={ativo} onChange={() => setAtivo((a) => !a)} label={ativo ? "Ativo" : "Inativo"} aria-label="Acesso ativo" style={{ minHeight: 36 }} />
+        </Field>
       </div>
       {erro ? <div role="alert" style={{ fontSize: 13, color: "var(--danger)" }}>{erro}</div> : null}
-      <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", fontSize: 13, color: "var(--n-500)" }}>
-        <Icon name="info" size="sm" />A conta precisa existir no painel do Supabase. O acesso nasce como Revisor, área <Badge>Geral</Badge>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 13, color: "var(--n-500)" }}>
+          <Icon name="info" size="sm" />A conta precisa existir no painel do Supabase.
+        </div>
+        <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
+          <Button size="sm" variant="secondary" onClick={() => ws.abrirAdicionarUsuario(false)} disabled={enviando}>Cancelar</Button>
+          <Button size="sm" type="submit" loading={enviando}>Adicionar</Button>
+        </div>
       </div>
     </form>
   );
@@ -161,7 +240,7 @@ export function Users({ v, ws, pad, isMobile }) {
           <Icon name="info" size="sm" />Dados de exemplo: as mudanças desta tela ainda não são gravadas e voltam ao recarregar a página.
         </div>
       ) : null}
-      {p.adicionando ? <Adicionar ws={ws} isMobile={isMobile} /> : null}
+      {p.adicionando ? <Adicionar ws={ws} isMobile={isMobile} opcoesDeAreas={p.areasDoAprovador} /> : null}
 
       {p.carregando ? (
         <div role="status" style={card(14, { padding: 24, display: "flex", gap: 10, alignItems: "center", color: "var(--n-500)" })}>

@@ -182,7 +182,9 @@ async function entrarNoPublicado(page, { falharLista = false } = {}) {
       estado.adicoes.push(corpo);
       if (corpo.email === "sem.conta@vereda.test") return route.fulfill({ status: 404, json: { erro: "Não há conta com este e-mail. Crie a conta no painel do Supabase (Authentication → Add user) e tente de novo." } });
       if (corpo.email === "outra@vereda.test") return route.fulfill({ status: 409, json: { erro: "Este e-mail não pode ser usado nesta organização." } });
-      const novo = { id: "44444444-4444-4444-8444-444444444444", nome: corpo.nome.trim(), email: corpo.email, papel: "Revisor", areas: [], ativo: true, propria: false };
+      if (estado.recusaDoPost) return route.fulfill({ status: estado.recusaDoPost.status, json: { erro: estado.recusaDoPost.erro } });
+      // Fase T (T2.7): a rota grava o papel, as áreas e a situação enviados; sem eles, Revisor, sem área, ativo.
+      const novo = { id: "44444444-4444-4444-8444-444444444444", nome: corpo.nome.trim(), email: corpo.email, papel: corpo.papel || "Revisor", areas: corpo.areas || [], ativo: corpo.ativo !== false, propria: false };
       estado.usuarios.push(novo);
       return route.fulfill({ status: 201, json: { usuario: novo } });
     }
@@ -417,4 +419,147 @@ test("Fase T · T1.9: confirmação só com o teclado e no celular, sem rolagem 
   await dialogo(page).getByText("Jurídico", { exact: true }).click();
   await dialogo(page).getByRole("button", { name: "Mudar para Aprovador" }).click();
   await expect(page.getByText("Kadu Mendes agora é Aprovador de Jurídico.").first()).toBeVisible();
+});
+
+// Fase T, etapa T2 (SPEC_FASE_T.md): Papel, Áreas e Situação no formulário "Adicionar usuário".
+const formulario = (page) => page.getByRole("form", { name: "Adicionar usuário" });
+const campoDeAreas = (page) => formulario(page).getByLabel("Áreas", { exact: true });
+const listaDoFormulario = (page) => page.getByRole("group", { name: "Áreas do novo usuário" });
+
+test("Fase T · T2.1 a T2.3: campos com os valores padrão, áreas em lista suspensa e erro sem área", async ({ page }) => {
+  await entrar(page);
+  await abrirPainel(page);
+  await page.getByRole("button", { name: "Adicionar usuário" }).click();
+
+  // T2.1: Papel Revisor, Áreas "Geral" desabilitado, Situação Ativo; o aviso só fala da conta.
+  await expect(formulario(page).getByLabel("Papel", { exact: true })).toHaveValue("Revisor");
+  await expect(campoDeAreas(page)).toBeDisabled();
+  await expect(campoDeAreas(page)).toHaveText("Geral");
+  await expect(formulario(page).getByRole("switch")).toBeChecked();
+  await expect(formulario(page)).toContainText("Ativo");
+  await expect(formulario(page)).toContainText("A conta precisa existir no painel do Supabase.");
+  await expect(formulario(page)).not.toContainText("O acesso nasce como Revisor");
+
+  // T2.2: com Aprovador, o campo abre a lista; marcar não fecha; o campo mostra as escolhidas.
+  await formulario(page).getByLabel("Papel", { exact: true }).selectOption("Aprovador");
+  await expect(campoDeAreas(page)).toBeEnabled();
+  await expect(campoDeAreas(page)).toHaveText("Selecione as áreas");
+  await campoDeAreas(page).click();
+  await expect(listaDoFormulario(page).getByRole("checkbox")).toHaveCount(6);
+  await expect(listaDoFormulario(page)).toContainText("C-Level vale por todas e não se combina com outras.");
+  await listaDoFormulario(page).getByText("Jurídico", { exact: true }).click();
+  await listaDoFormulario(page).getByText("Comercial", { exact: true }).click();
+  await expect(listaDoFormulario(page)).toBeVisible();
+  await expect(campoDeAreas(page)).toHaveText("Jurídico, Comercial");
+  // C-Level não se combina com outras.
+  await listaDoFormulario(page).getByText("C-Level", { exact: true }).click();
+  await expect(campoDeAreas(page)).toHaveText("C-Level");
+  // Clique fora fecha a lista.
+  await formulario(page).getByLabel("Nome").click();
+  await expect(listaDoFormulario(page)).toHaveCount(0);
+  // Voltar para Revisor limpa as áreas.
+  await formulario(page).getByLabel("Papel", { exact: true }).selectOption("Revisor");
+  await expect(campoDeAreas(page)).toHaveText("Geral");
+  await expect(campoDeAreas(page)).toBeDisabled();
+
+  // T2.3: Aprovador sem área não é adicionado; o campo fica inválido e o erro some ao marcar.
+  await formulario(page).getByLabel("Nome").fill("Lucas Prado");
+  await formulario(page).getByLabel("E-mail da conta").fill("lucas.prado@pulse.com.br");
+  await formulario(page).getByLabel("Papel", { exact: true }).selectOption("Aprovador");
+  await formulario(page).getByRole("button", { name: "Adicionar", exact: true }).click();
+  await expect(formulario(page).getByRole("alert")).toHaveText("Selecione pelo menos uma área.");
+  await expect(campoDeAreas(page)).toHaveAttribute("aria-invalid", "true");
+  await expect(linha(page, "Lucas Prado")).toHaveCount(0);
+  await campoDeAreas(page).click();
+  await listaDoFormulario(page).getByText("Produto", { exact: true }).click();
+  await expect(formulario(page).getByRole("alert")).toHaveCount(0);
+});
+
+test("Fase T · T2.4 a T2.6: adicionar Aprovador com áreas, pessoa inativa e recusa com o formulário preenchido", async ({ page }) => {
+  await entrar(page);
+  await abrirPainel(page);
+
+  // T2.6: recusa (já na lista) mantém papel, áreas e situação preenchidos.
+  await page.getByRole("button", { name: "Adicionar usuário" }).click();
+  await formulario(page).getByLabel("Nome").fill("Kadu");
+  await formulario(page).getByLabel("E-mail da conta").fill("kadu.mendes@pulse.com.br");
+  await formulario(page).getByLabel("Papel", { exact: true }).selectOption("Aprovador");
+  await campoDeAreas(page).click();
+  await listaDoFormulario(page).getByText("Jurídico", { exact: true }).click();
+  await page.keyboard.press("Escape");
+  await formulario(page).getByRole("switch").click({ force: true });
+  await formulario(page).getByRole("button", { name: "Adicionar", exact: true }).click();
+  await expect(formulario(page).getByRole("alert")).toHaveText("Esta pessoa já está na lista.");
+  await expect(formulario(page).getByLabel("Papel", { exact: true })).toHaveValue("Aprovador");
+  await expect(campoDeAreas(page)).toHaveText("Jurídico");
+  await expect(formulario(page).getByRole("switch")).not.toBeChecked();
+
+  // T2.4 e T2.5: com outro e-mail, entra como Aprovador do Jurídico, inativo.
+  await formulario(page).getByLabel("Nome").fill("Lucas Prado");
+  await formulario(page).getByLabel("E-mail da conta").fill("lucas.prado@pulse.com.br");
+  await formulario(page).getByRole("button", { name: "Adicionar", exact: true }).click();
+  await expect(formulario(page)).toHaveCount(0);
+  await expect(page.getByText("Lucas Prado entrou como Aprovador de Jurídico. O acesso está inativo.").first()).toBeVisible();
+  await expect(linha(page, "Lucas Prado")).toContainText("Jurídico");
+  await expect(linha(page, "Lucas Prado")).toContainText("Inativo");
+  await expect(linha(page, "Lucas Prado").getByLabel("Papel de Lucas Prado")).toHaveValue("Aprovador");
+
+  // T2.4: com os valores padrão, o resultado é o mesmo de antes (Revisor, área Geral, ativo).
+  await page.getByRole("button", { name: "Adicionar usuário" }).click();
+  await formulario(page).getByLabel("Nome").fill("Rita Moura");
+  await formulario(page).getByLabel("E-mail da conta").fill("rita.moura@pulse.com.br");
+  await formulario(page).getByRole("button", { name: "Adicionar", exact: true }).click();
+  await expect(page.getByText("Rita Moura entrou como Revisor, área Geral.").first()).toBeVisible();
+  await expect(linha(page, "Rita Moura")).toContainText("Geral");
+  await expect(linha(page, "Rita Moura")).toContainText("Ativo");
+});
+
+test("Fase T · publicado T2.4 e T2.7: o pedido leva papel, áreas e situação; a recusa da rota aparece no formulário", async ({ page }) => {
+  const estado = await entrarNoPublicado(page);
+  await page.getByRole("button", { name: "Adicionar usuário" }).click();
+  await formulario(page).getByLabel("Nome").fill("Lucas Prado");
+  await formulario(page).getByLabel("E-mail da conta").fill("lucas@vereda.test");
+  await formulario(page).getByLabel("Papel", { exact: true }).selectOption("Aprovador");
+  await campoDeAreas(page).click();
+  // A lista usa as áreas da rota (DF7): sem Produto.
+  await expect(listaDoFormulario(page).getByText("Produto", { exact: true })).toHaveCount(0);
+  await listaDoFormulario(page).getByText("Comercial", { exact: true }).click();
+  await page.keyboard.press("Escape");
+
+  // A recusa da rota fica no formulário, que continua preenchido.
+  estado.recusaDoPost = { status: 400, erro: "Selecione pelo menos uma área." };
+  await formulario(page).getByRole("button", { name: "Adicionar", exact: true }).click();
+  await expect(formulario(page).getByRole("alert")).toHaveText("Selecione pelo menos uma área.");
+  await expect(campoDeAreas(page)).toHaveText("Comercial");
+
+  estado.recusaDoPost = null;
+  await formulario(page).getByRole("button", { name: "Adicionar", exact: true }).click();
+  await expect(linhaPorEmail(page, "lucas@vereda.test")).toContainText("Comercial");
+  expect(estado.adicoes.at(-1)).toEqual({ nome: "Lucas Prado", email: "lucas@vereda.test", papel: "Aprovador", areas: ["Comercial"], ativo: true });
+});
+
+test("Fase T · T2.8: formulário só com o teclado e no celular, sem rolagem lateral", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await entrar(page);
+  await abrirPainel(page);
+  await page.getByRole("button", { name: "Adicionar usuário" }).click();
+  await formulario(page).getByLabel("Papel", { exact: true }).selectOption("Aprovador");
+  // Teclado: Enter abre a lista com o foco na primeira área, Espaço marca, Esc fecha e devolve o foco.
+  await campoDeAreas(page).focus();
+  await page.keyboard.press("Enter");
+  await expect(listaDoFormulario(page).getByRole("checkbox", { name: "Produto", exact: true })).toBeFocused();
+  await page.keyboard.press("Space");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Space");
+  await expect(campoDeAreas(page)).toHaveText("Produto, Tecnologia");
+  // Celular: a lista cabe na tela, sem rolagem lateral.
+  const caixa = await listaDoFormulario(page).boundingBox();
+  expect(caixa.x).toBeGreaterThanOrEqual(0);
+  expect(caixa.x + caixa.width).toBeLessThanOrEqual(390);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await page.keyboard.press("Escape");
+  await expect(listaDoFormulario(page)).toHaveCount(0);
+  await expect(campoDeAreas(page)).toBeFocused();
+  // O formulário continua aberto depois do Esc da lista.
+  await expect(formulario(page)).toBeVisible();
 });

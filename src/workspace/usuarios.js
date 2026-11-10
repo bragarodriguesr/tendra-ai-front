@@ -62,18 +62,27 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * Recusa do formulário "Adicionar usuário" (Q3 e Q4), ou null quando pode adicionar. Só antecipa as
  * recusas do backend (DF6), com as mesmas mensagens; conta inexistente e outra organização só ele sabe.
  */
-export function recusaDoNovoUsuario(usuarios, nome, email) {
+export function recusaDoNovoUsuario(usuarios, nome, email, dados = {}) {
   if (nome.trim() === "") return "Informe o nome da pessoa.";
   if (!EMAIL.test(email.trim())) return "Informe um e-mail válido.";
   if (usuarios.some((u) => u.email === email.trim().toLowerCase())) return "Esta pessoa já está na lista.";
+  // Fase T (T2.3): o Aprovador entra com pelo menos uma área.
+  if (dados.papel === "Aprovador" && !(dados.areas && dados.areas.length)) return MENSAGEM_SELECIONE_AREA;
   return null;
 }
 
-/** O acesso nasce como Revisor, área Geral (sem área), ativo (Q3). Só no modo local: no compartilhado, vem do backend. */
-export const novoUsuario = (nome, email) => {
+/**
+ * O acesso nasce como Revisor, área Geral (sem área), ativo (Q3); na fase T (T2.4), com o papel, as áreas
+ * e a situação escolhidos no formulário. Só no modo local: no compartilhado, vem do backend.
+ */
+export const novoUsuario = (nome, email, { papel = "Revisor", areas = [], ativo = true } = {}) => {
   const emailNormalizado = email.trim().toLowerCase();
-  return { id: "exemplo-" + emailNormalizado, nome: nome.trim(), email: emailNormalizado, papel: "Revisor", areas: [], ativo: true };
+  return { id: "exemplo-" + emailNormalizado, nome: nome.trim(), email: emailNormalizado, papel, areas: papel === "Aprovador" ? areas : [], ativo };
 };
+
+/** Aviso depois de adicionar (T2.4): papel e áreas, e o acesso inativo quando for o caso. */
+export const avisoDoNovoUsuario = (u) =>
+  `${u.nome} entrou como ${u.papel === "Aprovador" && u.areas.length ? `Aprovador de ${areasEmTexto(u.areas)}` : `${u.papel}, área Geral`}.${u.ativo ? "" : " O acesso está inativo."}`;
 
 /** Aprovadores ativos depois de uma mudança: a organização precisa de ao menos um (Q8). */
 export const aprovadoresAtivos = (usuarios) => usuarios.filter((u) => u.ativo && u.papel === "Aprovador").length;
