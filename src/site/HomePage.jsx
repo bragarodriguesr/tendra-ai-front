@@ -1,5 +1,8 @@
 import React from "react";
-import { Aurora, Badge, Button, Card, Divider, Icon, MonoLabel, ProgressBar, SourceTrail, Tag } from "../ds/index.js";
+import { Aurora, Button, Card, Icon, MonoLabel, Tag } from "../ds/index.js";
+import { LiveCard } from "./LiveCard.jsx";
+import { ProductTour } from "./ProductTour.jsx";
+import { Features } from "./Features.jsx";
 
 const Section = ({ children, tone, style, id }) => (
   <section id={id} style={{ background: tone === "ink" ? "var(--surface-inverse)" : tone === "sunken" ? "var(--surface-sunken)" : "transparent", ...style }}>
@@ -40,59 +43,22 @@ export function HomePage({ onPage }) {
             </div>
           </div>
 
-          <Card tone="ink" radius="3xl" padding="lg">
-            <div style={{ display: "grid", gap: "var(--space-5)" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-3) var(--space-4)", flexWrap: "wrap" }}>
-                <MonoLabel tone="inverse">REQ-084/210 · Banco Aurora</MonoLabel>
-                <Badge tone="approved-inverse" icon="check">Conformidade OK</Badge>
-              </div>
-              <Card tone="ink-panel" radius="lg" padding="sm">
-                <div style={{ display: "grid", gap: "var(--space-4)" }}>
-                  <div style={{ fontSize: "var(--text-sm-size)", lineHeight: 1.5, color: "var(--ink-200)" }}>
-                    “Descreva os controles de criptografia de dados em repouso e em trânsito.”
-                  </div>
-                  <Divider tone="inverse" />
-                  <div style={{ fontSize: "var(--text-ui-size)", lineHeight: 1.62, color: "var(--n-075)", textWrap: "pretty" }}>
-                    Dados em repouso cifrados com AES-256, chaves em HSM FIPS 140-2 nível 3 com rotação a cada 90 dias; tráfego em TLS 1.3 com <span style={{ color: "var(--brand-lime)" }}>perfect forward secrecy</span>.
-                  </div>
-                  <SourceTrail tone="ink" sources={[{ file: "Security_Whitepaper_v4.pdf", page: 12 }]} />
-                </div>
-              </Card>
-              <ProgressBar tone="ink" label="Preenchimento automático" value={92} />
-            </div>
-          </Card>
+          <LiveCard />
         </div>
       </Section>
 
       <Section tone="sunken" id="como-funciona">
         <div style={{ display: "grid", gap: "var(--space-10)" }}>
           <div style={{ display: "grid", gap: "var(--space-4)" }}>
-            <MonoLabel>Como funciona</MonoLabel>
+            <MonoLabel>O produto em ação</MonoLabel>
             <h2 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: "var(--text-d2-size)", lineHeight: "var(--text-d2-lh)", letterSpacing: "var(--text-d2-ls)", color: "var(--text-strong)", maxWidth: "24ch", textWrap: "pretty" }}>
-              Quatro passos, nenhuma resposta sem fonte
+              Da sua base à planilha aprovada, em cinco telas
             </h2>
+            <p style={{ margin: 0, fontSize: "var(--text-lead-size)", lineHeight: "var(--text-lead-lh)", color: "var(--text-body)", maxWidth: "var(--measure-lead)", textWrap: "pretty" }}>
+              Role a página: a tela ao lado acompanha cada etapa.
+            </p>
           </div>
-          <div className="tdr-site-steps">
-            {[
-              { n: "00", icon: "link", t: "Conecte suas fontes", d: "Drives, intranet, documentações, certificações e propostas/RFPs anteriores. A Tendra.ai organiza o que está espalhado." },
-              { n: "01", icon: "upload", t: "Importe o edital", d: "PDF, planilha ou portal do cliente. A Tendra.ai separa os requisitos item por item." },
-              { n: "02", icon: "sparkles", t: "Gere com rastreabilidade", d: "Cada resposta sai citando o documento e a página que a sustenta." },
-              { n: "03", icon: "check-check", t: "Revise e aprove", d: "O time responsável aprova nominalmente; a trilha de auditoria registra tudo." }
-            ].map((s) => (
-              <Card key={s.n} padding="lg" radius="2xl">
-                <div style={{ display: "grid", gap: "var(--space-4)" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <span style={{ width: 44, height: 44, borderRadius: "var(--radius-lg)", background: "var(--surface-sunken)", color: "var(--brand-sage)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <Icon name={s.icon} size="lg" />
-                    </span>
-                    <MonoLabel>{s.n}</MonoLabel>
-                  </div>
-                  <div style={{ fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: "var(--text-h3-size)", letterSpacing: "-0.02em", color: "var(--text-strong)" }}>{s.t}</div>
-                  <div style={{ fontSize: "var(--text-ui-size)", lineHeight: 1.6, color: "var(--text-body)", textWrap: "pretty" }}>{s.d}</div>
-                </div>
-              </Card>
-            ))}
-          </div>
+          <ProductTour />
         </div>
         <div className="tdr-site-teams">
           <span style={{ fontSize: "var(--text-ui-size)", color: "var(--text-strong)" }}>Feito para os times que respondem propostas</span>
@@ -140,6 +106,18 @@ export function HomePage({ onPage }) {
           </div>
         </div>
       </Aurora>
+
+      <Section id="funcionalidades">
+        <div style={{ display: "grid", gap: "var(--space-10)" }}>
+          <div style={{ display: "grid", gap: "var(--space-4)" }}>
+            <MonoLabel>Funcionalidades</MonoLabel>
+            <h2 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: "var(--text-d2-size)", lineHeight: "var(--text-d2-lh)", letterSpacing: "var(--text-d2-ls)", color: "var(--text-strong)", maxWidth: "24ch", textWrap: "pretty" }}>
+              O que a sua equipe passa a ter em cada proposta
+            </h2>
+          </div>
+          <Features />
+        </div>
+      </Section>
 
       <Section id="seguranca">
         <div className="tdr-site-trust">

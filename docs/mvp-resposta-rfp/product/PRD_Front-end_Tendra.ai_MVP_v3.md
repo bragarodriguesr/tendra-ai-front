@@ -200,10 +200,11 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 
 **F-32 · P0 · Site público** — Implementado
 
-- **Cabeçalho** em Tinta, com 64 px de altura, igual ao do Workspace: logo animado (volta para a home), menu **Plataforma** (rola até "Como funciona"), **Segurança** (rola até "Segurança e confiança"), **Contato** (página) e **Preços** (página), e o botão **"Entrar"** (abre o login). No celular os links vão para um menu recolhível.
+- **Cabeçalho** em Tinta, com 64 px de altura, igual ao do Workspace: logo animado (volta para a home), menu **Plataforma** (rola até "O produto em ação"), **Segurança** (rola até "Segurança e confiança"), **Contato** (página) e **Preços** (página), e o botão **"Entrar"** (abre o login). No celular os links vão para um menu recolhível.
 - **Home:**
-  - Hero "Responda a um RFP em horas, não semanas." com o botão "Agendar demo" (abre Contato) e um cartão de resposta de exemplo com fonte.
-  - "Como funciona" em quatro passos: 00 Conecte suas fontes, 01 Importe o edital, 02 Gere com rastreabilidade, 03 Revise e aprove. Abaixo, "Feito para os times que respondem propostas: Pré-vendas, RevOps, Segurança da informação, Jurídico e compliance".
+  - Hero "Responda a um RFP em horas, não semanas." com o botão "Agendar demo" (abre Contato) e um cartão de resposta de exemplo com fonte. O cartão é animado (10/11/2026): responde três requisitos em sequência (pergunta digitada, resposta escrita, fonte, verificação da citação, aprovação); com movimento reduzido fica parado no primeiro.
+  - "O produto em ação" (10/11/2026, no lugar de "Como funciona"), em cinco passos: 00 Conecte suas fontes, 01 Importe o edital, 02 Gere com rastreabilidade, 03 Revise e aprove, 04 Exporte a planilha aprovada. Os passos rolam à esquerda e uma janela do produto, fixa ao lado (no celular, presa no topo), toca a demonstração animada da tela de cada passo, com dados fictícios. Abaixo, "Feito para os times que respondem propostas: Pré-vendas, RevOps, Segurança da informação, Jurídico e compliance".
+  - "Funcionalidades" (10/11/2026), depois de "Plataforma AI native": cinco cartões com um fragmento de interface em movimento cada (fonte de cada afirmação, alertas, dashboard, base com validade, revisão de texto com IA).
   - Faixa de números.
   - "Segurança e confiança" com quatro cartões: Isolamento por tenant, Auditoria imutável, Aprovação nominal, Base curada e governada.
   - Chamada para webinar e rodapé.
