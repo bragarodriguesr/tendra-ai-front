@@ -62,13 +62,13 @@ export function onView(el, cb, opts = { threshold: 0.2 }) {
 /* Toca as cenas dentro de uma .tdr-demo: palco em tamanho fixo, escalado como um vídeo.
    O cursor é o glifo mouse-pointer-2 do Lucide, preenchido. */
 export function Player(root, opts = {}) {
-  const view = root.querySelector(".win-view"), url = root.querySelector(".win-url");
+  const view = root.querySelector(".win-view");
   const stage = document.createElement("div"); stage.className = "stage"; stage.setAttribute("aria-hidden", "true"); view.append(stage);
   const LIST = opts.scenes;
   let tk = { off: true }, idx = opts.start || 0, visible = false, scale = 1;
   const fit = () => {
     const w = view.clientWidth; if (!w) return;
-    const compact = w < (opts.compactBelow || 560), W = compact ? 520 : 920, H = compact ? 500 : 520;
+    const compact = w < (opts.compactBelow || 560), dim = opts.compactSize || [520, 500], W = compact ? dim[0] : 920, H = compact ? dim[1] : 520;
     scale = w / W; stage.classList.toggle("compact", compact);
     stage.style.width = W + "px"; stage.style.height = H + "px"; stage.style.transform = `scale(${scale})`; view.style.height = H * scale + "px";
   };
@@ -77,7 +77,6 @@ export function Player(root, opts = {}) {
     tk.off = true; tk = { off: false }; idx = (i + LIST.length) % LIST.length;
     const sc = LIST[idx], c = makeCtx(tk), t0 = performance.now();
     stage.innerHTML = opts.side(sc.nav) + `<div class="s-main">${sc.html()}</div><div class="s-cursor" style="opacity:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="#12140F" stroke="#F5F6F1" stroke-width="1.5" stroke-linejoin="round"><path d="M4.037 4.688a.495.495 0 0 1 .651-.651l16 6.5a.5.5 0 0 1-.063.947l-6.124 1.58a2 2 0 0 0-1.438 1.435l-1.579 6.126a.5.5 0 0 1-.947.063z"/></svg></div>`;
-    if (url) url.textContent = sc.url;
     const cur = stage.querySelector(".s-cursor");
     cur.style.transform = `translate(${stage.offsetWidth * 0.6}px, ${stage.offsetHeight * 0.75}px)`;
     Object.assign(c, {

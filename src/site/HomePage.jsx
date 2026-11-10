@@ -52,11 +52,8 @@ export function HomePage({ onPage }) {
           <div style={{ display: "grid", gap: "var(--space-4)" }}>
             <MonoLabel>O produto em ação</MonoLabel>
             <h2 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: "var(--text-d2-size)", lineHeight: "var(--text-d2-lh)", letterSpacing: "var(--text-d2-ls)", color: "var(--text-strong)", maxWidth: "24ch", textWrap: "pretty" }}>
-              Da sua base à planilha aprovada, em cinco telas
+              Da sua base à planilha aprovada, em cinco passos
             </h2>
-            <p style={{ margin: 0, fontSize: "var(--text-lead-size)", lineHeight: "var(--text-lead-lh)", color: "var(--text-body)", maxWidth: "var(--measure-lead)", textWrap: "pretty" }}>
-              Role a página: a tela ao lado acompanha cada etapa.
-            </p>
           </div>
           <ProductTour />
         </div>

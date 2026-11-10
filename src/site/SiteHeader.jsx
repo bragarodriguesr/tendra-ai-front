@@ -4,7 +4,8 @@ import { BrandBar } from "../BrandBar.jsx";
 
 // Itens do menu do site. "section" rola a Home até a seção; "page" abre outra página.
 export const SITE_LINKS = [
-  { label: "Plataforma", section: "como-funciona" },
+  { label: "Conheça", section: "como-funciona" },
+  { label: "Funcionalidades", section: "funcionalidades" },
   { label: "Segurança", section: "seguranca" },
   { label: "Contato", page: "contato" },
   { label: "Preços", page: "precos" }
