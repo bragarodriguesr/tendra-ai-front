@@ -106,6 +106,10 @@ Cada etapa termina com uma verificação que pode ser feita sem ler código.
 | P10 | Buscar um texto inexistente: cabeçalho visível e "Nenhuma pergunta encontrada." abaixo |
 | P11 | Na aba de rede do navegador, nenhuma chamada a `/api/` ao ordenar |
 
+### Conferência no publicado (09/11/2026)
+- O grupo conferiu o checklist no ambiente publicado (Vercel no commit `f790825`, desde as 19:20 UTC) e deu os testes por concluídos.
+- A fase é só de front e ordenar não faz requisições (P11). Por isso não há evidência no banco: os logs do Render mostram as aberturas das tarefas, sem nenhuma chamada nova.
+
 ## Definição de pronto
 
 Segue a definição de pronto do `plan/PLAN.md` (7 itens): cenários com testes automáticos e integração contínua verde; verificação de cada etapa feita; estados de erro tratados (aqui, só a busca sem resultado); nenhuma regra de negócio no front além da ordenação de exibição; spec e plano atualizados; nenhuma alteração fora do escopo do spec.

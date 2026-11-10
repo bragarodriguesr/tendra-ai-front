@@ -1023,7 +1023,7 @@ Pedida em 04/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 ### P5. Testes de ponta a ponta
 - `e2e/ordenacaoDosDetalhes.spec.js`, um teste por cenário (P1 a P11), e um com um Aprovador do Jurídico numa API simulada pelo teste.
 
-### Situação (09/11/2026): implementada, no `main` (PR #95, merge em 07/11/2026) e publicada; falta a conferência do grupo
+### Situação (09/11/2026): implementada, no `main` (PR #95, merge em 07/11/2026), publicada e conferida pelo grupo no publicado
 - Implementada sobre a `main` de 07/11/2026 (até o PR #94), com os conflitos em `TaskDetail.jsx` e `viewModel.js` resolvidos.
 - **Revalidada em 09/11/2026 na `main` com as fases Q e S:**
   - os cenários P1 a P11 têm teste de ponta a ponta (`e2e/ordenacaoDosDetalhes.spec.js`, 12 testes), e a suíte completa está verde (110 testes);
@@ -1070,10 +1070,11 @@ Pedida em 08/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 
 ### Segunda parte: conexão com o banco (08/11/2026)
 - Plano em `plan/PLAN_FASE_Q.md` (etapas Q0 a Q7), com o inventário dos dados fixos da tela (DF1 a DF10) e as pendências do Supabase, do Render e da Vercel (PQ1 a PQ5). Spec revisado e aprovado (Q0).
-- **Situação (09/11/2026): etapas Q0 a Q6 feitas (PR #102, merge às 19:19 UTC). Q7: publicada (Vercel e Render às 19:20 UTC, commit `f790825`); falta a conferência no publicado, com a PQ1.**
+- **Situação (09/11/2026): etapas Q0 a Q6 feitas (PR #102, merge às 19:19 UTC). Q7: publicada (Vercel e Render às 19:20 UTC, commit `f790825`) e conferida pelo grupo, menos a adição de pessoa (Q3, Q4) e a PQ1, que não foram exercitadas no publicado.**
   - Rotas `/api/gestao/usuarios` no backend, só com login e só para o Aprovador. O front usa as rotas no modo compartilhado e os dados de exemplo no local.
   - Q5 conferida com o backend real e o Supabase Auth simulado: todos os cenários de Q1 a Q13.
-  - Q6: PQ2 a PQ5 confirmadas. PQ1 (chave de serviço do Render na API de contas) se confere na Q7.
+  - Q6: PQ2 a PQ5 confirmadas. PQ1 (chave de serviço do Render na API de contas) segue pendente: só se confirma adicionando uma conta de teste pelo painel.
+  - Conferência no publicado: promoção com área, rebaixamento com as áreas zeradas e desativação e reativação, todas com 200 no Render. Detalhes em `plan/PLAN_FASE_Q.md` (Q7).
   - O teste de concorrência que falhava no Postgres do CI foi corrigido: a regra não mudou, o teste é que esperava um só dos dois códigos válidos.
   - O registro das mudanças no Histórico segue como alteração futura.
 
@@ -1105,9 +1106,9 @@ Pedida em 08/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 - **S4.** Testes de ponta a ponta (`e2e/areas.spec.js` atualizado e `e2e/areaNaRevisao.spec.js`).
 - **S5.** Publicação e conferência.
 
-### Situação (09/11/2026): etapas S1 a S4 feitas e no `main` (PRs #103 e #104, merge em 09/11/2026); publicada, falta a conferência do grupo (S5)
+### Situação (09/11/2026): etapas S1 a S5 feitas; no `main` (PRs #103 e #104), publicada e conferida pelo grupo no publicado
 - **Revalidada em 09/11/2026:** os cenários S1 a S9 e SA1 têm teste de ponta a ponta (`e2e/areaNaRevisao.spec.js`, com `e2e/areas.spec.js`), e a suíte completa está verde.
-- **S5 (publicação):** o front foi publicado na Vercel em 09/11/2026, às 19:20 UTC, pela conta dona do time, junto com as fases P e Q (o deploy automático de 09/11 tinha sido bloqueado, PQ5 da fase Q). Falta a conferência do checklist no publicado.
+- **S5 (publicação):** o front foi publicado na Vercel em 09/11/2026, às 19:20 UTC, pela conta dona do time, junto com as fases P e Q (o deploy automático de 09/11 tinha sido bloqueado, PQ5 da fase Q). Checklist conferido pelo grupo no publicado em 09/11/2026.
 
 Histórico das etapas:
 - S1: "Editado" com `history`; "Resposta manual", a linha "escrita por …" e o alerta `manual` (`data.js`) com `file-text`. Conferida no navegador no modo local; `npm test` e `e2e/jornada.spec.js` passando.
@@ -1116,7 +1117,7 @@ Histórico das etapas:
 - S4: `e2e/areas.spec.js` troca a área pelo lápis e confere que não há lápis na pergunta de outra área. Novo `e2e/areaNaRevisao.spec.js` com 6 testes (S1 a S9): Aprovador, Revisor e tarefa arquivada; abrir e fechar pelo mouse e pelo teclado; área atual; lista ocupada durante a gravação e recusa 409; celular; ícones das etiquetas. Novo `test/iconesDaRevisao.test.js` (alerta da resposta manual com `file-text`, nenhum alerta com o lápis). `npm test` com 36 testes e a suíte de ponta a ponta completa verde (109 testes).
 - Ajustes depois da validação manual: o lápis sozinho virou o botão "Alterar área" (contorno cinza e fundo preto com o mouse por cima, proposta A), sem a dica.
 - Apêndice SA1: o lápis das áreas do "Painel de Usuários" com o mesmo contorno e realce, sem texto. Teste em `e2e/areaNaRevisao.spec.js`. Conflitos com o PR da fase Q simulados: só o `PLAN.md`.
-- S5 (publicação e conferência) pendente.
+- S5: publicada e conferida pelo grupo no publicado em 09/11/2026.
 
 ## Fase T: evolução da alteração de papéis e do cadastro de usuários
 

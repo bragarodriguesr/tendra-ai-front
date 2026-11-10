@@ -101,6 +101,9 @@ Cada etapa termina com uma verificação que pode ser feita sem ler código.
 - Merge e deploy do front na Vercel (ver a observação da PQ5).
 - No publicado, com um Aprovador de uma área e um Revisor, conferir o checklist abaixo.
 - **Verificação:** checklist conferido no publicado.
+- **Situação (09/11/2026): conferida no publicado.** O grupo conferiu o checklist com o front da Vercel no commit `f790825` e deu os testes por concluídos.
+  - A fase é só de front. Nenhum evento `area` foi gravado depois da publicação: a troca de área (S4) usa a rota da fase N, conferida no publicado em 04/11/2026, e nos testes de ponta a ponta.
+  - Nenhum erro 5xx no Render desde a publicação.
 
 ## Checklist de aceite
 
