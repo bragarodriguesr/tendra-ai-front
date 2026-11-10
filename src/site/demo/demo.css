@@ -2,8 +2,6 @@
    O palco tem tamanho fixo e é escalado como um vídeo; tudo fica sob .tdr-demo para não vazar. */
 @keyframes tdr-demo-blink { 50% { opacity: 0.25; } }
 .tdr-demo { background: var(--n-000); border: 1px solid var(--n-350); border-radius: 18px; overflow: hidden; }
-.tdr-demo .win-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 40px; padding: 0 14px; border-bottom: 1px solid var(--n-200); background: var(--n-050); }
-.tdr-demo .win-url { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--n-400); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .tdr-demo .win-view { position: relative; overflow: hidden; background: var(--n-050); }
 .tdr-demo .stage { position: absolute; top: 0; left: 0; transform-origin: 0 0; display: grid; grid-template-columns: 172px minmax(0, 1fr); font-size: 13px; line-height: 1.5; color: var(--n-700); }
 .tdr-demo .stage.compact { grid-template-columns: minmax(0, 1fr); }
@@ -49,7 +47,7 @@
 .tdr-demo .s-li .badge { font-size: 9px; padding: 2px 6px; }
 .tdr-demo .s-detail { display: grid; align-content: start; gap: 12px; min-width: 0; }
 .tdr-demo .s-q { font-size: 13px; color: var(--n-500); font-style: normal; }
-.tdr-demo .s-ans { min-height: 96px; font-size: 13.5px; line-height: 1.6; color: var(--brand-ink); }
+.tdr-demo .s-ans { min-height: 88px; font-size: 13.5px; line-height: 1.6; color: var(--brand-ink); }
 .tdr-demo .s-ans .w { animation: tdr-fade 260ms var(--ease-out) backwards; }
 .tdr-demo .s-cite { display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px; padding: 0 4px; margin: 0 2px; border-radius: 5px; background: var(--brand-lime); color: var(--brand-ink); font-family: var(--font-mono); font-size: 10px; font-weight: 500; vertical-align: 1px; animation: tdr-rise var(--duration-base) var(--ease-out) backwards; }
 .tdr-demo .s-ins { background: var(--brand-lime); color: var(--brand-ink); padding: 0 3px; }
@@ -79,8 +77,6 @@
 .tdr-demo .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 6px; font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.3; background: var(--n-100); color: var(--n-500); white-space: nowrap; }
 .tdr-demo .badge.ok { background: var(--lime-wash); color: var(--state-ink); box-shadow: inset 0 0 0 1px rgba(200, 247, 61, 0.9); }
 .tdr-demo .badge.warn { background: var(--warning-wash); color: var(--warning); box-shadow: inset 0 0 0 1px var(--warning-line); }
-.tdr-demo .badge.live { background: transparent; padding-left: 0; }
-.tdr-demo .dot { width: 7px; height: 7px; border-radius: 99px; background: var(--brand-lime); box-shadow: 0 0 0 1px var(--brand-sage); animation: tdr-demo-blink 1.6s steps(2, jump-none) infinite; }
 .tdr-demo .tag { display: inline-flex; padding: 3px 10px; border-radius: 99px; border: 1px solid var(--n-200); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--n-500); background: var(--n-000); }
 .tdr-demo .s-tr.base { grid-template-columns: 1.6fr 0.9fr 0.5fr auto; }
 .tdr-demo .s-tr.base .badge { font-size: 9px; padding: 2px 6px; }

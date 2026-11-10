@@ -25,7 +25,7 @@ function review(mode) {
   </div></div>`;
 }
 const ETAPAS = [
-  { id: "importar", nav: "tarefas", url: "app.tendra.ai/tarefas/nova", dur: 14500,
+  { id: "importar", nav: "tarefas", dur: 14500,
     html: () => `<div class="s-row"><div><div class="mono">Nova tarefa</div><div class="s-h">Nova RFP/Questionário</div></div><span class="badge">Rascunho</span></div>
       <div id="f1" style="display:grid;gap:14px"><div style="display:grid;gap:6px"><span class="s-id">EMPRESA</span><div class="s-input" id="emp"></div></div>
         <div class="s-drop" id="drop">${ic("upload", 20)}<span>Arraste a planilha de perguntas ou escolha o arquivo</span><span class="s-id">.XLSX · .CSV</span></div>
@@ -48,7 +48,7 @@ const ETAPAS = [
       for (const r of c.$$("#f3 .s-req")) { r.hidden = false; r.classList.add("s-pop"); await c.wait(260); }
       await c.wait(700); await c.click("#open");
     } },
-  { id: "gerar", nav: "revisao", url: "app.tendra.ai/revisao/req-084", dur: 13000,
+  { id: "gerar", nav: "revisao", dur: 13000,
     html: () => review("gerar"),
     run: async (c) => {
       c.$("#st .badge").insertAdjacentHTML("afterbegin", `<span class="spin" style="display:inline-flex">${ic("loader-circle", 11)}</span>`);
@@ -59,7 +59,7 @@ const ETAPAS = [
       c.$("#bar").style.setProperty("--v", "92%"); await count(c.$("#pct"), 92, 1400, c, (n) => n + "%");
       await c.wait(500); c.$('[data-id="REQ-085"] .badge').outerHTML = bdg("Gerando"); await c.wait(1100); c.$('[data-id="REQ-085"] .badge').outerHTML = bdg("Sugerida");
     } },
-  { id: "revisar", nav: "revisao", url: "app.tendra.ai/revisao/req-084", dur: 14500,
+  { id: "revisar", nav: "revisao", dur: 14500,
     html: () => review("revisar"),
     run: async (c) => {
       c.$("#src2").classList.add("hot"); await c.wait(900); await c.click("#ack");
@@ -72,7 +72,7 @@ const ETAPAS = [
       c.$("#acts").innerHTML = `<span class="s-id s-pop">APROVADA POR MARCELO VIEIRA · 14:32</span>`;
       c.main.insertAdjacentHTML("beforeend", `<div class="s-toast">${ic("check-check", 15)}Resposta aprovada. Trilha de auditoria atualizada.</div>`);
     } },
-  { id: "exportar", nav: "exportacao", url: "app.tendra.ai/exportacao", dur: 10500,
+  { id: "exportar", nav: "exportacao", dur: 10500,
     html: () => `<div class="s-row"><div><div class="mono">Exportação</div><div class="s-h">RFP Banco Aurora — 2026</div></div><span id="est">${bdg("Pronta")}</span></div>
       <div class="s-card" style="display:grid;gap:8px"><div class="s-row"><span>Respostas aprovadas</span><span class="s-id"><b id="ap" style="color:var(--brand-ink)">0</b>/210</span></div><div class="s-bar"><i id="eb"></i></div></div>
       <div class="s-table"><div class="s-tr h"><span>Pergunta</span><span>ID</span><span>Resposta aprovada</span><span>Fontes</span></div>
@@ -90,7 +90,7 @@ const ETAPAS = [
 /* Passo 00: documentos entrando na base de conhecimento. */
 const DOCS = [["Security_Whitepaper_v4.pdf", "Documento", "4.0", "Vigente", "ok"], ["Politica_Backup_DR.pdf", "Documento", "2.3", "Mais de 120 dias", "warn"], ["RFP_Aurora_2025.xlsx", "RFP passada", "1.0", "Vigente", "ok"]];
 const row = (d, hid) => `<div class="s-tr base"${hid ? " hidden" : ""}><span style="color:var(--brand-ink)">${d[0]}</span><span>${d[1]}</span><span class="s-id">${d[2]}</span><span class="badge ${d[4]}">${ic(d[4] === "ok" ? "check" : "clock", 11)}${d[3]}</span></div>`;
-const BASE = { id: "base", nav: "base", url: "app.tendra.ai/base", dur: 12500,
+const BASE = { id: "base", nav: "base", dur: 12500,
   html: () => `<div class="s-row"><div><div class="mono">Base</div><div class="s-h">Base de conhecimento</div></div><span class="s-btn" id="up">${ic("upload", 13)}Subir documentos</span></div>
     <div class="s-row"><span class="s-id">PRAZO DE AGING EM VIGOR: 120 DIAS SEM ATUALIZAÇÃO</span><span class="s-id"><b id="nd" style="color:var(--brand-ink)">2</b> DOCUMENTOS ATIVOS</span></div>
     <div id="res" class="s-card" hidden style="display:grid;gap:10px"><div class="mono">Resultado do envio</div><div class="s-up">${DOCS.map((d) => `<span class="s-file" hidden><span class="si spin" style="display:inline-flex">${ic("loader-circle", 14)}</span>${d[0]}</span>`).join("")}</div></div>
