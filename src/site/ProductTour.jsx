@@ -19,7 +19,7 @@ const FOLGA = 80;
 /**
  * "O produto em ação": os passos rolam à esquerda e a janela do produto, fixa ao lado, toca a cena
  * do passo ativo. Todos os passos, inclusive o 00, sobem esmaecidos a partir do terço inferior da
- * janela e ficam ativos ao cruzar a linha a 1/3 do topo dela (2/3 da altura, contando de baixo);
+ * janela e ficam ativos ao cruzar a linha a 1/4 do topo dela (3/4 da altura, contando de baixo);
  * o último para nessa linha. As medidas vêm de `--tour-h`, a altura da janela. No celular a janela
  * fica presa no topo e os passos passam por baixo.
  */
@@ -39,7 +39,7 @@ export function ProductTour() {
       quadro = 0;
       const r = win.current.getBoundingClientRect();
       raiz.current.style.setProperty("--tour-h", Math.round(r.height) + "px");
-      const linha = celular.matches ? r.bottom + FOLGA : r.top + r.height / 3 + 2;
+      const linha = celular.matches ? r.bottom + FOLGA : r.top + r.height / 4 + 2;
       // No desktop nenhum passo começa ativo: o 00 também sobe até a linha.
       let i = celular.matches ? 0 : -1;
       passos.forEach((el, k) => { if (el.getBoundingClientRect().top <= linha) i = k; });
