@@ -13,35 +13,37 @@ const PASSOS = [
   { n: "04", tela: "Exportação", t: "Exporte a planilha aprovada", d: "O arquivo sai na ordem original do edital, com a resposta aprovada, as edições do revisor e as fontes usadas.", itens: ["Planilha na ordem original do edital", "Resposta aprovada, edições e fontes no arquivo", "Respostas aprovadas voltam para a base"] }
 ];
 
-// Linha de ativação: distância, em px, abaixo do topo da janela (ou do pé dela, no celular).
+// No celular, a linha de ativação fica esta distância, em px, abaixo do pé da janela.
 const FOLGA = 80;
 
 /**
  * "O produto em ação": os passos rolam à esquerda e a janela do produto, fixa ao lado, toca a cena
- * do passo que está alinhado ao topo dela. Cada passo ocupa a altura da janela (`--tour-h`), então
- * o texto do passo ativo fica sempre no alto, ao lado da animação, inclusive o último. No celular a
- * janela fica presa no topo e os passos passam por baixo.
+ * do passo ativo. Todos os passos, inclusive o 00, sobem esmaecidos a partir do terço inferior da
+ * janela e ficam ativos ao cruzar a linha a 1/3 do topo dela (2/3 da altura, contando de baixo);
+ * o último para nessa linha. As medidas vêm de `--tour-h`, a altura da janela. No celular a janela
+ * fica presa no topo e os passos passam por baixo.
  */
 export function ProductTour() {
   const raiz = React.useRef(null);
   const win = React.useRef(null);
   const lista = React.useRef(null);
-  const [ativo, setAtivo] = React.useState(0);
+  const [ativo, setAtivo] = React.useState(-1);
 
   React.useEffect(() => {
     if (!win.current) return undefined;
     const player = Player(win.current, { scenes: CENAS, side, advance: false, compactBelow: 760, compactSize: [600, 494] });
     const passos = [...lista.current.querySelectorAll("[data-i]")];
     const celular = window.matchMedia("(max-width: 900px)");
-    let quadro = 0, atual = 0;
+    let quadro = 0, atual = -1;
     const medir = () => {
       quadro = 0;
       const r = win.current.getBoundingClientRect();
       raiz.current.style.setProperty("--tour-h", Math.round(r.height) + "px");
-      const linha = (celular.matches ? r.bottom : r.top) + FOLGA;
-      let i = 0;
+      const linha = celular.matches ? r.bottom + FOLGA : r.top + r.height / 3 + 2;
+      // No desktop nenhum passo começa ativo: o 00 também sobe até a linha.
+      let i = celular.matches ? 0 : -1;
       passos.forEach((el, k) => { if (el.getBoundingClientRect().top <= linha) i = k; });
-      if (i !== atual) { atual = i; setAtivo(i); player.play(i); }
+      if (i !== atual) { atual = i; setAtivo(i); if (i >= 0) player.play(i); }
     };
     const pedir = () => { if (!quadro) quadro = requestAnimationFrame(medir); };
     const ro = new ResizeObserver(pedir); ro.observe(win.current);
