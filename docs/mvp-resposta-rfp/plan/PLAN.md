@@ -1146,6 +1146,18 @@ Pedida em 09/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 ### Situação (09/11/2026): planejada
 - Spec aprovado; implementação ainda não iniciada.
 
+## Fase U: seleção da base por área
+
+Pedida em 12/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/spec/SPEC_FASE_U.md` (cenários U1 a U17, `approved`). Decisões PU1 a PU13 validadas em 12/11/2026, com ajustes em PU10 (rastreio só nas métricas), PU12 (publicada ligada) e PU13 (correção manual das áreas no roadmap).
+
+**Objetivo:** os documentos da base recebem áreas na carga (Haiku 5.5, uma ou mais por documento), e cada pergunta da RFP, já classificada por área desde a fase N, passa a receber só os documentos da sua área mais os "Geral". A base inteira continua como varredura completa antes de "Sem rascunho".
+
+**Etapas:** U-0 base sintética da Vereda Documental; U-a classificação dos documentos; U-b seleção por área, publicada ligada.
+
+### Situação (12/11/2026): spec aprovado; U-0 em andamento
+- Proposta também no board do Miro, nos quadros 1 e 3 da pipeline, marcada como fase U.
+- U-0: base sintética da Vereda Documental em `base-sintetica/vereda-documental/` (86 documentos novos, a RFP e o gabarito); falta a carga na base publicada da Vereda.
+
 ## Definição de pronto (proposta, P10)
 
 Uma etapa só é concluída quando:
