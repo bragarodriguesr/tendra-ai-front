@@ -169,6 +169,28 @@ O ambiente da sessão não aceita a chave da Anthropic, então a v2 foi medida e
   - a migração 016 marca os documentos da v2 publicada para reclassificação ao iniciar, mantendo a área principal até lá.
 - **Próximo passo:** medir de novo depois da correção, da mesma forma.
 
+### Medição da v2 corrigida em produção (12/11/2026)
+
+Merge do PR #118 às 20:28 UTC; migração 016 aplicada; os 114 documentos reclassificados até 20:31, sem falha.
+
+| Medida (86 documentos novos da Vereda, rótulos revistos) | v1 | v2 sem secundárias | v2 corrigida |
+|---|---|---|---|
+| Concordância exata | 64% (55) | 63% (54) | **70% (60)** |
+| Áreas atribuídas incluem todas as rotuladas | 88% (76) | 63% (54) | 86% (74) |
+| Alguma área atribuída entre as rotuladas | 93% (80) | 97% (83) | **98% (84)** |
+| Áreas a mais | 33 | 3 | 20 |
+| Áreas a menos | 11 | 33 | 12 |
+| Áreas por documento, em média | 1,60 | 1,00 | 1,44 |
+
+- **A v2 corrigida é melhor que a v1, mas não atinge a meta de 85%.** Ganhou 6 pontos na concordância exata e tem 40% menos áreas a mais, sem perder cobertura (a menos: 12 contra 11).
+- **Erros que sobram (26 documentos):**
+  - Tecnologia a mais (5): plano de resposta a incidentes, análise de riscos, mapeamento ISO 27002, norma de operações documentais e manual do administrador;
+  - Comercial como secundária em documentos técnicos ou jurídicos (5): limites de desempenho, observabilidade, termos de uso, limitação de responsabilidade e minuta de aditivo de SLA;
+  - Jurídico faltando (5): faturamento, acordo de tratamento de dados, procurações, retenção legal e minuta de aditivo de SLA;
+  - área principal fora das rotuladas (2): `matriz-cobertura-uf.md` em "Geral" e `modelos-checklist-detalhados.md` em Jurídico.
+- **Leitura:** parte desses casos é discutível nos próprios rótulos (por exemplo, Tecnologia num plano de resposta a incidentes). A seleção continua desligada; as áreas só aparecem na tela da Base.
+- **Próximos passos possíveis:** limitar as secundárias a uma; exigir, na instrução, que a secundária responda a uma pergunta inteira da área (não só cite um termo); revisar com o grupo os rótulos discutíveis antes de uma v3.
+
 ### Como rodar as avaliações
 
 ```bash
