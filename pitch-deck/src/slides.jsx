@@ -145,7 +145,7 @@ function SecaoSolucao() {
   return <SectionSlide number="02" title="A solução" lead="Tendra.ai: da caça ao arquivo à resposta revisada e aprovada." />;
 }
 
-const UPLOADS = ["Propostas anteriores (PDF, DOCX)", "Whitepapers, políticas e certificações", "Documentação técnica do produto"];
+const UPLOADS = ["RFPs passadas, com perguntas e respostas", "Whitepapers, políticas e certificações", "Documentação técnica do produto"];
 
 function Produto() {
   return (
@@ -163,7 +163,7 @@ function Produto() {
           </div>
         </div>
         <DeckCard tone="ink" style={{ padding: 44, display: "grid", gap: 24, borderColor: "var(--ink-600)" }}>
-          <Eyebrow tone="inverse" size={22}>A empresa sobe</Eyebrow>
+          <Eyebrow tone="inverse" size={22}>A empresa sobe, em .md</Eyebrow>
           <div style={{ display: "grid", gap: 14 }}>
             {UPLOADS.map((u) => (
               <Card key={u} tone="ink-panel" padding="none" radius="lg" style={{ padding: "18px 22px", color: "var(--n-075)", fontSize: 24 }}>{u}</Card>
@@ -178,9 +178,9 @@ function Produto() {
 }
 
 const STEPS = [
-  { n: "01", title: "Importação e indexação", text: "A empresa importa seus documentos e a plataforma os indexa em uma base própria do cliente." },
-  { n: "02", title: "Geração com rastreabilidade", text: "Ao subir uma nova RFP, a IA cruza as perguntas com o histórico e gera o rascunho com a fonte de cada resposta." },
-  { n: "03", title: "Revisão e aprovação", text: "O trabalho do time evolui de escrever do zero para apenas revisar e aprovar." }
+  { n: "01", title: "Importação e indexação", text: "A empresa sobe seus documentos em .md e a plataforma os divide em trechos citáveis, numa base própria da organização." },
+  { n: "02", title: "Geração com rastreabilidade", text: "Ao subir uma nova RFP em planilha .xlsx, a IA cruza as perguntas com a base e gera o rascunho com a fonte de cada resposta." },
+  { n: "03", title: "Revisão e aprovação", text: "O time deixa de escrever do zero e passa a revisar. A IA classifica cada pergunta por área, e só o Aprovador daquela área a aprova." }
 ];
 
 function ComoFunciona() {
@@ -236,7 +236,7 @@ function Rastreabilidade({ active }) {
         <div style={{ display: "grid", gap: 28 }}>
           <Heading maxWidth="15ch" style={{ lineHeight: 1.08 }}>Cada resposta chega com a fonte que a sustenta.</Heading>
           <div style={{ fontSize: "var(--type-body)", lineHeight: 1.5, color: "var(--text-body)", maxWidth: "34ch" }}>
-            O revisor vê a afirmação, o documento de origem e a página. Sem fonte rastreável, o item não é entregável.
+            O revisor vê a afirmação, o documento de origem, a seção e a linha. Texto da IA sem fonte é descartado, e nenhum item sai sem aprovação humana.
           </div>
           <div className="chips">
             <Chip tone="approved">Conformidade OK</Chip>
@@ -251,8 +251,8 @@ function Rastreabilidade({ active }) {
           <Card tone="ink-panel" padding="none" radius="3xl" style={{ padding: 32, display: "grid", gap: 22 }}>
             <div style={{ fontSize: 25, lineHeight: 1.45, color: "var(--ink-200)" }}>"Descreva os controles de criptografia de dados em repouso."</div>
             <div style={{ height: 1, background: "var(--ink-600)" }} />
-            <div style={{ fontSize: 27, lineHeight: 1.55, color: "var(--n-075)" }}>AES-256 em repouso, chaves em HSM FIPS 140-2 nível 3, com rotação a cada 90 dias.</div>
-            <MonoLabel as="div" size="mono" tone="inverse" uppercase={false} style={{ fontSize: 21 }}>↳ Security_Whitepaper_v4.pdf · p.12</MonoLabel>
+            <div style={{ fontSize: 27, lineHeight: 1.55, color: "var(--n-075)" }}>Os dados em repouso são criptografados com AES-256. Os dados em trânsito usam TLS 1.2 ou superior.</div>
+            <MonoLabel as="div" size="mono" tone="inverse" uppercase={false} style={{ fontSize: 21 }}>↳ politica-seguranca-informacao.md · 4. Criptografia · linha 36</MonoLabel>
           </Card>
           <div style={{ display: "grid", gap: 14 }}>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -270,9 +270,9 @@ function Rastreabilidade({ active }) {
 }
 
 const ARCH = [
-  { eyebrow: "Motor de IA", title: "Claude via API da Anthropic", text: "O modelo redige a resposta só a partir dos trechos recuperados. Pela API comercial, o dado do cliente não é usado para treinar modelos." },
-  { eyebrow: "Recuperação de informação", title: "Busca nos documentos indexados", text: "Sem embeddings: os documentos importados são indexados e o trecho de origem é localizado antes de redigir, com documento e página citados." },
-  { eyebrow: "Dados e acesso", title: "Banco local + RBAC", text: "Documentos e respostas em banco local. Perfis Revisor e Aprovador com permissões distintas (RBAC), já implementados." }
+  { eyebrow: "Motor de IA", title: "Claude via API da Anthropic", text: "O modelo redige a resposta só com o que está na base da organização. Pela API comercial, o dado do cliente não é usado para treinar modelos." },
+  { eyebrow: "Contexto e citações", title: "Base inteira no contexto, com citações", text: "Sem embeddings: o modelo lê toda a base ativa da organização e cita os trechos. O código confere cada citação contra o documento e descarta texto sem fonte." },
+  { eyebrow: "Dados e acesso", title: "Postgres gerenciado + RBAC", text: "Documentos e respostas no Postgres gerenciado (Supabase), separados por organização. Perfis Revisor e Aprovador (RBAC), com aprovação por área, já implementados." }
 ];
 
 function Arquitetura() {
@@ -346,13 +346,16 @@ function Receita() {
   return (
     <>
       <Eyebrow style={{ marginBottom: 26 }}>Modelo de receita</Eyebrow>
-      <Heading maxWidth="30ch" style={{ marginBottom: "var(--gap-title)" }}>Assinatura SaaS com cobrança híbrida.</Heading>
+      <Heading maxWidth="30ch" style={{ marginBottom: 20 }}>Preço por revisor, não por resposta.</Heading>
+      <div style={{ fontSize: "var(--type-body)", lineHeight: 1.5, color: "var(--text-body)", maxWidth: "56ch", marginBottom: "var(--gap-title)" }}>
+        Cobrar por resposta gerada premiaria o volume. Cobramos por quem revisa, porque é a revisão que garante a entrega.
+      </div>
       <div className="cols cols--2">
-        <FeatureCard eyebrow={{ text: "Taxa fixa", size: 24 }} title="Por assento" titleSize={40} titleLh="normal" padding={44} gap={20}>
-          Preço fixo por usuário com acesso à plataforma — pré-vendas, jurídico e engenharia.
+        <FeatureCard eyebrow={{ text: "Assentos", size: 24 }} title="Por revisor" titleSize={40} titleLh="normal" padding={44} gap={20}>
+          No plano Basic, até 5 revisores com acesso à plataforma: pré-vendas, jurídico e engenharia.
         </FeatureCard>
-        <FeatureCard eyebrow={{ text: "Consumo", size: 24 }} title="Por volume de RFPs" titleSize={40} titleLh="normal" padding={44} gap={20}>
-          Pacote de RFPs processadas no mês, dimensionado conforme a operação do cliente.
+        <FeatureCard eyebrow={{ text: "Volume", size: 24 }} title="Por semestre" titleSize={40} titleLh="normal" padding={44} gap={20}>
+          No plano Basic, até 20 RFPs por semestre. No Enterprise, volume ilimitado, com SSO.
         </FeatureCard>
       </div>
     </>
@@ -366,11 +369,13 @@ function Escopo() {
       <Heading maxWidth="30ch" style={{ marginBottom: "var(--gap-title)" }}>O que compõe o MVP.</Heading>
       <div className="cols cols--2">
         <ContrastCard positive label="Dentro do MVP" gap={20} itemGap={16} items={[
-          "Upload manual de propostas antigas (PDF, DOCX), indexadas na base isolada do cliente e usadas para elaborar as respostas.",
-          "Processamento de uma nova RFP em texto e geração do rascunho de resposta.",
-          "Fonte citada e link rastreável em cada resposta gerada."
+          "Upload de documentos e RFPs passadas em .md, numa base isolada por organização e usada para elaborar as respostas.",
+          "Processamento de uma nova RFP em planilha .xlsx e geração do rascunho de resposta.",
+          "Fonte citada em cada resposta (arquivo · seção · linha), com o trecho original a um clique.",
+          "Aprovação por área: cada pergunta vai ao Aprovador responsável (Produto, Tecnologia, Segurança e privacidade, Comercial ou Jurídico)."
         ]} />
         <ContrastCard label="Fora do MVP" gap={20} itemGap={16} items={[
+          "Conversão de PDF, DOCX e outros formatos para a base.",
           "Integrações nativas via API com CRMs, como Salesforce.",
           "Conexão direta com diretórios corporativos (Google Drive, SharePoint).",
           "Fluxos complexos de aprovação em múltiplos níveis de diretoria."
@@ -406,7 +411,7 @@ function Metricas() {
 
 const ROADMAP = [
   "Integrações nativas com CRMs (Salesforce)",
-  "Conexão com Google Drive e SharePoint",
+  "Upload de PDF, DOCX e PPTX e conexão com Google Drive e SharePoint",
   "Fluxos de aprovação em múltiplos níveis",
   "Integrações via MCP com documentações técnicas de API",
   "Base pré-carregada com normas técnicas e regulatórias do mercado brasileiro (LGPD etc.)",
@@ -479,14 +484,14 @@ export const SLIDES = [
   { label: "Custo do problema", tone: "ink", Component: Custo, notes: "Pausa para a banca refletir sobre o custo real antes de apresentar a solução." },
   { label: "Seção: A solução", tone: "paper", Component: SecaoSolucao, notes: "Transição para a apresentação do produto." },
   { label: "Introduzindo Tendra.ai", tone: "paper", Component: Produto, notes: "Apresentar o produto como cérebro comercial e técnico da empresa." },
-  { label: "Como funciona", tone: "paper", Component: ComoFunciona, notes: "Os três passos do fluxo: importar, gerar com fonte, revisar e aprovar." },
+  { label: "Como funciona", tone: "paper", Component: ComoFunciona, notes: "Os três passos do fluxo: subir a base em .md, gerar com fonte a partir da planilha .xlsx, revisar e aprovar pela área responsável." },
   { label: "Rastreabilidade", tone: "paper", Component: Rastreabilidade, notes: "Mostrar o exemplo de resposta com fonte citada e a barra de preenchimento." },
-  { label: "Arquitetura técnica", tone: "paper", Component: Arquitetura, notes: "Explicar por que a base técnica evita alucinação: Claude via API da Anthropic, respostas só a partir dos documentos indexados do cliente, banco local e perfis de acesso (RBAC) já implementados." },
+  { label: "Arquitetura técnica", tone: "paper", Component: Arquitetura, notes: "Explicar por que a base técnica evita alucinação: Claude via API da Anthropic lendo a base inteira da organização, citações conferidas pelo código, Postgres gerenciado separado por organização e perfis Revisor e Aprovador (RBAC) com aprovação por área." },
   { label: "Seção: O negócio", tone: "ink", Component: SecaoNegocio, notes: "Transição para cliente, modelo de receita e escopo do MVP." },
   { label: "Cliente ideal", tone: "paper", Component: ClienteIdeal, notes: "Descrever o ICP: vertical, porte e personas." },
   { label: "Diferencial competitivo", tone: "paper", Component: Diferencial, notes: "Contraste entre o método tradicional e o Tendra.ai." },
-  { label: "Modelo de receita", tone: "paper", Component: Receita, notes: "Explicar a cobrança híbrida por assento e por volume." },
-  { label: "Escopo do MVP", tone: "paper", Component: Escopo, notes: "O que está dentro e fora do MVP." },
+  { label: "Modelo de receita", tone: "paper", Component: Receita, notes: "Mesmo modelo da página de Preços do site: cobrança por revisor; o plano Basic tem até 5 revisores e 20 RFPs por semestre, e o Enterprise tem volume ilimitado." },
+  { label: "Escopo do MVP", tone: "paper", Component: Escopo, notes: "O que está dentro e fora do MVP: base em .md, RFP em .xlsx e aprovação por área dentro; outros formatos e integrações fora." },
   { label: "Métricas", tone: "ink", Component: Metricas, notes: "Como medimos ROI para o cliente e sucesso do produto." },
   { label: "Roadmap", tone: "paper", Component: Roadmap, notes: "O que vem depois do MVP." },
   { label: "Time", tone: "paper", Component: Time, notes: "Apresentar o time fundador." },
