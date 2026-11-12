@@ -184,7 +184,7 @@ Merge do PR #118 às 20:28 UTC; migração 016 aplicada; os 114 documentos recla
 
 - **A v2 corrigida é melhor que a v1, mas não atinge a meta de 85%.** Ganhou 6 pontos na concordância exata e tem 40% menos áreas a mais, sem perder cobertura (a menos: 12 contra 11).
 - **Erros que sobram (26 documentos):**
-  - Tecnologia como secundária em documentos de segurança (4): plano de resposta a incidentes, análise de riscos, mapeamento ISO 27002 e RIPD (este último já certo);
+  - Tecnologia a mais (5): plano de resposta a incidentes, análise de riscos, mapeamento ISO 27002, norma de operações documentais e manual do administrador;
   - Comercial como secundária em documentos técnicos ou jurídicos (5): limites de desempenho, observabilidade, termos de uso, limitação de responsabilidade e minuta de aditivo de SLA;
   - Jurídico faltando (5): faturamento, acordo de tratamento de dados, procurações, retenção legal e minuta de aditivo de SLA;
   - área principal fora das rotuladas (2): `matriz-cobertura-uf.md` em "Geral" e `modelos-checklist-detalhados.md` em Jurídico.
