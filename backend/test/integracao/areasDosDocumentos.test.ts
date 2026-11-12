@@ -6,7 +6,7 @@ import { PGlite } from "@electric-sql/pglite";
 import type { FastifyInstance } from "fastify";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { criarArmazenamento } from "../../src/armazenamento/armazenamento.ts";
-import { areasDaResposta, entradaDaClassificacao } from "../../src/base/classificarDocumento.ts";
+import { areasDaResposta, entradaDaClassificacao, secoesDoDocumento } from "../../src/base/classificarDocumento.ts";
 import { carregarCabecalhos } from "../../src/config/cabecalhos.ts";
 import { carregarPessoas } from "../../src/config/pessoas.ts";
 import { carregarTermosCriticos } from "../../src/config/termosCriticos.ts";
@@ -143,7 +143,7 @@ describe("Cenário U2 · mais de uma área", () => {
   });
 
   it("v2: secundária só com uma seção do documento; principal 'Geral' vale sozinha; principal inválida é falha", () => {
-    const secoes = ["Anexo de SLA", "1. Disponibilidade", "4. Penalidades"];
+    const secoes = ["1. Disponibilidade", "4. Penalidades"];
     const resposta = (principal: unknown, secundarias: unknown) => areasDaResposta({ principal, secundarias }, secoes);
     // O título pode vir sem a numeração e com outra caixa; seção inventada é descartada.
     expect(resposta("Tecnologia", [{ area: "Jurídico", secao: "penalidades" }, { area: "Comercial", secao: "Preços" }])).toEqual(["Tecnologia", "Jurídico"]);
@@ -159,6 +159,15 @@ describe("Cenário U2 · mais de uma área", () => {
     expect(resposta("Financeiro", [])).toEqual([]);
     expect(resposta("C-Level", [])).toEqual([]);
     expect(areasDaResposta(null, secoes)).toEqual([]);
+    // Como o Haiku responde em produção: a seção com o caminho da lista de entrada (bug visto em 12/11/2026).
+    expect(resposta("Tecnologia", [{ area: "Jurídico", secao: "Anexo de SLA > 4. Penalidades" }])).toEqual(["Tecnologia", "Jurídico"]);
+    // O título do topo sozinho não prende a área a uma seção.
+    expect(
+      areasDaResposta(
+        { principal: "Tecnologia", secundarias: [{ area: "Jurídico", secao: "Anexo de SLA" }] },
+        secoesDoDocumento({ blocos: [{ caminhoDeSecoes: ["Anexo de SLA"], texto: "" }, { caminhoDeSecoes: ["Anexo de SLA", "4. Penalidades"], texto: "" }] }),
+      ),
+    ).toEqual(["Tecnologia"]);
   });
 });
 
