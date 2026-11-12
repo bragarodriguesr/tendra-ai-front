@@ -46,7 +46,8 @@ function servidor(page) {
       return route.fulfill({ body: "planilha", headers: { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": 'attachment; filename="tarefa.xlsx"' } });
     }
     if (caminho === "/api/base/documentos") {
-      return route.fulfill({ json: { documentos: [{ id: 1, nome: "politica-seguranca.md", titulo: "Política de Segurança da Informação", tipo: "documento", atualizadoEm: "2026-10-01", versao: "3.2", validade: "2027-10-01", vencido: false, ativo: true, enviadoPor: "Carla Diretora", carregadoEm: "2026-10-02T13:45:00.000Z" }] } });
+      return route.fulfill({ json: { documentos: [{ id: 1, nome: "politica-seguranca.md", titulo: "Política de Segurança da Informação", tipo: "documento", atualizadoEm: "2026-10-01", versao: "3.2", validade: "2027-10-01", vencido: false, ativo: true, enviadoPor: "Carla Diretora", carregadoEm: "2026-10-02T13:45:00.000Z", areas: ["Tecnologia", "Segurança e privacidade", "Jurídico"] },
+        { id: 2, nome: "anexo-sla-slo-rto-e-penalidades-por-descumprimento.md", titulo: "Anexo de SLA, SLO, RTO e penalidades por descumprimento do contrato", tipo: "documento", atualizadoEm: "2026-11-10", versao: null, validade: null, vencido: false, ativo: true, enviadoPor: "Carla Diretora", carregadoEm: "2026-11-12T13:45:00.000Z", areas: null }] } });
     }
     if (caminho === "/api/historico/tarefas") {
       return route.fulfill({ json: { eventos: [
@@ -202,9 +203,11 @@ test("O1 a O3: Base com Dica, tabela enxuta e detalhes do documento", async ({ p
   await expect(page.getByText("Política de Segurança da Informação").first()).toBeVisible();
   await expect(page.getByText(/Aceita arquivos/)).toHaveCount(0);
 
-  // O2: Documento, Validade, Idade, Status e Ações, sem rolagem lateral a 1.024 px.
+  // O2 e U17: Documento, Áreas, Validade, Idade, Status e Ações, sem rolagem lateral a 1.024 px.
   for (const coluna of ["Tipo", "Atualizado", "Enviado por"]) await expect(page.locator("main").getByText(coluna, { exact: true })).toHaveCount(0);
-  for (const coluna of ["Documento", "Validade", "Idade", "Status", "Ações"]) await expect(page.locator("main").getByText(coluna, { exact: true })).toBeVisible();
+  for (const coluna of ["Documento", "Áreas", "Validade", "Idade", "Status", "Ações"]) await expect(page.locator("main").getByText(coluna, { exact: true })).toBeVisible();
+  await expect(page.locator("main").getByLabel("Áreas: Tecnologia, Segurança e privacidade, Jurídico")).toBeVisible();
+  await expect(page.locator("main").getByText("Classificando…", { exact: true })).toBeVisible();
   const tabela = page.locator("main").getByText("Documento", { exact: true }).locator("xpath=../..");
   expect(await tabela.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -220,14 +223,15 @@ test("O1 a O3: Base com Dica, tabela enxuta e detalhes do documento", async ({ p
   // O3: os detalhes completos do documento, sem ações que o mudem.
   await page.getByRole("button", { name: "Ver detalhes de Política de Segurança da Informação" }).click();
   const detalhes = page.getByRole("dialog", { name: "Detalhes do documento" });
-  for (const texto of ["politica-seguranca.md", "Documento", "3.2", "01/10/2026", "01/10/2027", "Carla Diretora", "Pronto"]) await expect(detalhes).toContainText(texto);
+  for (const texto of ["politica-seguranca.md", "Documento", "3.2", "01/10/2026", "01/10/2027", "Carla Diretora", "Pronto", "Tecnologia, Segurança e privacidade, Jurídico"]) await expect(detalhes).toContainText(texto);
   await expect(detalhes).toContainText(/02\/10\/2026 \d{2}:45/);
   await expect(detalhes.getByRole("switch")).toHaveCount(0);
   await detalhes.getByRole("button", { name: "Fechar", exact: true }).click();
   await expect(detalhes).toBeHidden();
 
-  // Celular: o painel ocupa a tela, e o cartão também tem "Ver detalhes".
+  // Celular: o painel ocupa a tela, e o cartão também tem "Ver detalhes" e as áreas (U17).
   await page.setViewportSize({ width: 375, height: 760 });
+  await expect(page.locator("main").getByLabel("Áreas: Tecnologia, Segurança e privacidade, Jurídico")).toBeVisible();
   await page.getByRole("button", { name: "Ver detalhes de Política de Segurança da Informação" }).click();
   const largura = (await detalhes.boundingBox()).width;
   expect(largura).toBeGreaterThanOrEqual(374);

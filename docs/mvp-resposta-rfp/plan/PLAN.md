@@ -1154,9 +1154,12 @@ Pedida em 12/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 
 **Etapas:** U-0 base sintética da Vereda Documental; U-a classificação dos documentos; U-b seleção por área, publicada ligada.
 
-### Situação (12/11/2026): spec aprovado; U-0 em andamento
+### Situação (12/11/2026): U-a e U-b implementadas; avaliações e publicação pendentes
+- Plano em `docs/mvp-resposta-rfp/plan/PLAN_FASE_U.md`.
 - Proposta também no board do Miro, nos quadros 1 e 3 da pipeline, marcada como fase U.
-- U-0: base sintética da Vereda Documental em `base-sintetica/vereda-documental/` (86 documentos novos, a RFP e o gabarito); falta a carga na base publicada da Vereda.
+- U-0: base sintética da Vereda Documental em `base-sintetica/vereda-documental/` (86 documentos novos, a RFP e o gabarito); falta a carga na base publicada da Vereda, pela tela.
+- U-a e U-b: migração 014, classificação dos documentos depois da carga, coluna "Áreas" na Base, seleção por área com segunda tentativa e rastreio só nas métricas. Testes do backend e de ponta a ponta verdes.
+- Pendentes: as avaliações U7 e U16 com a API real e a publicação (U-c).
 
 ## Definição de pronto (proposta, P10)
 

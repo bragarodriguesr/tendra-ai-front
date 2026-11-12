@@ -1,6 +1,6 @@
 # Pipeline de IA do MVP · Tendra.ai
 
-*Proposta de 21/10/2026; quadro 1 revisto em 22/10/2026 (carga pela tela). Status: `draft`. Complementa a seção 20 do `PRD_Front-end_Tendra.ai_MVP_v3.md`, `docs/mvp-resposta-rfp/` e `docs/referencia/mvp-proposta-1/`.*
+*Proposta de 21/10/2026; quadro 1 revisto em 22/10/2026 (carga pela tela); quadros 1 e 3 revistos em 12/11/2026 (fase U: áreas dos documentos e seleção por área). Status: `draft`. Complementa a seção 20 do `PRD_Front-end_Tendra.ai_MVP_v3.md`, `docs/mvp-resposta-rfp/` e `docs/referencia/mvp-proposta-1/`.*
 
 Versão editável do diagrama, no board do projeto: [Miro](https://miro.com/app/board/uXjVHg0R4nQ=/?moveToWidget=3458764688008238401).
 
@@ -11,7 +11,7 @@ O pipeline cobre a jornada completa: da base de conhecimento e da planilha de RF
 - **Fluxo fixo em código, sem agente.** O backend executa as etapas em ordem e chama o Claude só onde há linguagem natural a tratar.
 - **Entrada da RFP: somente `.xlsx`.**
 - **Base de conhecimento: arquivos `.md` enviados pela tela Base de conhecimento** ("Subir documentos", com o seletor de arquivos do computador), direto no banco. O comando `carregar-base` faz a mesma carga a partir de uma pasta. Outros formatos ficam fora do MVP.
-- **Sem busca vetorial.** A base inteira vai ao Claude, que encontra e cita os trechos. A recuperação fica atrás de um módulo próprio (`buscarFontes`), trocável depois.
+- **Sem busca vetorial.** O Claude encontra e cita os trechos nos documentos que recebe. Até 50 mil tokens, a base inteira vai em cada lote; acima disso, cada pergunta recebe os documentos da sua área mais os "Geral", por regra (fase U), com a base inteira como segunda tentativa antes de "Sem rascunho". A recuperação fica atrás de módulos próprios (`buscarFontes` e `selecionarContexto`), trocáveis depois.
 - **A IA sugere, a pessoa decide.** Nada é aprovado nem exportado pela IA.
 - **Limites de qualidade:** relevância 80% e fidelidade 90%.
 
@@ -27,7 +27,7 @@ O pipeline cobre a jornada completa: da base de conhecimento e da planilha de RF
 
 ## 1. Preparar a base de conhecimento
 
-Acontece antes das RFPs e a cada novo documento. Nenhuma chamada de IA. O formato do cabeçalho está em [`FORMATO_BASE_MD.md`](FORMATO_BASE_MD.md).
+Acontece antes das RFPs e a cada novo documento. Desde a fase U, uma chamada leve de IA por documento novo ou alterado, depois da carga e em segundo plano, para as áreas. O formato do cabeçalho está em [`FORMATO_BASE_MD.md`](FORMATO_BASE_MD.md).
 
 ```mermaid
 flowchart LR
@@ -35,11 +35,13 @@ flowchart LR
     A2["2 · Subir os .md pela tela da Base<br/>Pessoa · seletor de arquivos do computador<br/>Ou o comando carregar-base, com uma pasta"]:::pessoa
     A3["3 · Validar e dividir em blocos<br/>Sistema · sem IA<br/>Confere o cabeçalho; mesmo nome substitui<br/>Localização: arquivo, seção, linha"]:::sistema
     A4[("4 · Gravar no banco<br/>Blocos, data, versão, tipo, tokens")]:::dados
-    A5["5 · Conferir na tela da Base<br/>Pessoa · resultado do envio e lista<br/>Idade em dias, selo de 120 dias, ativar/desativar"]:::pessoa
+    A4B["4b · Classificar as áreas do documento<br/>IA leve · Haiku 5.5, saída estruturada, em segundo plano<br/>Título, seções e início do texto; uma ou mais áreas<br/>Falha: Geral, tentado de novo; RFP passada: Geral, sem IA"]:::ia
+    A5["5 · Conferir na tela da Base<br/>Pessoa · resultado do envio e lista<br/>Áreas, idade em dias, selo de 120 dias, ativar/desativar"]:::pessoa
     X1["Arquivo inválido ou outro formato<br/>Recusado ou ignorado, com o motivo na tela<br/>Conversão de outros formatos: fora do MVP"]:::excecao
-    X2["Índice de busca: fora do MVP<br/>Sem embeddings; a base inteira vai ao Claude<br/>Módulo de busca trocável depois"]:::excecao
+    X2["Índice de busca: fora do MVP<br/>Sem embeddings; a seleção é por área, por regra<br/>Módulo de busca trocável depois"]:::excecao
 
     A1 --> A2 --> A3 --> A4 --> A5
+    A4 --> A4B --> A5
     A3 -.-> X1
     A4 -.-> X2
 
@@ -77,20 +79,23 @@ flowchart LR
 
 ## 3. Gerar respostas com fonte
 
-O núcleo do produto. No máximo duas chamadas de IA por lote, mais uma chamada leve por tarefa para a área das perguntas (fase N, 04/11/2026).
+O núcleo do produto. No máximo duas chamadas de IA por lote, mais uma chamada leve por tarefa para a área das perguntas (fase N, 04/11/2026). Desde a fase U (12/11/2026), a área das perguntas decide quais documentos vão em cada lote.
 
 ```mermaid
 flowchart LR
     G1["1 · Montar o contexto<br/>Sistema<br/>Só documentos ativos e prontos<br/>Base vazia: tudo Sem rascunho, sem IA"]:::sistema
     G1B["1b · Classificar por área<br/>IA leve · Haiku 5.5, saída estruturada<br/>Só o texto das perguntas<br/>Falha ou área fora da lista: Geral"]:::ia
-    G2["2 · Redigir por lote<br/>IA 1 · Claude com citações<br/>Cerca de 10 perguntas, base em cache<br/>Documento é dado, nunca instrução"]:::ia
+    G1C["1c · Selecionar o contexto por área<br/>Sistema · regra, sem IA<br/>Documentos da área + Geral; pergunta Geral ou<br/>área sem documento: base inteira<br/>Só acima de 50 mil tokens"]:::sistema
+    G2["2 · Redigir por lote, grupo a grupo<br/>IA 1 · Claude com citações<br/>Cerca de 10 perguntas, contexto do grupo em cache<br/>Documento é dado, nunca instrução"]:::ia
+    G2B["2b · Segunda tentativa<br/>IA 1 · base inteira<br/>Só as perguntas da área sem fonte válida"]:::ia
     G3["3 · Conferir as citações<br/>Sistema · sem IA<br/>Trecho existe no documento? Senão, descarta"]:::sistema
     G4["4 · Calcular os alertas<br/>Sistema · regras<br/>Sem contexto, baixa confiança,<br/>fonte antiga, termo crítico"]:::sistema
     G4B["4b · Detectar conflito<br/>IA 2 · leve, saída estruturada<br/>Só os trechos citados no item"]:::ia
     G5[("5 · Gravar os itens<br/>Sugerida ou Sem rascunho,<br/>parágrafos, fontes, alertas")]:::dados
     F["Falha do provedor de IA<br/>Nova tentativa; depois tarefa em Falha<br/>Tentar de novo só nos lotes pendentes"]:::excecao
 
-    G1 --> G1B --> G2 --> G3 --> G4 --> G5
+    G1 --> G1B --> G1C --> G2 --> G3 --> G4 --> G5
+    G3 -->|sem fonte no contexto da área| G2B --> G3
     G4 --> G4B --> G5
     G2 -.-> F
 

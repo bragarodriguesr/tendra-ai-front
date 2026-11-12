@@ -21,6 +21,8 @@ export interface DocumentoDoContexto {
   versao: string | null;
   tamanhoBytes: number;
   blocos: Bloco[];
+  /** Áreas do documento (fase U); vazia enquanto pendente, e então conta como "Geral" na seleção. */
+  areas: string[];
 }
 
 export interface ContextoDaBase {
@@ -82,6 +84,7 @@ export async function buscarFontes(opcoes: { banco: Banco; organizacaoId: string
       atualizadoEm: documento.atualizadoEm,
       versao: documento.versao,
       tamanhoBytes: documento.tamanhoBytes,
+      areas: documento.areas,
       blocos: await listarBlocos(opcoes.banco, opcoes.organizacaoId, documento.nome),
     });
   }

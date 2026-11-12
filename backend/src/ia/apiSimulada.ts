@@ -74,6 +74,12 @@ function classificar(texto: string): string {
   return JSON.stringify({ itens });
 }
 
+/** Classificação de um documento da base (fase U): todas as áreas cujas palavras-chave aparecem; sem nenhuma, "Geral". */
+function classificarDocumento(texto: string): string {
+  const areas = PALAVRAS_DAS_AREAS.filter(([, padrao]) => padrao.test(texto)).map(([area]) => area);
+  return JSON.stringify({ areas: areas.length > 0 ? areas : ["Geral"] });
+}
+
 function gerarRespostas(parametros: ParametrosDaGeracao): MensagemDaIa["content"] {
   const conteudo = parametros.messages[0]?.content;
   const documentos = Array.isArray(conteudo)
@@ -127,8 +133,14 @@ export function criarApiSimulada(): ApiDoClaude {
         return mensagem(parametros.model, [textoDoBloco(JSON.stringify({ texto: revisado }))]);
       }
       if (parametros.output_config?.format) {
-        // Identificação de perguntas, classificação por área ou conflito: a simulada nunca aponta conflito.
-        const saida = texto.startsWith("<planilha>") ? identificar(texto) : texto.startsWith("<perguntas>") ? classificar(texto) : JSON.stringify({ itens: [] });
+        // Identificação de perguntas, classificação por área (perguntas ou documento) ou conflito: a simulada nunca aponta conflito.
+        const saida = texto.startsWith("<planilha>")
+          ? identificar(texto)
+          : texto.startsWith("<perguntas>")
+            ? classificar(texto)
+            : texto.startsWith("<documento>")
+              ? classificarDocumento(texto)
+              : JSON.stringify({ itens: [] });
         return mensagem(parametros.model, [textoDoBloco(saida)]);
       }
       return mensagem(parametros.model, gerarRespostas(parametros));

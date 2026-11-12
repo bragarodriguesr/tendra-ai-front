@@ -65,9 +65,10 @@ export class ErroDaIa extends Error {
 
 /**
  * "revisao-texto" é o "Revisar com IA" de uma resposta manual, pedido na tela de revisão (cenário 65);
- * "classificacao", a área das perguntas (fase N, PN5).
+ * "classificacao", a área das perguntas (fase N, PN5); "classificacao-documento", as áreas de um
+ * documento da base (fase U, PU2).
  */
-export type EtapaDaIa = "identificacao" | "classificacao" | "geracao" | "conflito" | "contagem" | "revisao-texto";
+export type EtapaDaIa = "identificacao" | "classificacao" | "classificacao-documento" | "geracao" | "conflito" | "contagem" | "revisao-texto";
 
 /** Uma linha do registro de requisições (cenário 29). Sem chave e sem conteúdo. */
 export interface EntradaDoRegistro {

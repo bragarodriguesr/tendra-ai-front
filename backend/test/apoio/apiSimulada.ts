@@ -9,6 +9,28 @@ export function ehClassificacao(parametros: ParametrosDaGeracao): boolean {
   return parametros.output_config?.format !== undefined && ultimo?.type === "text" && ultimo.text.startsWith("<perguntas>");
 }
 
+/** Pedido da classificação de um documento da base (fase U). */
+export function ehClassificacaoDeDocumento(parametros: ParametrosDaGeracao): boolean {
+  const conteudo = parametros.messages[0]?.content;
+  const ultimo = Array.isArray(conteudo) ? conteudo.at(-1) : undefined;
+  return parametros.output_config?.format !== undefined && ultimo?.type === "text" && ultimo.text.startsWith("<documento>");
+}
+
+/** Classificação de documento que devolve sempre as mesmas áreas. */
+export function areasDoDocumento(...areas: string[]) {
+  return (parametros: ParametrosDaGeracao): MensagemDaIa => mensagem([texto(JSON.stringify({ areas }))], { model: parametros.model });
+}
+
+/** Classificação de documento pelo título: o mapa diz as áreas de cada título; os demais ficam "Geral". */
+export function areasPorTitulo(mapa: Record<string, string[]>) {
+  return (parametros: ParametrosDaGeracao): MensagemDaIa => {
+    const conteudo = parametros.messages[0]?.content;
+    const ultimo = Array.isArray(conteudo) ? conteudo.at(-1) : undefined;
+    const titulo = /^Título: (.*)$/m.exec(ultimo?.type === "text" ? ultimo.text : "")?.[1] ?? "";
+    return mensagem([texto(JSON.stringify({ areas: mapa[titulo] ?? ["Geral"] }))], { model: parametros.model });
+  };
+}
+
 /** Classificação que põe todas as perguntas do pedido na mesma área. */
 export function classificarTudoComo(area: string) {
   return (parametros: ParametrosDaGeracao): MensagemDaIa => {
@@ -24,7 +46,8 @@ export function classificarTudoComo(area: string) {
  * API do Claude simulada: guarda os parâmetros de cada chamada e devolve as respostas da fila
  * (mensagem pronta, função que monta a mensagem a partir do pedido, ou erro a lançar). A
  * classificação por área (fase N) tem resposta própria, fora da fila, e fica em `classificacoes`:
- * por padrão, todas as perguntas em "Geral".
+ * por padrão, todas as perguntas em "Geral". A classificação dos documentos (fase U) também, em
+ * `classificacoesDeDocumento`: por padrão, todo documento "Geral".
  */
 export class ApiSimulada implements ApiDoClaude {
   readonly geracoes: ParametrosDaGeracao[] = [];
@@ -32,12 +55,20 @@ export class ApiSimulada implements ApiDoClaude {
   readonly contagens: ParametrosDaContagem[] = [];
   respostas: Resposta[] = [];
   classificacao: Resposta = classificarTudoComo("Geral");
+  readonly classificacoesDeDocumento: ParametrosDaGeracao[] = [];
+  classificacaoDeDocumento: Resposta = areasDoDocumento("Geral");
   tokensContados: number | Error = 50_000;
 
   async gerar(parametros: ParametrosDaGeracao): Promise<MensagemDaIa> {
     if (ehClassificacao(parametros)) {
       this.classificacoes.push(parametros);
       const resposta = this.classificacao;
+      if (resposta instanceof Error) throw resposta;
+      return typeof resposta === "function" ? resposta(parametros) : resposta;
+    }
+    if (ehClassificacaoDeDocumento(parametros)) {
+      this.classificacoesDeDocumento.push(parametros);
+      const resposta = this.classificacaoDeDocumento;
       if (resposta instanceof Error) throw resposta;
       return typeof resposta === "function" ? resposta(parametros) : resposta;
     }
