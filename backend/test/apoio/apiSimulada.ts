@@ -16,18 +16,28 @@ export function ehClassificacaoDeDocumento(parametros: ParametrosDaGeracao): boo
   return parametros.output_config?.format !== undefined && ultimo?.type === "text" && ultimo.text.startsWith("<documento>");
 }
 
-/** Classificação de documento que devolve sempre as mesmas áreas. */
-export function areasDoDocumento(...areas: string[]) {
-  return (parametros: ParametrosDaGeracao): MensagemDaIa => mensagem([texto(JSON.stringify({ areas }))], { model: parametros.model });
+/** Primeira seção listada no pedido de classificação de documento, para prender as secundárias. */
+function primeiraSecao(parametros: ParametrosDaGeracao): string {
+  const conteudo = parametros.messages[0]?.content;
+  const ultimo = Array.isArray(conteudo) ? conteudo.at(-1) : undefined;
+  const pedido = ultimo?.type === "text" ? ultimo.text : "";
+  return /^Seções:\n- (.*)$/m.exec(pedido)?.[1]?.split(" > ").at(-1) ?? "";
 }
 
-/** Classificação de documento pelo título: o mapa diz as áreas de cada título; os demais ficam "Geral". */
+/** Resposta v2 da classificação de documento: a principal e as secundárias, presas à primeira seção do documento. */
+export function areasDoDocumento(principal: string, ...secundarias: string[]) {
+  return (parametros: ParametrosDaGeracao): MensagemDaIa =>
+    mensagem([texto(JSON.stringify({ principal, secundarias: secundarias.map((area) => ({ area, secao: primeiraSecao(parametros) })) }))], { model: parametros.model });
+}
+
+/** Classificação de documento pelo título: o mapa diz as áreas de cada título (a primeira é a principal); os demais ficam "Geral". */
 export function areasPorTitulo(mapa: Record<string, string[]>) {
   return (parametros: ParametrosDaGeracao): MensagemDaIa => {
     const conteudo = parametros.messages[0]?.content;
     const ultimo = Array.isArray(conteudo) ? conteudo.at(-1) : undefined;
     const titulo = /^Título: (.*)$/m.exec(ultimo?.type === "text" ? ultimo.text : "")?.[1] ?? "";
-    return mensagem([texto(JSON.stringify({ areas: mapa[titulo] ?? ["Geral"] }))], { model: parametros.model });
+    const [principal = "Geral", ...secundarias] = mapa[titulo] ?? ["Geral"];
+    return areasDoDocumento(principal, ...secundarias)(parametros);
   };
 }
 

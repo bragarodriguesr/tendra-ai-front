@@ -128,6 +128,26 @@ Assim, "Classificando…" nunca fica preso depois de uma falha, e a nova tentati
   - antes de religar, rever a regra: um limiar maior que 105 mil tokens nesta base, menos áreas por documento (só a principal e as fortes) ou um teto de documentos por grupo;
   - rever a instrução `classificacao-documento-v1`, que atribui áreas demais.
 
+### Revisão da classificação dos documentos (12/11/2026, aprovada pelo grupo)
+
+Motivo: na base da Vereda, a v1 deu 58% de concordância exata (meta 85%), com 34 áreas a mais e 16 a menos. A instrução pedia "todas as áreas de que o documento trata de forma substancial", e o modelo contava qualquer seção que tocava num assunto.
+
+- **Instrução `classificacao-documento-v2`:**
+  - o teste de cada área passa a ser "uma pergunta de RFP desta área seria respondida citando este documento?";
+  - definições das áreas pelo que respondem (o que a plataforma faz, como funciona por dentro, como os dados são protegidos, o que se paga, o que se compromete em contrato);
+  - "Geral" só para documentos institucionais; integridade, anticorrupção e conduta passam a ser Jurídico;
+  - uma lista de erros a evitar, com exemplos genéricos (menção a acesso não é Segurança, menção a sistema não é Tecnologia, preço de passagem não é Comercial).
+- **Saída nova:** uma área `principal` obrigatória e até duas `secundarias`, cada uma com o título da seção que a justifica. O código descarta a secundária cuja seção não existe no documento, repetida ou além de duas; principal "Geral" vale sozinha; principal fora da lista é falha.
+- **Migração 015 (`documentos.areas_versao`):** guarda a versão da instrução. Ao iniciar, o backend reclassifica os documentos de outra versão (os 98 documentos classificados com a v1), mantendo as áreas atuais até a nova classificação; uma falha nessa reclassificação mantém as áreas da v1. RFPs passadas continuam sem ir à IA.
+- **Rótulos revistos em `areas-esperadas-documentos.json`,** com o mesmo critério (a área de uma pergunta do gabarito que cita o documento):
+  - `arquitetura-ia-extracao.md`: de Tecnologia e Produto para Tecnologia e Segurança e privacidade (o gabarito o usa numa pergunta de segurança sobre o uso dos dados pela IA);
+  - `suporte-tecnico-niveis.md`: de Tecnologia e Comercial para Tecnologia (suporte técnico é Tecnologia);
+  - `direitos-titulares-procedimento.md`: de Segurança e privacidade e Jurídico para Segurança e privacidade (LGPD);
+  - `politica-reajuste.md`: de Comercial e Jurídico para Comercial;
+  - `modulo-extracao-campos.md`: de Produto e Tecnologia para Produto.
+- **Cuidado na avaliação:** os erros a evitar da v2 foram escritos a partir dos erros vistos na base da Vereda. A concordância medida nela tende a ser otimista; a confirmação vem da próxima base real.
+- **Pendente:** medir a v2 com a API real (`avaliar-areas-documentos`) antes de publicar, e comparar com a v1, que com os rótulos revistos fica em 64% de concordância exata (55 de 86) e 88% incluindo todas as rotuladas (76 de 86).
+
 ### Como rodar as avaliações
 
 ```bash

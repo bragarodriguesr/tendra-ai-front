@@ -26,8 +26,7 @@
    "documento": "produto/modulo-extracao-campos.md",
    "tipo": "documento",
    "areas_esperadas": [
-    "Produto",
-    "Tecnologia"
+    "Produto"
    ]
   },
   {
@@ -161,15 +160,14 @@
    "tipo": "documento",
    "areas_esperadas": [
     "Tecnologia",
-    "Produto"
+    "Segurança e privacidade"
    ]
   },
   {
    "documento": "tecnologia/suporte-tecnico-niveis.md",
    "tipo": "documento",
    "areas_esperadas": [
-    "Tecnologia",
-    "Comercial"
+    "Tecnologia"
    ]
   },
   {
@@ -258,8 +256,7 @@
    "documento": "seguranca/direitos-titulares-procedimento.md",
    "tipo": "documento",
    "areas_esperadas": [
-    "Segurança e privacidade",
-    "Jurídico"
+    "Segurança e privacidade"
    ]
   },
   {
@@ -353,8 +350,7 @@
    "documento": "comercial/politica-reajuste.md",
    "tipo": "documento",
    "areas_esperadas": [
-    "Comercial",
-    "Jurídico"
+    "Comercial"
    ]
   },
   {

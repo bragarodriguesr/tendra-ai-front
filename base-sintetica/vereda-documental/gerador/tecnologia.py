@@ -287,7 +287,7 @@ As notas de versão são publicadas no centro de ajuda no dia da publicação. M
 Cada mudança fica registrada com descrição, aprovador, data, resultado dos testes e eventual reversão. O registro é guardado por 24 meses e pode ser apresentado em auditorias de clientes do plano Corporativo.
 """),
 
-D("tecnologia", "arquitetura-ia-extracao.md", "Arquitetura da extração assistida por IA", "2026-10-01", "1.1", ["Tecnologia", "Produto"], """
+D("tecnologia", "arquitetura-ia-extracao.md", "Arquitetura da extração assistida por IA", "2026-10-01", "1.1", ["Tecnologia", "Segurança e privacidade"], """
 ## 1. Etapas do processamento
 
 1. **Recepção:** o arquivo chega do emissor ou do envio manual e recebe uma verificação de formato e de vírus.
@@ -310,7 +310,7 @@ Cada documento é processado de forma isolada, sem mistura com documentos de out
 A qualidade da extração é medida mensalmente contra um conjunto sintético de 400 documentos rotulados. Uma nova versão de modelo ou de instrução só entra em produção se mantiver pelo menos 95% de campos corretos no conjunto de avaliação.
 """),
 
-D("tecnologia", "suporte-tecnico-niveis.md", "Suporte técnico e níveis de atendimento", "2026-06-25", "1.1", ["Tecnologia", "Comercial"], """
+D("tecnologia", "suporte-tecnico-niveis.md", "Suporte técnico e níveis de atendimento", "2026-06-25", "1.1", ["Tecnologia"], """
 ## 1. Canais
 
 | Canal | Horário | Planos |

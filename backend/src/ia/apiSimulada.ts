@@ -74,10 +74,20 @@ function classificar(texto: string): string {
   return JSON.stringify({ itens });
 }
 
-/** Classificação de um documento da base (fase U): todas as áreas cujas palavras-chave aparecem; sem nenhuma, "Geral". */
+/**
+ * Classificação de um documento da base (fase U, formato da v2): a principal é a primeira área cujas
+ * palavras-chave aparecem; as secundárias, até duas, são as áreas com palavras-chave num título de
+ * seção, presas a ele. Sem nenhuma, "Geral".
+ */
 function classificarDocumento(texto: string): string {
   const areas = PALAVRAS_DAS_AREAS.filter(([, padrao]) => padrao.test(texto)).map(([area]) => area);
-  return JSON.stringify({ areas: areas.length > 0 ? areas : ["Geral"] });
+  const [principal = "Geral"] = areas;
+  const secoes = [...texto.matchAll(/^- (.*)$/gm)].map(([, secao]) => secao?.split(" > ").at(-1) ?? "");
+  const secundarias = PALAVRAS_DAS_AREAS.flatMap(([area, padrao]) => {
+    const secao = area === principal ? undefined : secoes.find((titulo) => padrao.test(titulo));
+    return secao === undefined ? [] : [{ area, secao }];
+  }).slice(0, 2);
+  return JSON.stringify({ principal, secundarias });
 }
 
 function gerarRespostas(parametros: ParametrosDaGeracao): MensagemDaIa["content"] {

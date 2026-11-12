@@ -264,7 +264,7 @@ Mídias com informação confidencial ou restrita são destruídas de forma segu
 Documentos impressos com informação interna ou superior não podem ficar sobre mesas fora do horário de trabalho. Telas devem ser bloqueadas sempre que a pessoa se afasta.
 """),
 
-D("seguranca", "direitos-titulares-procedimento.md", "Procedimento de atendimento a titulares", "2026-09-28", "1.1", ["Segurança e privacidade", "Jurídico"], """
+D("seguranca", "direitos-titulares-procedimento.md", "Procedimento de atendimento a titulares", "2026-09-28", "1.1", ["Segurança e privacidade"], """
 ## 1. Canal
 
 Titulares fazem pedidos pelo canal autenticado no site, que gera um número de protocolo. A identidade é validada de forma proporcional ao pedido: pedidos de acesso a documentos exigem validação mais forte do que pedidos de informação.
