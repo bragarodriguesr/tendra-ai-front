@@ -285,7 +285,7 @@ D("comercial", "comparativo-planos.md", "Comparativo dos planos Essencial, Profi
 A mudança para um plano superior vale a partir do mês seguinte ao pedido. A mudança para um plano inferior só pode ser feita na renovação do contrato.
 """),
 
-D("comercial", "politica-reajuste.md", "Política de reajuste de preços", "2026-01-20", "1.0", ["Comercial", "Jurídico"], """
+D("comercial", "politica-reajuste.md", "Política de reajuste de preços", "2026-01-20", "1.0", ["Comercial"], """
 ## 1. Índice
 
 Os valores de mensalidade, taxas por solicitação e serviços profissionais são reajustados anualmente pelo IPCA acumulado em 12 meses, na data de aniversário do contrato.

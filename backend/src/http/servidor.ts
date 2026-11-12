@@ -119,6 +119,7 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
   const tarefas = opcoes.tarefas;
   let classificacao: Promise<void> = Promise.resolve();
   let fechando = false;
+  /** Sem organização: a subida do backend, que também reclassifica as versões antigas da instrução. */
   const classificarEmSegundoPlano = (organizacaoId?: string) => {
     if (tarefas === undefined) return;
     classificacao = classificacao
@@ -128,7 +129,7 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
           banco,
           api: tarefas.api,
           modelo: tarefas.ia.modeloDeClassificacaoDeDocumento ?? MODELO_DE_CLASSIFICACAO_DE_DOCUMENTO_PADRAO,
-          ...(organizacaoId === undefined ? {} : { organizacaoId }),
+          ...(organizacaoId === undefined ? { reclassificarVersoesAntigas: true } : { organizacaoId }),
           continuar: () => !fechando,
           aoRegistrar: (entrada) =>
             opcoes.log?.info({ etapa: entrada.etapa, documentos: entrada.documentos, tokens: entrada.tokens, duracaoMs: entrada.duracaoMs, resultado: entrada.resultado, erro: entrada.erro }, "Requisição à IA"),

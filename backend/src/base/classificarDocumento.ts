@@ -8,17 +8,38 @@ import { estimarTokens } from "./carga.ts";
 /**
  * Classificação de um documento da base por área (fase U, PU1 a PU4, cenários U1 a U4): uma chamada
  * a um modelo pequeno com o título, o tipo, os títulos das seções e o início do texto, até 4 mil
- * tokens estimados (PU3). Saída estruturada, limitada às áreas das perguntas e a "Geral". Nunca
- * lança por causa da IA: erro, resposta ilegível ou nenhuma área válida dão `falhou`, e quem chama
- * deixa o documento em "Geral" (PU4).
+ * tokens estimados (PU3). Desde a v2 (12/11/2026), a saída é uma área principal e até duas
+ * secundárias, cada uma presa a uma seção do documento; secundária sem seção do documento é
+ * descartada. Nunca lança por causa da IA: erro, resposta ilegível ou principal inválida dão
+ * `falhou`, e quem chama deixa o documento em "Geral" (PU4).
  */
 
+const AREAS_ESPECIFICAS = AREAS_DOS_ITENS.filter((area) => area !== AREA_GERAL);
+
+/**
+ * Saída da v2: uma área principal obrigatória e até duas secundárias, cada uma com o título da
+ * seção que a justifica. O limite de duas e a conferência da seção ficam no código.
+ */
 const ESQUEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["areas"],
-  properties: { areas: { type: "array", items: { type: "string", enum: [...AREAS_DOS_ITENS] } } },
+  required: ["principal", "secundarias"],
+  properties: {
+    principal: { type: "string", enum: [...AREAS_DOS_ITENS] },
+    secundarias: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["area", "secao"],
+        properties: { area: { type: "string", enum: [...AREAS_ESPECIFICAS] }, secao: { type: "string" } },
+      },
+    },
+  },
 } as const;
+
+/** Áreas secundárias aceitas, além da principal. */
+export const MAXIMO_DE_SECUNDARIAS = 2;
 
 /** Tamanho máximo do texto enviado (PU3). */
 export const MAXIMO_DE_TOKENS_DO_TEXTO = 4_000;
@@ -63,19 +84,6 @@ export function entradaDaClassificacao(documento: DocumentoParaClassificacao): s
   ].join("\n");
 }
 
-/** Áreas válidas, sem repetição, na ordem da lista; "Geral" só quando sozinha (cenário U2). Vazia quando nada vale. */
-export function normalizarAreas(recebidas: readonly unknown[]): string[] {
-  const validas = new Set<string>();
-  for (const recebida of recebidas) {
-    if (typeof recebida !== "string") continue;
-    const area = areaDoItem(recebida);
-    if (area !== null) validas.add(area);
-  }
-  const especificas = AREAS_DOS_ITENS.filter((area) => area !== AREA_GERAL && validas.has(area));
-  if (especificas.length > 0) return especificas;
-  return validas.has(AREA_GERAL) ? [AREA_GERAL] : [];
-}
-
 export async function classificarDocumento(opcoes: { cliente: ClienteDaIa; modelo: string; documento: DocumentoParaClassificacao }): Promise<ResultadoDaClassificacaoDoDocumento> {
   const instrucoes = await lerInstrucoes("classificacaoDocumento");
   let texto: string;
@@ -103,7 +111,41 @@ export async function classificarDocumento(opcoes: { cliente: ClienteDaIa; model
   } catch {
     return { falhou: true };
   }
-  const recebidas = (dados as { areas?: unknown } | null)?.areas;
-  const areas = Array.isArray(recebidas) ? normalizarAreas(recebidas) : [];
+  const areas = areasDaResposta(dados, secoesDoDocumento(opcoes.documento));
   return areas.length === 0 ? { falhou: true } : { falhou: false, areas };
+}
+
+/** Títulos das seções do documento, de todos os níveis, sem repetição. */
+export function secoesDoDocumento(documento: Pick<DocumentoParaClassificacao, "blocos">): string[] {
+  return [...new Set(documento.blocos.flatMap((bloco) => bloco.caminhoDeSecoes))];
+}
+
+const normalizarTitulo = (texto: string) =>
+  texto.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("pt-BR").replace(/^[\s\d.)-]+/, "").replace(/\s+/g, " ").trim();
+
+/**
+ * Áreas da resposta v2, na ordem da lista: a principal e as secundárias presas a uma seção que
+ * existe no documento (o título pode vir com ou sem a numeração), sem repetição e no máximo duas.
+ * Principal "Geral" vale sozinha. Principal inválida: lista vazia (falha).
+ */
+export function areasDaResposta(dados: unknown, secoes: readonly string[]): string[] {
+  if (typeof dados !== "object" || dados === null) return [];
+  const { principal, secundarias } = dados as { principal?: unknown; secundarias?: unknown };
+  const areaPrincipal = typeof principal === "string" ? areaDoItem(principal) : null;
+  if (areaPrincipal === null) return [];
+  if (areaPrincipal === AREA_GERAL) return [AREA_GERAL];
+  const titulos = new Set(secoes.map(normalizarTitulo).filter((titulo) => titulo !== ""));
+  const escolhidas = new Set<string>([areaPrincipal]);
+  let aceitas = 0;
+  for (const secundaria of Array.isArray(secundarias) ? secundarias : []) {
+    if (aceitas >= MAXIMO_DE_SECUNDARIAS) break;
+    if (typeof secundaria !== "object" || secundaria === null) continue;
+    const { area, secao } = secundaria as { area?: unknown; secao?: unknown };
+    const valida = typeof area === "string" ? areaDoItem(area) : null;
+    if (valida === null || valida === AREA_GERAL || escolhidas.has(valida)) continue;
+    if (typeof secao !== "string" || !titulos.has(normalizarTitulo(secao))) continue;
+    escolhidas.add(valida);
+    aceitas++;
+  }
+  return AREAS_DOS_ITENS.filter((candidata) => escolhidas.has(candidata));
 }

@@ -6,7 +6,7 @@ import { PGlite } from "@electric-sql/pglite";
 import type { FastifyInstance } from "fastify";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { criarArmazenamento } from "../../src/armazenamento/armazenamento.ts";
-import { entradaDaClassificacao, normalizarAreas } from "../../src/base/classificarDocumento.ts";
+import { areasDaResposta, entradaDaClassificacao } from "../../src/base/classificarDocumento.ts";
 import { carregarCabecalhos } from "../../src/config/cabecalhos.ts";
 import { carregarPessoas } from "../../src/config/pessoas.ts";
 import { carregarTermosCriticos } from "../../src/config/termosCriticos.ts";
@@ -127,22 +127,38 @@ describe("Cenário U1 · documento classificado depois da carga", () => {
     const pedido = api.classificacoesDeDocumento[0];
     expect(pedido?.model).toBe("claude-haiku-5-5");
     expect(pedido?.output_config?.format?.type).toBe("json_schema");
+    // v2: área principal e secundárias presas a uma seção, com a instrução classificacao-documento-v2.
+    expect(JSON.stringify(pedido?.output_config?.format)).toContain('"principal"');
+    expect(JSON.stringify(pedido?.system)).toContain("uma pergunta de RFP desta área seria respondida citando este documento?");
   });
 });
 
 describe("Cenário U2 · mais de uma área", () => {
-  it("aceita várias áreas e tira 'Geral' quando vem junto com outra", async () => {
-    api.classificacaoDeDocumento = areasDoDocumento("Jurídico", "Geral", "Comercial", "Segurança e privacidade", "Comercial");
+  it("a principal e até duas secundárias, sem repetição, na ordem da lista", async () => {
+    api.classificacaoDeDocumento = areasDoDocumento("Jurídico", "Comercial", "Jurídico", "Segurança e privacidade", "Produto");
     const terminou = proximaClassificacao();
     await enviar(await arquivo(CONTRATO));
     await terminou;
     expect((await listar())[0]?.areas).toEqual(["Segurança e privacidade", "Comercial", "Jurídico"]);
   });
 
-  it("normaliza as áreas: só as da lista, sem repetição, 'Geral' sozinha", () => {
-    expect(normalizarAreas(["  jurídico ", "Tecnologia", "C-Level", 3, "Tecnologia"])).toEqual(["Tecnologia", "Jurídico"]);
-    expect(normalizarAreas(["Geral"])).toEqual(["Geral"]);
-    expect(normalizarAreas(["Financeiro"])).toEqual([]);
+  it("v2: secundária só com uma seção do documento; principal 'Geral' vale sozinha; principal inválida é falha", () => {
+    const secoes = ["Anexo de SLA", "1. Disponibilidade", "4. Penalidades"];
+    const resposta = (principal: unknown, secundarias: unknown) => areasDaResposta({ principal, secundarias }, secoes);
+    // O título pode vir sem a numeração e com outra caixa; seção inventada é descartada.
+    expect(resposta("Tecnologia", [{ area: "Jurídico", secao: "penalidades" }, { area: "Comercial", secao: "Preços" }])).toEqual(["Tecnologia", "Jurídico"]);
+    expect(resposta(" tecnologia ", [{ area: "Tecnologia", secao: "1. Disponibilidade" }, { area: "Geral", secao: "1. Disponibilidade" }])).toEqual(["Tecnologia"]);
+    expect(
+      resposta("Produto", [
+        { area: "Tecnologia", secao: "1. Disponibilidade" },
+        { area: "Jurídico", secao: "4. Penalidades" },
+        { area: "Comercial", secao: "Anexo de SLA" },
+      ]),
+    ).toEqual(["Produto", "Tecnologia", "Jurídico"]);
+    expect(resposta("Geral", [{ area: "Jurídico", secao: "4. Penalidades" }])).toEqual(["Geral"]);
+    expect(resposta("Financeiro", [])).toEqual([]);
+    expect(resposta("C-Level", [])).toEqual([]);
+    expect(areasDaResposta(null, secoes)).toEqual([]);
   });
 });
 
@@ -150,7 +166,7 @@ describe("Cenário U3 · falha da classificação", () => {
   for (const [caso, resposta] of [
     ["IA indisponível", new ErroDaIa("falha_de_comunicacao")],
     ["resposta fora do formato", mensagem([texto("não é JSON")])],
-    ["nenhuma área válida", mensagem([texto(JSON.stringify({ areas: ["Financeiro"] }))])],
+    ["principal fora da lista", mensagem([texto(JSON.stringify({ principal: "Financeiro", secundarias: [] }))])],
   ] as const) {
     it(`${caso}: a carga termina, o documento fica 'Geral' e é tentado de novo ao iniciar`, async () => {
       api.classificacaoDeDocumento = resposta;
@@ -232,7 +248,7 @@ describe("Cenário U5 · reenviar e 'Sem mudança'", () => {
         primeira = false;
         // Enquanto a IA classifica a versão 1, chega a versão 2 (direto no banco, como um envio).
         await banco.query("UPDATE documentos SET hash = 'versao-2', areas = '{}', areas_classificadas_em = NULL");
-        return mensagem([texto(JSON.stringify({ areas: ["Comercial"] }))]);
+        return mensagem([texto(JSON.stringify({ principal: "Comercial", secundarias: [] }))]);
       }
       return gerar(parametros);
     };
@@ -299,6 +315,24 @@ describe("Cenário U6 · documentos que já estavam na base", () => {
     // Itens de antes da fase vieram da base inteira.
     const coluna = await antigo.query<{ column_default: string }>("SELECT column_default FROM information_schema.columns WHERE table_name = 'itens' AND column_name = 'contexto'");
     expect(coluna.rows[0]?.column_default).toContain("base");
+  });
+
+  it("revisão v2: ao iniciar, reclassifica os documentos da versão anterior; falha mantém as áreas que já tinham", async () => {
+    await antigo.exec("UPDATE documentos SET areas_versao = 'classificacao-documento-v1' WHERE nome = 'sla.md'");
+    const simulada = new ApiSimulada();
+    // Depois de um envio (sem a opção), só os pendentes: nada a fazer.
+    expect(await classificarDocumentosPendentes({ banco: antigo, api: simulada, modelo: "claude-haiku-5-5" })).toEqual({ classificados: 0, comFalha: 0 });
+
+    simulada.classificacaoDeDocumento = new ErroDaIa("falha_de_comunicacao");
+    expect(await classificarDocumentosPendentes({ banco: antigo, api: simulada, modelo: "claude-haiku-5-5", reclassificarVersoesAntigas: true })).toEqual({ classificados: 0, comFalha: 1 });
+    const linha = async () => (await antigo.query<{ areas: string[]; areas_versao: string | null }>("SELECT areas, areas_versao FROM documentos WHERE nome = 'sla.md'")).rows[0];
+    expect(await linha()).toEqual({ areas: ["Tecnologia"], areas_versao: "classificacao-documento-v1" });
+
+    simulada.classificacaoDeDocumento = areasPorTitulo({ "Anexo de SLA": ["Tecnologia", "Jurídico"] });
+    expect(await classificarDocumentosPendentes({ banco: antigo, api: simulada, modelo: "claude-haiku-5-5", reclassificarVersoesAntigas: true })).toEqual({ classificados: 1, comFalha: 0 });
+    expect(await linha()).toEqual({ areas: ["Tecnologia", "Jurídico"], areas_versao: "classificacao-documento-v2" });
+    // A RFP passada nunca vai à IA, nem na reclassificação.
+    expect(simulada.classificacoesDeDocumento.every((pedido) => !JSON.stringify(pedido.messages).includes("RFP antiga"))).toBe(true);
   });
 
   it("só classifica a organização pedida, quando informada", async () => {

@@ -109,7 +109,7 @@ Dossiês podem ser compartilhados com usuários de outra unidade da mesma empres
 O dossiê pode ser exportado em um arquivo compactado com os documentos e um índice em PDF com o checklist, as pendências aceitas e o histórico. A exportação fica registrada no log de auditoria.
 """),
 
-D("produto", "modulo-extracao-campos.md", "Campos extraídos por tipo documental", "2026-10-02", "1.2", ["Produto", "Tecnologia"], """
+D("produto", "modulo-extracao-campos.md", "Campos extraídos por tipo documental", "2026-10-02", "1.2", ["Produto"], """
 ## 1. Como ler esta tabela
 
 A extração assistida lê os documentos recebidos e preenche campos. Cada campo traz a página e o trecho de origem. Quando o documento não traz o dado, o campo fica vazio. A extração não completa informação por dedução.

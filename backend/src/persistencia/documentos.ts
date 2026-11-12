@@ -225,16 +225,32 @@ export interface DocumentoParaClassificar {
   titulo: string;
   tipo: Cabecalho["tipo"];
   hash: string;
+  /** Null quando nunca foi classificado (ou falhou); preenchido quando é uma reclassificação de versão. */
+  areasClassificadasEm: string | null;
 }
 
-/** Documentos sem a marca de classificação, de uma organização ou de todas, na ordem em que entraram. */
-export async function listarDocumentosParaClassificar(banco: Banco, organizacaoId?: string): Promise<DocumentoParaClassificar[]> {
-  const { rows } = await banco.query<{ id: number; organizacao_id: string; nome: string; titulo: string; tipo: Cabecalho["tipo"]; hash: string }>(
-    `SELECT id, organizacao_id, nome, titulo, tipo, hash FROM documentos
-      WHERE areas_classificadas_em IS NULL AND ($1::uuid IS NULL OR organizacao_id = $1::uuid) ORDER BY id`,
-    [organizacaoId ?? null],
+/**
+ * Documentos sem a marca de classificação, de uma organização ou de todas, na ordem em que entraram.
+ * Com `versao`, também os documentos classificados por outra versão da instrução (revisão da v2):
+ * mantêm as áreas atuais até a nova classificação.
+ */
+export async function listarDocumentosParaClassificar(banco: Banco, organizacaoId?: string, versao?: string): Promise<DocumentoParaClassificar[]> {
+  const { rows } = await banco.query<{ id: number; organizacao_id: string; nome: string; titulo: string; tipo: Cabecalho["tipo"]; hash: string; areas_classificadas_em: Date | null }>(
+    `SELECT id, organizacao_id, nome, titulo, tipo, hash, areas_classificadas_em FROM documentos
+      WHERE (areas_classificadas_em IS NULL OR ($2::text IS NOT NULL AND tipo = 'documento' AND areas_versao IS DISTINCT FROM $2::text))
+        AND ($1::uuid IS NULL OR organizacao_id = $1::uuid)
+      ORDER BY id`,
+    [organizacaoId ?? null, versao ?? null],
   );
-  return rows.map((linha) => ({ id: linha.id, organizacaoId: linha.organizacao_id, nome: linha.nome, titulo: linha.titulo, tipo: linha.tipo, hash: linha.hash }));
+  return rows.map((linha) => ({
+    id: linha.id,
+    organizacaoId: linha.organizacao_id,
+    nome: linha.nome,
+    titulo: linha.titulo,
+    tipo: linha.tipo,
+    hash: linha.hash,
+    areasClassificadasEm: linha.areas_classificadas_em?.toISOString() ?? null,
+  }));
 }
 
 /**
@@ -242,10 +258,18 @@ export async function listarDocumentosParaClassificar(banco: Banco, organizacaoI
  * reenvio durante a classificação não recebe as áreas da versão anterior. Sem `classificado`
  * (falha, PU4), o documento fica "Geral" e sem a marca, para nova tentativa ao iniciar.
  */
-export async function gravarAreasDoDocumento(banco: Banco, documento: { id: number; hash: string }, areas: string[], classificado: boolean): Promise<boolean> {
+export async function gravarAreasDoDocumento(
+  banco: Banco,
+  documento: { id: number; hash: string },
+  areas: string[],
+  classificado: boolean,
+  versao: string | null = null,
+): Promise<boolean> {
   const resultado = await banco.query(
-    "UPDATE documentos SET areas = $3::text[], areas_classificadas_em = CASE WHEN $4::boolean THEN now() END WHERE id = $1 AND hash = $2",
-    [documento.id, documento.hash, areas, classificado],
+    `UPDATE documentos SET areas = $3::text[], areas_classificadas_em = CASE WHEN $4::boolean THEN now() END,
+       areas_versao = CASE WHEN $4::boolean THEN $5::text ELSE areas_versao END
+     WHERE id = $1 AND hash = $2`,
+    [documento.id, documento.hash, areas, classificado, versao],
   );
   return (resultado.affectedRows ?? 0) > 0;
 }
