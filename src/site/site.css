@@ -107,9 +107,12 @@
 .tdr-site-tour-sticky { grid-column: 2; grid-row: 1; position: sticky; top: calc(64px + var(--space-6)); }
 /* A janela cabe inteira na tela: a largura é limitada pela altura livre abaixo da barra (palco 600×494). */
 .tdr-site-tour-sticky .tdr-demo { max-width: calc((100vh - 64px - 2 * var(--space-6)) * 600 / 494); margin-left: auto; }
-.tdr-site-tour-steps { grid-column: 1; grid-row: 1; list-style: none; margin: 0; padding: 0; }
-/* Cada passo tem a altura da janela: o ativo fica no alto, ao lado dela, e o último também sobe até lá. */
+/* Os passos começam no terço inferior da janela (o 00 inclusive) e sobem esmaecidos até a linha de ativação. */
+.tdr-site-tour-steps { grid-column: 1; grid-row: 1; list-style: none; margin: 0; padding: calc(var(--tour-h, 60vh) * 2 / 3) 0 0; }
+/* Cada passo tem a altura da janela, então só um fica ao lado dela por vez. O último tem 2/3:
+   para na linha de ativação, a 1/3 do topo da janela, quando a seção termina. */
 .tdr-site-tour-step { min-height: var(--tour-h, 60vh); display: grid; gap: var(--space-3); align-content: start; opacity: 0.32; transition: opacity var(--duration-slow) var(--ease-out); }
+.tdr-site-tour-step:last-child { min-height: calc(var(--tour-h, 60vh) * 2 / 3); }
 .tdr-site-tour-step.is-on { opacity: 1; }
 .tdr-site-tour-step ul { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: grid; gap: var(--space-2); }
 .tdr-site-tour-step ul li { display: flex; gap: 10px; align-items: flex-start; font-size: var(--text-ui-size); line-height: 1.5; color: var(--text-strong); }
@@ -119,7 +122,8 @@
   .tdr-site-tour-sticky, .tdr-site-tour-steps { grid-column: 1; grid-row: auto; }
   .tdr-site-tour-sticky { top: 64px; z-index: 5; background: var(--surface-sunken); padding: var(--space-3) 0; border-bottom: 1px solid var(--border-strong); }
   .tdr-site-tour-sticky .tdr-demo { max-width: none; }
-  .tdr-site-tour-step { min-height: 0; padding: var(--space-10) 0 30vh; }
+  .tdr-site-tour-steps { padding-top: 0; }
+  .tdr-site-tour-step, .tdr-site-tour-step:last-child { min-height: 0; padding: var(--space-10) 0 30vh; }
 }
 
 /* "Funcionalidades": grade de cartões, cada um com um fragmento de interface que se completa em sequência. */
