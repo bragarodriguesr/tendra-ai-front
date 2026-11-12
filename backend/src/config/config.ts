@@ -21,6 +21,19 @@ export interface ConfiguracaoDaIa {
   esforco: NivelDeEsforco;
   /** Perguntas por requisição de geração. */
   tamanhoDoLote: number;
+  /** Modelo da classificação dos documentos da base por área (fase U, PU2). Sem ele, o Haiku 5.5. */
+  modeloDeClassificacaoDeDocumento?: string;
+  /**
+   * Seleção da base por área (fase U, PU11 e PU12). Sem ela, ligada com o limiar padrão. Desligada,
+   * ou com a base abaixo do limiar, todas as perguntas recebem a base inteira, como antes da fase.
+   */
+  selecao?: ConfiguracaoDaSelecao;
+}
+
+export interface ConfiguracaoDaSelecao {
+  porArea: boolean;
+  /** Tokens da base ativa (contados pela API) a partir dos quais a seleção liga. */
+  minimoDeTokens: number;
 }
 
 export interface Configuracao {
@@ -51,6 +64,8 @@ const MODELO_DE_IDENTIFICACAO_PADRAO = "claude-haiku-5-5";
 const MODELO_DE_CONFLITO_PADRAO = "claude-sonnet-5-5";
 export const MODELO_DE_REVISAO_DE_TEXTO_PADRAO = "claude-haiku-5-5";
 export const MODELO_DE_CLASSIFICACAO_PADRAO = "claude-haiku-5-5";
+export const MODELO_DE_CLASSIFICACAO_DE_DOCUMENTO_PADRAO = "claude-haiku-5-5";
+export const SELECAO_PADRAO: ConfiguracaoDaSelecao = { porArea: true, minimoDeTokens: 50_000 };
 const ESFORCO_PADRAO: NivelDeEsforco = "medium";
 const TAMANHO_DO_LOTE_PADRAO = 10;
 const TAMANHO_MAXIMO_DO_LOTE = 50;
@@ -70,6 +85,11 @@ function lerVariaveisDaIa(ambiente: NodeJS.ProcessEnv, problemas: string[]): Con
     problemas.push(`TENDRA_TAMANHO_LOTE inválida. Use um número de 1 a ${TAMANHO_MAXIMO_DO_LOTE}.`);
   }
 
+  const porAreaInformada = ambiente.TENDRA_SELECAO_POR_AREA?.trim().toLowerCase() || "true";
+  if (!["true", "1", "false", "0"].includes(porAreaInformada)) problemas.push("TENDRA_SELECAO_POR_AREA inválida. Use true ou false.");
+  const minimoInformado = ambiente.TENDRA_SELECAO_MINIMO_TOKENS?.trim() || String(SELECAO_PADRAO.minimoDeTokens);
+  if (!/^\d+$/.test(minimoInformado)) problemas.push("TENDRA_SELECAO_MINIMO_TOKENS inválida. Use um número inteiro de tokens, 0 ou mais.");
+
   return {
     modelo: ambiente.TENDRA_MODELO?.trim() || MODELO_PADRAO,
     modeloDeIdentificacao: ambiente.TENDRA_MODELO_IDENTIFICACAO?.trim() || MODELO_DE_IDENTIFICACAO_PADRAO,
@@ -78,6 +98,8 @@ function lerVariaveisDaIa(ambiente: NodeJS.ProcessEnv, problemas: string[]): Con
     modeloDeClassificacao: ambiente.TENDRA_MODELO_CLASSIFICACAO?.trim() || MODELO_DE_CLASSIFICACAO_PADRAO,
     esforco: esforco ?? ESFORCO_PADRAO,
     tamanhoDoLote,
+    modeloDeClassificacaoDeDocumento: ambiente.TENDRA_MODELO_CLASSIFICACAO_DOCUMENTO?.trim() || MODELO_DE_CLASSIFICACAO_DE_DOCUMENTO_PADRAO,
+    selecao: { porArea: porAreaInformada !== "false" && porAreaInformada !== "0", minimoDeTokens: Number(minimoInformado) || 0 },
   };
 }
 

@@ -5,9 +5,10 @@ import { PanelRow, PanelSection, SidePanel } from "../overlays.jsx";
 
 // Documento com mais largura e título em sans, para o nome não quebrar em várias linhas (revisão de design de 05/11/2026).
 // Fase O (O2): Tipo, Atualizado e Enviado por saem para os detalhes; a tabela cabe sem rolagem lateral a 1.024 px.
-// Com o menu aberto, a 1.024 px o cartão tem 654 px por dentro: 600 px de grade mais 40 de respiro.
-const COLS = "minmax(140px,3fr) 92px 92px minmax(104px,1fr) 124px";
-const rowGrid = { display: "grid", minWidth: 600, gridTemplateColumns: COLS, gap: 12 };
+// Com o menu aberto, a 1.024 px o cartão tem 654 px por dentro: 614 px de grade mais 40 de respiro.
+// Fase U (U17): a coluna Áreas entra com espaços menores entre as colunas, sem rolagem lateral nessa largura.
+const COLS = "minmax(112px,3fr) minmax(96px,2fr) 84px 64px minmax(92px,1fr) 116px";
+const rowGrid = { display: "grid", minWidth: 614, gridTemplateColumns: COLS, gap: 10 };
 const SORT_OPTIONS = [{ value: "idade", label: "Ordenar por idade" }, { value: "nome", label: "Ordenar por nome" }, { value: "upload", label: "Ordenar por envio" }, { value: "status", label: "Ordenar por status" }];
 
 function DocActions({ d }) {
@@ -25,6 +26,18 @@ function DocActions({ d }) {
         <Switch checked={d.active} disabled={d.toggleDisabled} onChange={d.toggle} aria-label={d.toggleLabel} />
       </Tooltip>
     </div>
+  );
+}
+
+/** Áreas do documento (fase U, cenário U17): uma por linha, "Geral" quando vale para todas, "Classificando…" enquanto a IA não termina. */
+function DocAreas({ d, inline }) {
+  if (!d.areaTags.length) return <span style={{ fontSize: 12, color: "var(--n-400)" }}>{d.areasText}</span>;
+  return (
+    <span aria-label={`Áreas: ${d.areasText}`} style={{ display: "flex", flexDirection: inline ? "row" : "column", flexWrap: "wrap", gap: inline ? "2px 10px" : 2, minWidth: 0 }}>
+      {d.areaTags.map((a) => (
+        <span key={a} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, lineHeight: 1.4, color: "var(--n-700)", overflowWrap: "anywhere" }}><Icon name="building-2" size="sm" />{a}</span>
+      ))}
+    </span>
   );
 }
 
@@ -76,6 +89,7 @@ function DocCards({ docs }) {
             <div style={{ fontSize: 14, fontWeight: 500, color: "var(--n-900)", lineHeight: 1.35, overflowWrap: "anywhere" }}>{d.name}</div>
             <div style={{ fontSize: 12, color: "var(--n-400)", marginTop: 2, overflowWrap: "anywhere" }}>{subtitle(d)}</div>
           </div>
+          <DocAreas d={d} inline />
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <Badge tone={d.tone} icon={d.icon}>{d.statusText}</Badge>
             {d.old ? <Badge tone="warning" icon="clock">Mais de 120 dias</Badge> : null}
@@ -129,7 +143,7 @@ export function Base({ v, ws, state, pad, isMobile }) {
       ) : isMobile ? <DocCards docs={v.docs} /> : (
       <div style={card(14, { overflowX: "auto", overflowY: "hidden" })}>
         <div style={{ ...rowGrid, padding: "12px 20px", background: "var(--n-050)", borderBottom: "1px solid var(--n-200)", ...mono(11, "var(--n-400)"), letterSpacing: ".1em", textTransform: "uppercase" }}>
-          <span>Documento</span><span>Validade</span><span>Idade</span><span>Status</span><span>Ações</span>
+          <span>Documento</span><span>Áreas</span><span>Validade</span><span>Idade</span><span>Status</span><span>Ações</span>
         </div>
         {v.docs.map((d) => (
           <div key={d.id} style={{ ...rowGrid, padding: "14px 20px", borderTop: "1px solid var(--n-100)", alignItems: "center" }}>
@@ -137,6 +151,7 @@ export function Base({ v, ws, state, pad, isMobile }) {
               <div style={{ fontSize: 14, fontWeight: 500, color: "var(--n-900)", lineHeight: 1.35, overflow: "hidden", textOverflow: "ellipsis" }}>{d.name}</div>
               <div style={{ fontSize: 12, color: "var(--n-400)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis" }}>{subtitle(d)}</div>
             </div>
+            <DocAreas d={d} />
             <span style={mono(12, d.expired ? "var(--danger)" : "inherit")}>{d.validity}</span>
             <span style={mono(13)}>{d.ageText}</span>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", minWidth: 0 }}>
@@ -219,6 +234,7 @@ function DocDetails({ d, onClose }) {
         <PanelRow rotulo="Arquivo" valor={d.file} mono />
         <PanelRow rotulo="Tipo" valor={d.type} />
         <PanelRow rotulo="Versão" valor={d.ver || "Sem versão"} />
+        <PanelRow rotulo="Áreas" valor={d.areasText} />
       </PanelSection>
       <PanelSection label="Datas e situação">
         <PanelRow rotulo="Atualizado" valor={`${d.upd} · ${d.ageText}`} mono />

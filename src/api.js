@@ -199,6 +199,9 @@ export function paraDocumentoDaTela(d, hoje = new Date()) {
     expired: !!d.vencido,
     off: !d.ativo,
     // Data e hora da carga, para os detalhes do documento (fase O, cenário O3).
-    sentAt: d.carregadoEm ? dataHoraDaTela(d.carregadoEm) : null
+    sentAt: d.carregadoEm ? dataHoraDaTela(d.carregadoEm) : null,
+    // Áreas do documento (fase U, cenário U17): null enquanto a IA classifica ("Classificando…").
+    areas: Array.isArray(d.areas) ? d.areas : null,
+    classifying: d.areas === null
   };
 }

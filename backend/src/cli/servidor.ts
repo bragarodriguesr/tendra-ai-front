@@ -65,6 +65,7 @@ async function executar(): Promise<void> {
       precos: await carregarPrecos(),
       pessoas: await carregarPessoas(),
       retomarInterrompidas: modo.tipo === "compartilhado",
+      classificarDocumentosAoIniciar: true,
       hoje: () => new Date().toISOString().slice(0, 10),
       aoFalharInesperadamente: (erro) => log.error({ erro: erro instanceof Error ? erro.name : "desconhecido" }, "Falha inesperada no processamento"),
     },

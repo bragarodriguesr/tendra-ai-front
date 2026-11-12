@@ -8,7 +8,7 @@ import { carregarTermosCriticos } from "../config/termosCriticos.ts";
 import { ErroDePlanilha } from "../documentos/planilha.ts";
 import { processarTarefa } from "../fluxo/processarTarefa.ts";
 import { ClienteDaIa, criarApiDoClaude, ErroDaIa, type EntradaDoRegistro } from "../ia/cliente.ts";
-import { calcularMetricas, carregarPrecos } from "../observabilidade/metricas.ts";
+import { calcularMetricas, calcularMetricasDaSelecao, carregarPrecos } from "../observabilidade/metricas.ts";
 import { abrirBancoConfigurado, ErroDeBancoEmUso } from "../persistencia/banco.ts";
 import { ErroDeOrganizacao, ORGANIZACAO_INICIAL, organizacaoAtiva } from "../persistencia/organizacoes.ts";
 import { ErroDeTeto } from "../recuperacao/buscarFontes.ts";
@@ -78,12 +78,21 @@ async function executar(): Promise<number> {
           documentos: resultado.documentos,
           // Posição de cada item na planilha (item rN ↔ posicoes[N-1]), para a avaliação.
           posicoes: resultado.perguntas.map(({ aba, linha }) => ({ aba, linha })),
+          // Área e contexto de cada item (fases N e U), na mesma ordem dos itens, para a avaliação U16.
+          areas: resultado.areas,
+          contextos: resultado.contextos,
         },
         null,
         2,
       ),
     );
-    const metricas = calcularMetricas({ registro, itens: resultado.itens, checagens: resultado.checagens, etapas: resultado.etapas, precos });
+    const metricas = {
+      ...calcularMetricas({ registro, itens: resultado.itens, checagens: resultado.checagens, etapas: resultado.etapas, precos }),
+      perguntasEmGeralPorFalha: resultado.perguntasEmGeralPorFalha,
+      ...(resultado.selecao === null
+        ? {}
+        : { selecao: calcularMetricasDaSelecao({ registro, selecao: resultado.selecao, contextos: resultado.contextos, documentosDaBase: resultado.documentos.length }) }),
+    };
     await writeFile(path.join(pasta, "metricas.json"), JSON.stringify(metricas, null, 2));
     await gravarRegistro(pasta, registro);
 

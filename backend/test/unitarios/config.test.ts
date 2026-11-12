@@ -65,6 +65,8 @@ describe("Cenário 38 · configuração da IA", () => {
       modeloDeClassificacao: "claude-haiku-5-5",
       esforco: "medium",
       tamanhoDoLote: 10,
+      modeloDeClassificacaoDeDocumento: "claude-haiku-5-5",
+      selecao: { porArea: true, minimoDeTokens: 50_000 },
     });
   });
 
@@ -79,6 +81,9 @@ describe("Cenário 38 · configuração da IA", () => {
         TENDRA_MODELO_CLASSIFICACAO: "claude-sonnet-5-5",
         TENDRA_ESFORCO: "high",
         TENDRA_TAMANHO_LOTE: "5",
+        TENDRA_MODELO_CLASSIFICACAO_DOCUMENTO: "claude-sonnet-5-5",
+        TENDRA_SELECAO_POR_AREA: "false",
+        TENDRA_SELECAO_MINIMO_TOKENS: "20000",
       },
       PASTA_BASE,
     );
@@ -90,7 +95,15 @@ describe("Cenário 38 · configuração da IA", () => {
       modeloDeClassificacao: "claude-sonnet-5-5",
       esforco: "high",
       tamanhoDoLote: 5,
+      modeloDeClassificacaoDeDocumento: "claude-sonnet-5-5",
+      selecao: { porArea: false, minimoDeTokens: 20_000 },
     });
+  });
+
+  it("fase U: recusa a seleção por área e o limiar inválidos", () => {
+    expect(() => carregarConfiguracao({ ANTHROPIC_API_KEY: CHAVE_FALSA, TENDRA_SELECAO_POR_AREA: "talvez" }, PASTA_BASE)).toThrow(/TENDRA_SELECAO_POR_AREA/);
+    expect(() => carregarConfiguracao({ ANTHROPIC_API_KEY: CHAVE_FALSA, TENDRA_SELECAO_MINIMO_TOKENS: "-1" }, PASTA_BASE)).toThrow(/TENDRA_SELECAO_MINIMO_TOKENS/);
+    expect(carregarConfiguracao({ ANTHROPIC_API_KEY: CHAVE_FALSA, TENDRA_SELECAO_POR_AREA: "0", TENDRA_SELECAO_MINIMO_TOKENS: "0" }, PASTA_BASE).ia.selecao).toEqual({ porArea: false, minimoDeTokens: 0 });
   });
 
   it("recusa esforço e tamanho de lote inválidos", () => {

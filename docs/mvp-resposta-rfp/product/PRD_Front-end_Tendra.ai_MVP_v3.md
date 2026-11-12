@@ -865,7 +865,7 @@ O diagrama completo está em `docs/mvp-resposta-rfp/product/PIPELINE_IA_MVP.md` 
 - **Fluxo fixo em código, sem agente.** As etapas são previsíveis; o backend as executa em ordem e chama o Claude só onde há linguagem natural a tratar. Isso torna o fluxo testável e auditável.
 - **A IA sugere, a pessoa decide.** Nenhuma etapa da IA aprova, revisa ou exporta. Todo item sai como *Sugerida* ou *Sem rascunho*, e as regras de estado, alertas e bloqueios são lógica de código.
 - **Sem fonte verificável, não há resposta.** Cada citação é conferida contra o documento antes de aparecer. O modelo redige a resposta com as fontes como contexto, de forma coerente com a pergunta, mas cada parágrafo precisa de ao menos uma citação válida: parágrafo sem citação é removido (alerta de baixa confiança), e item sem nenhuma citação válida vira *Sem rascunho* com o alerta de sem contexto. As instruções proíbem acrescentar o que os documentos não sustentam; a fidelidade do texto às fontes é conferida por pessoa na avaliação.
-- **Sem busca vetorial no MVP.** A base inteira vai ao Claude, que encontra e cita os trechos. A recuperação fica atrás de um módulo próprio, trocável depois.
+- **Sem busca vetorial no MVP.** O Claude encontra e cita os trechos nos documentos que recebe. Até 50 mil tokens de base, a base inteira vai em cada lote. Acima disso, desde a fase U (12/11/2026), cada pergunta recebe os documentos da sua área mais os "Geral", por regra, com a base inteira como segunda tentativa antes de *Sem rascunho*. As áreas dos documentos vêm de uma IA leve (Haiku 5.5), depois da carga, e aparecem na coluna "Áreas" da T2. A recuperação fica atrás de módulos próprios, trocáveis depois.
 
 **Etapas**
 

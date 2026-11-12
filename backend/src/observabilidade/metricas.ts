@@ -11,7 +11,7 @@ import type { ChecagemDoItem, ItemDaRevisao, TipoDeAlerta } from "../rastreabili
  * de etapa: nada de conteúdo de documentos nem texto de respostas.
  */
 
-export const ETAPAS_DA_TAREFA = ["planilha", "identificacao", "classificacao", "contexto", "geracao", "checagem", "conflito", "alertas", "planilhaPreenchida"] as const;
+export const ETAPAS_DA_TAREFA = ["planilha", "identificacao", "classificacao", "contexto", "selecao", "geracao", "checagem", "conflito", "alertas", "planilhaPreenchida"] as const;
 export type EtapaDaTarefa = (typeof ETAPAS_DA_TAREFA)[number];
 
 export interface DuracaoDaEtapa {
@@ -64,6 +64,37 @@ export interface MetricasDaTarefa {
   ignorados: { citacoesDescartadas: number; trechosSemFonte: number; perguntasSemMarcador: number };
   /** Perguntas que ficaram em "Geral" por falha da classificação (fase N, cenário N3). Ausente nas tarefas de antes da fase. */
   perguntasEmGeralPorFalha?: number;
+  /** Seleção da base por área (fase U, PU10). Ausente nas tarefas de antes da fase e com a base vazia. */
+  selecao?: MetricasDaSelecao;
+}
+
+export interface MetricasDaSelecao {
+  motivo: "ligada" | "desligada" | "base_pequena";
+  grupos: { area: string | null; documentos: number; perguntas: number }[];
+  perguntasPorContexto: Partial<Record<"area" | "base" | "base_segunda_tentativa", number>>;
+  /**
+   * Tokens de entrada das requisições de geração (cobrados, lidos e gravados no cache), separados
+   * pelo contexto: só uma parte da base ("area") ou a base inteira ("base", segunda tentativa incluída).
+   */
+  tokensDeEntradaDaGeracao: { area: number; base: number };
+}
+
+/** Métricas da seleção a partir do registro: uma requisição de geração com menos documentos que a base foi de um grupo de área. */
+export function calcularMetricasDaSelecao(entrada: {
+  registro: EntradaDoRegistro[];
+  selecao: Omit<MetricasDaSelecao, "perguntasPorContexto" | "tokensDeEntradaDaGeracao">;
+  contextos: ("area" | "base" | "base_segunda_tentativa")[];
+  documentosDaBase: number;
+}): MetricasDaSelecao {
+  const tokensDeEntradaDaGeracao = { area: 0, base: 0 };
+  for (const requisicao of entrada.registro) {
+    if (requisicao.etapa !== "geracao" || requisicao.tokens === null) continue;
+    const total = requisicao.tokens.entrada + requisicao.tokens.lidosDoCache + requisicao.tokens.gravadosNoCache;
+    tokensDeEntradaDaGeracao[requisicao.documentos.length < entrada.documentosDaBase ? "area" : "base"] += total;
+  }
+  const perguntasPorContexto: MetricasDaSelecao["perguntasPorContexto"] = {};
+  for (const contexto of entrada.contextos) perguntasPorContexto[contexto] = (perguntasPorContexto[contexto] ?? 0) + 1;
+  return { ...entrada.selecao, perguntasPorContexto, tokensDeEntradaDaGeracao };
 }
 
 export function calcularMetricas(entrada: {

@@ -191,6 +191,7 @@ sequenceDiagram
 - carga e validação dos documentos `.md` da base de conhecimento;
 - leitura da planilha da RFP e identificação das perguntas;
 - classificação da área de cada pergunta e aprovação só pela área (fase N);
+- classificação das áreas de cada documento da base e seleção do contexto por área na geração (fase U);
 - geração das respostas com citações, pela API da Anthropic;
 - revisão, aprovação e alertas de cada item;
 - ciclo de vida da tarefa: finalizar, arquivar e reativar, com a tarefa encerrada só para leitura (fase O);
@@ -207,7 +208,7 @@ A Tendra.ai usa três serviços do Supabase, sempre a partir do backend. O front
 
 | Serviço | Papel | O que guarda ou faz |
 |---|---|---|
-| **Postgres** (banco de dados) | Guarda os dados da aplicação | Organizações, perfis (com as áreas do Aprovador), sessões e tentativas de login; documentos da base e os blocos citáveis de cada um; tarefas (com a situação: em andamento, finalizada ou arquivada), itens (com a área), respostas, fontes, alertas e o histórico da revisão; o histórico das ações sobre as tarefas; empresas e contatos. São 16 tabelas, criadas pelas migrações em `backend/migracoes/` (001 a 013), aplicadas pelo backend ao iniciar |
+| **Postgres** (banco de dados) | Guarda os dados da aplicação | Organizações, perfis (com as áreas do Aprovador), sessões e tentativas de login; documentos da base (com as áreas) e os blocos citáveis de cada um; tarefas (com a situação: em andamento, finalizada ou arquivada), itens (com a área e o contexto de onde veio a resposta), respostas, fontes, alertas e o histórico da revisão; o histórico das ações sobre as tarefas; empresas e contatos. São 16 tabelas, criadas pelas migrações em `backend/migracoes/` (001 a 014), aplicadas pelo backend ao iniciar |
 | **Storage** (arquivos) | Guarda as planilhas | Bucket privado `rfps`, com as planilhas enviadas e as preenchidas, separadas por organização. Só o backend lê e grava, com a chave de serviço |
 | **Auth** (autenticação) | Confere e-mail e senha | O backend pergunta ao Supabase se o par confere e recebe o id da conta. **A senha nunca é guardada pela Tendra.ai.** As contas são criadas no painel do Supabase e ligadas a um perfil (nome, papel e organização) pelo comando `cadastrar-perfil` |
 
@@ -226,8 +227,9 @@ A Tendra.ai usa três serviços do Supabase, sempre a partir do backend. O front
 | Conflitos entre fontes | `TENDRA_MODELO_CONFLITO` | `claude-sonnet-5-5` |
 | "Revisar com IA" das respostas manuais (só redação) | `TENDRA_MODELO_REVISAO_TEXTO` | `claude-haiku-5-5` |
 | Classificação da área de cada pergunta (fase N) | `TENDRA_MODELO_CLASSIFICACAO` | `claude-haiku-5-5` |
+| Classificação das áreas de cada documento da base (fase U) | `TENDRA_MODELO_CLASSIFICACAO_DOCUMENTO` | `claude-haiku-5-5` |
 
-As perguntas vão em lotes (`TENDRA_TAMANHO_LOTE`, padrão 10). Não há banco vetorial nem embeddings: os blocos da base vão no contexto da chamada, com citações (decisão em `DECISAO_RAG.md`). Sem a chave, `TENDRA_API_SIMULADA=1` liga respostas fictícias, marcadas como "[Resposta simulada]".
+As perguntas vão em lotes (`TENDRA_TAMANHO_LOTE`, padrão 10). Desde a fase U, com a base acima de 50 mil tokens, os lotes são agrupados por área, e cada grupo recebe só os documentos da área mais os "Geral" (`TENDRA_SELECAO_POR_AREA`, ligada por padrão; `TENDRA_SELECAO_MINIMO_TOKENS`, padrão 50000). Não há banco vetorial nem embeddings: os blocos da base vão no contexto da chamada, com citações (decisão em `DECISAO_RAG.md`). Sem a chave, `TENDRA_API_SIMULADA=1` liga respostas fictícias, marcadas como "[Resposta simulada]".
 
 #### GitHub: código, testes e segurança
 
@@ -327,7 +329,7 @@ Citados como em `docs/mvp-resposta-rfp/spec/SPEC.md`:
 | | |
 |---|---|
 | **O que acontece** | A equipe escreve um `.md` por documento, com cabeçalho (`titulo`, `tipo`, `atualizado_em`, `versao` opcional). Na tela Base de conhecimento, a pessoa clica em "Subir documentos" e escolhe os arquivos no computador; o front envia os arquivos para `POST /api/base/documentos`. O backend valida cada arquivo, divide o texto em blocos (seção, parágrafo, linha), grava documentos e blocos no banco e devolve o resultado de cada arquivo, que a tela mostra. O comando `carregar-base` faz a mesma carga a partir de uma pasta. Detalhes e regras de validação em `docs/mvp-resposta-rfp/product/FORMATO_BASE_MD.md`. |
-| **IA?** | Não. |
+| **IA?** | Desde a fase U, sim, depois da carga e em segundo plano: cada documento novo ou alterado vai ao Haiku 5.5 (`TENDRA_MODELO_CLASSIFICACAO_DOCUMENTO`, instrução `classificacao-documento-v1`, saída estruturada) com o título, o tipo, os títulos das seções e o início do texto, até 4 mil tokens. Recebe uma ou mais áreas (as mesmas das perguntas) ou "Geral", gravadas em `documentos.areas`. O envio não espera: a tela mostra "Classificando…" até terminar. Falha da IA deixa o documento "Geral", tentado de novo ao iniciar o backend. RFPs passadas ficam "Geral" sem chamar a IA. O comando `carregar-base` não classifica: os documentos que ele grava são classificados na próxima subida do servidor. |
 | **Identidade** | O nome do arquivo (o navegador não informa a pasta). Enviar de novo o mesmo nome substitui a versão anterior; hash igual é ignorado; dois arquivos com o mesmo nome na mesma carga são recusados. No comando, documento sem arquivo de mesmo nome na pasta aparece como órfão, sem ser apagado. |
 | **Um processo por vez** | O PGlite não aceita dois processos no mesmo banco. O servidor e o comando usam uma trava; com o servidor aberto, a carga é pela tela. |
 | **Ativar ou desativar** | Estado só no banco. Um documento inativo não entra em novas tarefas; respostas já geradas não mudam. |
@@ -368,6 +370,16 @@ Citados como em `docs/mvp-resposta-rfp/spec/SPEC.md`:
 | **Base vazia** | Nada vai à IA (cenário 10): todas em "Geral". |
 | **Tarefas antigas** | As tarefas em aberto de antes da fase N são classificadas em segundo plano ao iniciar o backend (`reclassificarTarefasEmAberto`, marca `tarefas.areas_classificadas_em`). |
 | **Proteção** | Só o texto das perguntas vai à IA, como na identificação; a pergunta é dado, nunca instrução. |
+
+### Etapa 4c: selecionar o contexto por área (fase U, 12/11/2026)
+
+| | |
+|---|---|
+| **O que acontece** | Depois da classificação das perguntas, uma regra determinística (`selecionarContexto`) agrupa as perguntas por área. As de uma área recebem os documentos com essa área mais os "Geral" (inclusive os ainda não classificados). Pergunta "Geral" e área sem nenhum documento recebem a base inteira. Cada grupo é gerado em lotes de `TENDRA_TAMANHO_LOTE`, com o seu cache. A ordem dos itens e da planilha preenchida não muda. |
+| **Quando liga** | Com `TENDRA_SELECAO_POR_AREA` ligada (padrão) e a base ativa acima de `TENDRA_SELECAO_MINIMO_TOKENS` (padrão 50 mil, pela contagem da API). Abaixo disso, ou desligada, a base inteira vai em todos os lotes, como antes da fase. |
+| **Segunda tentativa** | Pergunta do contexto da área sem nenhum trecho com fonte válida volta num lote com a base inteira; só depois fica "Sem rascunho". |
+| **Rastreio** | `itens.contexto` (`area`, `base` ou `base_segunda_tentativa`) e `metricas.selecao` (grupos, perguntas por contexto e tokens de entrada da geração). Nada disso aparece na Revisão. |
+| **Teto** | O teto de 25 MB e 400 mil tokens continua valendo sobre a base inteira, que a segunda tentativa usa. |
 
 ### Etapa 5: checar contexto e fonte
 
@@ -454,6 +466,7 @@ A organização das pastas está no `PLAN.md`.
 | **N. Áreas** | Área de cada pergunta classificada pela IA (Haiku 5.5); só o Aprovador da área ou C-Level aprova; "Minha área primeiro" na Revisão (migração 011) | Testes de integração e de ponta a ponta; conferida no ambiente publicado, menos a avaliação da classificação (N4), que espera a rotulação do gabarito |
 | **O. Ciclo de vida da tarefa** | Situação da tarefa (em andamento, finalizada, arquivada), tarefa encerrada só para leitura, Exportação com finalizar e histórico das ações sobre as tarefas (migrações 012 e 013) | Testes de integração e de ponta a ponta; conferida no ambiente publicado |
 | **P. Cabeçalho dos detalhes** | Cabeçalho com ordenação na tabela dos detalhes da tarefa, com os alertas na coluna Status (só front) | Testes unitários e de ponta a ponta (P1 a P11) |
+| **U. Seleção da base por área** | Áreas dos documentos classificadas pela IA depois da carga, coluna "Áreas" na Base, geração por grupo de área com segunda tentativa na base inteira (migração 014) | Testes de integração e de ponta a ponta; avaliações U7 e U16 com a API real na base da Vereda Documental |
 
 A fase A sozinha mostra se a ideia funciona. Se a qualidade das respostas não atingir os critérios, o ajuste acontece antes de investir em servidor, tela ou hospedagem. A fase D só começa depois de A, B e C aceitas.
 

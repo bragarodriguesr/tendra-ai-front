@@ -67,6 +67,10 @@ export interface OpcoesDasTarefas extends AmbienteDaTarefa {
   pessoas: Pessoa[];
   /** Chamado quando o processamento de fundo termina (usado nos testes). */
   aoTerminarTarefa?: (id: string) => void;
+  /** Chamado quando uma rodada da classificação dos documentos por área termina (fase U; usado nos testes). */
+  aoTerminarClassificacao?: () => void;
+  /** Classifica, ao ficar pronto, os documentos ainda sem área de todas as organizações (fase U, PU5, cenário U6). */
+  classificarDocumentosAoIniciar?: boolean;
   /**
    * Modo compartilhado (etapa D8, cenário D15): ao ficar pronto, o servidor retoma, na fila, as
    * tarefas que ficaram em `processando` por um reinício. No modo local elas viram `falha` (cenário 32).

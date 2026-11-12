@@ -33,7 +33,7 @@ Os logs de acesso são mantidos por 12 meses em armazenamento imutável...
 | `versao` | Não | Texto de até 20 caracteres; número é aceito e convertido para texto | Coluna Versão da T2 (sem o campo, aparece "Sem versão") |
 | `validade` | Não (28/10/2026) | Data `AAAA-MM-DD`, não anterior a `atualizado_em`. Pode estar no passado: o arquivo entra como vencido, com um aviso | Coluna Validade da T2 (sem o campo, aparece "Indefinido"). A partir dessa data, inclusive, o documento fica vencido: inativo, fora da geração e sem reativação pela chave. Só uma nova versão com validade futura volta a valer |
 
-Entre as duas linhas `---` só entram esses cinco campos. Qualquer outro campo gera um aviso e é ignorado (seção 4), o que deixa espaço para evoluções futuras, como a classificação por disciplina (F-07 do PRD), sem quebrar arquivos existentes.
+Entre as duas linhas `---` só entram esses cinco campos. Qualquer outro campo gera um aviso e é ignorado (seção 4), o que deixa espaço para evoluções futuras, como a classificação por disciplina (F-07 do PRD), sem quebrar arquivos existentes. As áreas do documento (fase U, `spec/SPEC_FASE_U.md`) não entram no cabeçalho: são atribuídas pela IA depois da carga, a partir do título, das seções e do início do texto, e aparecem na coluna "Áreas" da tela da Base. Um campo `areas` no cabeçalho gera o aviso de campo desconhecido, como qualquer outro.
 
 ## 2. Decisões que definem o formato
 
