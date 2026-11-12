@@ -1146,6 +1146,17 @@ Pedida em 09/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 ### Situação (09/11/2026): planejada
 - Spec aprovado; implementação ainda não iniciada.
 
+## Fase U: seleção da base por área
+
+Pedida em 12/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/spec/SPEC_FASE_U.md` (cenários U1 a U19, `draft`). Decisões PU1 a PU13 propostas, a validar pelo grupo; o plano detalhado é escrito depois da aprovação.
+
+**Objetivo:** os documentos da base recebem áreas na carga (Haiku 5.5, uma ou mais por documento), e cada pergunta da RFP, já classificada por área desde a fase N, passa a receber só os documentos da sua área mais os "Geral". A base inteira continua como varredura completa antes de "Sem rascunho".
+
+**Etapas sugeridas:** U-a classificação dos documentos; U-b seleção por área, publicada desligada e ligada só com a avaliação aprovada; U-c tela (P1).
+
+### Situação (12/11/2026): spec em `draft`
+- Proposta também no board do Miro, nos quadros 1 e 3 da pipeline, marcada como fase U.
+
 ## Definição de pronto (proposta, P10)
 
 Uma etapa só é concluída quando:
