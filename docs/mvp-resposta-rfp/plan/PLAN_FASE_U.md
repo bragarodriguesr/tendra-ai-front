@@ -148,6 +148,27 @@ Motivo: na base da Vereda, a v1 deu 58% de concordância exata (meta 85%), com 3
 - **Cuidado na avaliação:** os erros a evitar da v2 foram escritos a partir dos erros vistos na base da Vereda. A concordância medida nela tende a ser otimista; a confirmação vem da próxima base real.
 - **Pendente:** medir a v2 com a API real (`avaliar-areas-documentos`) antes de publicar, e comparar com a v1, que com os rótulos revistos fica em 64% de concordância exata (55 de 86) e 88% incluindo todas as rotuladas (76 de 86).
 
+### Medição da v2 em produção (12/11/2026)
+
+O ambiente da sessão não aceita a chave da Anthropic, então a v2 foi medida em produção, com a seleção desligada (as áreas só aparecem na tela da Base). Merge do PR #116 às 19:58 UTC; deploy às 19:59; migração 015 aplicada; os 114 documentos classificados com a v2 até 20:02, sem falha.
+
+| Medida (86 documentos novos da Vereda, rótulos revistos) | v1 | v2 publicada |
+|---|---|---|
+| Concordância exata | 64% (55) | 63% (54) |
+| Áreas atribuídas incluem todas as rotuladas | 88% (76) | 63% (54) |
+| Área principal entre as rotuladas | 93% (80) | 97% (83) |
+| Áreas a mais | 33 | 3 |
+| Áreas a menos | 11 | 33 |
+
+- **A área principal melhorou:** só 3 documentos ficaram com uma área fora das rotuladas (`matriz-cobertura-uf.md` em "Geral", `modelos-checklist-detalhados.md` em Jurídico e `anexo-layout-exportacao.md` em Produto). As áreas a mais caíram de 33 para 3.
+- **Bug: nenhuma área secundária foi gravada.** A entrada lista as seções com o caminho ("Título > 2. Seção"), o Haiku copia esse caminho, e o código comparava só o título solto. Toda secundária era descartada. Os 30 documentos rotulados com mais de uma área perderam as demais (as 33 a menos). Os logs confirmam que a IA mandou secundárias: respostas de 65 a 70 tokens, contra 23 sem secundária. Os testes não pegaram porque a API simulada devolvia o título solto.
+- **Correção (PR seguinte):**
+  - a conferência usa o último trecho do caminho;
+  - o título do topo do documento não vale como seção quando há seções abaixo dele;
+  - a API simulada dos testes passa a responder com o caminho, como o Haiku;
+  - a migração 016 marca os documentos da v2 publicada para reclassificação ao iniciar, mantendo a área principal até lá.
+- **Próximo passo:** medir de novo depois da correção, da mesma forma.
+
 ### Como rodar as avaliações
 
 ```bash

@@ -116,8 +116,14 @@ export async function classificarDocumento(opcoes: { cliente: ClienteDaIa; model
 }
 
 /** Títulos das seções do documento, de todos os níveis, sem repetição. */
+/**
+ * Títulos das seções que podem justificar uma área secundária, sem repetição. O título do topo (o
+ * "# Título" do documento) fica de fora quando há seções abaixo dele: citar o documento inteiro não
+ * prende a área a uma seção.
+ */
 export function secoesDoDocumento(documento: Pick<DocumentoParaClassificacao, "blocos">): string[] {
-  return [...new Set(documento.blocos.flatMap((bloco) => bloco.caminhoDeSecoes))];
+  const abaixoDoTopo = documento.blocos.flatMap((bloco) => bloco.caminhoDeSecoes.slice(1));
+  return [...new Set(abaixoDoTopo.length > 0 ? abaixoDoTopo : documento.blocos.flatMap((bloco) => bloco.caminhoDeSecoes))];
 }
 
 const normalizarTitulo = (texto: string) =>
@@ -125,7 +131,8 @@ const normalizarTitulo = (texto: string) =>
 
 /**
  * Áreas da resposta v2, na ordem da lista: a principal e as secundárias presas a uma seção que
- * existe no documento (o título pode vir com ou sem a numeração), sem repetição e no máximo duas.
+ * existe no documento, sem repetição e no máximo duas. A seção pode vir como a entrada a lista
+ * ("Título > 2. Seção"), só com o título ou sem a numeração: vale o último trecho do caminho.
  * Principal "Geral" vale sozinha. Principal inválida: lista vazia (falha).
  */
 export function areasDaResposta(dados: unknown, secoes: readonly string[]): string[] {
@@ -143,7 +150,7 @@ export function areasDaResposta(dados: unknown, secoes: readonly string[]): stri
     const { area, secao } = secundaria as { area?: unknown; secao?: unknown };
     const valida = typeof area === "string" ? areaDoItem(area) : null;
     if (valida === null || valida === AREA_GERAL || escolhidas.has(valida)) continue;
-    if (typeof secao !== "string" || !titulos.has(normalizarTitulo(secao))) continue;
+    if (typeof secao !== "string" || !titulos.has(normalizarTitulo(secao.split(">").at(-1) ?? ""))) continue;
     escolhidas.add(valida);
     aceitas++;
   }

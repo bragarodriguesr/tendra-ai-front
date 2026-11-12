@@ -16,12 +16,14 @@ export function ehClassificacaoDeDocumento(parametros: ParametrosDaGeracao): boo
   return parametros.output_config?.format !== undefined && ultimo?.type === "text" && ultimo.text.startsWith("<documento>");
 }
 
-/** Primeira seção listada no pedido de classificação de documento, para prender as secundárias. */
+/** Primeira seção abaixo do título listada no pedido de classificação de documento, para prender as secundárias. */
 function primeiraSecao(parametros: ParametrosDaGeracao): string {
   const conteudo = parametros.messages[0]?.content;
   const ultimo = Array.isArray(conteudo) ? conteudo.at(-1) : undefined;
   const pedido = ultimo?.type === "text" ? ultimo.text : "";
-  return /^Seções:\n- (.*)$/m.exec(pedido)?.[1]?.split(" > ").at(-1) ?? "";
+  // Como o modelo real responde: a seção copiada da lista, com o caminho inteiro ("Título > 1. Seção").
+  const secoes = [...pedido.matchAll(/^- (.*)$/gm)].map(([, secao]) => secao ?? "");
+  return secoes.find((secao) => secao.includes(" > ")) ?? secoes[0] ?? "";
 }
 
 /** Resposta v2 da classificação de documento: a principal e as secundárias, presas à primeira seção do documento. */
