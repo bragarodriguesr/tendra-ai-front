@@ -1,0 +1,695 @@
+{
+ "data_referencia": "2026-11-12",
+ "empresa": "Vereda Documental (fictícia)",
+ "observacao": "Gabarito da fase U (SPEC_FASE_U.md, cenários U7 e U16). area_esperada é a área que a classificação das perguntas deve atribuir. Casos: fonte-em-outra-area (a resposta está só num documento de outra área: testa a segunda tentativa com a base inteira, U11); conflito-* (fontes que se contradizem, uma delas na base desde antes da fase U); sem-resposta e compromisso-nao-sustentado (devem ficar Sem rascunho).",
+ "pasta_base": "base",
+ "pasta_atualizacao": "base",
+ "rfps": [
+  {
+   "arquivo": "rfps/RFP-V1-Banco-Pampa-Homologacao.xlsx",
+   "aba": "Questionário",
+   "perguntas": [
+    {
+     "ref": "1.01",
+     "linha": 6,
+     "pergunta": "Quais planos de contratação a plataforma oferece e o que diferencia cada um?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "comparativo-planos.md",
+      "contrato-prestacao-servicos.md"
+     ],
+     "area_esperada": "Comercial",
+     "notas": []
+    },
+    {
+     "ref": "1.02",
+     "linha": 7,
+     "pergunta": "Qual é a mensalidade do plano Corporativo e quantos usuários estão incluídos?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "tabela-precos-2026.md",
+      "proposta-padrao-corporativo.md"
+     ],
+     "area_esperada": "Comercial",
+     "notas": []
+    },
+    {
+     "ref": "1.03",
+     "linha": 8,
+     "pergunta": "Quanto custa cada solicitação concluída no plano Corporativo?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "tabela-precos-2026.md",
+      "contrato-prestacao-servicos.md"
+     ],
+     "area_esperada": "Comercial",
+     "notas": []
+    },
+    {
+     "ref": "1.04",
+     "linha": 9,
+     "pergunta": "Há desconto por volume de solicitações? A partir de quantas por mês?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "politica-descontos-volume.md"
+     ],
+     "area_esperada": "Comercial",
+     "notas": []
+    },
+    {
+     "ref": "1.05",
+     "linha": 10,
+     "pergunta": "Os emolumentos dos cartórios estão incluídos na mensalidade?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "politica-reembolso-emolumentos.md",
+      "tabela-precos-2026.md"
+     ],
+     "area_esperada": "Comercial",
+     "notas": []
+    },
+    {
+     "ref": "1.06",
+     "linha": 11,
+     "pergunta": "Como funciona o reajuste anual dos preços?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "politica-reajuste.md",
+      "condicoes-gerais-contratacao.md"
+     ],
+     "area_esperada": "Comercial",
+     "notas": []
+    },
+    {
+     "ref": "1.07",
+     "linha": 12,
+     "pergunta": "Qual é o vencimento das faturas e o que acontece em caso de atraso?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "faturamento-pagamento.md"
+     ],
+     "area_esperada": "Comercial",
+     "notas": []
+    },
+    {
+     "ref": "1.08",
+     "linha": 13,
+     "pergunta": "É possível fazer um piloto antes da contratação? Em quais condições?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "condicoes-piloto-poc.md"
+     ],
+     "area_esperada": "Comercial",
+     "notas": []
+    },
+    {
+     "ref": "1.09",
+     "linha": 14,
+     "pergunta": "Quantos clientes a empresa atende hoje e em quais segmentos?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "referencias-clientes-sinteticos.md",
+      "apresentacao-institucional.md"
+     ],
+     "area_esperada": "Comercial",
+     "notas": []
+    },
+    {
+     "ref": "1.10",
+     "linha": 15,
+     "pergunta": "Qual é o preço por hora de um projeto de integração sob medida?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "tabela-precos-2026.md"
+     ],
+     "area_esperada": "Comercial",
+     "notas": []
+    },
+    {
+     "ref": "2.01",
+     "linha": 16,
+     "pergunta": "Quais tipos de certidão a plataforma consegue solicitar para pessoa jurídica?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "catalogo-tipos-documentais.md",
+      "catalogo-documentos-cobertura.md"
+     ],
+     "area_esperada": "Produto",
+     "notas": []
+    },
+    {
+     "ref": "2.02",
+     "linha": 17,
+     "pergunta": "A plataforma tem cobertura de certidões no Mato Grosso? Por qual canal?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "matriz-cobertura-uf.md",
+      "cadastro-emissores-municipios.md"
+     ],
+     "area_esperada": "Produto",
+     "notas": []
+    },
+    {
+     "ref": "2.03",
+     "linha": 18,
+     "pergunta": "Como são organizados os dossiês e o que significa um dossiê completo?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "modulo-dossies-checklists.md",
+      "diligencia-imobiliaria.md"
+     ],
+     "area_esperada": "Produto",
+     "notas": []
+    },
+    {
+     "ref": "2.04",
+     "linha": 19,
+     "pergunta": "Quais itens compõem o checklist de crédito rural com garantia de imóvel?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "modelos-checklist-detalhados.md"
+     ],
+     "area_esperada": "Produto",
+     "notas": []
+    },
+    {
+     "ref": "2.05",
+     "linha": 20,
+     "pergunta": "Com que antecedência a plataforma avisa o vencimento de uma certidão?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "alertas-vencimento-renovacao.md",
+      "portal-operacoes-documentais.md"
+     ],
+     "area_esperada": "Produto",
+     "notas": []
+    },
+    {
+     "ref": "2.06",
+     "linha": 21,
+     "pergunta": "Quais campos são extraídos de uma matrícula de imóvel?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "modulo-extracao-campos.md"
+     ],
+     "area_esperada": "Produto",
+     "notas": []
+    },
+    {
+     "ref": "2.07",
+     "linha": 22,
+     "pergunta": "Existe aplicativo móvel para aprovar despesas? Quais sistemas operacionais são suportados?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "aplicativo-movel-aprovacoes.md"
+     ],
+     "area_esperada": "Produto",
+     "notas": []
+    },
+    {
+     "ref": "2.08",
+     "linha": 23,
+     "pergunta": "Quais relatórios gerenciais estão disponíveis?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "painel-relatorios-indicadores.md",
+      "portal-operacoes-documentais.md"
+     ],
+     "area_esperada": "Produto",
+     "notas": []
+    },
+    {
+     "ref": "2.09",
+     "linha": 24,
+     "pergunta": "Quanto tempo leva a implantação do plano Corporativo?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "implantacao-onboarding.md",
+      "proposta-padrao-corporativo.md"
+     ],
+     "area_esperada": "Produto",
+     "notas": []
+    },
+    {
+     "ref": "2.10",
+     "linha": 25,
+     "pergunta": "A extração de campos funciona para documentos em inglês?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "modulo-extracao-campos.md",
+      "roteiro-produto-2027.md"
+     ],
+     "area_esperada": "Produto",
+     "notas": []
+    },
+    {
+     "ref": "2.11",
+     "linha": 26,
+     "pergunta": "A plataforma concede crédito ou emite parecer jurídico?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "analise-ia-extracao.md",
+      "visao-geral-plataforma.md"
+     ],
+     "area_esperada": "Produto",
+     "notas": []
+    },
+    {
+     "ref": "3.01",
+     "linha": 27,
+     "pergunta": "A plataforma oferece API? Qual é o método de autenticação?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "api-referencia-v1.md",
+      "portal-operacoes-documentais.md"
+     ],
+     "area_esperada": "Tecnologia",
+     "notas": []
+    },
+    {
+     "ref": "3.02",
+     "linha": 28,
+     "pergunta": "Quais eventos podem ser recebidos por webhook e como a autenticidade é garantida?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "webhooks-eventos.md"
+     ],
+     "area_esperada": "Tecnologia",
+     "notas": []
+    },
+    {
+     "ref": "3.03",
+     "linha": 29,
+     "pergunta": "Qual é o limite de requisições por minuto da API no plano Profissional?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "tabela-precos-2026.md"
+     ],
+     "area_esperada": "Tecnologia",
+     "caso": "fonte-em-outra-area",
+     "notas": []
+    },
+    {
+     "ref": "3.04",
+     "linha": 30,
+     "pergunta": "Qual é o limite de requisições por minuto da API no plano Corporativo?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "limites-desempenho-capacidade.md"
+     ],
+     "area_esperada": "Tecnologia",
+     "notas": []
+    },
+    {
+     "ref": "3.05",
+     "linha": 31,
+     "pergunta": "Em que região os dados ficam hospedados e qual é o provedor de nuvem?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "arquitetura-sistemas-aplicacoes.md",
+      "modelo-dados-retencao-tecnica.md"
+     ],
+     "area_esperada": "Tecnologia",
+     "notas": []
+    },
+    {
+     "ref": "3.06",
+     "linha": 32,
+     "pergunta": "Quais são o RPO e o RTO da plataforma?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "plano-continuidade-negocios.md",
+      "anexo-sla-slo-rto.md"
+     ],
+     "area_esperada": "Tecnologia",
+     "caso": "conflito-rpo-rto",
+     "notas": []
+    },
+    {
+     "ref": "3.07",
+     "linha": 33,
+     "pergunta": "Com que frequência são feitos backups e por quanto tempo ficam guardados?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "politica-backup-restauracao.md",
+      "arquitetura-sistemas-aplicacoes.md"
+     ],
+     "area_esperada": "Tecnologia",
+     "notas": []
+    },
+    {
+     "ref": "3.08",
+     "linha": 34,
+     "pergunta": "Qual é a disponibilidade mensal garantida e qual é o crédito em caso de descumprimento?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "anexo-sla-slo-rto.md"
+     ],
+     "area_esperada": "Tecnologia",
+     "notas": []
+    },
+    {
+     "ref": "3.09",
+     "linha": 35,
+     "pergunta": "Qual é o tempo de primeira resposta para um chamado de severidade 1?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "suporte-tecnico-niveis.md",
+      "anexo-sla-slo-rto.md"
+     ],
+     "area_esperada": "Tecnologia",
+     "notas": []
+    },
+    {
+     "ref": "3.10",
+     "linha": 36,
+     "pergunta": "Existe ambiente de homologação para testar a integração?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "ambientes-homologacao.md"
+     ],
+     "area_esperada": "Tecnologia",
+     "notas": []
+    },
+    {
+     "ref": "3.11",
+     "linha": 37,
+     "pergunta": "Como são publicadas novas versões e com que antecedência mudanças na API são avisadas?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "gestao-mudancas-releases.md",
+      "notas-versao-2026.md"
+     ],
+     "area_esperada": "Tecnologia",
+     "notas": []
+    },
+    {
+     "ref": "3.12",
+     "linha": 38,
+     "pergunta": "Qual é o layout do arquivo de exportação de gastos para o ERP?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "anexo-layout-exportacao.md"
+     ],
+     "area_esperada": "Tecnologia",
+     "notas": []
+    },
+    {
+     "ref": "4.01",
+     "linha": 39,
+     "pergunta": "A empresa possui certificação ISO/IEC 27001 ou SOC 2?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "declaracao-iso27001-em-implantacao.md"
+     ],
+     "area_esperada": "Segurança e privacidade",
+     "notas": []
+    },
+    {
+     "ref": "4.02",
+     "linha": 40,
+     "pergunta": "Quais algoritmos de criptografia são usados em repouso e em trânsito?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "politica-seguranca-informacao.md",
+      "criptografia-chaves.md"
+     ],
+     "area_esperada": "Segurança e privacidade",
+     "notas": []
+    },
+    {
+     "ref": "4.03",
+     "linha": 41,
+     "pergunta": "O acesso à plataforma exige autenticação de dois fatores?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "politica-seguranca-informacao.md",
+      "portal-operacoes-documentais.md"
+     ],
+     "area_esperada": "Segurança e privacidade",
+     "notas": []
+    },
+    {
+     "ref": "4.04",
+     "linha": 42,
+     "pergunta": "Em quanto tempo o cliente é comunicado de um incidente de segurança?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "plano-resposta-incidentes.md",
+      "politica-seguranca-informacao.md"
+     ],
+     "area_esperada": "Segurança e privacidade",
+     "notas": []
+    },
+    {
+     "ref": "4.05",
+     "linha": 43,
+     "pergunta": "Por quanto tempo os logs de segurança são guardados?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "norma-registro-e-monitoramento.md",
+      "politica-seguranca-informacao.md"
+     ],
+     "area_esperada": "Segurança e privacidade",
+     "caso": "conflito-retencao-logs",
+     "notas": []
+    },
+    {
+     "ref": "4.06",
+     "linha": 44,
+     "pergunta": "Qual é o prazo para corrigir uma vulnerabilidade crítica?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "gestao-vulnerabilidades.md",
+      "politica-seguranca-informacao.md"
+     ],
+     "area_esperada": "Segurança e privacidade",
+     "notas": []
+    },
+    {
+     "ref": "4.07",
+     "linha": 45,
+     "pergunta": "É feito teste de intrusão independente? Qual foi o resultado mais recente?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "relatorio-teste-intrusao-2026.md"
+     ],
+     "area_esperada": "Segurança e privacidade",
+     "notas": []
+    },
+    {
+     "ref": "4.08",
+     "linha": 46,
+     "pergunta": "Quem é o encarregado de dados e como contatá-lo?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "politica-privacidade-plataforma.md",
+      "auditoria-privacidade.md"
+     ],
+     "area_esperada": "Segurança e privacidade",
+     "notas": []
+    },
+    {
+     "ref": "4.09",
+     "linha": 47,
+     "pergunta": "Os documentos são usados para treinar modelos de inteligência artificial?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "analise-ia-extracao.md",
+      "propriedade-intelectual.md"
+     ],
+     "area_esperada": "Segurança e privacidade",
+     "notas": []
+    },
+    {
+     "ref": "4.10",
+     "linha": 48,
+     "pergunta": "Quais são os subprocessadores e há transferência internacional de dados?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "gestao-fornecedores-subprocessadores.md"
+     ],
+     "area_esperada": "Segurança e privacidade",
+     "notas": []
+    },
+    {
+     "ref": "4.11",
+     "linha": 49,
+     "pergunta": "Quantas pessoas trabalham exclusivamente na equipe de segurança da informação?",
+     "tem_resposta": false,
+     "estado_esperado_base": "sem-rascunho",
+     "documentos_esperados": [],
+     "area_esperada": "Segurança e privacidade",
+     "caso": "sem-resposta",
+     "notas": []
+    },
+    {
+     "ref": "5.01",
+     "linha": 50,
+     "pergunta": "Qual é a vigência do contrato e o aviso prévio para rescisão?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "contrato-prestacao-servicos.md",
+      "condicoes-gerais-contratacao.md"
+     ],
+     "area_esperada": "Jurídico",
+     "notas": []
+    },
+    {
+     "ref": "5.02",
+     "linha": 51,
+     "pergunta": "Qual é o limite de responsabilidade da contratada?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "limitacao-responsabilidade-seguros.md",
+      "contrato-prestacao-servicos.md"
+     ],
+     "area_esperada": "Jurídico",
+     "notas": []
+    },
+    {
+     "ref": "5.03",
+     "linha": 52,
+     "pergunta": "Em quanto tempo o documento recebido do emissor é disponibilizado ao cliente?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "contrato-prestacao-servicos.md",
+      "portal-operacoes-documentais.md"
+     ],
+     "area_esperada": "Jurídico",
+     "caso": "conflito-prazo-disponibilizacao",
+     "notas": []
+    },
+    {
+     "ref": "5.04",
+     "linha": 53,
+     "pergunta": "O contrato inclui acordo de tratamento de dados? O cliente pode auditar?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "acordo-tratamento-dados-dpa.md"
+     ],
+     "area_esperada": "Jurídico",
+     "notas": []
+    },
+    {
+     "ref": "5.05",
+     "linha": 54,
+     "pergunta": "A empresa mantém seguro de responsabilidade civil e de riscos cibernéticos?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "limitacao-responsabilidade-seguros.md"
+     ],
+     "area_esperada": "Jurídico",
+     "notas": []
+    },
+    {
+     "ref": "5.06",
+     "linha": 55,
+     "pergunta": "Como a plataforma lida com emissores que exigem procuração do titular?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "procuracoes-representacao.md",
+      "catalogo-documentos-cobertura.md"
+     ],
+     "area_esperada": "Jurídico",
+     "notas": []
+    },
+    {
+     "ref": "5.07",
+     "linha": 56,
+     "pergunta": "A contratada aceita multa de 20% do contrato por descumprimento do SLA?",
+     "tem_resposta": false,
+     "estado_esperado_base": "sem-rascunho",
+     "documentos_esperados": [],
+     "area_esperada": "Jurídico",
+     "caso": "compromisso-nao-sustentado",
+     "notas": []
+    },
+    {
+     "ref": "5.08",
+     "linha": 57,
+     "pergunta": "A empresa possui política anticorrupção e canal de denúncias?",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "politica-anticorrupcao-integridade.md"
+     ],
+     "area_esperada": "Jurídico",
+     "notas": []
+    },
+    {
+     "ref": "6.01",
+     "linha": 58,
+     "pergunta": "Descreva brevemente a empresa, o ano de fundação e o número de colaboradores.",
+     "tem_resposta": true,
+     "estado_esperado_base": "sugerida",
+     "documentos_esperados": [
+      "apresentacao-institucional.md"
+     ],
+     "area_esperada": "Geral",
+     "notas": []
+    },
+    {
+     "ref": "6.02",
+     "linha": 59,
+     "pergunta": "A empresa possui escritório físico em Porto Alegre para atendimento presencial?",
+     "tem_resposta": false,
+     "estado_esperado_base": "sem-rascunho",
+     "documentos_esperados": [],
+     "area_esperada": "Geral",
+     "caso": "sem-resposta",
+     "notas": []
+    }
+   ]
+  }
+ ]
+}

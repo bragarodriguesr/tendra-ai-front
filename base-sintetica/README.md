@@ -4,6 +4,8 @@ Material da **fase 0.2** do `docs/mvp-resposta-rfp/plan/PLAN.md`. Tudo aqui é f
 
 **Data de referência para os testes: 2026-10-21.** Os alertas de fonte antiga (mais de 120 dias) foram calculados para essa data, então os testes devem fixar o relógio nela.
 
+A pasta `vereda-documental/` tem uma segunda empresa fictícia, a **Vereda Documental**, com uma base maior (102 documentos, acima do limiar de 50 mil tokens da fase U), uma RFP e o gabarito. Ver `vereda-documental/README.md`.
+
 ## Estrutura
 
 | Caminho | O que é |
