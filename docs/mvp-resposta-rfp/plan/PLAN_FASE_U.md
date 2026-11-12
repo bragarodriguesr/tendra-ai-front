@@ -98,7 +98,7 @@ Assim, "Classificando…" nunca fica preso depois de uma falha, e a nova tentati
 - Conferir no Supabase: as áreas dos documentos das duas organizações depois da classificação ao iniciar (U6). Conferir também a primeira tarefa processada na Vereda (tokens da base e contexto dos itens).
 - Atualizar os documentos que a spec lista em "Documentos a atualizar".
 
-## Situação (12/11/2026): U-a e U-b implementadas; avaliações e publicação pendentes
+## Situação (12/11/2026): publicada; seleção desligada depois da primeira tarefa real
 
 - **U-a1, U-a2 e U-b1:** implementadas.
   - Backend: 432 testes no PGlite (o CI roda também no Postgres). Os novos cobrem U1 a U6 (`areasDosDocumentos.test.ts`), U8 a U15 e o rastreio de PU10 (`selecaoPorArea.test.ts`) e a regra da seleção (`selecionarContexto.test.ts`).
@@ -106,7 +106,27 @@ Assim, "Classificando…" nunca fica preso depois de uma falha, e a nova tentati
 - **U-a3 e U-b2 (avaliações com a API real):** comandos prontos (`avaliar-areas-documentos` e `avaliar-selecao`), com testes da conta. As execuções esperam:
   - a chave da API, que não está neste ambiente;
   - a carga dos 86 documentos novos na base publicada da Vereda, que o grupo faz pela tela.
-- **U-c (publicação):** depois do merge. A migração 014 roda no deploy, e a classificação dos documentos existentes das duas organizações começa ao iniciar o backend.
+- **U-c (publicação):** feita e conferida.
+  - **Deploy:** merge do PR #114 às 18:29 UTC; deploy no Render às 18:30, sem erro nos logs. Migração 014 aplicada às 18:30:39.
+  - **Classificação dos documentos:** os 16 da Pulse e os 16 existentes da Vereda foram classificados ao iniciar (18:31). Depois, o grupo subiu pela tela os 86 documentos novos da Vereda e, junto, os 16 de `base/existentes/`, que substituíram os originais com o mesmo conteúdo e foram classificados de novo. Ao todo, 130 classificações, nenhuma com falha. As 4 RFPs passadas ficaram "Geral" sem chamar a IA.
+- **Primeira tarefa real com a seleção ligada (18:40 UTC):** `RFP-V1-Banco-Pampa-Homologacao.xlsx` na Vereda, 54 perguntas, pronta em 76 s.
+  - **Base:** 105.492 tokens pela contagem da API, mais que o dobro da estimativa da carga (cerca de 48 mil). A seleção ligou, com 5 grupos de área de 29 a 50 dos 102 documentos.
+  - **O que funcionou:**
+    - 51 sugeridas e 3 "Sem rascunho": as duas sem resposta na base (4.11 e 6.02) e o compromisso não sustentado (5.07). Nenhuma pergunta com resposta em "Sem rascunho".
+    - Segunda tentativa em 5 perguntas. A 3.03 (fonte em outra área) achou a resposta na tabela de preços, como em U11.
+    - Relevância de 90% (46 de 51 citam um documento esperado), acima do limite de 80%.
+    - Conflito de RPO e RTO (3.06) apontado.
+  - **O que não funcionou:**
+    - **Custo:** US$ 1,03 na tarefa, com 336 mil tokens gravados no cache, porque cada grupo grava o seu contexto. Estimativa com a base inteira (sem execução para comparar): cerca de 105 mil gravados e US$ 0,55. A seleção encareceu a tarefa.
+    - **Tokens de entrada da geração:** 535 mil, contra cerca de 630 mil estimados com a base inteira (−15%, meta −40%). Os grupos ficam grandes porque muitos documentos têm várias áreas e os "Geral" entram em todos.
+    - **Perguntas prejudicadas pela seleção:** 2.11 e 3.12 caíram numa área em que o documento esperado não estava. Na 5.03 (conflito de prazo de disponibilização), a pergunta foi para Produto, o contrato não tem essa área, e o conflito não foi apontado.
+    - **Classificação das perguntas:** 47 de 54 na área esperada do gabarito.
+  - **Classificação dos documentos (U7, medida no banco publicado contra `areas-esperadas-documentos.json`):** 58% de concordância exata (50 de 86), abaixo da meta de 85%. Em 83% (71 de 86), as áreas atribuídas incluem todas as rotuladas. A maioria dos erros é área a mais (34 casos), que só reduz a economia. Os que prejudicam são os de área a menos (16 casos), porque o documento sai do contexto daquela área.
+- **Decisão (12/11/2026): seleção desligada no Render** (`TENDRA_SELECAO_POR_AREA=false`), a pedido do grupo, às 18:50 UTC. A troca da variável reinicia o serviço, sem mudança de código. A classificação dos documentos continua: a variável só muda o processamento da RFP.
+- **Próximos passos:**
+  - processar a mesma RFP com a seleção desligada, para a comparação U16 com números reais (`avaliar-selecao`);
+  - antes de religar, rever a regra: um limiar maior que 105 mil tokens nesta base, menos áreas por documento (só a principal e as fortes) ou um teto de documentos por grupo;
+  - rever a instrução `classificacao-documento-v1`, que atribui áreas demais.
 
 ### Como rodar as avaliações
 
