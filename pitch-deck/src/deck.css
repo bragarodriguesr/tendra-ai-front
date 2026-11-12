@@ -1,0 +1,104 @@
+@import "./ds/styles.css";
+
+/* ---- Página ---- */
+html, body, #root { height: 100%; }
+body { margin: 0; background: var(--brand-ink); color: var(--text-body); font-family: var(--font-sans); overflow: hidden; }
+* { box-sizing: border-box; }
+button { font-family: inherit; }
+/* Foco: sálvia, nunca o azul do navegador. */
+:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+/* ---- Escala do slide (1920×1080) ---- */
+:root {
+  --deck-w: 1920px;
+  --deck-h: 1080px;
+  --type-display: 132px;
+  --type-title: 84px;
+  --type-h2: 64px;
+  --type-lead: 36px;
+  --type-body: 32px;
+  --type-small: 27px;
+  --type-eyebrow: 27px;
+  --pad-x: 150px;
+  --pad-top: 140px;
+  --pad-bottom: 120px;
+  --gap-title: 56px;
+  --radius-deck-card: 22px;
+}
+
+/* ---- Palco ---- */
+.deck { position: fixed; inset: 0; background: var(--brand-ink); overflow: hidden; touch-action: pan-y; }
+.deck-canvas { position: absolute; left: 50%; top: 50%; width: var(--deck-w); height: var(--deck-h); transform-origin: center; }
+.slide { position: absolute; inset: 0; display: flex; flex-direction: column; padding: var(--pad-top) var(--pad-x) var(--pad-bottom); font-family: var(--font-sans); overflow: hidden; }
+.slide[hidden] { display: none; }
+.slide--paper { background: var(--brand-paper); color: var(--text-strong); }
+.slide--ink { background: var(--brand-ink); color: var(--brand-paper); }
+.slide--lime { background: var(--brand-lime); color: var(--brand-ink); }
+
+/* ---- Controles ---- */
+.deck-controls { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; align-items: center; gap: var(--space-1); padding: var(--space-1); background: var(--surface-inverse-card); border: 1px solid var(--border-inverse-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-overlay); transition: opacity var(--duration-base) var(--ease-out); }
+.deck-controls[data-idle="true"]:not(:focus-within):not(:hover) { opacity: 0; }
+.deck-counter { min-width: 76px; text-align: center; padding: 0 var(--space-2); white-space: nowrap; }
+.deck-notes { position: fixed; left: 16px; right: 16px; bottom: 76px; margin: 0 auto; max-width: 720px; padding: var(--space-4) var(--space-5); background: var(--surface-inverse-card); border: 1px solid var(--border-inverse-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-overlay); color: var(--text-on-inverse-body); font-size: var(--text-ui-size); line-height: var(--text-ui-lh); display: grid; gap: var(--space-2); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ---- Peças do slide ---- */
+.title { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.03em; margin: 0; }
+.title--h2 { font-size: var(--type-h2); line-height: 1.1; }
+/* Marcador limão atrás da palavra: limão é preenchimento, o texto sobre ele é tinta. */
+.mark { background: var(--brand-lime); color: var(--brand-ink); padding: 0 16px; }
+.cols { display: grid; gap: 32px; flex: 1; }
+.cols--2 { grid-template-columns: repeat(2, 1fr); }
+.cols--3 { grid-template-columns: repeat(3, 1fr); }
+.split { display: grid; gap: 64px; align-items: center; flex: 1; }
+.stack { display: grid; align-content: start; }
+.card-title { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.02em; }
+.body-small { font-size: var(--type-small); line-height: 1.5; color: var(--text-body); }
+.chips { display: flex; gap: 16px; flex-wrap: wrap; }
+.footer-rule { display: flex; justify-content: space-between; align-items: flex-end; gap: 48px; padding-top: 36px; }
+
+/* Slide 02: fontes espalhadas. */
+.scatter { position: relative; height: 460px; }
+.scatter svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.scatter-chip { position: absolute; white-space: nowrap; width: max-content; background: var(--surface-card); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: 20px 26px; font-family: var(--font-mono); font-size: 22px; box-shadow: var(--shadow-popover); }
+@keyframes tdr-jitter-a { 0%,100% { transform: translate(0,0) rotate(-1.5deg); } 50% { transform: translate(6px,-10px) rotate(1deg); } }
+@keyframes tdr-jitter-b { 0%,100% { transform: translate(0,0) rotate(1.5deg); } 50% { transform: translate(-8px,8px) rotate(-1deg); } }
+@keyframes tdr-jitter-c { 0%,100% { transform: translate(0,0) rotate(-1deg); } 50% { transform: translate(5px,9px) rotate(2deg); } }
+@keyframes tdr-jitter-d { 0%,100% { transform: translate(0,0) rotate(2deg); } 50% { transform: translate(-6px,-7px) rotate(-1.5deg); } }
+.drift-a { animation: tdr-jitter-a 5.2s var(--ease-in-out) infinite; }
+.drift-b { animation: tdr-jitter-b 4.6s var(--ease-in-out) infinite; }
+.drift-c { animation: tdr-jitter-c 6.1s var(--ease-in-out) infinite; }
+.drift-d { animation: tdr-jitter-d 5.6s var(--ease-in-out) infinite; }
+@keyframes tdr-dash-flow { to { stroke-dashoffset: -1; } }
+.dash-flow { animation: tdr-dash-flow 2.6s linear infinite; }
+
+/* Slide 06: os três passos sobem em sequência a cada entrada no slide. */
+.rise-1, .rise-2, .rise-3 { animation: tdr-rise var(--duration-slow) var(--ease-out) both; }
+.rise-1 { animation-delay: 0.1s; }
+.rise-2 { animation-delay: 0.35s; }
+.rise-3 { animation-delay: 0.6s; }
+
+/* Slide 15: linha do tempo. */
+.roadmap { position: relative; flex: 1; display: flex; align-items: stretch; padding-top: 34px; }
+.roadmap-line { position: absolute; top: 48px; left: 0; right: 0; height: 2px; background: var(--border-strong); }
+.roadmap-steps { display: flex; justify-content: space-between; gap: 18px; width: 100%; list-style: none; margin: 0; padding: 0; }
+.roadmap-step { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 22px; position: relative; }
+
+.avatar { width: 88px; height: 88px; border-radius: 50%; background: var(--surface-sunken); border: 1px solid var(--border-strong); }
+
+@media (prefers-reduced-motion: reduce) {
+  .drift-a, .drift-b, .drift-c, .drift-d, .dash-flow, .rise-1, .rise-2, .rise-3 { animation: none; }
+}
+
+/* ---- Impressão / PDF: um slide por página, em 1920×1080 ---- */
+@page { size: 1920px 1080px; margin: 0; }
+@media print {
+  html, body, #root { height: auto; }
+  body { overflow: visible; background: none; }
+  .deck { position: static; overflow: visible; background: none; }
+  .deck-canvas { position: static; transform: none !important; height: auto; }
+  .slide, .slide[hidden] { display: flex; position: relative; inset: auto; width: var(--deck-w); height: var(--deck-h); break-after: page; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide:last-child { break-after: auto; }
+  .slide * { animation: none !important; }
+  .deck-controls, .deck-notes { display: none; }
+}

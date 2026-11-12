@@ -1,0 +1,9 @@
+/* A marca é construída com borda, não com sombra.
+   Superfícies planas + 1px de borda são o padrão; sombra existe apenas
+   para camadas que flutuam de fato (dialog, dropdown, tooltip). */
+:root {
+  --shadow-none: none;
+  --shadow-overlay: 0 12px 32px -8px rgba(18, 20, 15, 0.22), 0 2px 6px rgba(18, 20, 15, 0.08);
+  --shadow-popover: 0 6px 18px -6px rgba(18, 20, 15, 0.18);
+  --scrim: rgba(18, 20, 15, 0.52);
+}
