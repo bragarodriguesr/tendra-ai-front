@@ -21,6 +21,15 @@ async function abrirPainel(page) {
 }
 
 const linha = (page, nome) => page.getByRole("row").filter({ hasText: nome });
+const dialogo = (page) => page.getByRole("alertdialog");
+/** Fase T (T1.1 a T1.4): Revisor → Aprovador pela confirmação, marcando as áreas. */
+async function promover(page, nome, areas) {
+  await page.getByLabel(`Papel de ${nome}`).selectOption("Aprovador");
+  await expect(dialogo(page)).toContainText(`Mudar ${nome} para Aprovador?`);
+  for (const area of areas) await dialogo(page).getByText(area, { exact: true }).click();
+  await dialogo(page).getByRole("button", { name: "Mudar para Aprovador" }).click();
+  await expect(dialogo(page)).toHaveCount(0);
+}
 const nomes = async (page) => (await page.getByRole("row").filter({ has: page.locator("span") }).allInnerTexts())
   .map((t) => t.split("\n")[0]).filter((t) => !/^Pessoa/i.test(t));
 
@@ -92,11 +101,11 @@ test("Cenários Q5 e Q6: papel e áreas do Aprovador numa lista sobre as etiquet
   // Revisor: só a etiqueta Geral, sem o lápis.
   const lapis = (nome) => page.getByRole("button", { name: `Editar áreas de ${nome}` });
   await expect(lapis("Kadu Mendes")).toHaveCount(0);
-  await linha(page, "Kadu Mendes").getByLabel("Papel de Kadu Mendes").selectOption("Aprovador");
-  await expect(linha(page, "Kadu Mendes")).toContainText("Geral");
+  // Fase T (T1.1 a T1.4): a promoção passa pela confirmação, já com uma área.
+  await promover(page, "Kadu Mendes", ["Jurídico"]);
+  await expect(linha(page, "Kadu Mendes")).toContainText("Jurídico");
   await lapis("Kadu Mendes").click();
-  const lista = page.getByRole("group", { name: "Áreas de Kadu Mendes" });
-  await lista.getByText("Jurídico", { exact: true }).click();
+  const lista = page.getByRole("group", { name: "Áreas de Kadu Mendes" }).last();
   await lista.getByText("Comercial", { exact: true }).click();
   await page.keyboard.press("Escape");
   await expect(lista).toHaveCount(0);
@@ -173,7 +182,9 @@ async function entrarNoPublicado(page, { falharLista = false } = {}) {
       estado.adicoes.push(corpo);
       if (corpo.email === "sem.conta@vereda.test") return route.fulfill({ status: 404, json: { erro: "Não há conta com este e-mail. Crie a conta no painel do Supabase (Authentication → Add user) e tente de novo." } });
       if (corpo.email === "outra@vereda.test") return route.fulfill({ status: 409, json: { erro: "Este e-mail não pode ser usado nesta organização." } });
-      const novo = { id: "44444444-4444-4444-8444-444444444444", nome: corpo.nome.trim(), email: corpo.email, papel: "Revisor", areas: [], ativo: true, propria: false };
+      if (estado.recusaDoPost) return route.fulfill({ status: estado.recusaDoPost.status, json: { erro: estado.recusaDoPost.erro } });
+      // Fase T (T2.7): a rota grava o papel, as áreas e a situação enviados; sem eles, Revisor, sem área, ativo.
+      const novo = { id: "44444444-4444-4444-8444-444444444444", nome: corpo.nome.trim(), email: corpo.email, papel: corpo.papel || "Revisor", areas: corpo.areas || [], ativo: corpo.ativo !== false, propria: false };
       estado.usuarios.push(novo);
       return route.fulfill({ status: 201, json: { usuario: novo } });
     }
@@ -182,6 +193,7 @@ async function entrarNoPublicado(page, { falharLista = false } = {}) {
       const mudanca = route.request().postDataJSON();
       estado.alteracoes.push({ id: patch[1], mudanca });
       if (estado.falharPatch) return route.fulfill({ status: 503, json: { erro: "O serviço está fora do ar." } });
+      if (estado.recusaDoPatch) return route.fulfill({ status: estado.recusaDoPatch.status, json: { erro: estado.recusaDoPatch.erro } });
       estado.usuarios = estado.usuarios.map((u) => (u.id === patch[1] ? { ...u, ...mudanca, ...(mudanca.papel === "Revisor" ? { areas: [] } : null) } : u));
       return route.fulfill({ json: { usuario: estado.usuarios.find((u) => u.id === patch[1]) } });
     }
@@ -233,21 +245,25 @@ test("Publicado Q3, Q4 e Q13: adicionar pela rota, com as recusas do backend", a
 
 test("Publicado Q5, Q6 e Q7: papel, áreas da rota e acesso gravados pela rota", async ({ page }) => {
   const estado = await entrarNoPublicado(page);
-  await linhaPorEmail(page, REVISORA.email).getByLabel("Papel de Beatriz Lima").selectOption("Aprovador");
-  await expect(page.getByRole("button", { name: "Editar áreas de Beatriz Lima" })).toBeVisible();
+  // Fase T (T1.1 e T1.4): a confirmação usa as áreas da rota (DF7) e grava papel e áreas num só pedido.
+  await page.getByLabel("Papel de Beatriz Lima").selectOption("Aprovador");
+  await expect(dialogo(page).getByText("Produto", { exact: true })).toHaveCount(0);
+  await dialogo(page).getByText("Comercial", { exact: true }).click();
+  await dialogo(page).getByRole("button", { name: "Mudar para Aprovador" }).click();
+  await expect(linhaPorEmail(page, REVISORA.email)).toContainText("Comercial");
   await page.getByRole("button", { name: "Editar áreas de Beatriz Lima" }).click();
   const lista = page.getByRole("group", { name: "Áreas de Beatriz Lima" });
-  // A lista suspensa usa as áreas da rota (DF7).
+  // A lista do lápis também usa as áreas da rota.
   await expect(lista.getByText("Produto", { exact: true })).toHaveCount(0);
-  await lista.getByText("Comercial", { exact: true }).click();
-  await expect(linhaPorEmail(page, REVISORA.email)).toContainText("Comercial");
+  await lista.getByText("Tecnologia", { exact: true }).click();
+  await expect(linhaPorEmail(page, REVISORA.email)).toContainText("Tecnologia");
   await page.keyboard.press("Escape");
   await linhaPorEmail(page, HOMONIMO.email).getByRole("switch").click({ force: true });
   await page.getByRole("button", { name: "Desativar acesso" }).click();
   await expect(linhaPorEmail(page, HOMONIMO.email)).toContainText("Inativo");
   expect(estado.alteracoes).toEqual([
-    { id: REVISORA.id, mudanca: { papel: "Aprovador" } },
-    { id: REVISORA.id, mudanca: { areas: ["Comercial"] } },
+    { id: REVISORA.id, mudanca: { papel: "Aprovador", areas: ["Comercial"] } },
+    { id: REVISORA.id, mudanca: { areas: ["Comercial", "Tecnologia"] } },
     { id: HOMONIMO.id, mudanca: { ativo: false } }
   ]);
 });
@@ -259,8 +275,291 @@ test("Publicado Q13: erro ao gravar não muda a linha; erro ao listar mostra a m
   await page.getByRole("button", { name: "Tentar de novo" }).click();
   await expect(linhaPorEmail(page, REVISORA.email)).toBeVisible();
   estado.falharPatch = true;
-  await linhaPorEmail(page, REVISORA.email).getByLabel("Papel de Beatriz Lima").selectOption("Aprovador");
+  await page.getByLabel("Papel de Beatriz Lima").selectOption("Aprovador");
+  await dialogo(page).getByText("Comercial", { exact: true }).click();
+  await dialogo(page).getByRole("button", { name: "Mudar para Aprovador" }).click();
   // O aviso aparece na tela e na região lida pelos leitores de tela.
   await expect(page.getByText("Mudança não gravada").first()).toBeVisible();
   await expect(linhaPorEmail(page, REVISORA.email).getByLabel("Papel de Beatriz Lima")).toHaveValue("Revisor");
+});
+
+// Fase T, etapa T1 (docs/mvp-resposta-rfp/spec/SPEC_FASE_T.md): confirmação com áreas ao mudar para
+// Aprovador e o mínimo de uma área.
+const AREAS = ["Produto", "Tecnologia", "Segurança e privacidade", "Comercial", "Jurídico", "C-Level"];
+const marcadas = async (grupo) => {
+  const nomes = [];
+  for (const area of AREAS) if (await grupo.getByRole("checkbox", { name: area, exact: true }).isChecked()) nomes.push(area);
+  return nomes;
+};
+
+test("Fase T · T1.1 a T1.5: confirmação com áreas ao mudar para Aprovador, erro sem área e cancelar", async ({ page }) => {
+  await entrar(page);
+  await abrirPainel(page);
+  const papel = page.getByLabel("Papel de Kadu Mendes");
+  const confirmar = dialogo(page).getByRole("button", { name: "Mudar para Aprovador" });
+
+  // T1.1: nada é gravado ao escolher; a confirmação traz as seis áreas, todas desmarcadas.
+  await papel.selectOption("Aprovador");
+  await expect(dialogo(page)).toContainText("Mudar Kadu Mendes para Aprovador?");
+  await expect(dialogo(page)).toContainText("Escolha as áreas que Kadu Mendes vai aprovar.");
+  await expect(dialogo(page)).toContainText("C-Level vale por todas e não se combina com outras.");
+  await expect(dialogo(page).getByRole("checkbox")).toHaveCount(6);
+  expect(await marcadas(dialogo(page))).toEqual([]);
+  await expect(dialogo(page).getByRole("button", { name: "Cancelar" })).toBeFocused();
+  await expect(papel).toHaveValue("Revisor");
+
+  // T1.2: sem área, o erro aparece, a confirmação continua aberta e nada muda.
+  await confirmar.click();
+  await expect(dialogo(page).getByRole("alert")).toHaveText("Selecione pelo menos uma área.");
+  await expect(papel).toHaveValue("Revisor");
+
+  // T1.2 e T1.3: marcar limpa o erro; C-Level não se combina com outras.
+  await dialogo(page).getByText("Jurídico", { exact: true }).click();
+  await expect(dialogo(page).getByRole("alert")).toHaveCount(0);
+  await dialogo(page).getByText("C-Level", { exact: true }).click();
+  expect(await marcadas(dialogo(page))).toEqual(["C-Level"]);
+  await dialogo(page).getByText("Comercial", { exact: true }).click();
+  expect(await marcadas(dialogo(page))).toEqual(["Comercial"]);
+
+  // T1.5: cancelar não grava; reabrir começa sem áreas; Esc também fecha.
+  await dialogo(page).getByRole("button", { name: "Cancelar" }).click();
+  await expect(dialogo(page)).toHaveCount(0);
+  await expect(papel).toHaveValue("Revisor");
+  await expect(page.getByRole("button", { name: "Editar áreas de Kadu Mendes" })).toHaveCount(0);
+  await papel.selectOption("Aprovador");
+  expect(await marcadas(dialogo(page))).toEqual([]);
+  await page.keyboard.press("Escape");
+  await expect(dialogo(page)).toHaveCount(0);
+  await expect(papel).toHaveValue("Revisor");
+
+  // T1.4: com áreas, o papel e as etiquetas mudam juntos, com o aviso.
+  await promover(page, "Kadu Mendes", ["Jurídico", "Comercial"]);
+  await expect(papel).toHaveValue("Aprovador");
+  await expect(linha(page, "Kadu Mendes")).toContainText("Jurídico");
+  await expect(linha(page, "Kadu Mendes")).toContainText("Comercial");
+  await expect(page.getByRole("button", { name: "Editar áreas de Kadu Mendes" })).toBeVisible();
+  await expect(page.getByText("Kadu Mendes agora é Aprovador de Jurídico e Comercial.").first()).toBeVisible();
+});
+
+test("Fase T · T1.6: a única área do Aprovador não sai pela lista do lápis", async ({ page }) => {
+  await entrar(page);
+  await abrirPainel(page);
+  // Carla Diretora só tem C-Level: desmarcar avisa e a caixa continua marcada.
+  await page.getByRole("button", { name: "Editar áreas de Carla Diretora" }).click();
+  const lista = page.getByRole("group", { name: "Áreas de Carla Diretora" });
+  await expect(lista).toContainText("C-Level vale por todas e não se combina com outras. O Aprovador precisa de pelo menos uma área.");
+  await lista.getByText("C-Level", { exact: true }).click();
+  await expect(page.getByText("Área não removida").first()).toBeVisible();
+  expect(await marcadas(lista)).toEqual(["C-Level"]);
+  // Trocar C-Level por outra área continua valendo: a pessoa nunca fica sem área.
+  await lista.getByText("Produto", { exact: true }).click();
+  expect(await marcadas(lista)).toEqual(["Produto"]);
+  await page.keyboard.press("Escape");
+  await expect(linha(page, "Carla Diretora")).toContainText("Produto");
+
+  // Marcelo Vieira (a própria linha) tem duas áreas: uma sai, a última não.
+  await page.getByRole("button", { name: "Editar áreas de Marcelo Vieira" }).click();
+  const minhas = page.getByRole("group", { name: "Áreas de Marcelo Vieira" });
+  await minhas.getByText("Jurídico", { exact: true }).click();
+  expect(await marcadas(minhas)).toEqual(["Comercial"]);
+  await minhas.getByText("Comercial", { exact: true }).click();
+  expect(await marcadas(minhas)).toEqual(["Comercial"]);
+});
+
+test("Fase T · publicado T1.7 e T1.8: quem já está sem área segue valendo; a recusa da rota aparece no aviso", async ({ page }) => {
+  const estado = await entrarNoPublicado(page);
+  // T1.7: o Aprovador sem área aparece com "Geral" e o lápis; a primeira área entra, e daí não sai mais.
+  await expect(linhaPorEmail(page, HOMONIMO.email)).toContainText("Geral");
+  await linhaPorEmail(page, HOMONIMO.email).getByRole("button", { name: "Editar áreas de Antônio Carlos" }).click();
+  const lista = page.getByRole("group", { name: "Áreas de Antônio Carlos" });
+  await lista.getByText("Tecnologia", { exact: true }).click();
+  await expect(linhaPorEmail(page, HOMONIMO.email)).toContainText("Tecnologia");
+  await lista.getByText("Tecnologia", { exact: true }).click();
+  await expect(page.getByText("Área não removida").first()).toBeVisible();
+  await page.keyboard.press("Escape");
+  expect(estado.alteracoes).toEqual([{ id: HOMONIMO.id, mudanca: { areas: ["Tecnologia"] } }]);
+
+  // T1.8: a rota recusa (400) e a pessoa continua Revisor, com o motivo no aviso.
+  estado.recusaDoPatch = { status: 400, erro: "Selecione pelo menos uma área." };
+  await page.getByLabel("Papel de Beatriz Lima").selectOption("Aprovador");
+  await dialogo(page).getByText("Comercial", { exact: true }).click();
+  await dialogo(page).getByRole("button", { name: "Mudar para Aprovador" }).click();
+  await expect(page.getByText("Mudança não gravada").first()).toBeVisible();
+  await expect(page.getByLabel("Papel de Beatriz Lima")).toHaveValue("Revisor");
+  expect(estado.alteracoes.at(-1)).toEqual({ id: REVISORA.id, mudanca: { papel: "Aprovador", areas: ["Comercial"] } });
+});
+
+test("Fase T · T1.9: confirmação só com o teclado e no celular, sem rolagem lateral", async ({ page }) => {
+  await entrar(page);
+  await abrirPainel(page);
+  // Teclado: o foco começa em "Cancelar"; Shift+Tab volta às áreas, Espaço marca, Tab chega ao botão.
+  await page.getByLabel("Papel de Kadu Mendes").selectOption("Aprovador");
+  await expect(dialogo(page).getByRole("button", { name: "Cancelar" })).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(dialogo(page).getByRole("checkbox", { name: "C-Level", exact: true })).toBeFocused();
+  await page.keyboard.press("Space");
+  expect(await marcadas(dialogo(page))).toEqual(["C-Level"]);
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await expect(dialogo(page).getByRole("button", { name: "Mudar para Aprovador" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(dialogo(page)).toHaveCount(0);
+  await expect(linha(page, "Kadu Mendes")).toContainText("C-Level");
+
+  // Celular: a confirmação cabe na tela.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByLabel("Papel de Kadu Mendes").selectOption("Revisor");
+  await dialogo(page).getByRole("button", { name: "Mudar para Revisor" }).click();
+  await page.getByLabel("Papel de Kadu Mendes").selectOption("Aprovador");
+  await expect(dialogo(page)).toBeVisible();
+  const caixa = await dialogo(page).boundingBox();
+  expect(caixa.x).toBeGreaterThanOrEqual(0);
+  expect(caixa.x + caixa.width).toBeLessThanOrEqual(390);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await dialogo(page).getByText("Jurídico", { exact: true }).click();
+  await dialogo(page).getByRole("button", { name: "Mudar para Aprovador" }).click();
+  await expect(page.getByText("Kadu Mendes agora é Aprovador de Jurídico.").first()).toBeVisible();
+});
+
+// Fase T, etapa T2 (SPEC_FASE_T.md): Papel, Áreas e Situação no formulário "Adicionar usuário".
+const formulario = (page) => page.getByRole("form", { name: "Adicionar usuário" });
+const campoDeAreas = (page) => formulario(page).getByLabel("Áreas", { exact: true });
+const listaDoFormulario = (page) => page.getByRole("group", { name: "Áreas do novo usuário" });
+
+test("Fase T · T2.1 a T2.3: campos com os valores padrão, áreas em lista suspensa e erro sem área", async ({ page }) => {
+  await entrar(page);
+  await abrirPainel(page);
+  await page.getByRole("button", { name: "Adicionar usuário" }).click();
+
+  // T2.1: Papel Revisor, Áreas "Geral" desabilitado, Situação Ativo; o aviso só fala da conta.
+  await expect(formulario(page).getByLabel("Papel", { exact: true })).toHaveValue("Revisor");
+  await expect(campoDeAreas(page)).toBeDisabled();
+  await expect(campoDeAreas(page)).toHaveText("Geral");
+  await expect(formulario(page).getByRole("switch")).toBeChecked();
+  await expect(formulario(page)).toContainText("Ativo");
+  await expect(formulario(page)).toContainText("A conta precisa existir no painel do Supabase.");
+  await expect(formulario(page)).not.toContainText("O acesso nasce como Revisor");
+
+  // T2.2: com Aprovador, o campo abre a lista; marcar não fecha; o campo mostra as escolhidas.
+  await formulario(page).getByLabel("Papel", { exact: true }).selectOption("Aprovador");
+  await expect(campoDeAreas(page)).toBeEnabled();
+  await expect(campoDeAreas(page)).toHaveText("Selecione as áreas");
+  await campoDeAreas(page).click();
+  await expect(listaDoFormulario(page).getByRole("checkbox")).toHaveCount(6);
+  await expect(listaDoFormulario(page)).toContainText("C-Level vale por todas e não se combina com outras.");
+  await listaDoFormulario(page).getByText("Jurídico", { exact: true }).click();
+  await listaDoFormulario(page).getByText("Comercial", { exact: true }).click();
+  await expect(listaDoFormulario(page)).toBeVisible();
+  await expect(campoDeAreas(page)).toHaveText("Jurídico, Comercial");
+  // C-Level não se combina com outras.
+  await listaDoFormulario(page).getByText("C-Level", { exact: true }).click();
+  await expect(campoDeAreas(page)).toHaveText("C-Level");
+  // Clique fora fecha a lista.
+  await formulario(page).getByLabel("Nome").click();
+  await expect(listaDoFormulario(page)).toHaveCount(0);
+  // Voltar para Revisor limpa as áreas.
+  await formulario(page).getByLabel("Papel", { exact: true }).selectOption("Revisor");
+  await expect(campoDeAreas(page)).toHaveText("Geral");
+  await expect(campoDeAreas(page)).toBeDisabled();
+
+  // T2.3: Aprovador sem área não é adicionado; o campo fica inválido e o erro some ao marcar.
+  await formulario(page).getByLabel("Nome").fill("Lucas Prado");
+  await formulario(page).getByLabel("E-mail da conta").fill("lucas.prado@pulse.com.br");
+  await formulario(page).getByLabel("Papel", { exact: true }).selectOption("Aprovador");
+  await formulario(page).getByRole("button", { name: "Adicionar", exact: true }).click();
+  await expect(formulario(page).getByRole("alert")).toHaveText("Selecione pelo menos uma área.");
+  await expect(campoDeAreas(page)).toHaveAttribute("aria-invalid", "true");
+  await expect(linha(page, "Lucas Prado")).toHaveCount(0);
+  await campoDeAreas(page).click();
+  await listaDoFormulario(page).getByText("Produto", { exact: true }).click();
+  await expect(formulario(page).getByRole("alert")).toHaveCount(0);
+});
+
+test("Fase T · T2.4 a T2.6: adicionar Aprovador com áreas, pessoa inativa e recusa com o formulário preenchido", async ({ page }) => {
+  await entrar(page);
+  await abrirPainel(page);
+
+  // T2.6: recusa (já na lista) mantém papel, áreas e situação preenchidos.
+  await page.getByRole("button", { name: "Adicionar usuário" }).click();
+  await formulario(page).getByLabel("Nome").fill("Kadu");
+  await formulario(page).getByLabel("E-mail da conta").fill("kadu.mendes@pulse.com.br");
+  await formulario(page).getByLabel("Papel", { exact: true }).selectOption("Aprovador");
+  await campoDeAreas(page).click();
+  await listaDoFormulario(page).getByText("Jurídico", { exact: true }).click();
+  await page.keyboard.press("Escape");
+  await formulario(page).getByRole("switch").click({ force: true });
+  await formulario(page).getByRole("button", { name: "Adicionar", exact: true }).click();
+  await expect(formulario(page).getByRole("alert")).toHaveText("Esta pessoa já está na lista.");
+  await expect(formulario(page).getByLabel("Papel", { exact: true })).toHaveValue("Aprovador");
+  await expect(campoDeAreas(page)).toHaveText("Jurídico");
+  await expect(formulario(page).getByRole("switch")).not.toBeChecked();
+
+  // T2.4 e T2.5: com outro e-mail, entra como Aprovador do Jurídico, inativo.
+  await formulario(page).getByLabel("Nome").fill("Lucas Prado");
+  await formulario(page).getByLabel("E-mail da conta").fill("lucas.prado@pulse.com.br");
+  await formulario(page).getByRole("button", { name: "Adicionar", exact: true }).click();
+  await expect(formulario(page)).toHaveCount(0);
+  await expect(page.getByText("Lucas Prado entrou como Aprovador de Jurídico. O acesso está inativo.").first()).toBeVisible();
+  await expect(linha(page, "Lucas Prado")).toContainText("Jurídico");
+  await expect(linha(page, "Lucas Prado")).toContainText("Inativo");
+  await expect(linha(page, "Lucas Prado").getByLabel("Papel de Lucas Prado")).toHaveValue("Aprovador");
+
+  // T2.4: com os valores padrão, o resultado é o mesmo de antes (Revisor, área Geral, ativo).
+  await page.getByRole("button", { name: "Adicionar usuário" }).click();
+  await formulario(page).getByLabel("Nome").fill("Rita Moura");
+  await formulario(page).getByLabel("E-mail da conta").fill("rita.moura@pulse.com.br");
+  await formulario(page).getByRole("button", { name: "Adicionar", exact: true }).click();
+  await expect(page.getByText("Rita Moura entrou como Revisor, área Geral.").first()).toBeVisible();
+  await expect(linha(page, "Rita Moura")).toContainText("Geral");
+  await expect(linha(page, "Rita Moura")).toContainText("Ativo");
+});
+
+test("Fase T · publicado T2.4 e T2.7: o pedido leva papel, áreas e situação; a recusa da rota aparece no formulário", async ({ page }) => {
+  const estado = await entrarNoPublicado(page);
+  await page.getByRole("button", { name: "Adicionar usuário" }).click();
+  await formulario(page).getByLabel("Nome").fill("Lucas Prado");
+  await formulario(page).getByLabel("E-mail da conta").fill("lucas@vereda.test");
+  await formulario(page).getByLabel("Papel", { exact: true }).selectOption("Aprovador");
+  await campoDeAreas(page).click();
+  // A lista usa as áreas da rota (DF7): sem Produto.
+  await expect(listaDoFormulario(page).getByText("Produto", { exact: true })).toHaveCount(0);
+  await listaDoFormulario(page).getByText("Comercial", { exact: true }).click();
+  await page.keyboard.press("Escape");
+
+  // A recusa da rota fica no formulário, que continua preenchido.
+  estado.recusaDoPost = { status: 400, erro: "Selecione pelo menos uma área." };
+  await formulario(page).getByRole("button", { name: "Adicionar", exact: true }).click();
+  await expect(formulario(page).getByRole("alert")).toHaveText("Selecione pelo menos uma área.");
+  await expect(campoDeAreas(page)).toHaveText("Comercial");
+
+  estado.recusaDoPost = null;
+  await formulario(page).getByRole("button", { name: "Adicionar", exact: true }).click();
+  await expect(linhaPorEmail(page, "lucas@vereda.test")).toContainText("Comercial");
+  expect(estado.adicoes.at(-1)).toEqual({ nome: "Lucas Prado", email: "lucas@vereda.test", papel: "Aprovador", areas: ["Comercial"], ativo: true });
+});
+
+test("Fase T · T2.8: formulário só com o teclado e no celular, sem rolagem lateral", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await entrar(page);
+  await abrirPainel(page);
+  await page.getByRole("button", { name: "Adicionar usuário" }).click();
+  await formulario(page).getByLabel("Papel", { exact: true }).selectOption("Aprovador");
+  // Teclado: Enter abre a lista com o foco na primeira área, Espaço marca, Esc fecha e devolve o foco.
+  await campoDeAreas(page).focus();
+  await page.keyboard.press("Enter");
+  await expect(listaDoFormulario(page).getByRole("checkbox", { name: "Produto", exact: true })).toBeFocused();
+  await page.keyboard.press("Space");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Space");
+  await expect(campoDeAreas(page)).toHaveText("Produto, Tecnologia");
+  // Celular: a lista cabe na tela, sem rolagem lateral.
+  const caixa = await listaDoFormulario(page).boundingBox();
+  expect(caixa.x).toBeGreaterThanOrEqual(0);
+  expect(caixa.x + caixa.width).toBeLessThanOrEqual(390);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await page.keyboard.press("Escape");
+  await expect(listaDoFormulario(page)).toHaveCount(0);
+  await expect(campoDeAreas(page)).toBeFocused();
+  // O formulário continua aberto depois do Esc da lista.
+  await expect(formulario(page)).toBeVisible();
 });

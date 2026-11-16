@@ -104,7 +104,8 @@ export const listarEventosDeTarefas = () => pedir("/historico/tarefas");
 /** Pessoas da organização e as áreas válidas para o Aprovador: `{ usuarios, areasDoAprovador }`. */
 export const listarUsuariosDaGestao = () => pedir("/gestao/usuarios");
 /** Adiciona a pessoa cuja conta já existe no Supabase Auth, como Revisor, área Geral: `{ usuario }`. */
-export const adicionarUsuarioNaGestao = (nome, email) => pedir("/gestao/usuarios", { method: "POST", corpo: { nome, email } });
+// Fase T (T2.4): `dados` traz papel, áreas e situação; sem eles, o backend grava Revisor, sem área, ativo.
+export const adicionarUsuarioNaGestao = (nome, email, dados = {}) => pedir("/gestao/usuarios", { method: "POST", corpo: { nome, email, ...dados } });
 /** Muda papel, áreas ou acesso (`{ papel?, areas?, ativo? }`): `{ usuario }`. */
 export const alterarUsuarioNaGestao = (id, mudanca) => pedir(`/gestao/usuarios/${id}`, { method: "PATCH", corpo: mudanca });
 /**

@@ -18,6 +18,9 @@ export const MENSAGEM_PROVEDOR_FORA = "Não foi possível consultar as contas no
 export const MENSAGEM_PROPRIO_ACESSO = "Peça a outro Aprovador para mudar o seu acesso.";
 export const MENSAGEM_SEM_APROVADOR = "A organização precisa de ao menos um Aprovador ativo.";
 export const MENSAGEM_PESSOA_NAO_ENCONTRADA = "Pessoa não encontrada.";
+// Fase T (T1.2, T1.6 e T1.8): o Aprovador precisa de pelo menos uma área, na promoção e na troca de áreas.
+export const MENSAGEM_SELECIONE_AREA = "Selecione pelo menos uma área.";
+export const MENSAGEM_APROVADOR_SEM_AREA = "O Aprovador precisa de pelo menos uma área.";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const TAMANHO_MAXIMO_DO_NOME = 120;
@@ -70,17 +73,34 @@ export async function listarUsuariosDaGestao(banco: Consultas, organizacaoId: st
 }
 
 /**
- * Adiciona a pessoa cuja conta já existe no Supabase Auth (Q3), como Revisor, sem área, ativa.
- * Pessoa já nesta organização não muda; de outra organização é recusada sem dizer qual (Q4, PK5).
+ * Adiciona a pessoa cuja conta já existe no Supabase Auth (Q3). Sem papel, áreas e situação, ela entra
+ * como Revisor, sem área, ativa; com eles (fase T, T2.7), entra já com esses valores, validados antes de
+ * consultar o Supabase. Pessoa já nesta organização não muda; de outra organização é recusada sem dizer
+ * qual (Q4, PK5).
  */
 export async function adicionarUsuario(
   banco: Banco,
-  opcoes: { organizacaoId: string; idDaSessao: string; nome: string; email: string; procurarConta: (email: string) => Promise<string | null> },
+  opcoes: {
+    organizacaoId: string; idDaSessao: string; nome: string; email: string; papel?: string; areas?: string[]; ativo?: boolean;
+    procurarConta: (email: string) => Promise<string | null>;
+  },
 ): Promise<UsuarioDaGestao> {
   const nome = opcoes.nome.trim();
   const email = opcoes.email.trim().toLowerCase();
   if (nome === "" || nome.length > TAMANHO_MAXIMO_DO_NOME) throw new ErroDaGestao(400, MENSAGEM_NOME_VAZIO);
   if (!EMAIL.test(email)) throw new ErroDaGestao(400, MENSAGEM_EMAIL_INVALIDO);
+  const papel = opcoes.papel ?? "Revisor";
+  if (!PAPEIS.some((valido) => valido === papel)) throw new ErroDaGestao(400, `Papel inválido. Use ${PAPEIS.join(" ou ")}.`);
+  let areas: string[];
+  try {
+    areas = validarAreasDoPerfil(papel, opcoes.areas ?? []);
+  } catch (erro) {
+    if (erro instanceof ErroDeArea) throw new ErroDaGestao(400, erro.message);
+    throw erro;
+  }
+  // T2.3 e T2.7: o Aprovador entra com pelo menos uma área.
+  if (papel === "Aprovador" && areas.length === 0) throw new ErroDaGestao(400, MENSAGEM_SELECIONE_AREA);
+  const ativo = opcoes.ativo ?? true;
   await recusarSeJaExiste(banco, opcoes.organizacaoId, { email });
 
   let id: string | null;
@@ -94,9 +114,9 @@ export async function adicionarUsuario(
   await recusarSeJaExiste(banco, opcoes.organizacaoId, { id });
 
   const { rows } = await banco.query<LinhaDoPerfil>(
-    `INSERT INTO perfis (id, email, nome, papel, organizacao_id, areas) VALUES ($1, $2, $3, 'Revisor', $4, '{}')
+    `INSERT INTO perfis (id, email, nome, papel, organizacao_id, areas, ativo) VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING id, nome, email, papel, areas, ativo`,
-    [id, email, nome, opcoes.organizacaoId],
+    [id, email, nome, papel, opcoes.organizacaoId, areas, ativo],
   );
   const linha = rows[0];
   if (linha === undefined) throw new Error("Perfil não gravado.");
@@ -146,6 +166,12 @@ export async function alterarUsuario(
     } catch (erro) {
       if (erro instanceof ErroDeArea) throw new ErroDaGestao(400, erro.message);
       throw erro;
+    }
+    // Fase T (T1.8): só recusa quando o pedido promove ou envia áreas. Quem já é Aprovador sem área
+    // continua podendo ter o acesso ou o papel mudados (T1.7).
+    if (papel === "Aprovador" && areas.length === 0) {
+      if (atual.papel !== "Aprovador") throw new ErroDaGestao(400, MENSAGEM_SELECIONE_AREA);
+      if (mudanca.areas !== undefined) throw new ErroDaGestao(400, MENSAGEM_APROVADOR_SEM_AREA);
     }
 
     const aprovadoresDepois = perfis.filter((perfil) => (perfil.id === atual.id ? ativo && papel === "Aprovador" : perfil.ativo && perfil.papel === "Aprovador")).length;

@@ -1,5 +1,5 @@
 import React from "react";
-import { Badge, Button, IconButton, Toast } from "../ds/index.js";
+import { Badge, Button, Checkbox, Icon, IconButton, Toast } from "../ds/index.js";
 import { DISPLAY, card, mono } from "./ui.jsx";
 
 const bar = (width, height = 6, background = "var(--n-100)") => <div style={{ height, width, background, borderRadius: 2 }} />;
@@ -222,10 +222,37 @@ export function ConfirmArchiveTaskDialog({ task, busy, onCancel, onConfirm }) {
   );
 }
 
-/** Painel de Usuários (fase Q): confirmação antes de desativar o acesso (Q7) ou de passar para Revisor (Q5). */
-export function ConfirmUserChangeDialog({ confirmacao: c, onCancel, onConfirm }) {
+/**
+ * Painel de Usuários (fase Q): confirmação antes de desativar o acesso (Q7) ou de passar para Revisor (Q5).
+ * Fase T (T1.1 a T1.5): passar para Aprovador também pede confirmação, com as áreas; sem pelo menos uma,
+ * o erro aparece e a confirmação continua aberta.
+ */
+export function ConfirmUserChangeDialog({ confirmacao: c, areas = [], onCancel, onConfirm, onMarcarArea }) {
   const nome = c.usuario ? c.usuario.nome : "";
   const desativar = c.tipo === "desativar";
+  if (c.tipo === "aprovador") {
+    return (
+      <Confirm id="tdr-usr" title={`Mudar ${nome} para Aprovador?`} actions={<>
+        <Button variant="secondary" onClick={onCancel} autoFocus>Cancelar</Button>
+        <Button onClick={onConfirm}>Mudar para Aprovador</Button>
+      </>}>
+        <div style={{ display: "grid", gap: 12 }}>
+          <span>Escolha as áreas que {nome} vai aprovar.</span>
+          <div role="group" aria-label={`Áreas de ${nome}`} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", columnGap: 12 }}>
+            {areas.map((a) => (
+              <Checkbox key={a} label={a} checked={c.areas.includes(a)} onChange={() => onMarcarArea(a)} style={{ minHeight: 36 }} />
+            ))}
+          </div>
+          <span style={{ fontSize: 12, lineHeight: 1.45, color: "var(--text-meta)" }}>C-Level vale por todas e não se combina com outras.</span>
+          {c.erro ? (
+            <div role="alert" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "var(--text-sm-size)", color: "var(--danger)" }}>
+              <Icon name="circle-alert" size="sm" />{c.erro}
+            </div>
+          ) : null}
+        </div>
+      </Confirm>
+    );
+  }
   return (
     <Confirm id="tdr-usr" title={desativar ? `Desativar o acesso de ${nome}?` : `Mudar ${nome} para Revisor?`} actions={<>
       <Button variant="secondary" onClick={onCancel} autoFocus>Cancelar</Button>

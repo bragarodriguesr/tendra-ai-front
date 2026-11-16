@@ -99,7 +99,7 @@ function WorkspaceLayout({ state, ws, onSite, onLogout }) {
           {v.downloadTask ? <ConfirmDownloadDialog task={v.downloadTask} onCancel={() => ws.setState({ confirmDownload: null })} onConfirm={ws.confirmDownloadSheet} /> : null}
           {v.finishingTask ? <FinishTaskDialog task={v.finishingTask} busy={state.mudandoSituacao} onCancel={() => ws.setState({ finishing: null })} onConfirm={ws.finishTask} /> : null}
           {v.archivingTask ? <ConfirmArchiveTaskDialog task={v.archivingTask} busy={state.mudandoSituacao} onCancel={() => ws.setState({ archiving: null })} onConfirm={ws.archiveTask} /> : null}
-          {v.painel.confirmacao ? <ConfirmUserChangeDialog confirmacao={v.painel.confirmacao} onCancel={() => ws.setState({ painelConfirmacao: null })} onConfirm={ws.confirmarMudancaDeUsuario} /> : null}
+          {v.painel.confirmacao ? <ConfirmUserChangeDialog confirmacao={v.painel.confirmacao} areas={v.painel.areasDoAprovador} onMarcarArea={ws.marcarAreaDaConfirmacao} onCancel={() => ws.setState({ painelConfirmacao: null })} onConfirm={ws.confirmarMudancaDeUsuario} /> : null}
         </div>
       </div>
     </div>
