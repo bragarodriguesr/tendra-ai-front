@@ -1143,7 +1143,7 @@ Pedida em 09/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 - **Etapa T1:** T1-A backend; T1-B confirmação; T1-C lista do lápis; T1-D testes do front; T1-E publicação e conferência.
 - **Etapa T2:** T2-A backend; T2-B formulário; T2-C testes do front; T2-D publicação e conferência.
 
-### Situação (09/11/2026): etapa T1 implementada (T1-A a T1-D), sem commit
+### Situação (09/11/2026): etapa T1 implementada (T1-A a T1-D)
 - Spec e plano no `main` (PR #107).
 - **T1-A (backend):** `alterarUsuario` recusa com 400 a promoção sem área ("Selecione pelo menos uma área.") e a lista de áreas vazia para o Aprovador ("O Aprovador precisa de pelo menos uma área."). A recusa só vale quando o pedido promove ou envia áreas: quem já é Aprovador sem área continua podendo ser desativado, reativado ou rebaixado. 3 testes novos em `gestaoDeUsuarios.test.ts` e 2 ajustados (promoção com áreas no mesmo pedido).
 - **T1-B (confirmação):** escolher "Aprovador" abre "Mudar {nome} para Aprovador?" com as áreas em caixas de seleção; sem área, o erro aparece e a confirmação continua aberta; com área, papel e áreas vão num só pedido, com o aviso "{nome} agora é Aprovador de {áreas}."
@@ -1152,13 +1152,20 @@ Pedida em 09/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 - Conferida no navegador no modo local.
 - T1-E (publicação e conferência) pendente. PR #108.
 
-### Situação (09/11/2026): etapa T2 implementada (T2-A a T2-C), sem commit
+### Situação (09/11/2026): etapa T2 implementada (T2-A a T2-C)
 - Branch criada sobre a da etapa T1 (PR #108 ainda aberto).
 - **T2-A (backend):** `POST /api/gestao/usuarios` aceita `papel`, `areas` e `ativo`, opcionais; sem eles, grava Revisor, sem área, ativo, como antes. Recusa com 400, antes de consultar o Supabase: Aprovador sem área, Revisor com área, área inválida, C-Level combinado e papel inválido. 3 testes novos em `gestaoDeUsuarios.test.ts`.
 - **T2-B (formulário):** Papel (Revisor por padrão), Áreas em lista suspensa (desabilitada com "Geral" para o Revisor; caixas de seleção para o Aprovador, com o C-Level exclusivo) e Situação (toggle, Ativo por padrão). Aprovador sem área marca o campo e mostra "Selecione pelo menos uma área."; as recusas mantêm o formulário preenchido. Aviso conforme o papel, as áreas e a situação.
 - **T2-C (testes):** 3 testes unitários novos (`npm test`, 42 no total) e 4 de ponta a ponta em `e2e/painelDeUsuarios.spec.js` (T2.1 a T2.8, no modo local, com a API simulada, no celular e pelo teclado).
 - Conferida no navegador no modo local, no computador e no celular.
 - T2-D (publicação e conferência) pendente.
+
+### Situação (16/11/2026): T1 e T2 no `main` (PR #108); conferência no publicado pendente
+- O branch do PR #108 recebeu a `main` atual (fases U e site), sem conflito.
+- Testes na versão integrada: backend 439 no PGlite, com `tsc` sem erros; front 45 de unidade, build ok e 122 de ponta a ponta.
+- A falha anterior em "Testes do backend no Postgres" no PR era o deadlock intermitente na limpeza de `organizacoes.test.ts`, já visto no PR #113. Os 408 testes daquela execução tinham passado.
+- Merge feito pela conta dona do time na Vercel, para o front e o backend serem publicados juntos (PT1 e PT2).
+- **Pendente:** conferir no ambiente publicado os checklists das etapas T1 e T2 (T1-E e T2-D).
 
 ## Fase U: seleção da base por área
 

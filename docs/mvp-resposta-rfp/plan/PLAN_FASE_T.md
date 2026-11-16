@@ -165,6 +165,12 @@ Cada etapa termina com uma verificação que pode ser feita sem ler código.
 | T2.7 | Pedido direto só com nome e e-mail grava Revisor ativo; Aprovador sem área responde 400 |
 | T2.8 | O mesmo no modo local, no celular e só com o teclado |
 
+## Situação (16/11/2026): T1 e T2 implementadas e no `main` (PR #108)
+
+- T1-A a T1-D e T2-A a T2-C implementadas e testadas (detalhes em `PLAN.md`, fase T).
+- Versão integrada com a `main` de 16/11/2026: backend 439 testes, front 45 de unidade e 122 de ponta a ponta, todos verdes.
+- Pendente: T1-E e T2-D, a conferência no ambiente publicado, depois do deploy no Render e na Vercel.
+
 ## Riscos
 
 | Risco | Mitigação |
