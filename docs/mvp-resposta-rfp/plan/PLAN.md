@@ -1160,12 +1160,13 @@ Pedida em 09/11/2026. O comportamento esperado está em `docs/mvp-resposta-rfp/s
 - Conferida no navegador no modo local, no computador e no celular.
 - T2-D (publicação e conferência) pendente.
 
-### Situação (16/11/2026): T1 e T2 no `main` (PR #108); conferência no publicado pendente
+### Situação (16/11/2026): T1 e T2 publicadas e conferidas (PR #108)
 - O branch do PR #108 recebeu a `main` atual (fases U e site), sem conflito.
 - Testes na versão integrada: backend 439 no PGlite, com `tsc` sem erros; front 45 de unidade, build ok e 122 de ponta a ponta.
 - A falha anterior em "Testes do backend no Postgres" no PR era o deadlock intermitente na limpeza de `organizacoes.test.ts`, já visto no PR #113. Os 408 testes daquela execução tinham passado.
 - Merge feito pela conta dona do time na Vercel, para o front e o backend serem publicados juntos (PT1 e PT2).
-- **Pendente:** conferir no ambiente publicado os checklists das etapas T1 e T2 (T1-E e T2-D).
+- **Publicação:** merge às 17:26 UTC. Render e Vercel publicaram o mesmo commit (`afeec07`) às 17:27, sem erro nos logs.
+- **T1-E e T2-D (conferência no publicado):** feitas pelo grupo em 16/11/2026, sem problemas. Os logs registram a abertura do Painel de Usuários e seis alterações de papel e de áreas entre 17:47 e 17:48 UTC.
 
 ## Fase U: seleção da base por área
 
