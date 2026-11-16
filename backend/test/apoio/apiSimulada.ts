@@ -9,6 +9,40 @@ export function ehClassificacao(parametros: ParametrosDaGeracao): boolean {
   return parametros.output_config?.format !== undefined && ultimo?.type === "text" && ultimo.text.startsWith("<perguntas>");
 }
 
+/** Pedido da classificação de um documento da base (fase U). */
+export function ehClassificacaoDeDocumento(parametros: ParametrosDaGeracao): boolean {
+  const conteudo = parametros.messages[0]?.content;
+  const ultimo = Array.isArray(conteudo) ? conteudo.at(-1) : undefined;
+  return parametros.output_config?.format !== undefined && ultimo?.type === "text" && ultimo.text.startsWith("<documento>");
+}
+
+/** Primeira seção abaixo do título listada no pedido de classificação de documento, para prender as secundárias. */
+function primeiraSecao(parametros: ParametrosDaGeracao): string {
+  const conteudo = parametros.messages[0]?.content;
+  const ultimo = Array.isArray(conteudo) ? conteudo.at(-1) : undefined;
+  const pedido = ultimo?.type === "text" ? ultimo.text : "";
+  // Como o modelo real responde: a seção copiada da lista, com o caminho inteiro ("Título > 1. Seção").
+  const secoes = [...pedido.matchAll(/^- (.*)$/gm)].map(([, secao]) => secao ?? "");
+  return secoes.find((secao) => secao.includes(" > ")) ?? secoes[0] ?? "";
+}
+
+/** Resposta v2 da classificação de documento: a principal e as secundárias, presas à primeira seção do documento. */
+export function areasDoDocumento(principal: string, ...secundarias: string[]) {
+  return (parametros: ParametrosDaGeracao): MensagemDaIa =>
+    mensagem([texto(JSON.stringify({ principal, secundarias: secundarias.map((area) => ({ area, secao: primeiraSecao(parametros) })) }))], { model: parametros.model });
+}
+
+/** Classificação de documento pelo título: o mapa diz as áreas de cada título (a primeira é a principal); os demais ficam "Geral". */
+export function areasPorTitulo(mapa: Record<string, string[]>) {
+  return (parametros: ParametrosDaGeracao): MensagemDaIa => {
+    const conteudo = parametros.messages[0]?.content;
+    const ultimo = Array.isArray(conteudo) ? conteudo.at(-1) : undefined;
+    const titulo = /^Título: (.*)$/m.exec(ultimo?.type === "text" ? ultimo.text : "")?.[1] ?? "";
+    const [principal = "Geral", ...secundarias] = mapa[titulo] ?? ["Geral"];
+    return areasDoDocumento(principal, ...secundarias)(parametros);
+  };
+}
+
 /** Classificação que põe todas as perguntas do pedido na mesma área. */
 export function classificarTudoComo(area: string) {
   return (parametros: ParametrosDaGeracao): MensagemDaIa => {
@@ -24,7 +58,8 @@ export function classificarTudoComo(area: string) {
  * API do Claude simulada: guarda os parâmetros de cada chamada e devolve as respostas da fila
  * (mensagem pronta, função que monta a mensagem a partir do pedido, ou erro a lançar). A
  * classificação por área (fase N) tem resposta própria, fora da fila, e fica em `classificacoes`:
- * por padrão, todas as perguntas em "Geral".
+ * por padrão, todas as perguntas em "Geral". A classificação dos documentos (fase U) também, em
+ * `classificacoesDeDocumento`: por padrão, todo documento "Geral".
  */
 export class ApiSimulada implements ApiDoClaude {
   readonly geracoes: ParametrosDaGeracao[] = [];
@@ -32,12 +67,20 @@ export class ApiSimulada implements ApiDoClaude {
   readonly contagens: ParametrosDaContagem[] = [];
   respostas: Resposta[] = [];
   classificacao: Resposta = classificarTudoComo("Geral");
+  readonly classificacoesDeDocumento: ParametrosDaGeracao[] = [];
+  classificacaoDeDocumento: Resposta = areasDoDocumento("Geral");
   tokensContados: number | Error = 50_000;
 
   async gerar(parametros: ParametrosDaGeracao): Promise<MensagemDaIa> {
     if (ehClassificacao(parametros)) {
       this.classificacoes.push(parametros);
       const resposta = this.classificacao;
+      if (resposta instanceof Error) throw resposta;
+      return typeof resposta === "function" ? resposta(parametros) : resposta;
+    }
+    if (ehClassificacaoDeDocumento(parametros)) {
+      this.classificacoesDeDocumento.push(parametros);
+      const resposta = this.classificacaoDeDocumento;
       if (resposta instanceof Error) throw resposta;
       return typeof resposta === "function" ? resposta(parametros) : resposta;
     }

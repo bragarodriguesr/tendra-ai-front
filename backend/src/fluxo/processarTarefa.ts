@@ -1,4 +1,4 @@
-import { MODELO_DE_CLASSIFICACAO_PADRAO, type ConfiguracaoDaIa } from "../config/config.ts";
+import { MODELO_DE_CLASSIFICACAO_PADRAO, SELECAO_PADRAO, type ConfiguracaoDaIa, type ConfiguracaoDaSelecao } from "../config/config.ts";
 import type { NomesDeCabecalho } from "../config/cabecalhos.ts";
 import { identificarPerguntas, lerPlanilha, validarArquivoDePlanilha, type ModeloDeResposta, type Pergunta } from "../documentos/planilha.ts";
 import { gerarPlanilhaPreenchida } from "../documentos/planilhaPreenchida.ts";
@@ -14,6 +14,8 @@ import type { Banco } from "../persistencia/banco.ts";
 import type { RespostaGravada } from "../persistencia/tarefas.ts";
 import { montarItem, type ChecagemDoItem, type ItemChecado, type ItemDaRevisao } from "../rastreabilidade/montarItem.ts";
 import { buscarFontes } from "../recuperacao/buscarFontes.ts";
+import { selecionarContexto, type ContextoDoItem, type MotivoDaSelecao } from "../recuperacao/selecionarContexto.ts";
+import type { RespostaGerada } from "../geracao/separarRespostas.ts";
 import { aplicarAlertasDeterministicos } from "../regras/alertas.ts";
 
 /**
@@ -33,8 +35,16 @@ export interface ComportamentoDaTarefa {
   modeloDeConflito: string;
   /** Modelo da classificação por área (fase N). Ausente nas tarefas de antes da fase. */
   modeloDeClassificacao?: string;
+  /** Seleção da base por área (fase U, PU12). Ausente nas tarefas de antes da fase. */
+  selecao?: ConfiguracaoDaSelecao;
   /** Instruções do processamento. A revisão de texto (cenário 65) é pedida depois, na tela, e não entra aqui. */
-  instrucoes: Omit<typeof VERSOES_DAS_INSTRUCOES, "revisaoDeTexto" | "classificacao"> & { classificacao?: string };
+  instrucoes: Omit<typeof VERSOES_DAS_INSTRUCOES, "revisaoDeTexto" | "classificacao" | "classificacaoDocumento"> & { classificacao?: string };
+}
+
+/** Grupos da geração, só com números, para as métricas (fase U, PU10). */
+export interface ResumoDaSelecao {
+  motivo: MotivoDaSelecao;
+  grupos: { area: string | null; documentos: number; perguntas: number }[];
 }
 
 export interface ResultadoDaTarefa {
@@ -47,6 +57,10 @@ export interface ResultadoDaTarefa {
   /** Perguntas em "Geral" por falha da classificação (cenário N3). */
   perguntasEmGeralPorFalha: number;
   checagens: ChecagemDoItem[];
+  /** De onde veio o contexto de cada item, na mesma ordem (fase U, PU10). */
+  contextos: ContextoDoItem[];
+  /** Como a base foi dividida (fase U); null com a base vazia. */
+  selecao: ResumoDaSelecao | null;
   /** Nomes dos documentos usados como contexto; vazio quando a base não tinha documento ativo. */
   documentos: string[];
   comportamento: ComportamentoDaTarefa;
@@ -114,34 +128,80 @@ export async function processarTarefa(opcoes: OpcoesDaTarefa): Promise<Resultado
       : await medir("classificacao", () => classificarAreas({ cliente: opcoes.cliente, modelo: modeloDeClassificacao, perguntas }));
 
   let checados: ItemChecado[];
+  let contextos: ContextoDoItem[] = perguntas.map(() => "base");
+  let selecao: ResumoDaSelecao | null = null;
   if (fontes.tipo === "vazia") {
     // Cenário 10: sem documento ativo, nenhuma chamada de geração.
     checados = await medir("checagem", () => perguntas.map((pergunta) => montarItem({ pergunta, resposta: null, contexto: null, hoje: opcoes.hoje })));
     await opcoes.aoProgredir?.(perguntas.length, perguntas.length);
   } else {
     const textoDe = new Map(perguntas.map((pergunta) => [pergunta.numero, pergunta.texto]));
-    const jaGeradas = new Map(
+    const respostaDe = new Map<number, RespostaGerada>(
       (opcoes.respostasGravadas ?? []).filter((gravada) => textoDe.get(gravada.numero) === gravada.texto).map((gravada) => [gravada.numero, gravada.resposta]),
     );
     const aoGerarLote = opcoes.aoGerarLote;
-    const geracao = await medir("geracao", () =>
-      gerarRespostas({
-        cliente: opcoes.cliente,
+    const gravarLote =
+      aoGerarLote === undefined
+        ? undefined
+        : (respostas: RespostaGerada[]) => aoGerarLote(respostas.map((resposta) => ({ numero: resposta.numero, texto: textoDe.get(resposta.numero) ?? "", resposta })));
+
+    // Fase U (PU7, PU9, PU11, PU12): grupos de perguntas por área, cada um com o seu contexto.
+    const configuracaoDaSelecao = opcoes.ia.selecao ?? SELECAO_PADRAO;
+    const escolhida = await medir("selecao", () =>
+      selecionarContexto({
         contexto: fontes.contexto,
-        perguntas,
-        ia: opcoes.ia,
-        aoConcluirLote: opcoes.aoProgredir,
-        jaGeradas,
-        ...(aoGerarLote === undefined
-          ? {}
-          : { aoGerarLote: (respostas) => aoGerarLote(respostas.map((resposta) => ({ numero: resposta.numero, texto: textoDe.get(resposta.numero) ?? "", resposta }))) }),
+        perguntas: perguntas.map((pergunta, posicao) => ({ numero: pergunta.numero, area: classificacao.areas[posicao] ?? AREA_GERAL })),
+        configuracao: configuracaoDaSelecao,
       }),
     );
+    const contextoDe = new Map<number, ContextoDoItem>();
+    for (const grupo of escolhida.grupos) for (const numero of grupo.perguntas) contextoDe.set(numero, grupo.area === null ? "base" : "area");
+
+    await medir("geracao", async () => {
+      // Só as perguntas sem resposta gravada vão à IA (retomada, etapa D8 e cenário U14).
+      let geradas = 0;
+      const pendentesAntes = perguntas.filter((pergunta) => !respostaDe.has(pergunta.numero)).length;
+      const jaFeitas = perguntas.length - pendentesAntes;
+      if (jaFeitas > 0 && pendentesAntes === 0) await opcoes.aoProgredir?.(perguntas.length, perguntas.length);
+      for (const grupo of escolhida.grupos) {
+        const pendentes = grupo.perguntas.filter((numero) => !respostaDe.has(numero)).map((numero) => ({ numero, texto: textoDe.get(numero) ?? "" }));
+        if (pendentes.length === 0) continue;
+        const antes = jaFeitas + geradas;
+        const geracao = await gerarRespostas({
+          cliente: opcoes.cliente,
+          contexto: grupo.contexto,
+          perguntas: pendentes,
+          ia: opcoes.ia,
+          aoConcluirLote: opcoes.aoProgredir === undefined ? undefined : (processadas) => opcoes.aoProgredir?.(antes + processadas, perguntas.length),
+          ...(gravarLote === undefined ? {} : { aoGerarLote: gravarLote }),
+        });
+        for (const resposta of geracao.respostas) respostaDe.set(resposta.numero, resposta);
+        geradas += pendentes.length;
+      }
+
+      // Segunda tentativa (PU8, cenário U11): pergunta do contexto da área sem nenhum trecho com fonte
+      // válida volta num lote só com a base inteira, antes de ficar "Sem rascunho".
+      const semFonte = perguntas.filter(
+        (pergunta) =>
+          contextoDe.get(pergunta.numero) === "area" &&
+          montarItem({ pergunta, resposta: respostaDe.get(pergunta.numero) ?? null, contexto: fontes.contexto, hoje: opcoes.hoje }).item.st === "sem-rascunho",
+      );
+      if (semFonte.length > 0) {
+        const segunda = await gerarRespostas({ cliente: opcoes.cliente, contexto: fontes.contexto, perguntas: semFonte, ia: opcoes.ia, ...(gravarLote === undefined ? {} : { aoGerarLote: gravarLote }) });
+        for (const resposta of segunda.respostas) respostaDe.set(resposta.numero, resposta);
+        for (const pergunta of semFonte) contextoDe.set(pergunta.numero, "base_segunda_tentativa");
+      }
+    });
+
+    // A checagem confere as citações contra a base inteira, que contém os documentos de todos os grupos.
     checados = await medir("checagem", () =>
-      perguntas.map((pergunta, posicao) =>
-        montarItem({ pergunta, resposta: geracao.respostas[posicao] ?? null, contexto: fontes.contexto, hoje: opcoes.hoje }),
-      ),
+      perguntas.map((pergunta) => montarItem({ pergunta, resposta: respostaDe.get(pergunta.numero) ?? null, contexto: fontes.contexto, hoje: opcoes.hoje })),
     );
+    contextos = perguntas.map((pergunta) => contextoDe.get(pergunta.numero) ?? "base");
+    selecao = {
+      motivo: escolhida.motivo,
+      grupos: escolhida.grupos.map((grupo) => ({ area: grupo.area, documentos: grupo.contexto.documentos.length, perguntas: grupo.perguntas.length })),
+    };
   }
 
   let itens = checados.map(({ item }) => item);
@@ -162,6 +222,8 @@ export async function processarTarefa(opcoes: OpcoesDaTarefa): Promise<Resultado
     areas: classificacao.areas,
     perguntasEmGeralPorFalha: classificacao.falhas,
     checagens: checados.map(({ checagem }) => checagem),
+    contextos,
+    selecao,
     documentos: fontes.tipo === "vazia" ? [] : fontes.contexto.documentos.map((documento) => documento.nome),
     comportamento: {
       modelo: opcoes.ia.modelo,
@@ -171,6 +233,7 @@ export async function processarTarefa(opcoes: OpcoesDaTarefa): Promise<Resultado
       modeloDeIdentificacao: opcoes.ia.modeloDeIdentificacao,
       modeloDeConflito: opcoes.ia.modeloDeConflito,
       modeloDeClassificacao,
+      selecao: opcoes.ia.selecao ?? SELECAO_PADRAO,
       instrucoes: {
         geracao: VERSOES_DAS_INSTRUCOES.geracao,
         identificacao: VERSOES_DAS_INSTRUCOES.identificacao,

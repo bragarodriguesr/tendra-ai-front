@@ -1,0 +1,637 @@
+{
+ "observacao": "Áreas esperadas dos documentos novos da Vereda Documental, rotuladas pelo autor da base para a avaliação U7 (SPEC_FASE_U.md). RFPs passadas ficam Geral sem classificar (PU2). Os 16 documentos que já estavam na base publicada não estão aqui.",
+ "documentos": [
+  {
+   "documento": "produto/visao-geral-plataforma.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Produto"
+   ]
+  },
+  {
+   "documento": "produto/modulo-certidoes-solicitacao.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Produto"
+   ]
+  },
+  {
+   "documento": "produto/modulo-dossies-checklists.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Produto"
+   ]
+  },
+  {
+   "documento": "produto/modulo-extracao-campos.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Produto"
+   ]
+  },
+  {
+   "documento": "produto/painel-relatorios-indicadores.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Produto"
+   ]
+  },
+  {
+   "documento": "produto/alertas-vencimento-renovacao.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Produto"
+   ]
+  },
+  {
+   "documento": "produto/aplicativo-movel-aprovacoes.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Produto"
+   ]
+  },
+  {
+   "documento": "produto/roteiro-produto-2027.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Produto"
+   ]
+  },
+  {
+   "documento": "produto/implantacao-onboarding.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Produto",
+    "Comercial"
+   ]
+  },
+  {
+   "documento": "produto/manual-perfis-permissoes.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Produto",
+    "Segurança e privacidade"
+   ]
+  },
+  {
+   "documento": "produto/notas-versao-2026.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Produto",
+    "Tecnologia"
+   ]
+  },
+  {
+   "documento": "produto/fluxo-due-diligence-ma.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Produto",
+    "Jurídico"
+   ]
+  },
+  {
+   "documento": "tecnologia/api-referencia-v1.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Tecnologia"
+   ]
+  },
+  {
+   "documento": "tecnologia/webhooks-eventos.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Tecnologia"
+   ]
+  },
+  {
+   "documento": "tecnologia/integracoes-erp-crm.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Tecnologia",
+    "Produto"
+   ]
+  },
+  {
+   "documento": "tecnologia/limites-desempenho-capacidade.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Tecnologia"
+   ]
+  },
+  {
+   "documento": "tecnologia/ambientes-homologacao.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Tecnologia"
+   ]
+  },
+  {
+   "documento": "tecnologia/ciclo-desenvolvimento-seguro.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Tecnologia",
+    "Segurança e privacidade"
+   ]
+  },
+  {
+   "documento": "tecnologia/observabilidade-plataforma.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Tecnologia"
+   ]
+  },
+  {
+   "documento": "tecnologia/modelo-dados-retencao-tecnica.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Tecnologia",
+    "Segurança e privacidade"
+   ]
+  },
+  {
+   "documento": "tecnologia/gestao-mudancas-releases.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Tecnologia"
+   ]
+  },
+  {
+   "documento": "tecnologia/arquitetura-ia-extracao.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Tecnologia",
+    "Segurança e privacidade"
+   ]
+  },
+  {
+   "documento": "tecnologia/suporte-tecnico-niveis.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Tecnologia"
+   ]
+  },
+  {
+   "documento": "tecnologia/requisitos-navegadores-acessibilidade.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Tecnologia",
+    "Produto"
+   ]
+  },
+  {
+   "documento": "seguranca/politica-privacidade-plataforma.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Segurança e privacidade"
+   ]
+  },
+  {
+   "documento": "seguranca/ripd-extracao-documental.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Segurança e privacidade"
+   ]
+  },
+  {
+   "documento": "seguranca/plano-resposta-incidentes.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Segurança e privacidade"
+   ]
+  },
+  {
+   "documento": "seguranca/gestao-vulnerabilidades.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Segurança e privacidade",
+    "Tecnologia"
+   ]
+  },
+  {
+   "documento": "seguranca/criptografia-chaves.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Segurança e privacidade",
+    "Tecnologia"
+   ]
+  },
+  {
+   "documento": "seguranca/gestao-fornecedores-subprocessadores.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Segurança e privacidade",
+    "Jurídico"
+   ]
+  },
+  {
+   "documento": "seguranca/norma-uso-aceitavel.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Segurança e privacidade",
+    "Jurídico"
+   ]
+  },
+  {
+   "documento": "seguranca/relatorio-teste-intrusao-2026.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Segurança e privacidade"
+   ]
+  },
+  {
+   "documento": "seguranca/programa-conscientizacao.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Segurança e privacidade"
+   ]
+  },
+  {
+   "documento": "seguranca/norma-classificacao-descarte.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Segurança e privacidade"
+   ]
+  },
+  {
+   "documento": "seguranca/direitos-titulares-procedimento.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Segurança e privacidade"
+   ]
+  },
+  {
+   "documento": "seguranca/declaracao-iso27001-em-implantacao.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Segurança e privacidade"
+   ]
+  },
+  {
+   "documento": "comercial/tabela-precos-2026.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Comercial"
+   ]
+  },
+  {
+   "documento": "comercial/proposta-padrao-corporativo.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Comercial"
+   ]
+  },
+  {
+   "documento": "comercial/politica-descontos-volume.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Comercial"
+   ]
+  },
+  {
+   "documento": "comercial/faturamento-pagamento.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Comercial",
+    "Jurídico"
+   ]
+  },
+  {
+   "documento": "comercial/casos-uso-segmentos.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Comercial",
+    "Produto"
+   ]
+  },
+  {
+   "documento": "comercial/programa-parceiros.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Comercial"
+   ]
+  },
+  {
+   "documento": "comercial/politica-reembolso-emolumentos.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Comercial"
+   ]
+  },
+  {
+   "documento": "comercial/condicoes-piloto-poc.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Comercial"
+   ]
+  },
+  {
+   "documento": "comercial/sucesso-cliente-governanca.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Comercial"
+   ]
+  },
+  {
+   "documento": "comercial/referencias-clientes-sinteticos.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Comercial"
+   ]
+  },
+  {
+   "documento": "comercial/comparativo-planos.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Comercial",
+    "Produto"
+   ]
+  },
+  {
+   "documento": "comercial/politica-reajuste.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Comercial"
+   ]
+  },
+  {
+   "documento": "juridico/termos-uso-plataforma.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Jurídico"
+   ]
+  },
+  {
+   "documento": "juridico/acordo-tratamento-dados-dpa.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Jurídico",
+    "Segurança e privacidade"
+   ]
+  },
+  {
+   "documento": "juridico/clausulas-confidencialidade-nda.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Jurídico"
+   ]
+  },
+  {
+   "documento": "juridico/politica-anticorrupcao-integridade.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Jurídico"
+   ]
+  },
+  {
+   "documento": "juridico/procuracoes-representacao.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Jurídico",
+    "Produto"
+   ]
+  },
+  {
+   "documento": "juridico/limitacao-responsabilidade-seguros.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Jurídico"
+   ]
+  },
+  {
+   "documento": "juridico/propriedade-intelectual.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Jurídico"
+   ]
+  },
+  {
+   "documento": "juridico/politica-retencao-legal-preservacao.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Jurídico",
+    "Segurança e privacidade"
+   ]
+  },
+  {
+   "documento": "juridico/minuta-aditivo-sla.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Jurídico",
+    "Tecnologia"
+   ]
+  },
+  {
+   "documento": "juridico/regras-contratacao-publica.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Jurídico",
+    "Comercial"
+   ]
+  },
+  {
+   "documento": "juridico/politica-conflito-interesses.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Jurídico"
+   ]
+  },
+  {
+   "documento": "juridico/codigo-conduta-fornecedores.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Jurídico",
+    "Segurança e privacidade"
+   ]
+  },
+  {
+   "documento": "referencia/matriz-cobertura-uf.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Produto"
+   ]
+  },
+  {
+   "documento": "referencia/tabela-referencia-emolumentos.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Comercial"
+   ]
+  },
+  {
+   "documento": "institucional/glossario-termos.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Geral"
+   ]
+  },
+  {
+   "documento": "institucional/apresentacao-institucional.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Geral"
+   ]
+  },
+  {
+   "documento": "institucional/historico-incidentes-disponibilidade.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Tecnologia",
+    "Segurança e privacidade"
+   ]
+  },
+  {
+   "documento": "rfp-passadas/rfp-2025-banco-meridional.md",
+   "tipo": "rfp-passada",
+   "areas_esperadas": [
+    "Geral"
+   ]
+  },
+  {
+   "documento": "rfp-passadas/rfp-2026-construtora-atlas.md",
+   "tipo": "rfp-passada",
+   "areas_esperadas": [
+    "Geral"
+   ]
+  },
+  {
+   "documento": "referencia/catalogo-tipos-documentais.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Produto"
+   ]
+  },
+  {
+   "documento": "seguranca/questionario-seguranca-padrao.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Segurança e privacidade",
+    "Tecnologia"
+   ]
+  },
+  {
+   "documento": "juridico/condicoes-gerais-contratacao.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Jurídico",
+    "Comercial"
+   ]
+  },
+  {
+   "documento": "produto/manual-usuario-portal.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Produto"
+   ]
+  },
+  {
+   "documento": "seguranca/analise-riscos-2026.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Segurança e privacidade"
+   ]
+  },
+  {
+   "documento": "rfp-passadas/rfp-2025-cooperativa-campo-verde.md",
+   "tipo": "rfp-passada",
+   "areas_esperadas": [
+    "Geral"
+   ]
+  },
+  {
+   "documento": "produto/perguntas-frequentes-ajuda.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Produto"
+   ]
+  },
+  {
+   "documento": "referencia/cadastro-emissores-municipios.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Produto"
+   ]
+  },
+  {
+   "documento": "operacoes/norma-operacoes-documentais.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Produto"
+   ]
+  },
+  {
+   "documento": "produto/manual-administrador-portal.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Produto",
+    "Segurança e privacidade"
+   ]
+  },
+  {
+   "documento": "tecnologia/politica-backup-restauracao.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Tecnologia",
+    "Segurança e privacidade"
+   ]
+  },
+  {
+   "documento": "comercial/relatorio-satisfacao-clientes-2026.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Comercial",
+    "Produto"
+   ]
+  },
+  {
+   "documento": "produto/modelos-checklist-detalhados.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Produto"
+   ]
+  },
+  {
+   "documento": "tecnologia/anexo-layout-exportacao.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Tecnologia",
+    "Comercial"
+   ]
+  },
+  {
+   "documento": "seguranca/mapeamento-controles-iso27002.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Segurança e privacidade"
+   ]
+  },
+  {
+   "documento": "juridico/matriz-obrigacoes-contratuais.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Jurídico",
+    "Comercial"
+   ]
+  },
+  {
+   "documento": "comercial/historico-precos-2024-2026.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Comercial"
+   ]
+  },
+  {
+   "documento": "tecnologia/runbook-recuperacao-servicos.md",
+   "tipo": "documento",
+   "areas_esperadas": [
+    "Tecnologia"
+   ]
+  },
+  {
+   "documento": "rfp-passadas/rfp-2026-rede-farmacias-ipe.md",
+   "tipo": "rfp-passada",
+   "areas_esperadas": [
+    "Geral"
+   ]
+  }
+ ]
+}

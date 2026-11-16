@@ -200,10 +200,11 @@ O front tem duas áreas: o **site público** e o **Workspace** (área logada). A
 
 **F-32 · P0 · Site público** — Implementado
 
-- **Cabeçalho** em Tinta, com 64 px de altura, igual ao do Workspace: logo animado (volta para a home), menu **Plataforma** (rola até "Como funciona"), **Segurança** (rola até "Segurança e confiança"), **Contato** (página) e **Preços** (página), e o botão **"Entrar"** (abre o login). No celular os links vão para um menu recolhível.
+- **Cabeçalho** em Tinta, com 64 px de altura, igual ao do Workspace: logo animado (volta para a home), menu **Conheça** (rola até "O produto em ação"), **Funcionalidades** (rola até "Funcionalidades"), **Segurança** (rola até "Segurança e confiança"), **Contato** (página) e **Preços** (página), e o botão **"Entrar"** (abre o login). No celular os links vão para um menu recolhível.
 - **Home:**
-  - Hero "Responda a um RFP em horas, não semanas." com o botão "Agendar demo" (abre Contato) e um cartão de resposta de exemplo com fonte.
-  - "Como funciona" em quatro passos: 00 Conecte suas fontes, 01 Importe o edital, 02 Gere com rastreabilidade, 03 Revise e aprove. Abaixo, "Feito para os times que respondem propostas: Pré-vendas, RevOps, Segurança da informação, Jurídico e compliance".
+  - Hero "Responda a um RFP em horas, não semanas." com o botão "Agendar demo" (abre Contato) e um cartão de resposta de exemplo com fonte. O cartão é animado (10/11/2026): responde três requisitos em sequência (pergunta digitada, resposta escrita, fonte, verificação da citação, aprovação); com movimento reduzido fica parado no primeiro.
+  - "O produto em ação" (10/11/2026, no lugar de "Como funciona"), em cinco passos: 00 Conecte suas fontes, 01 Importe o questionário, 02 Gere com rastreabilidade, 03 Revise e aprove, 04 Exporte a planilha aprovada. Os passos rolam à esquerda e uma janela do produto, fixa ao lado (no celular, presa no topo), toca a demonstração animada da tela de cada passo, com dados fictícios. A janela cabe inteira na tela; cada texto, do 00 ao 04, sobe esmaecido a partir do terço inferior dela e fica ativo ao chegar a 1/3 do topo (2/3 da altura da janela), onde o último para. Abaixo, "Feito para os times que respondem propostas: Pré-vendas, RevOps, Segurança da informação, Jurídico e compliance".
+  - "Funcionalidades" (10/11/2026), depois de "Plataforma AI native": cinco cartões com um fragmento de interface em movimento cada (fonte de cada afirmação, alertas, dashboard, base com validade, revisão de texto com IA).
   - Faixa de números.
   - "Segurança e confiança" com quatro cartões: Isolamento por tenant, Auditoria imutável, Aprovação nominal, Base curada e governada.
   - Chamada para webinar e rodapé.
@@ -864,7 +865,7 @@ O diagrama completo está em `docs/mvp-resposta-rfp/product/PIPELINE_IA_MVP.md` 
 - **Fluxo fixo em código, sem agente.** As etapas são previsíveis; o backend as executa em ordem e chama o Claude só onde há linguagem natural a tratar. Isso torna o fluxo testável e auditável.
 - **A IA sugere, a pessoa decide.** Nenhuma etapa da IA aprova, revisa ou exporta. Todo item sai como *Sugerida* ou *Sem rascunho*, e as regras de estado, alertas e bloqueios são lógica de código.
 - **Sem fonte verificável, não há resposta.** Cada citação é conferida contra o documento antes de aparecer. O modelo redige a resposta com as fontes como contexto, de forma coerente com a pergunta, mas cada parágrafo precisa de ao menos uma citação válida: parágrafo sem citação é removido (alerta de baixa confiança), e item sem nenhuma citação válida vira *Sem rascunho* com o alerta de sem contexto. As instruções proíbem acrescentar o que os documentos não sustentam; a fidelidade do texto às fontes é conferida por pessoa na avaliação.
-- **Sem busca vetorial no MVP.** A base inteira vai ao Claude, que encontra e cita os trechos. A recuperação fica atrás de um módulo próprio, trocável depois.
+- **Sem busca vetorial no MVP.** O Claude encontra e cita os trechos nos documentos que recebe. Até 50 mil tokens de base, a base inteira vai em cada lote. Acima disso, desde a fase U (12/11/2026), cada pergunta recebe os documentos da sua área mais os "Geral", por regra, com a base inteira como segunda tentativa antes de *Sem rascunho*. As áreas dos documentos vêm de uma IA leve (Haiku 5.5), depois da carga, e aparecem na coluna "Áreas" da T2. A recuperação fica atrás de módulos próprios, trocáveis depois.
 
 **Etapas**
 

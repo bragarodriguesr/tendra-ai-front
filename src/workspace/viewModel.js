@@ -202,6 +202,8 @@ export function buildView(s, ws) {
       statusText: x[0], tone: x[1], icon: x[2], ageText: d.age === 0 ? "hoje" : d.age + " dias", old: d.age > 120,
       version: d.ver ? "Versão " + d.ver : "Sem versão", canRetry: d.st === "erro" && !d.off, retry: () => ws.retryDoc(d.id),
       openDetails: () => ws.openDocDetails(d.id),
+      // Fase U (cenário U17): etiquetas das áreas; "Classificando…" enquanto a IA não termina.
+      areaTags: d.classifying ? [] : d.areas || [], areasText: d.classifying ? "Classificando…" : d.areas && d.areas.length ? d.areas.join(", ") : "—",
       note: d.st === "formato" ? `Formato não aceito. Formatos aceitos: ${FORMATS}.`
         : d.st === "suporte" ? "Este arquivo precisa de tratamento pelo suporte. Avisaremos aqui quando estiver pronto."
         : d.st === "erro" ? "Falha ao processar. Tente novamente."

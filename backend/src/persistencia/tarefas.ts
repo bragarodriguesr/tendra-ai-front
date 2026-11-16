@@ -275,7 +275,7 @@ export async function concluirTarefa(
   banco: Banco,
   id: string,
   resultado: {
-    itens: (ItemDaRevisao & { aba: string; linha: number; area: string })[];
+    itens: (ItemDaRevisao & { aba: string; linha: number; area: string; contexto?: "area" | "base" | "base_segunda_tentativa" })[];
     comportamento: ComportamentoDaTarefa;
     metricas: MetricasDaTarefa;
     caminhoDaPlanilhaPreenchida: string;
@@ -284,8 +284,8 @@ export async function concluirTarefa(
   await banco.transaction(async (transacao) => {
     for (const [posicao, item] of resultado.itens.entries()) {
       await transacao.query(
-        `INSERT INTO itens (tarefa_id, numero, aba, linha, q, paras, paras_originais, srcs, alerts, st, orig, area) VALUES ($1, $2, $3, $4, $5, $6, $6, $7, $8, $9, $10, $11)`,
-        [id, posicao + 1, item.aba, item.linha, item.q, JSON.stringify(item.paras), JSON.stringify(item.srcs), JSON.stringify(item.alerts), item.st, item.orig, item.area],
+        `INSERT INTO itens (tarefa_id, numero, aba, linha, q, paras, paras_originais, srcs, alerts, st, orig, area, contexto) VALUES ($1, $2, $3, $4, $5, $6, $6, $7, $8, $9, $10, $11, $12)`,
+        [id, posicao + 1, item.aba, item.linha, item.q, JSON.stringify(item.paras), JSON.stringify(item.srcs), JSON.stringify(item.alerts), item.st, item.orig, item.area, item.contexto ?? "base"],
       );
     }
     await transacao.query(

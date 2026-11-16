@@ -1,0 +1,22 @@
+:root {
+  /* Grid de 8px. 4px existe só para ajuste óptico dentro de chips e badges. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-18: 72px;
+
+  --gutter-card: var(--space-6);
+  --gutter-card-lg: var(--space-8);
+  --gutter-section: var(--space-18);
+  --gutter-grid: var(--space-5);
+  --page-max: 1160px;
+  --page-pad: var(--space-10);
+  --hit-min: 44px;
+}

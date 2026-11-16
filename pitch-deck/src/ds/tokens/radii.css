@@ -1,0 +1,12 @@
+:root {
+  --radius-xs: 6px;   /* chips, badges, marcadores */
+  --radius-sm: 8px;   /* inputs pequenos, swatches */
+  --radius-md: 9px;   /* botões */
+  --radius-lg: 12px;  /* painéis internos, app icon (raio 12u de 48u) */
+  --radius-xl: 14px;  /* cards de conteúdo */
+  --radius-2xl: 16px; /* cards de produto */
+  --radius-3xl: 18px; /* cards de aplicação, banners */
+  --radius-pill: 99px;
+  --border-width: 1px;
+  --border-width-accent: 3px;
+}

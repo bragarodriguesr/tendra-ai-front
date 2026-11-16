@@ -26,6 +26,7 @@ const documentos: DocumentoDoContexto[] = [
     atualizadoEm: "2026-06-23",
     versao: "2.0",
     tamanhoBytes: 1000,
+    areas: [],
     blocos: [bloco(1, "(início)", 7, "Documento fictício."), bloco(2, "2. Retenção dos registros", 18, RETENCAO)],
   },
   {
@@ -35,6 +36,7 @@ const documentos: DocumentoDoContexto[] = [
     atualizadoEm: "2026-10-21",
     versao: null,
     tamanhoBytes: 500,
+    areas: ["Geral"],
     blocos: [bloco(1, "3. Continuidade", 30, RPO), bloco(2, "3. Continuidade", 32, "Testes anuais.")],
   },
 ];

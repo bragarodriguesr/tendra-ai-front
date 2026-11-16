@@ -142,7 +142,7 @@ As duas primeiras camadas já existem. A citação aponta sempre para o bloco, n
 1. **Lotes maiores** (`TENDRA_TAMANHO_LOTE`, padrão 10, máximo 50): menos releituras da base, a validar na avaliação.
 2. **Cache de prompt,** já em uso.
 3. **Processamento assíncrono em lote da API,** com 50% de desconto e resposta em até 24 horas, para RFPs com prazo folgado.
-4. **Filtro por metadados antes da geração,** por regra e sem vetores: por exemplo, por tipo de documento ou por disciplina (F-07 do PRD).
+4. **Filtro por metadados antes da geração,** por regra e sem vetores: por exemplo, por tipo de documento ou por disciplina (F-07 do PRD). **Decidido na fase U (12/11/2026, `spec/SPEC_FASE_U.md`):** os documentos recebem áreas na carga (Haiku 5.5, as mesmas áreas das perguntas da fase N), e, com a base acima de 50 mil tokens, cada pergunta recebe só os documentos da sua área mais os "Geral", com a base inteira como segunda tentativa antes de "Sem rascunho". A regra fica em `selecionarContexto`, sem vetores.
 5. **Base limpa:** desativar documentos repetidos ou vencidos. A validade dos documentos (cenário 80) já ajuda.
 
 ## 9. Cuidados quando a busca for introduzida

@@ -74,6 +74,22 @@ function classificar(texto: string): string {
   return JSON.stringify({ itens });
 }
 
+/**
+ * Classificação de um documento da base (fase U, formato da v2): a principal é a primeira área cujas
+ * palavras-chave aparecem; as secundárias, até duas, são as áreas com palavras-chave num título de
+ * seção, presas a ele. Sem nenhuma, "Geral".
+ */
+function classificarDocumento(texto: string): string {
+  const areas = PALAVRAS_DAS_AREAS.filter(([, padrao]) => padrao.test(texto)).map(([area]) => area);
+  const [principal = "Geral"] = areas;
+  const secoes = [...texto.matchAll(/^- (.*)$/gm)].map(([, secao]) => secao?.split(" > ").at(-1) ?? "");
+  const secundarias = PALAVRAS_DAS_AREAS.flatMap(([area, padrao]) => {
+    const secao = area === principal ? undefined : secoes.find((titulo) => padrao.test(titulo));
+    return secao === undefined ? [] : [{ area, secao }];
+  }).slice(0, 2);
+  return JSON.stringify({ principal, secundarias });
+}
+
 function gerarRespostas(parametros: ParametrosDaGeracao): MensagemDaIa["content"] {
   const conteudo = parametros.messages[0]?.content;
   const documentos = Array.isArray(conteudo)
@@ -127,8 +143,14 @@ export function criarApiSimulada(): ApiDoClaude {
         return mensagem(parametros.model, [textoDoBloco(JSON.stringify({ texto: revisado }))]);
       }
       if (parametros.output_config?.format) {
-        // Identificação de perguntas, classificação por área ou conflito: a simulada nunca aponta conflito.
-        const saida = texto.startsWith("<planilha>") ? identificar(texto) : texto.startsWith("<perguntas>") ? classificar(texto) : JSON.stringify({ itens: [] });
+        // Identificação de perguntas, classificação por área (perguntas ou documento) ou conflito: a simulada nunca aponta conflito.
+        const saida = texto.startsWith("<planilha>")
+          ? identificar(texto)
+          : texto.startsWith("<perguntas>")
+            ? classificar(texto)
+            : texto.startsWith("<documento>")
+              ? classificarDocumento(texto)
+              : JSON.stringify({ itens: [] });
         return mensagem(parametros.model, [textoDoBloco(saida)]);
       }
       return mensagem(parametros.model, gerarRespostas(parametros));

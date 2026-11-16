@@ -12,6 +12,7 @@ export const VERSOES_DAS_INSTRUCOES = {
   conflito: "conflito-v2",
   revisaoDeTexto: "revisao-texto-v1",
   classificacao: "classificacao-v1",
+  classificacaoDocumento: "classificacao-documento-v2",
 } as const;
 
 export type NomeDasInstrucoes = keyof typeof VERSOES_DAS_INSTRUCOES;

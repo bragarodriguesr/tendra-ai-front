@@ -4,7 +4,7 @@ import type { NomesDeCabecalho } from "../config/cabecalhos.ts";
 import type { ConfiguracaoDaIa } from "../config/config.ts";
 import { ErroDePlanilha } from "../documentos/planilha.ts";
 import { ClienteDaIa, ErroDaIa, type ApiDoClaude, type EntradaDoRegistro } from "../ia/cliente.ts";
-import { calcularMetricas, type TabelaDePrecos } from "../observabilidade/metricas.ts";
+import { calcularMetricas, calcularMetricasDaSelecao, type TabelaDePrecos } from "../observabilidade/metricas.ts";
 import type { Banco } from "../persistencia/banco.ts";
 import {
   apagarRespostasGeradas,
@@ -100,11 +100,15 @@ export async function executarTarefa(ambiente: AmbienteDaTarefa, tarefa: Tarefa)
         aba: resultado.perguntas[posicao]?.aba ?? "",
         linha: resultado.perguntas[posicao]?.linha ?? 0,
         area: resultado.areas[posicao] ?? AREA_GERAL,
+        contexto: resultado.contextos[posicao] ?? "base",
       })),
       comportamento: resultado.comportamento,
       metricas: {
         ...calcularMetricas({ registro, itens: resultado.itens, checagens: resultado.checagens, etapas: resultado.etapas, precos: ambiente.precos }),
         perguntasEmGeralPorFalha: resultado.perguntasEmGeralPorFalha,
+        ...(resultado.selecao === null
+          ? {}
+          : { selecao: calcularMetricasDaSelecao({ registro, selecao: resultado.selecao, contextos: resultado.contextos, documentosDaBase: resultado.documentos.length }) }),
       },
       caminhoDaPlanilhaPreenchida,
     });

@@ -1077,6 +1077,13 @@ export function useWorkspace({ initialScreen = "dashboard", role = "Aprovador" }
   React.useEffect(() => { if (["dashboard", "tasks", "finalizadas", "arquivadas", "task", "export", "review", "onboarding"].includes(state.screen)) ws.loadTasks(); }, [ws, state.screen]);
   React.useEffect(() => { if (state.screen === "new") ws.loadUsers(); }, [ws, state.screen, state.sessao]);
   React.useEffect(() => { if (state.screen === "history") ws.loadTaskEvents(); }, [ws, state.screen]);
+  // Fase U (cenário U17): enquanto algum documento está em "Classificando…" e a Base está aberta, relê a lista a cada 3 segundos.
+  const classifying = (state.screen === "base" || state.screen === "onboarding") && state.docs.some((d) => d.classifying);
+  React.useEffect(() => {
+    if (!classifying) return undefined;
+    const timer = setInterval(() => ws.loadBase(), 3000);
+    return () => clearInterval(timer);
+  }, [ws, classifying]);
   const processing = state.tarefas.some((t) => t.estado === "processando");
   React.useEffect(() => {
     if (!processing) return undefined;

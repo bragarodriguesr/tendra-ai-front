@@ -1,5 +1,6 @@
 import type { Bloco } from "../base/blocos.ts";
 import type { Cabecalho } from "../base/cabecalho.ts";
+import { AREA_GERAL } from "../regras/areas.ts";
 import type { Banco } from "./banco.ts";
 
 /** Documento da base como está gravado no banco. */
@@ -21,6 +22,13 @@ export interface DocumentoGravado {
   enviadoPor: string | null;
   /** Data e hora da primeira carga, em ISO 8601. */
   carregadoEm: string;
+  /**
+   * Áreas do documento (fase U, PU1). Vazia enquanto a IA não classificou; `["Geral"]` quando vale
+   * para todas as perguntas, inclusive depois de uma falha da classificação (PU4).
+   */
+  areas: string[];
+  /** Quando a IA classificou (ou a RFP passada foi gravada). Null: pendente ou com falha, tentado de novo ao iniciar. */
+  areasClassificadasEm: string | null;
 }
 
 /** Dados de um documento a gravar, já validado e dividido em blocos. */
@@ -48,11 +56,13 @@ interface LinhaDeDocumento {
   ativo: boolean;
   enviado_por: string | null;
   carregado_em: Date;
+  areas: string[];
+  areas_classificadas_em: Date | null;
 }
 
 const COLUNAS = `id, nome, titulo, tipo, to_char(atualizado_em, 'YYYY-MM-DD') AS atualizado_em, versao,
   to_char(validade, 'YYYY-MM-DD') AS validade, hash,
-  tamanho_bytes, tokens_estimados, ativo, enviado_por, carregado_em`;
+  tamanho_bytes, tokens_estimados, ativo, enviado_por, carregado_em, areas, areas_classificadas_em`;
 
 function paraDocumento(linha: LinhaDeDocumento): DocumentoGravado {
   return {
@@ -69,6 +79,8 @@ function paraDocumento(linha: LinhaDeDocumento): DocumentoGravado {
     ativo: linha.ativo,
     enviadoPor: linha.enviado_por,
     carregadoEm: linha.carregado_em.toISOString(),
+    areas: linha.areas,
+    areasClassificadasEm: linha.areas_classificadas_em?.toISOString() ?? null,
   };
 }
 
@@ -104,11 +116,14 @@ export async function gravarDocumento(banco: Banco, organizacaoId: string, docum
     ]);
     const idExistente = existente.rows[0]?.id;
 
+    // Conteúdo novo: classificação pendente (PU2); a RFP passada fica "Geral" sem ir à IA (U5b).
+    const rfpPassada = cabecalho.tipo === "rfp-passada";
     let id: number;
     if (idExistente === undefined) {
       const inserido = await transacao.query<{ id: number }>(
-        `INSERT INTO documentos (nome, titulo, tipo, atualizado_em, versao, hash, tamanho_bytes, tokens_estimados, enviado_por, organizacao_id, validade)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
+        `INSERT INTO documentos (nome, titulo, tipo, atualizado_em, versao, hash, tamanho_bytes, tokens_estimados, enviado_por, organizacao_id, validade,
+           areas, areas_classificadas_em)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::text[], CASE WHEN $13::boolean THEN now() END) RETURNING id`,
         [
           documento.nome,
           cabecalho.titulo,
@@ -121,6 +136,8 @@ export async function gravarDocumento(banco: Banco, organizacaoId: string, docum
           documento.enviadoPor,
           organizacaoId,
           cabecalho.validade,
+          rfpPassada ? [AREA_GERAL] : [],
+          rfpPassada,
         ],
       );
       const novoId = inserido.rows[0]?.id;
@@ -130,7 +147,8 @@ export async function gravarDocumento(banco: Banco, organizacaoId: string, docum
       id = idExistente;
       await transacao.query(
         `UPDATE documentos SET titulo = $2, tipo = $3, atualizado_em = $4, versao = $5, hash = $6,
-           tamanho_bytes = $7, tokens_estimados = $8, enviado_por = COALESCE($9, enviado_por), validade = $10, substituido_em = now()
+           tamanho_bytes = $7, tokens_estimados = $8, enviado_por = COALESCE($9, enviado_por), validade = $10, substituido_em = now(),
+           areas = $11::text[], areas_classificadas_em = CASE WHEN $12::boolean THEN now() END
          WHERE id = $1`,
         [
           id,
@@ -143,6 +161,8 @@ export async function gravarDocumento(banco: Banco, organizacaoId: string, docum
           documento.tokensEstimados,
           documento.enviadoPor,
           cabecalho.validade,
+          rfpPassada ? [AREA_GERAL] : [],
+          rfpPassada,
         ],
       );
       await transacao.query("DELETE FROM blocos WHERE documento_id = $1", [id]);
@@ -195,4 +215,61 @@ export async function listarBlocos(banco: Banco, organizacaoId: string, nome: st
     linhaFinal: linha.linha_final,
     texto: linha.texto,
   }));
+}
+
+/** Documento à espera da classificação por área (fase U): novo, alterado ou com falha anterior (PU4, PU5). */
+export interface DocumentoParaClassificar {
+  id: number;
+  organizacaoId: string;
+  nome: string;
+  titulo: string;
+  tipo: Cabecalho["tipo"];
+  hash: string;
+  /** Null quando nunca foi classificado (ou falhou); preenchido quando é uma reclassificação de versão. */
+  areasClassificadasEm: string | null;
+}
+
+/**
+ * Documentos sem a marca de classificação, de uma organização ou de todas, na ordem em que entraram.
+ * Com `versao`, também os documentos classificados por outra versão da instrução (revisão da v2):
+ * mantêm as áreas atuais até a nova classificação.
+ */
+export async function listarDocumentosParaClassificar(banco: Banco, organizacaoId?: string, versao?: string): Promise<DocumentoParaClassificar[]> {
+  const { rows } = await banco.query<{ id: number; organizacao_id: string; nome: string; titulo: string; tipo: Cabecalho["tipo"]; hash: string; areas_classificadas_em: Date | null }>(
+    `SELECT id, organizacao_id, nome, titulo, tipo, hash, areas_classificadas_em FROM documentos
+      WHERE (areas_classificadas_em IS NULL OR ($2::text IS NOT NULL AND tipo = 'documento' AND areas_versao IS DISTINCT FROM $2::text))
+        AND ($1::uuid IS NULL OR organizacao_id = $1::uuid)
+      ORDER BY id`,
+    [organizacaoId ?? null, versao ?? null],
+  );
+  return rows.map((linha) => ({
+    id: linha.id,
+    organizacaoId: linha.organizacao_id,
+    nome: linha.nome,
+    titulo: linha.titulo,
+    tipo: linha.tipo,
+    hash: linha.hash,
+    areasClassificadasEm: linha.areas_classificadas_em?.toISOString() ?? null,
+  }));
+}
+
+/**
+ * Grava as áreas de um documento. Só grava se o conteúdo ainda é o classificado (mesmo hash): um
+ * reenvio durante a classificação não recebe as áreas da versão anterior. Sem `classificado`
+ * (falha, PU4), o documento fica "Geral" e sem a marca, para nova tentativa ao iniciar.
+ */
+export async function gravarAreasDoDocumento(
+  banco: Banco,
+  documento: { id: number; hash: string },
+  areas: string[],
+  classificado: boolean,
+  versao: string | null = null,
+): Promise<boolean> {
+  const resultado = await banco.query(
+    `UPDATE documentos SET areas = $3::text[], areas_classificadas_em = CASE WHEN $4::boolean THEN now() END,
+       areas_versao = CASE WHEN $4::boolean THEN $5::text ELSE areas_versao END
+     WHERE id = $1 AND hash = $2`,
+    [documento.id, documento.hash, areas, classificado, versao],
+  );
+  return (resultado.affectedRows ?? 0) > 0;
 }

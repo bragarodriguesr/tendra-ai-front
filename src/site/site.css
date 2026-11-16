@@ -3,7 +3,6 @@
    empilham; abaixo de 600px os tokens de display, gutter e seção encolhem só no site. */
 
 .tdr-site-hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: var(--space-12); align-items: center; }
-.tdr-site-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gutter-grid); }
 .tdr-site-trust { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-12); align-items: center; }
 .tdr-site-plans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gutter-grid); align-items: start; }
 .tdr-site-footer-cols { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)); gap: var(--space-10); }
@@ -11,7 +10,6 @@
 @media (max-width: 900px) {
   .tdr-site { --gutter-section: var(--space-16); --text-d1-size: 44px; --text-d2-size: 34px; }
   .tdr-site-hero, .tdr-site-trust { grid-template-columns: minmax(0, 1fr); gap: var(--space-10); }
-  .tdr-site-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tdr-site-plans { grid-template-columns: minmax(0, 1fr); }
   .tdr-site-plans { max-width: 520px; margin: 0 auto; width: 100%; }
   .tdr-site-footer-cols { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-8); }
@@ -29,7 +27,6 @@
   }
   .tdr-site-footer-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tdr-site-cta > button { flex: 1 1 100%; }
-  .tdr-site-steps { grid-template-columns: minmax(0, 1fr); }
 }
 
 
@@ -68,7 +65,7 @@
   .tdr-site-contact-row { grid-template-columns: minmax(0, 1fr); }
 }
 
-/* "Feito para os times…": linha ao pé de "Como funciona", times separados por filete vertical. */
+/* "Feito para os times…": linha ao pé de "O produto em ação", times separados por filete vertical. */
 .tdr-site-teams { margin-top: var(--space-12); padding-top: var(--space-6); border-top: 1px solid var(--border-strong); display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-6); }
 .tdr-site-teams ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; }
 .tdr-site-teams li { display: flex; align-items: center; }
@@ -94,4 +91,82 @@
 @media (prefers-reduced-motion: reduce) {
   .tdr-site-ai-card { opacity: 1; transform: none; }
   .tdr-site-ai-steps.is-in .tdr-site-ai-card { animation: none; }
+}
+
+/* Hero: cartão que responde requisitos em sequência (LiveCard). Alturas mínimas evitam que o
+   cartão mude de tamanho enquanto o texto é escrito. */
+.tdr-site-live-panel { display: grid; gap: var(--space-4); align-content: start; }
+.tdr-site-live-q { font-size: var(--text-sm-size); line-height: 1.5; color: var(--ink-200); min-height: 3em; }
+.tdr-site-live-a { font-size: var(--text-ui-size); line-height: 1.62; color: var(--n-075); text-wrap: pretty; min-height: 6.48em; }
+.tdr-site-live-w { animation: tdr-fade 260ms var(--ease-out) backwards; }
+.tdr-site-live-src { animation: tdr-rise var(--duration-base) var(--ease-out) backwards; }
+.tdr-site-live-spin { display: inline-flex; animation: tdr-spin 0.9s linear infinite; }
+
+/* "O produto em ação": passos à esquerda, janela do produto fixa à direita. */
+.tdr-site-tour { display: grid; grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr); gap: var(--space-12); align-items: start; }
+.tdr-site-tour-sticky { grid-column: 2; grid-row: 1; position: sticky; top: calc(64px + var(--space-6)); }
+/* A janela cabe inteira na tela: a largura é limitada pela altura livre abaixo da barra (palco 600×494). */
+.tdr-site-tour-sticky .tdr-demo { max-width: calc((100vh - 64px - 2 * var(--space-6)) * 600 / 494); margin-left: auto; }
+/* Os passos começam no terço inferior da janela (o 00 inclusive) e sobem esmaecidos até a linha de ativação. */
+.tdr-site-tour-steps { grid-column: 1; grid-row: 1; list-style: none; margin: 0; padding: calc(var(--tour-h, 60vh) * 2 / 3) 0 0; }
+/* Cada passo tem a altura da janela, então só um fica ao lado dela por vez. O último tem 2/3:
+   para na linha de ativação, a 1/3 do topo da janela, quando a seção termina. */
+.tdr-site-tour-step { min-height: var(--tour-h, 60vh); display: grid; gap: var(--space-3); align-content: start; opacity: 0.32; transition: opacity var(--duration-slow) var(--ease-out); }
+.tdr-site-tour-step:last-child { min-height: calc(var(--tour-h, 60vh) * 2 / 3); }
+.tdr-site-tour-step.is-on { opacity: 1; }
+.tdr-site-tour-step ul { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: grid; gap: var(--space-2); }
+.tdr-site-tour-step ul li { display: flex; gap: 10px; align-items: flex-start; font-size: var(--text-ui-size); line-height: 1.5; color: var(--text-strong); }
+.tdr-site-tour-check { flex: none; margin-top: 3px; width: 16px; height: 16px; border-radius: 4px; background: var(--brand-lime); color: var(--brand-ink); display: inline-flex; align-items: center; justify-content: center; }
+@media (max-width: 900px) {
+  .tdr-site-tour { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .tdr-site-tour-sticky, .tdr-site-tour-steps { grid-column: 1; grid-row: auto; }
+  .tdr-site-tour-sticky { top: 64px; z-index: 5; background: var(--surface-sunken); padding: var(--space-3) 0; border-bottom: 1px solid var(--border-strong); }
+  .tdr-site-tour-sticky .tdr-demo { max-width: none; }
+  .tdr-site-tour-steps { padding-top: 0; }
+  .tdr-site-tour-step, .tdr-site-tour-step:last-child { min-height: 0; padding: var(--space-10) 0 30vh; }
+}
+
+/* "Funcionalidades": grade de cartões, cada um com um fragmento de interface que se completa em sequência. */
+.tdr-site-feats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--gutter-grid); }
+.tdr-site-feat { grid-column: span 2; display: grid; gap: 18px; align-content: space-between; min-width: 0; }
+.tdr-site-feat { transition: border-color var(--duration-fast) var(--ease-out), opacity var(--duration-base) var(--ease-out); }
+.tdr-site-feat:hover { border-color: var(--border-strong) !important; }
+/* Com o cursor (ou o foco) num cartão, os demais recuam para ele ficar em destaque. */
+@media (hover: hover) {
+  .tdr-site-feats:has(.tdr-site-feat:hover) .tdr-site-feat:not(:hover),
+  .tdr-site-feats:has(.tdr-site-feat:focus-within) .tdr-site-feat:not(:focus-within):not(:hover) { opacity: 0.45; }
+}
+.tdr-site-feat.is-wide { grid-column: span 4; }
+.tdr-site-feat-demo { background: var(--surface-sunken); border-radius: var(--radius-lg); padding: var(--space-4); display: grid; gap: 10px; align-content: center; min-height: 168px; min-width: 0; }
+.tdr-site-feat-src { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: var(--space-5); align-items: center; }
+.tdr-site-feat-ans { margin: 0; font-size: var(--text-body-size); line-height: 1.9; color: var(--text-strong); }
+.tdr-site-cite { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 4px; margin: 0 2px; border: 0; border-radius: 5px; background: var(--brand-lime); color: var(--brand-ink); font-family: var(--font-mono); font-size: 11px; font-weight: var(--weight-medium); cursor: pointer; vertical-align: 1px; transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
+.tdr-site-cite.is-on { background: var(--brand-ink); color: var(--brand-lime); }
+.tdr-site-cite:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(110, 114, 104, 0.35); }
+.tdr-site-feat-panel { background: var(--surface-card); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: 14px; display: grid; gap: var(--space-2); min-height: 120px; align-content: start; }
+.tdr-site-feat-panel > * { animation: tdr-rise var(--duration-base) var(--ease-out) backwards; }
+.tdr-site-feat-panel p { margin: 0; font-size: var(--text-sm-size); line-height: 1.6; color: var(--text-state); }
+.tdr-site-feat-panel mark { background: var(--brand-lime); color: var(--brand-ink); padding: 0 3px; }
+.tdr-site-feat-file { display: flex; align-items: flex-start; gap: 6px; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.03em; color: var(--text-meta); }
+.tdr-site-feat-file svg { margin-top: 2px; }
+.tdr-site-feat-file b { font-weight: var(--weight-medium); color: var(--text-body); }
+.tdr-site-feat-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-height: 36px; padding: 6px 10px; background: var(--surface-card); border: 1px solid var(--border-default); border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 11.5px; color: var(--text-body); white-space: nowrap; min-width: 0; }
+.tdr-site-feat-row > span:not([style]) { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.tdr-site-feat-row > span[style] { flex: none; }
+.tdr-site-feat-demo .vi { opacity: 0.3; transition: opacity var(--duration-slow) var(--ease-out), transform 700ms var(--ease-out); }
+.tdr-site-feat-demo .vi.on { opacity: 1; }
+.tdr-site-feat-bars { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; height: 96px; align-items: end; border-bottom: 1px solid var(--border-strong); }
+.tdr-site-feat-bars i { display: block; background: var(--dv-series-1); border-radius: 4px 4px 0 0; transform-origin: bottom; transform: scaleY(0); }
+.tdr-site-feat-bars i.on { transform: none; }
+.tdr-site-feat-bars-x { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; text-align: center; }
+.tdr-site-feat-diff { margin: 0; font-size: var(--text-ui-size); line-height: 1.7; color: var(--text-strong); }
+.tdr-site-feat-diff .vi, .tdr-site-feat-diff .vi.on { opacity: 1; }
+.tdr-site-feat-diff .del.on { text-decoration: line-through; color: var(--text-meta); }
+.tdr-site-feat-diff .ins { display: none; }
+.tdr-site-feat-diff .ins.on { display: inline; background: var(--brand-lime); padding: 0 3px; animation: tdr-fade var(--duration-slow) var(--ease-out); }
+@media (max-width: 980px) { .tdr-site-feat { grid-column: span 3; } .tdr-site-feat.is-wide { grid-column: span 6; } }
+@media (max-width: 760px) { .tdr-site-feat, .tdr-site-feat.is-wide { grid-column: span 6; } .tdr-site-feat-src { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) {
+  .tdr-site-live-w, .tdr-site-live-src, .tdr-site-live-spin, .tdr-site-feat-panel > *, .tdr-site-feat-diff .ins.on { animation: none; }
+  .tdr-site-tour-step, .tdr-site-feat, .tdr-site-feat-demo .vi { transition: none; }
 }

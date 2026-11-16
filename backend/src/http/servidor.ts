@@ -3,6 +3,8 @@ import { carregarArquivos, type ArquivoParaCarga } from "../base/carga.ts";
 import { estaVencido } from "../base/cabecalho.ts";
 import type { Banco } from "../persistencia/banco.ts";
 import { definirAtivo, listarDocumentos, type DocumentoGravado } from "../persistencia/documentos.ts";
+import { MODELO_DE_CLASSIFICACAO_DE_DOCUMENTO_PADRAO } from "../config/config.ts";
+import { classificarDocumentosPendentes } from "../fluxo/classificarDocumentos.ts";
 import { ErroDaRota } from "./erros.ts";
 import { organizacaoDo, registrarOrganizacao } from "./organizacao.ts";
 import { registrarAutenticacao, type OpcoesDaAutenticacao } from "./rotasDeAutenticacao.ts";
@@ -55,6 +57,8 @@ export interface DocumentoDaBase {
   ativo: boolean;
   enviadoPor: string | null;
   carregadoEm: string;
+  /** Áreas do documento (fase U, cenário U17); null enquanto a IA não classificou ("Classificando…"). */
+  areas: string[] | null;
 }
 
 interface CorpoDoEnvio {
@@ -80,6 +84,7 @@ const paraTela = (hoje: string) => (documento: DocumentoGravado): DocumentoDaBas
     ativo: documento.ativo && !vencido,
     enviadoPor: documento.enviadoPor,
     carregadoEm: documento.carregadoEm,
+    areas: documento.areas.length === 0 ? null : documento.areas,
   };
 };
 
@@ -107,6 +112,38 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
     fila = resultado.catch(() => undefined);
     return resultado;
   };
+
+  // Classificação dos documentos por área (fase U, PU2), numa fila própria: o envio não espera a IA,
+  // e uma carga nova não espera a classificação da anterior. Ao fechar, termina o documento em curso
+  // e deixa os demais para a próxima subida.
+  const tarefas = opcoes.tarefas;
+  let classificacao: Promise<void> = Promise.resolve();
+  let fechando = false;
+  /** Sem organização: a subida do backend, que também reclassifica as versões antigas da instrução. */
+  const classificarEmSegundoPlano = (organizacaoId?: string) => {
+    if (tarefas === undefined) return;
+    classificacao = classificacao
+      .then(async () => {
+        if (fechando) return;
+        const resultado = await classificarDocumentosPendentes({
+          banco,
+          api: tarefas.api,
+          modelo: tarefas.ia.modeloDeClassificacaoDeDocumento ?? MODELO_DE_CLASSIFICACAO_DE_DOCUMENTO_PADRAO,
+          ...(organizacaoId === undefined ? { reclassificarVersoesAntigas: true } : { organizacaoId }),
+          continuar: () => !fechando,
+          aoRegistrar: (entrada) =>
+            opcoes.log?.info({ etapa: entrada.etapa, documentos: entrada.documentos, tokens: entrada.tokens, duracaoMs: entrada.duracaoMs, resultado: entrada.resultado, erro: entrada.erro }, "Requisição à IA"),
+        });
+        if (resultado.classificados + resultado.comFalha > 0) opcoes.log?.info(resultado, "Documentos classificados por área");
+      })
+      .catch((erro: unknown) => opcoes.log?.error({ erro: erro instanceof Error ? erro.name : "desconhecido" }, "Falha na classificação dos documentos"))
+      .finally(() => tarefas.aoTerminarClassificacao?.());
+  };
+  if (tarefas?.classificarDocumentosAoIniciar === true) servidor.addHook("onReady", async () => classificarEmSegundoPlano());
+  servidor.addHook("onClose", async () => {
+    fechando = true;
+    await classificacao;
+  });
 
   servidor.setErrorHandler((erro: FastifyError, pedido, resposta) => {
     if (erro instanceof ErroDaRota || erro instanceof ErroDeRevisao || erro instanceof ErroDaGestao) return resposta.status(erro.statusCode).send({ erro: erro.message });
@@ -206,6 +243,7 @@ export function criarServidor(opcoes: OpcoesDoServidor): FastifyInstance {
         },
         "Envio para a base",
       );
+      if (resumo.carregados.length + resumo.atualizados.length > 0) classificarEmSegundoPlano(organizacaoId);
       return { resumo, documentos: (await listarDocumentos(banco, organizacaoId)).map(paraTela(hoje())) };
     },
   );
