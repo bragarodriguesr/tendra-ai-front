@@ -30,7 +30,7 @@ npm run dev
 ## Animações por slide
 
 - **01:** o logo animado da capa toca uma vez a cada entrada no slide, no mesmo tamanho do logo estático.
-- **02:** cada fonte (e-mail, PDF, proposta, chat, planilha, pessoas) surge e cresce, uma após a outra, ligada à anterior por um conector limão com o gradiente em movimento da barra de progresso do site. Toca a cada entrada no slide.
+- **02:** cada fonte (e-mail, PDF, proposta, chat, planilha, pessoas) surge e cresce, uma após a outra, ligada à anterior por um conector limão fino com o gradiente em movimento da barra de progresso do site. As fontes flutuam de leve, afastando-se e aproximando-se do centro, e os conectores acompanham. A sequência recomeça a cada 10 s enquanto o slide está na tela.
 - **07:** o chip de IA de cada card usa o mesmo gradiente limão em movimento.
 - **04 e 09:** "A solução" e "O negócio" são escritos letra a letra e dão lugar ao logo animado, sobre o campo Brand Aurora (limão no 04, tinta no 09).
 - **05:** a janela do produto toca o passo 00 (documentos entrando na base).

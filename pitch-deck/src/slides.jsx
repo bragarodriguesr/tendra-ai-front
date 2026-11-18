@@ -150,10 +150,83 @@ function FonteIcone({ fonte }) {
   );
 }
 
-function Problema({ active }) {
-  // A sequência toca de novo a cada entrada no slide.
+// Centro do grupo: as fontes se afastam dele e voltam (flutuação leve).
+const FONTES_CENTRO = { x: FONTES.reduce((t, f) => t + f.x, 0) / FONTES.length, y: FONTES.reduce((t, f) => t + f.y, 0) / FONTES.length };
+const FONTES_CICLO_MS = 10000; // a sequência recomeça a cada 10 s
+const FONTES_SAIDA_MS = 500; // esmaecimento antes de recomeçar
+
+// Posição de cada fonte no instante t (s): vai e volta na direção do centro, com um leve desvio lateral.
+function posicoesDasFontes(t) {
+  return FONTES.map((f, i) => {
+    const dx = f.x - FONTES_CENTRO.x, dy = f.y - FONTES_CENTRO.y, d = Math.hypot(dx, dy) || 1;
+    const radial = 14 * Math.sin((2 * Math.PI * t) / (4.6 + i * 0.35) + i * 1.7);
+    const lateral = 6 * Math.sin((2 * Math.PI * t) / (5.8 + i * 0.27) + i);
+    return { x: f.x + (dx / d) * radial - (dy / d) * lateral, y: f.y + (dy / d) * radial + (dx / d) * lateral };
+  });
+}
+
+/** Uma passada da sequência: as fontes surgem uma a uma e flutuam; os conectores acompanham. */
+function FontesCena({ active, saindo }) {
+  const nodes = React.useRef([]);
+  const links = React.useRef([]);
+  React.useEffect(() => {
+    if (!active || REDUCED) return undefined;
+    let raf = 0;
+    const t0 = performance.now();
+    const frame = (now) => {
+      const pos = posicoesDasFontes((now - t0) / 1000);
+      pos.forEach((p, i) => {
+        const el = nodes.current[i];
+        if (el) el.style.translate = `${p.x - FONTES[i].x}px ${p.y - FONTES[i].y}px`;
+      });
+      links.current.forEach((el, i) => {
+        if (!el) return;
+        const a = pos[i], b = pos[i + 1];
+        el.style.left = `${a.x}px`;
+        el.style.top = `${a.y}px`;
+        el.style.width = `${Math.hypot(b.x - a.x, b.y - a.y)}px`;
+        el.style.transform = `rotate(${(Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI}deg)`;
+      });
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(raf);
+  }, [active]);
+  return (
+    <div className={"fontes" + (saindo ? " is-out" : "")} role="img" aria-label="Fontes espalhadas: e-mail, PDF antigo, proposta anterior, chat, planilha e pessoas">
+      {FONTE_LIGACOES.map((l, i) => (
+        <i key={i} ref={(el) => { links.current[i] = el; }} className="fonte-link" style={{ left: l.x, top: l.y, width: l.len, transform: `rotate(${l.ang}deg)`, "--i": i }} />
+      ))}
+      {FONTES.map((f, i) => (
+        <div key={f.text} ref={(el) => { nodes.current[i] = el; }} className="fonte" style={{ left: f.x, top: f.y, "--i": i }} aria-hidden="true">
+          <span className="fonte-icone"><FonteIcone fonte={f} /></span>
+          <span className="fonte-tag">{f.text}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Toca a sequência ao entrar no slide e a recomeça a cada 10 s enquanto ele está na tela. */
+function Fontes({ active }) {
   const [run, setRun] = React.useState(0);
-  React.useEffect(() => { if (active) setRun((n) => n + 1); }, [active]);
+  const [saindo, setSaindo] = React.useState(false);
+  React.useEffect(() => {
+    if (!active) return undefined;
+    setRun((n) => n + 1);
+    setSaindo(false);
+    if (REDUCED) return undefined;
+    let restart = 0;
+    const ciclo = setInterval(() => {
+      setSaindo(true);
+      restart = setTimeout(() => { setRun((n) => n + 1); setSaindo(false); }, FONTES_SAIDA_MS);
+    }, FONTES_CICLO_MS);
+    return () => { clearInterval(ciclo); clearTimeout(restart); };
+  }, [active]);
+  return <FontesCena key={run} active={active} saindo={saindo} />;
+}
+
+function Problema({ active }) {
   return (
     <>
       <div className="split" style={{ gridTemplateColumns: "minmax(0,1fr) minmax(0,0.85fr)" }}>
@@ -164,17 +237,7 @@ function Problema({ active }) {
           </div>
         </div>
         <div style={{ display: "grid", gap: 24 }}>
-          <div key={run} className="fontes" role="img" aria-label="Fontes espalhadas: e-mail, PDF antigo, proposta anterior, chat, planilha e pessoas">
-            {FONTE_LIGACOES.map((l, i) => (
-              <i key={i} className="fonte-link" style={{ left: l.x, top: l.y, width: l.len, transform: `rotate(${l.ang}deg)`, "--i": i }} />
-            ))}
-            {FONTES.map((f, i) => (
-              <div key={f.text} className="fonte" style={{ left: f.x, top: f.y, "--i": i }} aria-hidden="true">
-                <span className="fonte-icone"><FonteIcone fonte={f} /></span>
-                <span className="fonte-tag">{f.text}</span>
-              </div>
-            ))}
-          </div>
+          <Fontes active={active} />
           <Eyebrow tone="default" size={19}>↳ um processo que hoje envolve, em média, 8 pessoas e mais de 40 horas</Eyebrow>
         </div>
       </div>
