@@ -123,17 +123,37 @@ function Capa({ active }) {
   );
 }
 
-const SCATTER_PATH = "M 12 9 L 88 13 L 22 50 L 91 50 L 29 89 L 88 85 Z";
-const SCATTER_CHIPS = [
-  { text: "E-mail", drift: "a", pos: { top: 10, left: 10 } },
-  { text: "PDF antigo", drift: "b", pos: { top: 30, right: 0 } },
-  { text: "Proposta anterior", drift: "c", pos: { top: 200, left: 40 } },
-  { text: "Chat", drift: "d", pos: { top: 200, right: 20 } },
-  { text: "Planilha", drift: "b", pos: { bottom: 20, left: 130 } },
-  { text: "Pessoas", drift: "a", pos: { bottom: 40, right: 10 } }
+// Slide 02: as fontes espalhadas, uma após a outra, ligadas por um conector limão em gradiente.
+// "mail" e "sheet" vêm do Lucide (ISC), como os demais ícones do DS; o resto usa o <Icon>.
+const FONTE_GLIFOS = {
+  mail: '<path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"></path><rect x="2" y="4" width="20" height="16" rx="2"></rect>',
+  sheet: '<rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M3 9h18"></path><path d="M3 15h18"></path><path d="M9 9v12"></path><path d="M15 9v12"></path>'
+};
+// Centro do ícone de cada fonte, em px, num quadro de 760×580 (zigue-zague de cima para baixo).
+const FONTES = [
+  { text: "E-mail", glifo: "mail", x: 110, y: 66 },
+  { text: "PDF antigo", icon: "file-text", x: 640, y: 84 },
+  { text: "Proposta anterior", icon: "archive", x: 150, y: 276 },
+  { text: "Chat", icon: "message-square", x: 620, y: 288 },
+  { text: "Planilha", glifo: "sheet", x: 120, y: 486 },
+  { text: "Pessoas", icon: "users", x: 640, y: 476 }
 ];
+const FONTE_LIGACOES = FONTES.slice(1).map((b, i) => {
+  const a = FONTES[i];
+  return { x: a.x, y: a.y, len: Math.hypot(b.x - a.x, b.y - a.y), ang: (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI };
+});
 
-function Problema() {
+function FonteIcone({ fonte }) {
+  if (fonte.icon) return <Icon name={fonte.icon} size={48} strokeWidth={1.75} />;
+  return (
+    <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: "block" }} dangerouslySetInnerHTML={{ __html: FONTE_GLIFOS[fonte.glifo] }} />
+  );
+}
+
+function Problema({ active }) {
+  // A sequência toca de novo a cada entrada no slide.
+  const [run, setRun] = React.useState(0);
+  React.useEffect(() => { if (active) setRun((n) => n + 1); }, [active]);
   return (
     <>
       <div className="split" style={{ gridTemplateColumns: "minmax(0,1fr) minmax(0,0.85fr)" }}>
@@ -144,13 +164,15 @@ function Problema() {
           </div>
         </div>
         <div style={{ display: "grid", gap: 24 }}>
-          <div className="scatter">
-            <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-              <path d={SCATTER_PATH} fill="none" stroke="var(--brand-ink)" strokeWidth="4.5" strokeLinecap="round" vectorEffect="non-scaling-stroke" opacity="0.14" />
-              <path className="dash-flow" pathLength="1" d={SCATTER_PATH} fill="none" stroke="var(--brand-lime)" strokeWidth="3" strokeDasharray="0.02 0.05" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-            </svg>
-            {SCATTER_CHIPS.map((c) => (
-              <div key={c.text} className={`scatter-chip drift-${c.drift}`} style={c.pos}>{c.text}</div>
+          <div key={run} className="fontes" role="img" aria-label="Fontes espalhadas: e-mail, PDF antigo, proposta anterior, chat, planilha e pessoas">
+            {FONTE_LIGACOES.map((l, i) => (
+              <i key={i} className="fonte-link" style={{ left: l.x, top: l.y, width: l.len, transform: `rotate(${l.ang}deg)`, "--i": i }} />
+            ))}
+            {FONTES.map((f, i) => (
+              <div key={f.text} className="fonte" style={{ left: f.x, top: f.y, "--i": i }} aria-hidden="true">
+                <span className="fonte-icone"><FonteIcone fonte={f} /></span>
+                <span className="fonte-tag">{f.text}</span>
+              </div>
             ))}
           </div>
           <Eyebrow tone="default" size={19}>↳ um processo que hoje envolve, em média, 8 pessoas e mais de 40 horas</Eyebrow>
@@ -269,9 +291,9 @@ function ComoFunciona({ active }) {
 
 // Mesmo conteúdo da seção "Plataforma AI native" do site, com a divisão entre IA e código explícita.
 const IA_PASSOS = [
-  { t: "Classifica por área", d: "A IA atribui uma área a cada pergunta do edital e a cada documento da base: Produto, Tecnologia, Segurança, Comercial ou Jurídico. Assim cada item chega ao aprovador certo.", tag: "IA + regras" },
+  { t: "Classifica por área", d: "A IA atribui uma área a cada pergunta do edital e a cada documento da base: Produto, Tecnologia, Segurança etc. Assim cada item chega ao aprovador certo.", tag: "IA + regras" },
   { t: "Entende o edital", d: "Lê a planilha e separa as perguntas item por item. Se a estrutura fugir do padrão, a IA localiza as perguntas e a sua equipe confirma a lista.", tag: "IA + regras" },
-  { t: "Redige com a sua base", d: "O modelo cruza cada pergunta com a base aprovada e escreve a resposta citando o documento e o trecho. Citação que não existe no documento é descartada.", tag: "IA com citação" },
+  { t: "Redige com a sua base", d: "O modelo cruza cada pergunta com a base aprovada e escreve a resposta citando o documento e o trecho. Citação que não existe no documento é descartada.", tag: "IA + regras" },
   { t: "Sinaliza contradição", d: "A IA aponta quando as fontes citadas numa resposta se contradizem. Os demais alertas (sem fonte, baixa confiança, base vencida) são regras do código.", tag: "IA + regras" }
 ];
 
