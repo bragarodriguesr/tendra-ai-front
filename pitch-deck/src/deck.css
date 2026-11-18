@@ -94,6 +94,9 @@ button { font-family: inherit; }
 .intro[data-phase="out"] .intro-title, .intro[data-phase="logo"] .intro-title { opacity: 0; transform: scale(1.06); }
 .intro[data-phase="logo"] .intro-logo { opacity: 1; transform: none; }
 @keyframes tdr-caret { 50% { opacity: 0; } }
+/* Capa: título digitado. O que falta já ocupa o lugar (invisível); o cursor não empurra o texto. */
+.type-rest { visibility: hidden; }
+.type-caret { display: inline-block; width: 8px; height: 0.82em; margin: 0 -12px -0.06em 4px; vertical-align: baseline; background: currentColor; animation: tdr-caret 0.9s steps(2, jump-none) infinite; }
 
 /* Slides 05 e 06: janela do produto, a mesma demonstração do site. */
 .deck-demo { border-radius: 24px; box-shadow: var(--shadow-popover); }
@@ -143,7 +146,7 @@ button { font-family: inherit; }
 .avatar { width: 88px; height: 88px; border-radius: 50%; background: var(--surface-sunken); border: 1px solid var(--border-strong); }
 
 @media (prefers-reduced-motion: reduce) {
-  .fonte, .fonte-link, .ai-chip, .rise-1, .rise-2, .rise-3, .rise-4, .rise-5, .roadmap-line, .roadmap-step, .intro-caret { animation: none; }
+  .fonte, .fonte-link, .ai-chip, .rise-1, .rise-2, .rise-3, .rise-4, .rise-5, .roadmap-line, .roadmap-step, .intro-caret, .type-caret { animation: none; }
   .carousel-track, .intro-title, .intro-logo { transition: none; }
 }
 

@@ -39,6 +39,10 @@ const REDUCED = typeof matchMedia === "function" && matchMedia("(prefers-reduced
 
 // Abertura de seção (slides 04 e 09): o título é escrito letra a letra e dá lugar ao logo animado,
 // sobre o campo Aurora do slide. Recomeça a cada entrada no slide; com movimento reduzido, mostra o logo.
+// Digitação dos títulos (capa e aberturas de seção): começa após 500 ms, uma letra a cada 110 ms.
+const DIGITA_INICIO_MS = 500;
+const DIGITA_LETRA_MS = 110;
+
 function SectionIntro({ active, title, logo }) {
   const [typed, setTyped] = React.useState(REDUCED ? title.length : 0);
   const [phase, setPhase] = React.useState(REDUCED ? "logo" : "typing");
@@ -49,8 +53,8 @@ function SectionIntro({ active, title, logo }) {
     setPhase("typing");
     const timers = [];
     const later = (ms, fn) => timers.push(setTimeout(fn, ms));
-    let t = 500;
-    for (let k = 1; k <= title.length; k++) later((t += 110), () => setTyped(k));
+    let t = DIGITA_INICIO_MS;
+    for (let k = 1; k <= title.length; k++) later((t += DIGITA_LETRA_MS), () => setTyped(k));
     later((t += 1100), () => setPhase("out"));
     later((t += 650), () => { setPhase("logo"); ref.current?.replay?.(); });
     return () => timers.forEach(clearTimeout);
@@ -99,8 +103,57 @@ function ContrastCard({ positive, label, items, gap = 24, itemGap = 18 }) {
 const CAPA_LOGO_ALTURA = 64;
 const CAPA_LOGO_FINAL = 5; // segundos: quadro com o logo completo (o mesmo do `once` e do movimento reduzido)
 
+// Título da capa em trechos: o do meio leva o realce limão.
+const CAPA_TITULO = [{ t: "Responda a um RFP em " }, { t: "horas", mark: true }, { t: ", não semanas." }];
+const CAPA_TITULO_TEXTO = CAPA_TITULO.map((p) => p.t).join("");
+const CAPA_CURSOR_MS = 1400; // o cursor pisca mais um pouco depois da última letra
+
+/**
+ * Título digitado letra a letra. O texto inteiro já ocupa o lugar (o que falta fica invisível),
+ * então as linhas não se mexem durante a digitação. O realce de "horas" cresce junto com as letras.
+ */
+function TituloDigitado({ typed, cursor }) {
+  // O cursor fica no primeiro trecho ainda incompleto (ou no fim, quando tudo foi digitado).
+  let inicio = 0;
+  const trechos = CAPA_TITULO.map((p) => {
+    const n = Math.max(0, Math.min(p.t.length, typed - inicio));
+    inicio += p.t.length;
+    return { ...p, feito: p.t.slice(0, n), falta: p.t.slice(n) };
+  });
+  const incompleto = trechos.findIndex((p) => p.falta);
+  const comCursor = incompleto === -1 ? trechos.length - 1 : incompleto;
+  return trechos.map((p, i) => {
+    const caret = cursor && i === comCursor ? <span className="type-caret" /> : null;
+    if (!p.mark) {
+      return <React.Fragment key={i}>{p.feito}{caret}{p.falta ? <span className="type-rest">{p.falta}</span> : null}</React.Fragment>;
+    }
+    // Realce partido em dois enquanto digita: o padding de cada lado fica com a sua metade.
+    return (
+      <React.Fragment key={i}>
+        {p.feito ? <span className="mark" style={p.falta ? { paddingRight: 0 } : undefined}>{p.feito}</span> : null}
+        {caret}
+        {p.falta ? <span className="mark type-rest" style={p.feito ? { paddingLeft: 0 } : undefined}>{p.falta}</span> : null}
+      </React.Fragment>
+    );
+  });
+}
+
 function Capa({ active }) {
   const ref = React.useRef(null);
+  // Título: digitado a cada entrada no slide; fora dele (e no PDF), inteiro.
+  const total = CAPA_TITULO_TEXTO.length;
+  const [typed, setTyped] = React.useState(total);
+  const [cursor, setCursor] = React.useState(false);
+  React.useLayoutEffect(() => {
+    if (!active || REDUCED) { setTyped(total); setCursor(false); return undefined; }
+    setTyped(0);
+    setCursor(true);
+    const timers = [];
+    let t = DIGITA_INICIO_MS;
+    for (let k = 1; k <= total; k++) timers.push(setTimeout(() => setTyped(k), (t += DIGITA_LETRA_MS)));
+    timers.push(setTimeout(() => setCursor(false), t + CAPA_CURSOR_MS));
+    return () => timers.forEach(clearTimeout);
+  }, [active, total]);
   // Toca uma vez a cada entrada no slide; fora dele (e no PDF), fica no quadro completo.
   React.useLayoutEffect(() => {
     const el = ref.current;
@@ -112,8 +165,8 @@ function Capa({ active }) {
   return (
     <>
       <AnimatedLogo ref={ref} variant="ink" bare once style={{ width: 224 * k, marginLeft: -4 * k }} title="Tendra.ai" />
-      <h1 className="title" style={{ fontSize: "var(--type-display)", lineHeight: 1.02, letterSpacing: "-0.04em", margin: "auto 0 48px", maxWidth: "17ch" }}>
-        Responda a um RFP em <span className="mark">horas</span>, não semanas.
+      <h1 className="title" aria-label={CAPA_TITULO_TEXTO} style={{ fontSize: "var(--type-display)", lineHeight: 1.02, letterSpacing: "-0.04em", margin: "auto 0 48px", maxWidth: "17ch" }}>
+        <span aria-hidden="true"><TituloDigitado typed={typed} cursor={cursor} /></span>
       </h1>
       <div className="footer-rule" style={{ borderTop: "1px solid var(--ink-500)" }}>
         <div style={{ fontSize: "var(--type-lead)", lineHeight: 1.5, color: "var(--ink-200)", maxWidth: "42ch" }}>O cérebro comercial e técnico da sua operação.</div>
@@ -285,7 +338,7 @@ function Produto() {
         <div style={{ display: "grid", gap: 28 }}>
           <Heading maxWidth="16ch">Uma plataforma que transforma dado desestruturado em resposta revisada e aprovada.</Heading>
           <div style={{ fontSize: "var(--type-body)", lineHeight: 1.5, color: "var(--text-body)", maxWidth: "36ch" }}>
-            A empresa sobe os seus documentos e a Tendra.ai responde a partir deles — no lugar de um processo que hoje exige, em média, 8 pessoas e mais de 40 horas por proposta.
+            A empresa sobe os seus documentos e a Tendra.ai responde a partir deles.
           </div>
           <div className="chips">
             <Chip tone="approved">Conhecimento centralizado</Chip>
