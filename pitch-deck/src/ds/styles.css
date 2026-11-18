@@ -1,5 +1,5 @@
 /* Cópia dos tokens do design system Tendra.ai (origem: src/ds do site principal).
-   Sem dataviz e sem gradientes: o deck não usa nenhum dos dois. */
+   Sem dataviz. Os gradientes (Brand Aurora) entram só nos slides em que foram pedidos: 04, 09 e 16. */
 @import "./tokens/fonts.css";
 @import "./tokens/colors.css";
 @import "./tokens/typography.css";
@@ -7,3 +7,4 @@
 @import "./tokens/radii.css";
 @import "./tokens/elevation.css";
 @import "./tokens/motion.css";
+@import "./tokens/gradients.css";
