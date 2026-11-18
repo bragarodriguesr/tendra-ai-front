@@ -34,6 +34,9 @@ button { font-family: inherit; }
 .slide--paper { background: var(--brand-paper); color: var(--text-strong); }
 .slide--ink { background: var(--brand-ink); color: var(--brand-paper); }
 .slide--lime { background: var(--brand-lime); color: var(--brand-ink); }
+/* Brand Aurora: só nos slides 04 e 16 (campo limão, texto em tinta) e 09 (campo tinta, texto em papel), por pedido. */
+.slide--aurora-lime { background: var(--grad-aurora-lime); color: var(--brand-ink); }
+.slide--aurora-ink { background: var(--grad-aurora-ink); color: var(--brand-paper); }
 
 /* ---- Controles ---- */
 .deck-controls { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; align-items: center; gap: var(--space-1); padding: var(--space-1); background: var(--surface-inverse-card); border: 1px solid var(--border-inverse-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-overlay); transition: opacity var(--duration-base) var(--ease-out); }
@@ -50,6 +53,7 @@ button { font-family: inherit; }
 .cols { display: grid; gap: 32px; flex: 1; }
 .cols--2 { grid-template-columns: repeat(2, 1fr); }
 .cols--3 { grid-template-columns: repeat(3, 1fr); }
+.cols--4 { grid-template-columns: repeat(4, 1fr); }
 .split { display: grid; gap: 64px; align-items: center; flex: 1; }
 .stack { display: grid; align-content: start; }
 .card-title { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.02em; }
@@ -72,22 +76,73 @@ button { font-family: inherit; }
 @keyframes tdr-dash-flow { to { stroke-dashoffset: -1; } }
 .dash-flow { animation: tdr-dash-flow 2.6s linear infinite; }
 
-/* Slide 06: os três passos sobem em sequência a cada entrada no slide. */
-.rise-1, .rise-2, .rise-3 { animation: tdr-rise var(--duration-slow) var(--ease-out) both; }
+/* Slides 07 e 08: os cards sobem em sequência a cada entrada no slide. */
+.rise-1, .rise-2, .rise-3, .rise-4, .rise-5 { animation: tdr-rise var(--duration-slow) var(--ease-out) both; }
 .rise-1 { animation-delay: 0.1s; }
-.rise-2 { animation-delay: 0.35s; }
-.rise-3 { animation-delay: 0.6s; }
+.rise-2 { animation-delay: 0.3s; }
+.rise-3 { animation-delay: 0.5s; }
+.rise-4 { animation-delay: 0.7s; }
+.rise-5 { animation-delay: 0.9s; }
 
-/* Slide 15: linha do tempo. */
-.roadmap { position: relative; flex: 1; display: flex; align-items: stretch; padding-top: 34px; }
-.roadmap-line { position: absolute; top: 48px; left: 0; right: 0; height: 2px; background: var(--border-strong); }
-.roadmap-steps { display: flex; justify-content: space-between; gap: 18px; width: 100%; list-style: none; margin: 0; padding: 0; }
-.roadmap-step { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 22px; position: relative; }
+/* Slides 04 e 09: o título é escrito e dá lugar ao logo animado, no centro. */
+.intro { position: relative; flex: 1; display: grid; place-items: center; }
+.intro-title, .intro-logo { grid-area: 1 / 1; }
+.intro-print { display: none; grid-area: 1 / 1; font-size: 150px; line-height: 1; letter-spacing: -0.04em; }
+.intro-title { font-size: 150px; line-height: 1; letter-spacing: -0.04em; display: flex; align-items: center; transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out); }
+.intro-caret { display: inline-block; width: 8px; height: 0.9em; margin-left: 10px; background: currentColor; animation: tdr-caret 0.9s steps(2, jump-none) infinite; }
+.intro-logo { opacity: 0; transform: scale(0.94); transition: opacity 700ms var(--ease-out), transform 900ms var(--ease-out); }
+.intro[data-phase="out"] .intro-title, .intro[data-phase="logo"] .intro-title { opacity: 0; transform: scale(1.06); }
+.intro[data-phase="logo"] .intro-logo { opacity: 1; transform: none; }
+@keyframes tdr-caret { 50% { opacity: 0; } }
+
+/* Slides 05 e 06: janela do produto, a mesma demonstração do site. */
+.deck-demo { border-radius: 24px; box-shadow: var(--shadow-popover); }
+.demo-caption { display: flex; align-items: center; justify-content: center; gap: 14px; background: var(--lime-wash); border: 1px solid var(--brand-lime); border-radius: var(--radius-lg); padding: 18px 22px; font-size: 26px; font-weight: 600; color: var(--brand-ink); }
+.demo-caption-mark { display: inline-flex; color: var(--state-ink); }
+
+/* Slide 06: carrossel dos passos 01 a 04, da direita para a esquerda. */
+.carousel { position: relative; flex: 1; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 28px; }
+.carousel-view { overflow: hidden; min-height: 0; }
+.carousel-track { display: flex; height: 100%; transition: transform 700ms var(--ease-in-out); }
+.carousel-panel { flex: 0 0 100%; display: grid; grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr); gap: 64px; align-items: center; padding: 0 4px; }
+.step-text { display: grid; gap: 22px; align-content: center; }
+.step-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 14px; }
+.step-list li { display: flex; gap: 14px; align-items: flex-start; font-size: 25px; line-height: 1.4; color: var(--text-strong); }
+.step-check { flex: none; margin-top: 4px; width: 28px; height: 28px; border-radius: 7px; background: var(--brand-lime); color: var(--brand-ink); display: inline-flex; align-items: center; justify-content: center; }
+.carousel-arrow { position: absolute; top: calc(50% - 46px); width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--border-strong); background: var(--surface-card); color: var(--brand-ink); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow-popover); transition: background var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out); z-index: 2; }
+.carousel-arrow:hover:not(:disabled) { background: var(--n-100); }
+.carousel-arrow:disabled { opacity: 0.3; cursor: default; }
+.carousel-arrow--prev { left: -112px; }
+.carousel-arrow--next { right: -112px; }
+.carousel-dots { display: flex; justify-content: center; gap: 12px; }
+.carousel-dots span { width: 12px; height: 12px; border-radius: 50%; background: var(--border-strong); transition: background var(--duration-base) var(--ease-out), width var(--duration-base) var(--ease-out); }
+.carousel-dots span.is-on { width: 36px; border-radius: 6px; background: var(--brand-ink); }
+
+/* Slide 07: plataforma AI native. */
+.ai-head { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 64px; align-items: end; margin-bottom: 40px; }
+.ai-chip { width: 50px; height: 50px; border-radius: var(--radius-lg); background: var(--brand-lime); color: var(--brand-ink); display: flex; align-items: center; justify-content: center; }
+.ai-tag { display: inline-flex; padding: 6px 16px; border-radius: 99px; border: 1px solid var(--border-strong); font-family: var(--font-mono); font-size: 18px; letter-spacing: 0.04em; color: var(--text-body); background: var(--surface-card); }
+.ai-split { margin-top: 36px; display: grid; grid-template-columns: 1fr 1fr; gap: 32px; border-top: 2px solid var(--brand-ink); padding-top: 24px; font-size: 23px; line-height: 1.45; color: var(--text-body); }
+.ai-split b { color: var(--text-strong); }
+
+/* Slide 08: stack, uma linha por peça. */
+.stack-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
+.stack-row { display: grid; grid-template-columns: 172px 380px minmax(0, 1fr); gap: 32px; align-items: center; background: var(--surface-card); border: 1px solid var(--border-default); border-radius: var(--radius-deck-card); padding: 20px 32px; }
+.stack-logos { display: flex; gap: 12px; }
+.stack-logo { width: 72px; height: 72px; border-radius: var(--radius-lg); background: var(--surface-sunken); border: 1px solid var(--border-default); display: inline-flex; align-items: center; justify-content: center; }
+
+/* Slide 15: linha do tempo; a linha cresce e cada ponto aparece em seguida, uma vez por entrada. */
+.roadmap { position: relative; flex: 1; display: flex; align-items: stretch; padding-top: 34px; --step-ms: 650ms; }
+.roadmap-line { position: absolute; top: 48px; left: 0; right: 0; height: 2px; background: var(--border-strong); transform-origin: left center; animation: tdr-grow calc(var(--step-ms) * var(--steps)) linear both; }
+.roadmap-steps { display: flex; justify-content: space-between; gap: 24px; width: 100%; list-style: none; margin: 0; padding: 0; }
+.roadmap-step { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 22px; position: relative; animation: tdr-rise 520ms var(--ease-out) both; animation-delay: calc(var(--step-ms) * var(--i) + 120ms); }
+@keyframes tdr-grow { from { transform: scaleX(0); } }
 
 .avatar { width: 88px; height: 88px; border-radius: 50%; background: var(--surface-sunken); border: 1px solid var(--border-strong); }
 
 @media (prefers-reduced-motion: reduce) {
-  .drift-a, .drift-b, .drift-c, .drift-d, .dash-flow, .rise-1, .rise-2, .rise-3 { animation: none; }
+  .drift-a, .drift-b, .drift-c, .drift-d, .dash-flow, .rise-1, .rise-2, .rise-3, .rise-4, .rise-5, .roadmap-line, .roadmap-step, .intro-caret { animation: none; }
+  .carousel-track, .intro-title, .intro-logo { transition: none; }
 }
 
 /* ---- Impressão / PDF: um slide por página, em 1920×1080 ---- */
@@ -101,4 +156,7 @@ button { font-family: inherit; }
   .slide:last-child { break-after: auto; }
   .slide * { animation: none !important; }
   .deck-controls, .deck-notes { display: none; }
+  /* Aberturas de seção no PDF: o título inteiro, sem a animação. */
+  .intro-title, .intro-logo { display: none; }
+  .intro-print { display: block; }
 }

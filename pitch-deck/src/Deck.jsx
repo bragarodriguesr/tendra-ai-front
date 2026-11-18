@@ -113,7 +113,8 @@ export function Deck({ slides }) {
           const Slide = s.Component;
           const active = i === index;
           return (
-            <section key={s.label} className={`slide slide--${s.tone}`} aria-label={`${pad(i + 1)} — ${s.label}`} hidden={!active}>
+            // Campos Aurora (slides 04, 09 e 16, por pedido) derivam devagar enquanto o slide está na tela.
+            <section key={s.label} className={`slide slide--${s.tone}`} data-aurora={active && s.tone.startsWith("aurora") ? "move" : undefined} aria-label={`${pad(i + 1)} — ${s.label}`} hidden={!active}>
               <Slide active={active} />
             </section>
           );

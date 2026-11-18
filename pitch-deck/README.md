@@ -23,7 +23,18 @@ npm run dev
 - `src/slides.jsx`: conteúdo dos slides e a lista `SLIDES` (ordem, campo e notas).
 - `src/Deck.jsx`: palco, que escala o slide para a janela e cuida da navegação.
 - `src/deck.css`: escala tipográfica do slide, animações e impressão.
-- `src/ds/`: cópia do subconjunto do design system Tendra.ai usado pelo deck (tokens, `Logo`, `MonoLabel`, `Card`, `Badge`, `Icon`, `IconButton`). A origem é `src/ds` do site principal; ao mudar o design system lá, replique aqui.
+- `src/ds/`: cópia do subconjunto do design system Tendra.ai usado pelo deck (tokens, `Logo`, `AnimatedLogo`, `MonoLabel`, `Card`, `Badge`, `Icon`, `IconButton` e os gradientes do Brand Aurora). A origem é `src/ds` do site principal; ao mudar o design system lá, replique aqui.
+- `src/demo/`: cópia das demonstrações animadas do site ("O produto em ação", passos 00 a 04), usadas nos slides 05 e 06. Só o cursor foi ajustado à escala do deck.
+- `src/stack-icons.js`: marcas da stack do slide 08 (Simple Icons, CC0), desenhadas em tinta.
+
+## Animações por slide
+
+- **04 e 09:** "A solução" e "O negócio" são escritos letra a letra e dão lugar ao logo animado, sobre o campo Brand Aurora (limão no 04, tinta no 09).
+- **05:** a janela do produto toca o passo 00 (documentos entrando na base).
+- **06:** carrossel com os passos 01 a 04; as setas laterais do slide trazem o passo seguinte da direita para a esquerda.
+- **15:** a linha do roadmap cresce e cada ponto aparece em seguida, uma vez a cada entrada no slide.
+- **16:** fundo Brand Aurora (limão), em movimento lento.
+- Com movimento reduzido, tudo aparece parado no estado final. No PDF, os slides 04 e 09 mostram o título.
 
 ## Publicação (Vercel)
 
