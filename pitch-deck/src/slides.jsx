@@ -95,10 +95,23 @@ function ContrastCard({ positive, label, items, gap = 24, itemGap = 18 }) {
 
 /* ---- Slides ---- */
 
-function Capa() {
+// Logo animado na proporção do estático (símbolo de 64 px: viewBox de 224×48, com 4 de folga à esquerda).
+const CAPA_LOGO_ALTURA = 64;
+const CAPA_LOGO_FINAL = 5; // segundos: quadro com o logo completo (o mesmo do `once` e do movimento reduzido)
+
+function Capa({ active }) {
+  const ref = React.useRef(null);
+  // Toca uma vez a cada entrada no slide; fora dele (e no PDF), fica no quadro completo.
+  React.useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (active && !REDUCED) el.replay?.();
+    else { el.pause?.(); el.currentTime = CAPA_LOGO_FINAL; }
+  }, [active]);
+  const k = CAPA_LOGO_ALTURA / 48;
   return (
     <>
-      <Logo variant="ink" size={64} />
+      <AnimatedLogo ref={ref} variant="ink" bare once style={{ width: 224 * k, marginLeft: -4 * k }} title="Tendra.ai" />
       <h1 className="title" style={{ fontSize: "var(--type-display)", lineHeight: 1.02, letterSpacing: "-0.04em", margin: "auto 0 48px", maxWidth: "17ch" }}>
         Responda a um RFP em <span className="mark">horas</span>, não semanas.
       </h1>
@@ -256,24 +269,19 @@ function ComoFunciona({ active }) {
 
 // Mesmo conteúdo da seção "Plataforma AI native" do site, com a divisão entre IA e código explícita.
 const IA_PASSOS = [
+  { t: "Classifica por área", d: "A IA atribui uma área a cada pergunta do edital e a cada documento da base: Produto, Tecnologia, Segurança, Comercial ou Jurídico. Assim cada item chega ao aprovador certo.", tag: "IA + regras" },
   { t: "Entende o edital", d: "Lê a planilha e separa as perguntas item por item. Se a estrutura fugir do padrão, a IA localiza as perguntas e a sua equipe confirma a lista.", tag: "IA + regras" },
   { t: "Redige com a sua base", d: "O modelo cruza cada pergunta com a base aprovada e escreve a resposta citando o documento e o trecho. Citação que não existe no documento é descartada.", tag: "IA com citação" },
-  { t: "Sinaliza contradição", d: "A IA aponta quando as fontes citadas numa resposta se contradizem. Os demais alertas (sem fonte, baixa confiança, base vencida) são regras do código.", tag: "IA + regras" },
-  { t: "A pessoa aprova", d: "Nada é aprovado nem exportado pela IA. O revisor responsável decide, e a trilha de auditoria registra.", tag: "Pessoa decide" }
+  { t: "Sinaliza contradição", d: "A IA aponta quando as fontes citadas numa resposta se contradizem. Os demais alertas (sem fonte, baixa confiança, base vencida) são regras do código.", tag: "IA + regras" }
 ];
 
 function PlataformaIA() {
   return (
     <>
-      <div className="ai-head">
-        <Heading maxWidth="24ch" style={{ fontSize: 56, lineHeight: 1.1 }}>A IA não é um recurso extra. É como a Tendra.ai foi construída.</Heading>
-        <div style={{ fontSize: 25, lineHeight: 1.5, color: "var(--text-body)" }}>
-          Cada etapa da resposta passa por um modelo de linguagem, sempre sob regras que garantem fonte, privacidade e revisão humana. A IA sugere; a sua equipe decide.
-        </div>
-      </div>
+      <Heading maxWidth="30ch" style={{ fontSize: 56, lineHeight: 1.1, marginBottom: 40 }}>A IA não é um recurso extra. É como a Tendra.ai foi construída.</Heading>
       <div className="cols cols--4" style={{ flex: "none" }}>
         {IA_PASSOS.map((p, i) => (
-          <DeckCard key={p.t} className={`stack rise-${i + 1}`} style={{ padding: 28, gap: 14 }}>
+          <DeckCard key={p.t} className={`stack ai-card rise-${i + 1}`} style={{ padding: 28, gap: 14 }}>
             <span className="ai-chip" aria-hidden="true"><Icon name="sparkles" size={24} /></span>
             <div className="card-title" style={{ fontSize: 28, lineHeight: 1.2 }}>{p.t}</div>
             <div style={{ fontSize: 21, lineHeight: 1.45, color: "var(--text-body)" }}>{p.d}</div>
@@ -281,9 +289,8 @@ function PlataformaIA() {
           </DeckCard>
         ))}
       </div>
-      <div className="ai-split">
-        <div><b>A IA faz três coisas:</b> identifica as perguntas, redige a resposta com a fonte e sinaliza contradição entre fontes.</div>
-        <div><b>O resto é código determinístico:</b> conferir cada citação contra o documento, calcular os alertas, aplicar as permissões por área e montar a planilha.</div>
+      <div className="ai-foot">
+        Cada etapa da resposta passa por um modelo de linguagem, sempre sob regras que garantem fonte, privacidade e revisão humana. Uma combinação inteligente de IA com guardrails em código determinístico. <b>A IA sugere; a sua equipe decide.</b>
       </div>
     </>
   );
@@ -511,7 +518,7 @@ export const SLIDES = [
   { label: "Seção: A solução", tone: "aurora-lime", Component: SecaoSolucao, notes: "Transição para a apresentação do produto: \"A solução\" é escrita e dá lugar ao logo animado." },
   { label: "Introduzindo Tendra.ai", tone: "paper", Component: Produto, notes: "Apresentar o produto como cérebro comercial e técnico da empresa. A janela mostra o passo 00: documentos entrando na base." },
   { label: "Como funciona", tone: "paper", Component: ComoFunciona, notes: "Carrossel com os passos 01 a 04 (importar, gerar com fonte, revisar e aprovar, exportar). Avance com as setas laterais do slide." },
-  { label: "Plataforma AI native", tone: "paper", Component: PlataformaIA, notes: "A IA faz três coisas no fluxo (identifica perguntas, redige com fonte, sinaliza contradição); o resto é código determinístico, e a pessoa aprova." },
+  { label: "Plataforma AI native", tone: "paper", Component: PlataformaIA, notes: "A IA classifica perguntas e documentos por área, entende o edital, redige com fonte e sinaliza contradição; guardrails em código determinístico conferem tudo, e a pessoa aprova." },
   { label: "Arquitetura técnica", tone: "paper", Component: Arquitetura, notes: "A stack: Claude pela API da Anthropic, GitHub, Supabase, Render e Vercel, e o papel de cada um no produto." },
   { label: "Seção: O negócio", tone: "aurora-ink", Component: SecaoNegocio, notes: "Transição para cliente, modelo de receita e escopo do MVP: \"O negócio\" é escrito e dá lugar ao logo animado." },
   { label: "Cliente ideal", tone: "paper", Component: ClienteIdeal, notes: "Descrever o ICP: vertical, porte e personas." },

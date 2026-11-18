@@ -29,6 +29,7 @@ npm run dev
 
 ## Animações por slide
 
+- **01:** o logo animado da capa toca uma vez a cada entrada no slide, no mesmo tamanho do logo estático.
 - **04 e 09:** "A solução" e "O negócio" são escritos letra a letra e dão lugar ao logo animado, sobre o campo Brand Aurora (limão no 04, tinta no 09).
 - **05:** a janela do produto toca o passo 00 (documentos entrando na base).
 - **06:** carrossel com os passos 01 a 04; as setas laterais do slide trazem o passo seguinte da direita para a esquerda.
