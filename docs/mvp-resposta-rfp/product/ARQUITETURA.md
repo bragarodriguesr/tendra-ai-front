@@ -1,6 +1,6 @@
 # Arquitetura essencial: backend do MVP, do fluxo local à publicação compartilhada
 
-*Proposta de 21/10/2026, reescrita em 21/10/2026 para combinar este caminho (risco primeiro, local) com as partes úteis de `docs/referencia/mvp-proposta-1/` (revisão persistida, métrica de aceitação e, no fim, login e hospedagem). Atualizada em 02/11/2026 com o que foi implementado até a fase M: decisões pendentes já tomadas, fases novas, itens que saíram de "Fora do MVP" e a situação das exceções. Revista em 07/11/2026 com as fases N (áreas), O (ciclo de vida da tarefa) e P (ordenação nos detalhes da tarefa), as migrações 011 a 013 e novos pontos de atenção. Status: `draft`.*
+*Proposta de 21/10/2026, reescrita em 21/10/2026 para combinar este caminho (risco primeiro, local) com as partes úteis de `docs/referencia/mvp-proposta-1/` (revisão persistida, métrica de aceitação e, no fim, login e hospedagem). Atualizada em 02/11/2026 com o que foi implementado até a fase M: decisões pendentes já tomadas, fases novas, itens que saíram de "Fora do MVP" e a situação das exceções. Revista em 07/11/2026 com as fases N (áreas), O (ciclo de vida da tarefa) e P (ordenação nos detalhes da tarefa), as migrações 011 a 013 e novos pontos de atenção. Revista em 18/11/2026 com as fases Q (gestão de usuários pelo Aprovador), S (área e etiquetas do item na Revisão), T (papéis e cadastro de usuários) e U (seleção da base por área, migrações 014 a 016). Status: `draft`.*
 
 ## Objetivo
 
@@ -25,7 +25,7 @@ Tudo o que não serve a esses três objetivos fica de fora (seção 6).
 
 ## 1. Visão geral
 
-*Descrição de 02/11/2026, revista em 07/11/2026, da arquitetura em funcionamento, feita a partir do código: `vercel.json`, `render.yaml`, `vite.config.js`, `src/api.js`, `backend/src/`, `backend/migracoes/` e `.github/workflows/`. Os pontos de atenção estão na seção 11.*
+*Descrição de 02/11/2026, revista em 07/11/2026 e em 18/11/2026, da arquitetura em funcionamento, feita a partir do código: `vercel.json`, `render.yaml`, `vite.config.js`, `src/api.js`, `backend/src/`, `backend/migracoes/` e `.github/workflows/`. Os pontos de atenção estão na seção 11.*
 
 ### 1.1 As partes da aplicação
 
@@ -71,14 +71,14 @@ flowchart LR
   end
 
   subgraph render["Render · plano gratuito · Virginia"]
-    backend["Backend Node 24 + Fastify<br/>login e sessão · organizações<br/>base de conhecimento · tarefas<br/>revisão e aprovação · histórico"]
+    backend["Backend Node 24 + Fastify<br/>login e sessão · organizações<br/>gestão de usuários<br/>base de conhecimento · tarefas<br/>revisão e aprovação · histórico"]
     processamento["Processamento em segundo plano<br/>leitura da planilha · áreas<br/>respostas com citações · conflitos"]
   end
 
   subgraph supabase["Supabase"]
-    postgres[("Postgres<br/>16 tabelas · migrações 001 a 013")]
+    postgres[("Postgres<br/>16 tabelas · migrações 001 a 016")]
     storage[("Storage<br/>bucket privado rfps")]
-    auth["Auth<br/>e-mail e senha"]
+    auth["Auth<br/>e-mail e senha · consulta de contas"]
   end
 
   subgraph anthropic["Anthropic"]
@@ -97,7 +97,7 @@ flowchart LR
   backend --> processamento
   backend -->|"SQL"| postgres
   backend -->|"planilhas"| storage
-  backend -->|"confere a senha"| auth
+  backend -->|"confere a senha<br/>procura a conta pelo e-mail"| auth
   processamento -->|"SQL"| postgres
   processamento -->|"API com a chave do cofre"| sonnet
   processamento --> haiku
@@ -188,6 +188,7 @@ sequenceDiagram
 **O que o backend faz, rodando no Render:**
 - login, sessão e papéis (Revisor e Aprovador);
 - separação dos dados por organização;
+- gestão de usuários pelo Aprovador no "Painel de Usuários": listar, adicionar com papel, áreas e situação, mudar o papel e as áreas, desativar e reativar o acesso (fases Q e T);
 - carga e validação dos documentos `.md` da base de conhecimento;
 - leitura da planilha da RFP e identificação das perguntas;
 - classificação da área de cada pergunta e aprovação só pela área (fase N);
@@ -208,11 +209,11 @@ A Tendra.ai usa três serviços do Supabase, sempre a partir do backend. O front
 
 | Serviço | Papel | O que guarda ou faz |
 |---|---|---|
-| **Postgres** (banco de dados) | Guarda os dados da aplicação | Organizações, perfis (com as áreas do Aprovador), sessões e tentativas de login; documentos da base (com as áreas) e os blocos citáveis de cada um; tarefas (com a situação: em andamento, finalizada ou arquivada), itens (com a área e o contexto de onde veio a resposta), respostas, fontes, alertas e o histórico da revisão; o histórico das ações sobre as tarefas; empresas e contatos. São 16 tabelas, criadas pelas migrações em `backend/migracoes/` (001 a 015), aplicadas pelo backend ao iniciar |
+| **Postgres** (banco de dados) | Guarda os dados da aplicação | Organizações, perfis (com as áreas do Aprovador), sessões e tentativas de login; documentos da base (com as áreas) e os blocos citáveis de cada um; tarefas (com a situação: em andamento, finalizada ou arquivada), itens (com a área e o contexto de onde veio a resposta), respostas, fontes, alertas e o histórico da revisão; o histórico das ações sobre as tarefas; empresas e contatos. São 16 tabelas, criadas pelas migrações em `backend/migracoes/` (001 a 016), aplicadas pelo backend ao iniciar |
 | **Storage** (arquivos) | Guarda as planilhas | Bucket privado `rfps`, com as planilhas enviadas e as preenchidas, separadas por organização. Só o backend lê e grava, com a chave de serviço |
-| **Auth** (autenticação) | Confere e-mail e senha | O backend pergunta ao Supabase se o par confere e recebe o id da conta. **A senha nunca é guardada pela Tendra.ai.** As contas são criadas no painel do Supabase e ligadas a um perfil (nome, papel e organização) pelo comando `cadastrar-perfil` |
+| **Auth** (autenticação) | Confere e-mail e senha; encontra a conta pelo e-mail | O backend pergunta ao Supabase se o par confere e recebe o id da conta. **A senha nunca é guardada pela Tendra.ai.** As contas continuam sendo criadas no painel do Supabase. O perfil (nome, papel, áreas, situação e organização) é ligado à conta pelo "Painel de Usuários" (fases Q e T), que procura a conta pelo e-mail na API de administração do Supabase Auth com a chave de serviço, ou pelo comando `cadastrar-perfil` |
 
-**Sessão:** depois da conferência da senha, a sessão é do próprio backend, não do Supabase. O backend cria um identificador, guarda só o hash dele na tabela `sessoes` e envia o valor num cookie. Sair apaga a sessão na hora; ela também expira depois de 8 horas sem uso (`TENDRA_SESSAO_HORAS`).
+**Sessão:** depois da conferência da senha, a sessão é do próprio backend, não do Supabase. O backend cria um identificador, guarda só o hash dele na tabela `sessoes` e envia o valor num cookie. Sair apaga a sessão na hora; ela também expira depois de 8 horas sem uso (`TENDRA_SESSAO_HORAS`). O papel e as áreas são lidos do perfil a cada pedido: uma mudança feita no "Painel de Usuários" vale no pedido seguinte da pessoa, sem novo login, e desativar o acesso apaga as sessões dela (fase Q).
 
 #### Anthropic: a IA (Claude)
 
@@ -242,7 +243,7 @@ As perguntas vão em lotes (`TENDRA_TAMANHO_LOTE`, padrão 10). Desde a fase U, 
 | `front.yml` | Build do front e a jornada de ponta a ponta no navegador (Playwright), com o backend usando a API simulada |
 | `backend.yml` | Tipos do TypeScript e testes do backend no PGlite e num Postgres 16; varredura de segredos (gitleaks) |
 
-O `front.yml` ainda não roda os testes unitários do front (`npm test`, 27 testes em 07/11/2026). Os pull requests também mostram as verificações das integrações da Vercel ("Vercel" e "Vercel Preview Comments") e do Supabase ("Supabase Preview", hoje pulada).
+O `front.yml` ainda não roda os testes unitários do front (`npm test`, 45 testes em 18/11/2026). Os pull requests também mostram as verificações das integrações da Vercel ("Vercel" e "Vercel Preview Comments") e do Supabase ("Supabase Preview", hoje pulada).
 
 ### 1.4 Modo local (desenvolvimento)
 
@@ -466,11 +467,14 @@ A organização das pastas está no `PLAN.md`.
 | **N. Áreas** | Área de cada pergunta classificada pela IA (Haiku 5.5); só o Aprovador da área ou C-Level aprova; "Minha área primeiro" na Revisão (migração 011) | Testes de integração e de ponta a ponta; conferida no ambiente publicado, menos a avaliação da classificação (N4), que espera a rotulação do gabarito |
 | **O. Ciclo de vida da tarefa** | Situação da tarefa (em andamento, finalizada, arquivada), tarefa encerrada só para leitura, Exportação com finalizar e histórico das ações sobre as tarefas (migrações 012 e 013) | Testes de integração e de ponta a ponta; conferida no ambiente publicado |
 | **P. Cabeçalho dos detalhes** | Cabeçalho com ordenação na tabela dos detalhes da tarefa, com os alertas na coluna Status (só front) | Testes unitários e de ponta a ponta (P1 a P11) |
-| **U. Seleção da base por área** | Áreas dos documentos classificadas pela IA depois da carga, coluna "Áreas" na Base, geração por grupo de área com segunda tentativa na base inteira (migrações 014 e 015) | Testes de integração e de ponta a ponta; avaliações U7 e U16 com a API real na base da Vereda Documental |
+| **Q. Gestão de usuários** | "Painel de Usuários" no menu "Gestão de acessos", só para o Aprovador, ligado ao banco pelas rotas `/api/gestao/usuarios`: listar, adicionar uma conta que já existe no Supabase Auth, mudar papel e áreas, desativar e reativar; a organização nunca fica sem Aprovador ativo. Sem migração nova | Testes de integração (incluindo duas mudanças ao mesmo tempo) e de ponta a ponta; conferida no ambiente publicado em 09/11/2026, menos a adição de pessoa (Q3, Q4) e a PQ1 |
+| **S. Área e etiquetas na Revisão** | Área da pergunta igual para todos, com o botão "Alterar área" para quem pode trocá-la; "Editado" e "Resposta manual" sem o ícone de lápis (só front) | Testes unitários e de ponta a ponta (S1 a S9); conferida no ambiente publicado |
+| **T. Papéis e cadastro** | Confirmação com áreas ao mudar de Revisor para Aprovador; o Aprovador precisa de pelo menos uma área; cadastro com Papel, Áreas e Situação. Sem migração nova | Testes de integração e de ponta a ponta (T1.1 a T2.8); conferida no ambiente publicado em 16/11/2026 |
+| **U. Seleção da base por área** | Áreas dos documentos classificadas pela IA depois da carga, coluna "Áreas" na Base, geração por grupo de área com segunda tentativa na base inteira (migrações 014 a 016) | Testes de integração e de ponta a ponta; avaliações U7 e U16 com a API real na base da Vereda Documental |
 
 A fase A sozinha mostra se a ideia funciona. Se a qualidade das respostas não atingir os critérios, o ajuste acontece antes de investir em servidor, tela ou hospedagem. A fase D só começa depois de A, B e C aceitas.
 
-**Desvio (23/10/2026):** a fase D começou com exceção, por decisão do grupo, com duas pendências da fase A ainda abertas: a taxa de aceitação, que continua sem medição, e a lista de fidelidade, conferida depois só em amostra (portão da fase A fechado por decisão do grupo em 24/10/2026). As fases E a P foram pedidas pelo grupo depois da publicação.
+**Desvio (23/10/2026):** a fase D começou com exceção, por decisão do grupo, com duas pendências da fase A ainda abertas: a taxa de aceitação, que continua sem medição, e a lista de fidelidade, conferida depois só em amostra (portão da fase A fechado por decisão do grupo em 24/10/2026). As fases E a U foram pedidas pelo grupo depois da publicação; não há fase R.
 
 ---
 
@@ -529,6 +533,8 @@ Sem eles o fluxo não pode ser testado nem avaliado.
 | Multi-tenant com segregação lógica: banco único, cada registro pertence a uma organização | Fase K, 28/10/2026 (seção 9.3) |
 | Área só para o Aprovador; área da pergunta classificada pela IA, com "Geral" quando a IA falha; reclassificação das tarefas em aberto na migração | Fase N, decisões PN1 a PN9 validadas em 04/11/2026 (`spec/SPEC_FASE_N.md`) |
 | Situação da tarefa separada do estado do processamento; tarefa finalizada ou arquivada só para leitura; histórico das ações sobre as tarefas só de inclusão | Fase O, 05/11/2026 (`spec/SPEC_FASE_O.md`) |
+| Gestão de usuários por qualquer Aprovador, sem papel novo de Administrador; a conta e a senha continuam no painel do Supabase; o registro das mudanças no Histórico fica para depois | Fase Q, 08/11/2026 (`spec/SPEC_FASE_Q.md`) |
+| O Aprovador precisa de pelo menos uma área: a promoção pede as áreas e a última área não sai; os Aprovadores que já estavam sem área continuam valendo, e o comando `cadastrar-perfil` não muda | Fase T, 09/11/2026 (`spec/SPEC_FASE_T.md`) |
 | Respostas sempre em português, qualquer que seja o idioma da RFP; tradução é evolução futura | Decisão de 21/10/2026; cenário 50 do SPEC |
 
 ### Pendentes
@@ -605,6 +611,7 @@ Cada empresa usuária, cliente da Tendra.ai, é uma **organização**. É um mul
 | Organização do pedido | `src/http/organizacao.ts`: da sessão (lida do perfil a cada pedido) ou, sem login, a inicial; nunca do pedido |
 | Conferência do dono | O mesmo módulo, antes de toda rota `/api/tarefas/:id…` (404 para outra organização); as funções de persistência recebem a organização e filtram por ela |
 | IA | `buscarFontes` só com a base da organização da tarefa |
+| Gestão de usuários (fase Q) | As rotas `/api/gestao/usuarios` listam e alteram só os perfis da organização da sessão; pessoa de outra organização responde 404, como a inexistente, e o e-mail de outra organização é recusado sem dizer qual |
 | Arquivos | Caminho com o id da organização, conferido em `ler` e `apagar` |
 | Prova | Suíte `test/integracao/organizacoes.test.ts`, com a lista de rotas do servidor comparada à testada |
 
@@ -630,16 +637,19 @@ A exceção E5 da versão anterior deste documento (edição e aprovação não 
 
 ## 11. Pontos de atenção
 
-Riscos da arquitetura em funcionamento (seção 1), levantados em 02/11/2026 e revistos em 07/11/2026.
+Riscos da arquitetura em funcionamento (seção 1), levantados em 02/11/2026 e revistos em 07/11/2026 e em 18/11/2026.
 
 | Ponto | Por que importa |
 |---|---|
 | Contrato sem tipos compartilhados | O backend é TypeScript e o front é JavaScript. Uma rota que muda de formato só aparece com o sistema rodando, ou num teste de ponta a ponta que cubra o caso |
-| Regras repetidas no front e no backend | O limite de 10 MB, a mensagem de formato `.xlsx` e o mínimo de 30 palavras do "Revisar com IA" precisam mudar juntos. Na gestão de usuários (fase Q), as recusas do formulário e a lista das áreas do Aprovador também existem no front (`src/workspace/usuarios.js`), só para o modo local e para antecipar as recusas; no publicado, a lista de áreas vem do backend. O front só antecipa a recusa; quem decide é o backend |
+| Regras repetidas no front e no backend | O limite de 10 MB, a mensagem de formato `.xlsx` e o mínimo de 30 palavras do "Revisar com IA" precisam mudar juntos. Na gestão de usuários (fase Q), as recusas do formulário e a lista das áreas do Aprovador também existem no front (`src/workspace/usuarios.js`), só para o modo local e para antecipar as recusas; no publicado, a lista de áreas vem do backend. Desde a fase T, as mensagens do mínimo de uma área ("Selecione pelo menos uma área." e "O Aprovador precisa de pelo menos uma área.") também estão nos dois lados. O front só antecipa a recusa; quem decide é o backend |
 | Endereços fixos na configuração | Trocar o domínio do front (`render.yaml`) ou o nome do serviço no Render (`vercel.json`) quebra o login ou as chamadas, sem erro de build |
 | Deploys independentes | Uma mudança de contrato precisa funcionar com a versão anterior do outro lado, ou ser publicada nos dois ao mesmo tempo |
 | Plano gratuito do Render | A primeira chamada depois de um tempo parado é lenta |
 | Mensagem de erro do modo local | "Inicie-o com npm run servidor" aparece também no site publicado quando o Render está dormindo |
 | Tela de login no modo local enquanto o backend acorda | O front começa no modo local até `GET /api/auth/me` responder. Nesse intervalo, "Entrar na Tendra.ai" abre o Workspace sem conferir a senha. Desde 07/11/2026 (PR #97) os campos abrem vazios, mas o botão continua habilitado |
 | Deploy de produção bloqueado pelo autor do merge | O commit de merge sai no nome de quem fez o merge; sem acesso à Vercel, a `main` fica à frente do site publicado sem nenhum aviso além da verificação falhando no GitHub (seção 1.3) |
+| Aprovador sem área por dois caminhos | Desde a fase T, a tela não deixa o Aprovador sem área, mas os que já estavam assim continuam valendo (aprovam só as perguntas "Geral") e o comando `cadastrar-perfil` ainda aceita criar um. Quem cadastra pelo comando precisa informar as áreas |
+| Gestão de usuários depende da chave de serviço do Supabase | Adicionar uma pessoa procura a conta pelo e-mail na API de administração do Supabase Auth, com a chave de serviço guardada no Render. Sem a chave, ou com o Supabase fora do ar, adicionar responde 503; as outras ações da gestão não dependem dela. O acesso dessa chave à API de contas (PQ1 da fase Q) ainda não foi conferido no publicado: as conferências registradas no `PLAN.md` não incluem uma adição de pessoa |
+| Gestão de usuários sem histórico | Mudanças de papel, áreas e acesso não ficam registradas no Histórico (alteração futura da fase Q). Hoje só o estado atual do perfil fica no banco |
 | Duas tabelas de eventos | Os eventos dos itens e os das tarefas ficam em tabelas diferentes, com regras de exclusão diferentes (os dos itens saem com a tarefa; os das tarefas não saem). Uma auditoria futura precisa juntar as duas |
