@@ -1,6 +1,6 @@
 # Tendra.ai — Pitch Deck
 
-Site separado do site principal, com o pitch deck do Tendra.ai (17 slides, 1920×1080). Tudo o que pertence a ele fica nesta pasta; nada aqui importa de fora dela.
+Site separado do site principal, com o pitch deck do Tendra.ai (16 slides, 1920×1080). Tudo o que pertence a ele fica nesta pasta; nada aqui importa de fora dela.
 
 ## Rodar
 
@@ -35,8 +35,8 @@ npm run dev
 - **04 e 09:** "A solução" e "O negócio" são escritos letra a letra e dão lugar ao logo animado, sobre o campo Brand Aurora (limão no 04, tinta no 09).
 - **05:** a janela do produto toca o passo 00 (documentos entrando na base).
 - **06:** carrossel com os passos 01 a 04; as setas laterais do slide trazem o passo seguinte da direita para a esquerda.
-- **15:** a linha do roadmap cresce e cada ponto aparece em seguida, uma vez a cada entrada no slide.
-- **16:** fundo Brand Aurora (limão), em movimento lento.
+- **14:** a linha do roadmap cresce e cada ponto aparece em seguida, uma vez a cada entrada no slide.
+- **15:** fundo Brand Aurora (limão), em movimento lento.
 - Com movimento reduzido, tudo aparece parado no estado final. No PDF, os slides 04 e 09 mostram o título.
 
 ## Publicação (Vercel)

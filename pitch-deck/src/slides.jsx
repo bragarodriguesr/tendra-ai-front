@@ -497,26 +497,6 @@ function ClienteIdeal() {
   );
 }
 
-function Diferencial() {
-  return (
-    <>
-      <Heading maxWidth="30ch" style={{ marginBottom: "var(--gap-title)" }}>Copiar e colar não escala com segurança.</Heading>
-      <div className="cols cols--2">
-        <ContrastCard positive label="Com Tendra.ai" items={[
-          "Resposta com fonte rastreável até o documento de origem.",
-          "Base de conhecimento centralizada, sem repetir o trabalho em cada proposta.",
-          "Time revisa e aprova, não redige do zero."
-        ]} />
-        <ContrastCard label="Copiar e colar tradicional" items={[
-          "Processo que hoje envolve, em média, 8 pessoas e mais de 40 horas por proposta.",
-          "Resposta sem link para a fonte que a sustenta.",
-          "Risco de compliance a cada novo envio."
-        ]} />
-      </div>
-    </>
-  );
-}
-
 function Receita() {
   return (
     <>
@@ -660,7 +640,6 @@ export const SLIDES = [
   { label: "Arquitetura técnica", tone: "paper", Component: Arquitetura, notes: "A stack: Claude pela API da Anthropic, GitHub, Supabase, Render e Vercel, e o papel de cada um no produto." },
   { label: "Seção: O negócio", tone: "aurora-ink", Component: SecaoNegocio, notes: "Transição para cliente, modelo de receita e escopo do MVP: \"O negócio\" é escrito e dá lugar ao logo animado." },
   { label: "Cliente ideal", tone: "paper", Component: ClienteIdeal, notes: "Descrever o ICP: vertical, porte e personas." },
-  { label: "Diferencial competitivo", tone: "paper", Component: Diferencial, notes: "Contraste entre o método tradicional e o Tendra.ai." },
   { label: "Modelo de receita", tone: "paper", Component: Receita, notes: "Mesmo modelo da página de Preços do site: cobrança por revisor; o plano Basic tem até 5 revisores e 20 RFPs por semestre, e o Enterprise tem volume ilimitado." },
   { label: "Escopo do MVP", tone: "paper", Component: Escopo, notes: "O que está dentro e fora do MVP: base em .md, RFP em .xlsx e aprovação por área dentro; outros formatos e integrações fora." },
   { label: "Métricas", tone: "ink", Component: Metricas, notes: "Como medimos ROI para o cliente e sucesso do produto." },
