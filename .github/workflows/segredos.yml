@@ -1,0 +1,30 @@
+name: Segredos
+
+# Sem filtro de caminhos: um segredo pode vazar em qualquer arquivo. A varredura é rápida.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Um novo push no mesmo PR cancela a execução anterior; na main, as execuções vão até o fim.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  segredos:
+    name: Varredura de segredos
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

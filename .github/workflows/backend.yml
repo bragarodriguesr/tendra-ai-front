@@ -2,8 +2,21 @@ name: Backend
 
 on:
   pull_request:
+    paths:
+      - "backend/**"
+      - "base-sintetica/**"
+      - ".github/workflows/backend.yml"
   push:
     branches: [main]
+    paths:
+      - "backend/**"
+      - "base-sintetica/**"
+      - ".github/workflows/backend.yml"
+
+# Um novo push no mesmo PR cancela a execução anterior; na main, as execuções vão até o fim.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -56,17 +69,3 @@ jobs:
       - run: npm test
         env:
           TENDRA_TESTE_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/postgres
-
-  segredos:
-    name: Varredura de segredos
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: read
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
