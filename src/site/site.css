@@ -5,15 +5,12 @@
 .tdr-site-hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: var(--space-12); align-items: center; }
 .tdr-site-trust { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-12); align-items: center; }
 .tdr-site-plans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gutter-grid); align-items: start; }
-.tdr-site-footer-cols { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)); gap: var(--space-10); }
 
 @media (max-width: 900px) {
   .tdr-site { --gutter-section: var(--space-16); --text-d1-size: 44px; --text-d2-size: 34px; }
   .tdr-site-hero, .tdr-site-trust { grid-template-columns: minmax(0, 1fr); gap: var(--space-10); }
   .tdr-site-plans { grid-template-columns: minmax(0, 1fr); }
   .tdr-site-plans { max-width: 520px; margin: 0 auto; width: 100%; }
-  .tdr-site-footer-cols { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-8); }
-  .tdr-site-footer-brand { grid-column: 1 / -1; }
 }
 
 @media (max-width: 600px) {
@@ -25,7 +22,6 @@
     --text-d2-size: 28px;
     --text-lead-size: 17px;
   }
-  .tdr-site-footer-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tdr-site-cta > button { flex: 1 1 100%; }
 }
 
@@ -102,28 +98,78 @@
 .tdr-site-live-src { animation: tdr-rise var(--duration-base) var(--ease-out) backwards; }
 .tdr-site-live-spin { display: inline-flex; animation: tdr-spin 0.9s linear infinite; }
 
-/* "O produto em ação": passos à esquerda, janela do produto fixa à direita. */
-.tdr-site-tour { display: grid; grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr); gap: var(--space-12); align-items: start; }
-.tdr-site-tour-sticky { grid-column: 2; grid-row: 1; position: sticky; top: calc(64px + var(--space-6)); }
-/* A janela cabe inteira na tela: a largura é limitada pela altura livre abaixo da barra (palco 600×494). */
-.tdr-site-tour-sticky .tdr-demo { max-width: calc((100vh - 64px - 2 * var(--space-6)) * 600 / 494); margin-left: auto; }
-/* Os passos começam no terço inferior da janela (o 00 inclusive) e sobem esmaecidos até a linha de ativação. */
-.tdr-site-tour-steps { grid-column: 1; grid-row: 1; list-style: none; margin: 0; padding: calc(var(--tour-h, 60vh) * 2 / 3) 0 0; }
-/* Cada passo tem a altura da janela, então só um fica ao lado dela por vez. O último tem 2/3:
-   para na linha de ativação, a 1/3 do topo da janela, quando a seção termina. */
-.tdr-site-tour-step { min-height: var(--tour-h, 60vh); display: grid; gap: var(--space-3); align-content: start; opacity: 0.32; transition: opacity var(--duration-slow) var(--ease-out); }
-.tdr-site-tour-step:last-child { min-height: calc(var(--tour-h, 60vh) * 2 / 3); }
-.tdr-site-tour-step.is-on { opacity: 1; }
+/* "O produto em ação": carrossel de um passo por vez, com setas laterais. Tudo é dimensionado pela
+   altura livre da tela (abaixo da barra de 64 px), para o passo inteiro caber sem rolar. */
+.tdr-site-tour-section {
+  max-width: var(--page-max); margin: 0 auto; padding: var(--space-12) var(--page-pad) var(--gutter-section);
+  /* Altura livre para a janela do produto: tela − barra − respiro do topo − título − espaços − navegação. */
+  --tour-livre: calc(100vh - 280px);
+  --tour-livre: calc(100svh - 280px);
+}
+.tdr-site-tour-wrap { display: grid; gap: var(--space-6); }
+.tdr-site-tour-h2 { margin: 0; font-family: var(--font-display); font-weight: var(--weight-semibold); font-size: var(--text-d2-size); line-height: var(--text-d2-lh); letter-spacing: var(--text-d2-ls); color: var(--text-strong); text-wrap: balance; }
+
+.tdr-site-tour { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; column-gap: var(--space-5); row-gap: var(--space-4); align-items: center; }
+.tdr-site-tour-side { grid-row: 1; display: flex; justify-content: center; }
+.tdr-site-tour-side.is-prev { grid-column: 1; }
+.tdr-site-tour-side.is-next { grid-column: 3; }
+.tdr-site-tour-body { grid-column: 2; grid-row: 1; display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: var(--space-10); align-items: center; }
+
+/* Todos os passos na mesma célula: a altura é a do maior e o conteúdo não pula ao trocar. */
+.tdr-site-tour-steps { display: grid; }
+.tdr-site-tour-step { grid-area: 1 / 1; display: grid; gap: var(--space-3); align-content: center; visibility: hidden; opacity: 0; }
+.tdr-site-tour-step.is-on { visibility: visible; opacity: 1; animation: tdr-rise var(--duration-slow) var(--ease-out); }
+.tdr-site-tour-title { margin: 0; font-family: var(--font-display); font-weight: var(--weight-semibold); font-size: var(--text-h2-size); line-height: var(--text-h2-lh); letter-spacing: var(--text-h2-ls); color: var(--text-strong); }
+.tdr-site-tour-text { margin: 0; font-size: var(--text-ui-size); line-height: 1.6; color: var(--text-body); text-wrap: pretty; }
 .tdr-site-tour-step ul { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: grid; gap: var(--space-2); }
 .tdr-site-tour-step ul li { display: flex; gap: 10px; align-items: flex-start; font-size: var(--text-ui-size); line-height: 1.5; color: var(--text-strong); }
 .tdr-site-tour-check { flex: none; margin-top: 3px; width: 16px; height: 16px; border-radius: 4px; background: var(--brand-lime); color: var(--brand-ink); display: inline-flex; align-items: center; justify-content: center; }
+
+/* A janela cabe na altura livre (palco 600×494), sem passar de 320 px de largura para baixo. */
+.tdr-site-tour-window .tdr-demo { max-width: max(320px, calc(var(--tour-livre) * 600 / 494)); margin-left: auto; }
+
+/* Navegação: números dos passos; o ativo leva o sublinhado de 2 px, como nas abas. */
+.tdr-site-tour-nav { grid-column: 1 / -1; grid-row: 2; display: flex; align-items: center; justify-content: center; gap: var(--space-3); }
+.tdr-site-tour-nav-arrow { display: none; }
+.tdr-site-tour-dots { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--space-1); }
+.tdr-site-tour-dot { width: 44px; height: 36px; border: 0; padding: 0; background: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: var(--text-mono-size); letter-spacing: var(--text-mono-ls); color: var(--text-meta); border-radius: var(--radius-sm); transition: color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out); }
+.tdr-site-tour-dot span { padding-bottom: 4px; border-bottom: 2px solid transparent; }
+.tdr-site-tour-dot:hover { color: var(--text-strong); background: var(--n-200); }
+.tdr-site-tour-dot.is-on { color: var(--text-strong); }
+.tdr-site-tour-dot.is-on span { border-bottom-color: var(--brand-ink); }
+
+/* Destaque das setas depois de a cena do passo tocar duas vezes: três pulsos com um empurrão na
+   direção da seta; depois fica o anel limão até o passo mudar. */
+@keyframes tdr-tour-hint-next { 0%, 100% { transform: translateX(0); box-shadow: 0 0 0 3px var(--brand-lime); } 45% { transform: translateX(5px); box-shadow: 0 0 0 10px rgba(200, 247, 61, 0.25); } }
+@keyframes tdr-tour-hint-prev { 0%, 100% { transform: translateX(0); box-shadow: 0 0 0 3px var(--brand-lime); } 45% { transform: translateX(-5px); box-shadow: 0 0 0 10px rgba(200, 247, 61, 0.25); } }
+.tdr-site-tour-arrow.is-hint { box-shadow: 0 0 0 3px var(--brand-lime); }
+.tdr-site-tour-arrow.is-hint.is-next { animation: tdr-tour-hint-next 1.1s var(--ease-in-out) 3; }
+.tdr-site-tour-arrow.is-hint.is-prev { animation: tdr-tour-hint-prev 1.1s var(--ease-in-out) 3; }
+
 @media (max-width: 900px) {
-  .tdr-site-tour { grid-template-columns: minmax(0, 1fr); gap: 0; }
-  .tdr-site-tour-sticky, .tdr-site-tour-steps { grid-column: 1; grid-row: auto; }
-  .tdr-site-tour-sticky { top: 64px; z-index: 5; background: var(--surface-sunken); padding: var(--space-3) 0; border-bottom: 1px solid var(--border-strong); }
-  .tdr-site-tour-sticky .tdr-demo { max-width: none; }
-  .tdr-site-tour-steps { padding-top: 0; }
-  .tdr-site-tour-step, .tdr-site-tour-step:last-child { min-height: 0; padding: var(--space-10) 0 30vh; }
+  .tdr-site-tour-section {
+    padding-top: var(--space-10);
+    /* No celular o texto fica abaixo da janela: a altura livre desconta também o texto do passo. */
+    --tour-livre: calc(100vh - 600px);
+    --tour-livre: calc(100svh - 600px);
+  }
+  .tdr-site-tour-wrap { gap: var(--space-5); }
+  .tdr-site-tour-h2 { font-size: 28px; }
+  .tdr-site-tour { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-3); }
+  .tdr-site-tour-side { display: none; }
+  .tdr-site-tour-body { grid-column: 1; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+  .tdr-site-tour-window { order: -1; }
+  .tdr-site-tour-window .tdr-demo { max-width: min(100%, max(240px, calc(var(--tour-livre) * 600 / 494))); margin: 0 auto; }
+  .tdr-site-tour-title { font-size: var(--text-h3-size); line-height: var(--text-h3-lh); }
+  .tdr-site-tour-nav { grid-column: 1; justify-content: space-between; }
+  .tdr-site-tour-nav-arrow { display: block; }
+  .tdr-site-tour-dot { width: 36px; }
+}
+/* Celulares estreitos: título e texto um degrau menores, para o passo caber com a janela. */
+@media (max-width: 480px) {
+  .tdr-site-tour-section { padding-top: var(--space-6); --tour-livre: calc(100vh - 560px); --tour-livre: calc(100svh - 560px); }
+  .tdr-site-tour-h2 { font-size: 24px; }
+  .tdr-site-tour-text, .tdr-site-tour-step ul li { font-size: var(--text-sm-size); }
 }
 
 /* "Funcionalidades": grade de cartões, cada um com um fragmento de interface que se completa em sequência. */
@@ -168,5 +214,6 @@
 @media (max-width: 760px) { .tdr-site-feat, .tdr-site-feat.is-wide { grid-column: span 6; } .tdr-site-feat-src { grid-template-columns: minmax(0, 1fr); } }
 @media (prefers-reduced-motion: reduce) {
   .tdr-site-live-w, .tdr-site-live-src, .tdr-site-live-spin, .tdr-site-feat-panel > *, .tdr-site-feat-diff .ins.on { animation: none; }
-  .tdr-site-tour-step, .tdr-site-feat, .tdr-site-feat-demo .vi { transition: none; }
+  .tdr-site-feat, .tdr-site-feat-demo .vi { transition: none; }
+  .tdr-site-tour-step.is-on, .tdr-site-tour-arrow.is-hint.is-next, .tdr-site-tour-arrow.is-hint.is-prev { animation: none; }
 }

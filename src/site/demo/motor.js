@@ -94,6 +94,8 @@ export function Player(root, opts = {}) {
     run((async () => {
       await sc.run(c);
       await c.wait(Math.max(1200, sc.dur - (performance.now() - t0)));
+      // A cena tocou até o fim: avisa antes de recomeçar (ou seguir para a próxima).
+      if (opts.onEnd) opts.onEnd(idx, sc);
       if (!REDUCED) play(opts.advance === false ? idx : idx + 1);
     })());
   };

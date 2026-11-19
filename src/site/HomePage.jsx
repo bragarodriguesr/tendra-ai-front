@@ -4,9 +4,9 @@ import { LiveCard } from "./LiveCard.jsx";
 import { ProductTour } from "./ProductTour.jsx";
 import { Features } from "./Features.jsx";
 
-const Section = ({ children, tone, style, id }) => (
+const Section = ({ children, tone, style, id, innerClassName }) => (
   <section id={id} style={{ background: tone === "ink" ? "var(--surface-inverse)" : tone === "sunken" ? "var(--surface-sunken)" : "transparent", ...style }}>
-    <div style={{ maxWidth: "var(--page-max)", margin: "0 auto", padding: "var(--gutter-section) var(--page-pad)" }}>{children}</div>
+    <div className={innerClassName} style={{ maxWidth: "var(--page-max)", margin: "0 auto", padding: innerClassName ? undefined : "var(--gutter-section) var(--page-pad)" }}>{children}</div>
   </section>
 );
 
@@ -47,11 +47,11 @@ export function HomePage({ onPage }) {
         </div>
       </Section>
 
-      <Section tone="sunken" id="como-funciona">
-        <div style={{ display: "grid", gap: "var(--space-10)" }}>
-          <div style={{ display: "grid", gap: "var(--space-4)" }}>
+      <Section tone="sunken" id="como-funciona" innerClassName="tdr-site-tour-section">
+        <div className="tdr-site-tour-wrap">
+          <div style={{ display: "grid", gap: "var(--space-3)" }}>
             <MonoLabel>O produto em ação</MonoLabel>
-            <h2 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: "var(--weight-semibold)", fontSize: "var(--text-d2-size)", lineHeight: "var(--text-d2-lh)", letterSpacing: "var(--text-d2-ls)", color: "var(--text-strong)", maxWidth: "24ch", textWrap: "pretty" }}>
+            <h2 className="tdr-site-tour-h2">
               Da sua base à planilha aprovada, em cinco passos
             </h2>
           </div>
