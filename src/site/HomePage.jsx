@@ -36,7 +36,7 @@ export function HomePage({ onPage }) {
               Responda a um RFP em <span style={{ background: "var(--brand-lime)", padding: "0 8px" }}>horas</span>, não semanas.
             </h1>
             <p style={{ margin: 0, fontSize: "var(--text-lead-size)", lineHeight: "var(--text-lead-lh)", color: "var(--text-body)", maxWidth: "var(--measure-lead)", textWrap: "pretty" }}>
-              A Tendra.ai lê o edital, cruza com a sua base aprovada e devolve respostas completas — com a fonte de cada afirmação rastreável até o documento de origem.
+              A Tendra.ai lê a planilha do edital, cruza cada pergunta com a base da sua organização e entrega o rascunho de cada resposta — com a fonte de cada afirmação rastreável até o documento, a seção e a linha.
             </p>
             <div className="tdr-site-cta" style={{ display: "flex", gap: "var(--space-3)", flexWrap: "wrap" }}>
               <Button size="lg" icon="calendar" onClick={() => onPage("contato")}>Agendar demo</Button>
@@ -80,16 +80,16 @@ export function HomePage({ onPage }) {
               </h2>
             </div>
             <p style={{ margin: 0, fontSize: "var(--text-lead-size)", lineHeight: "var(--text-lead-lh)", color: "var(--brand-ink)", maxWidth: "var(--measure-lead)", textWrap: "pretty" }}>
-              Cada etapa da resposta passa por um modelo de linguagem, sempre sob regras que garantem fonte, privacidade e revisão humana. A IA sugere; a sua equipe decide.
+              A IA entra onde ajuda: entender o edital, classificar as perguntas, redigir com citação e revisar a redação. Sempre sob regras que garantem fonte, privacidade e revisão humana. A IA sugere; a sua equipe decide.
             </p>
           </div>
 
           <div ref={aiRef} className={"tdr-site-ai-steps" + (aiShown ? " is-in" : "")}>
             {[
-              { t: "Entende o edital", d: "Lê a planilha e separa as perguntas item por item. Se a estrutura fugir do padrão, a IA localiza as perguntas e a sua equipe confirma a lista.", tag: "IA + regras" },
-              { t: "Redige com a sua base", d: "O modelo cruza cada pergunta com a base aprovada e escreve a resposta citando o documento e o trecho. Citação que não existe no documento é descartada.", tag: "IA com citação" },
-              { t: "Sinaliza o que exige atenção", d: "Alertas apontam respostas sem fonte, de baixa confiança ou com base vencida. A IA também revisa o texto sob demanda.", tag: "IA + regras" },
-              { t: "A pessoa aprova", d: "Nada é aprovado nem exportado pela IA. O revisor responsável decide, e a trilha de auditoria registra.", tag: "Pessoa decide" }
+              { t: "Entende o edital", d: "Lê a planilha e separa as perguntas item por item. Se a estrutura fugir do padrão, a IA localiza as perguntas. Depois, classifica cada uma pela área responsável.", tag: "IA + regras" },
+              { t: "Redige com a sua base", d: "O modelo cruza cada pergunta com a base da sua organização e escreve a resposta citando o documento e o trecho. Citação que não confere com o documento é descartada.", tag: "IA com citação" },
+              { t: "Sinaliza o que exige atenção", d: "Alertas apontam fonte antiga, conflito entre fontes, baixa confiança e termos críticos. Nas respostas manuais, a IA revisa a redação sob demanda.", tag: "IA + regras" },
+              { t: "A pessoa aprova", d: "Nada é aprovado nem exportado pela IA. O Aprovador da área decide, e o histórico registra quem aprovou e quando.", tag: "Pessoa decide" }
             ].map((s, i) => (
               <Card key={s.t} padding="lg" radius="2xl" className="tdr-site-ai-card" style={{ "--i": i }}>
                 <div style={{ display: "grid", gap: "var(--space-4)" }}>
@@ -124,15 +124,15 @@ export function HomePage({ onPage }) {
               Nenhuma resposta sai sem revisão humana
             </h2>
             <p style={{ margin: 0, fontSize: "var(--text-body-size)", lineHeight: 1.65, color: "var(--text-body)", maxWidth: "var(--measure-lead)", textWrap: "pretty" }}>
-              A trilha de auditoria registra quem aprovou cada item, com qual fonte e em que versão do documento. É o que o seu time de segurança pede quando questiona conteúdo gerado.
+              O histórico registra quem editou e quem aprovou cada item, quando e com qual fonte. É o que o seu time de segurança pede quando questiona conteúdo gerado.
             </p>
           </div>
           <div style={{ display: "grid", gap: "var(--gutter-grid)" }}>
             {[
-              { icon: "shield-check", t: "Isolamento por tenant", d: "Seus documentos nunca treinam modelo compartilhado." },
-              { icon: "history", t: "Auditoria imutável", d: "Registro append-only de cada aprovação e edição." },
-              { icon: "users", t: "Aprovação nominal", d: "Cada item tem um revisor responsável identificado." },
-              { icon: "database", t: "Base curada e governada", d: "Cada resposta tem dono, versão e validade. A base fica melhor a cada proposta aprovada e avisa quando o conhecimento está vencido ou defasado." }
+              { icon: "shield-check", t: "Base separada por organização", d: "Cada resposta é gerada só com a base da sua organização. Pela API comercial da Anthropic, seus documentos não treinam modelos." },
+              { icon: "history", t: "Histórico de cada ação", d: "Edição, aprovação, alerta reconhecido e troca de área ficam registrados com nome e horário." },
+              { icon: "users", t: "Aprovação pela área", d: "O Revisor edita e revisa; só o Aprovador da área da pergunta aprova, com o nome registrado." },
+              { icon: "database", t: "Base curada e governada", d: "Cada documento tem quem enviou, versão e validade. A base avisa quando a fonte passa de 120 dias sem atualização, e documento vencido sai da geração." }
             ].map((r) => (
               <Card key={r.t} tone="paper" radius="lg" padding="sm">
                 <div style={{ display: "flex", gap: "var(--space-4)", alignItems: "flex-start" }}>

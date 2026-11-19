@@ -7,9 +7,9 @@ const sub = { margin: 0, fontSize: "var(--text-ui-size)", lineHeight: 1.6, color
 
 // Trechos de exemplo que sustentam cada citação do cartão "Fonte de cada afirmação".
 const FONTES = [
-  { file: "Politica_Backup_DR.pdf", page: "p. 7", antes: "…as cópias são armazenadas em ", marca: "região distinta da produção", depois: ", com replicação diária…" },
-  { file: "Security_Whitepaper_v4.pdf", page: "p. 12", antes: "…backups e volumes são ", marca: "criptografados com AES-256", depois: ", com chaves em HSM…" },
-  { file: "Politica_Backup_DR.pdf", page: "p. 9", antes: "…a retenção padrão das cópias é de ", marca: "35 dias", depois: ", salvo exigência contratual…" }
+  { file: "politica-backup-dr.md", page: "4. Cópias · linha 33", antes: "…as cópias são armazenadas em ", marca: "região distinta da produção", depois: ", com replicação diária…" },
+  { file: "whitepaper-seguranca.md", page: "3.2 Criptografia · linha 48", antes: "…backups e volumes são ", marca: "criptografados com AES-256", depois: ", com chaves em HSM…" },
+  { file: "politica-backup-dr.md", page: "4.2 Retenção · linha 41", antes: "…a retenção padrão das cópias é de ", marca: "35 dias", depois: ", salvo exigência contratual…" }
 ];
 
 /** Liga o ciclo "acende um a um" no elemento enquanto ele está montado. */
@@ -64,7 +64,7 @@ export function Features() {
   const diff = useCycle({ step: 900, hold: 3200 });
   return (
     <div className="tdr-site-feats">
-      <Tile wide titulo="Fonte de cada afirmação, até a página" texto="Passe o cursor por uma citação para ver o trecho do documento que a sustenta.">
+      <Tile wide titulo="Fonte de cada afirmação, até a linha" texto="Passe o cursor por uma citação para ver o trecho do documento que a sustenta.">
         <FonteDemo />
       </Tile>
       <Tile titulo="Alertas que pedem atenção" texto="A revisão começa pelo que tem risco.">
@@ -81,16 +81,16 @@ export function Features() {
           <div className="tdr-site-feat-bars-x">{["Jun", "Jul", "Ago", "Set", "Out", "Nov"].map((m) => <MonoLabel key={m}>{m}</MonoLabel>)}</div>
         </div>
       </Tile>
-      <Tile titulo="Base curada, com validade" texto="Cada documento tem dono, versão e prazo.">
+      <Tile titulo="Base curada, com validade" texto="Cada documento tem quem enviou, versão e validade.">
         <div ref={base} className="tdr-site-feat-demo" aria-hidden="true">
-          {[["Certificado_ISO27001.pdf", "approved", "Vigente"], ["Politica_Backup_DR.pdf", "warning", "Vence em 12 dias"], ["RFP_Aurora_2025.xlsx", "neutral", "Importada"]].map(([f, tone, t]) => (
+          {[["certificado-iso27001.md", "approved", "Vigente"], ["politica-backup-dr.md", "warning", "Mais de 120 dias"], ["rfp-aurora-2025.md", "neutral", "RFP passada"]].map(([f, tone, t]) => (
             <div key={f} className="tdr-site-feat-row vi on"><span>{f}</span><Badge tone={tone}>{t}</Badge></div>
           ))}
         </div>
       </Tile>
-      <Tile titulo="Revisão de texto com IA" texto="Sob demanda, com a diferença sempre visível.">
+      <Tile titulo="Revisão de texto com IA" texto="Nas respostas manuais, sob demanda: corrige a redação sem acrescentar informação.">
         <div ref={diff} className="tdr-site-feat-demo" aria-hidden="true">
-          <p className="tdr-site-feat-diff">A plataforma <span className="del vi on">tem</span> <span className="ins vi on">mantém</span> certificação ISO/IEC 27001 vigente<span className="ins vi on">, com escopo de desenvolvimento e operação</span>.</p>
+          <p className="tdr-site-feat-diff">A plataforma <span className="del vi on">tem</span> <span className="ins vi on">mantém</span> a certificação ISO/IEC 27001 <span className="del vi on">valida</span><span className="ins vi on"> vigente</span>.</p>
           <div><Button size="sm" variant="secondary" icon="sparkles" tabIndex={-1}>Revisar com IA</Button></div>
         </div>
       </Tile>

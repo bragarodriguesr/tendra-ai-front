@@ -3,9 +3,9 @@ import { Badge, Button, Card, Icon, Input, Select } from "../ds/index.js";
 
 const BULLETS = [
   "Rascunho de cada requisito com a fonte citada",
-  "Fila de revisão com aprovação por especialista",
-  "Base de respostas com controle de validade",
-  "Conexão com os documentos que vocês já usam"
+  "Revisão item a item, com aprovação pela área responsável",
+  "Base de conhecimento com versão e validade",
+  "Planilha do cliente exportada com resposta e fonte"
 ];
 const label = { fontSize: 14, fontWeight: 500, color: "var(--text-on-inverse)" };
 
