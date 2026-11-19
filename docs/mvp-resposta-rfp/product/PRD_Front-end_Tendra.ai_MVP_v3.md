@@ -788,7 +788,7 @@ Esta seção lista o que o front já consome e dispara. Os nomes são descritivo
 | Perfis de acesso | MoSCoW põe RBAC em Could, mas exige aprovador identificado (Must) | Dois papéis em P0 |
 | Prazo de aging | Documentos anteriores: 90 dias | 120 dias sem atualização |
 | Baixa confiança | Canvas e PRD anterior mandam não rascunhar "zona cinzenta" | Rascunho com alerta reconhecível, exceto sem contexto |
-| Formato da exportação | Front: planilha (.xlsx). Página de preços (plano Basic): "Exportação em Word e Excel" | Manter .xlsx no MVP; ajustar o texto do site ou decidir em Q-10 |
+| Formato da exportação | Front: planilha (.xlsx). Página de preços (plano Basic), até 19/11/2026: "Exportação em Word e Excel" | Resolvido em 19/11/2026: o site diz "Exportação em planilha (.xlsx)"; Word segue em Q-10 |
 | Setor público | PRD: fluxos de licitação fora do MVP. Site: plano "Setor público", rótulo "RFP & Licitações" e login "RFPs e editais" | O produto do MVP segue privado; o site anuncia o setor público como oferta comercial. Alinhar o texto do site ou o escopo (Q-24) |
 | Autenticação | Login do front: e-mail e senha. Plano Enterprise: "SSO SAML + SCIM" | E-mail e senha no MVP; SSO como requisito do plano Enterprise (Q-19) |
 | Números de marketing | v1: o produto não exibe números de horas como fato. Home: "4h 12m por edital de 200 itens", "83% de reaproveitamento", "3,2× mais RFPs", "100% com fonte" | Tratar como ilustrativos até haver dados do piloto; revisar antes do lançamento aberto |

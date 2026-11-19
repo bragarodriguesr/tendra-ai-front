@@ -5,9 +5,9 @@ import { REDUCED, makeCtx, onView, run } from "./demo/motor.js";
 // Requisitos de exemplo que o cartão responde em sequência. O primeiro é o estado de repouso
 // (o mesmo cartão estático de antes), usado também com movimento reduzido.
 const REQS = [
-  { id: "REQ-084", q: "Descreva os controles de criptografia de dados em repouso e em trânsito.", a: "Dados em repouso cifrados com AES-256, chaves em HSM FIPS 140-2 nível 3 com rotação a cada 90 dias; tráfego em TLS 1.3 com perfect forward secrecy.", file: "Security_Whitepaper_v4.pdf", page: 12, pct: 92 },
-  { id: "REQ-085", q: "Onde ficam armazenados os backups?", a: "Backups ficam em região distinta da produção, criptografados com AES-256 e retidos por 35 dias.", file: "Politica_Backup_DR.pdf", page: 7, pct: 93, aviso: "Fonte com mais de 120 dias" },
-  { id: "REQ-086", q: "A plataforma possui certificação ISO 27001?", a: "Sim. A certificação ISO/IEC 27001 está vigente, com escopo que cobre desenvolvimento e operação da plataforma.", file: "Certificado_ISO27001.pdf", page: 1, pct: 94 }
+  { id: "REQ-084", q: "Descreva os controles de criptografia de dados em repouso e em trânsito.", a: "Dados em repouso cifrados com AES-256, chaves em HSM FIPS 140-2 nível 3 com rotação a cada 90 dias; tráfego em TLS 1.3 com perfect forward secrecy.", file: "whitepaper-seguranca.md · 3.2 Criptografia · linha 48", pct: 92 },
+  { id: "REQ-085", q: "Onde ficam armazenados os backups?", a: "Backups ficam em região distinta da produção, criptografados com AES-256 e retidos por 35 dias.", file: "politica-backup-dr.md · 4. Cópias · linha 33", pct: 93, aviso: "Fonte com mais de 120 dias" },
+  { id: "REQ-086", q: "A plataforma possui certificação ISO 27001?", a: "Sim. A certificação ISO/IEC 27001 está vigente, com escopo que cobre desenvolvimento e operação da plataforma.", file: "certificado-iso27001.md · 1. Escopo · linha 12", pct: 94 }
 ];
 const palavras = (t) => t.split(" ");
 const PRONTO = { n: 0, q: Infinity, a: Infinity, fonte: true, etapa: "ok", pct: REQS[0].pct };
@@ -65,7 +65,7 @@ export function LiveCard() {
   const r = REQS[s.n];
   const resposta = palavras(r.a);
   return (
-    <Card tone="ink" radius="3xl" padding="lg" role="img" aria-label="Exemplo: a Tendra.ai responde a um requisito do edital citando o documento e a página da fonte.">
+    <Card tone="ink" radius="3xl" padding="lg" role="img" aria-label="Exemplo: a Tendra.ai responde a um requisito do edital citando o documento, a seção e a linha da fonte.">
       <div ref={ref} aria-hidden="true" style={{ display: "grid", gap: "var(--space-5)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-3) var(--space-4)", flexWrap: "wrap" }}>
           <MonoLabel tone="inverse">{r.id}/210 · Banco Aurora</MonoLabel>
@@ -80,7 +80,7 @@ export function LiveCard() {
                 <>Dados em repouso cifrados com AES-256, chaves em HSM FIPS 140-2 nível 3 com rotação a cada 90 dias; tráfego em TLS 1.3 com <span style={{ color: "var(--brand-lime)" }}>perfect forward secrecy</span>.</>
               ) : resposta.slice(0, s.a).map((w, k) => <span key={`${s.n}-${k}`} className="tdr-site-live-w">{w} </span>)}
             </div>
-            <SourceTrail key={`${s.n}-${s.fonte}`} tone="ink" className={s === PRONTO ? undefined : "tdr-site-live-src"} style={{ visibility: s.fonte ? "visible" : "hidden" }} sources={[{ file: r.file, page: r.page }]} />
+            <SourceTrail key={`${s.n}-${s.fonte}`} tone="ink" className={s === PRONTO ? undefined : "tdr-site-live-src"} style={{ visibility: s.fonte ? "visible" : "hidden" }} sources={[{ file: r.file }]} />
           </div>
         </Card>
         <ProgressBar tone="ink" label="Preenchimento automático" value={s.pct} />
