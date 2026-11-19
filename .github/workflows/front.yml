@@ -2,8 +2,47 @@ name: Front
 
 on:
   pull_request:
+    paths:
+      # A jornada sobe o backend e lê a base sintética, então mudanças neles também rodam o e2e.
+      - "src/**"
+      - "e2e/**"
+      - "public/**"
+      - "index.html"
+      - "package.json"
+      - "package-lock.json"
+      - "vite.config.js"
+      - "playwright.config.js"
+      - "backend/src/**"
+      - "backend/config/**"
+      - "backend/migracoes/**"
+      - "backend/package.json"
+      - "backend/package-lock.json"
+      - "base-sintetica/**"
+      - ".github/workflows/front.yml"
   push:
     branches: [main]
+    paths:
+      # A jornada sobe o backend e lê a base sintética, então mudanças neles também rodam o e2e.
+      - "src/**"
+      - "e2e/**"
+      - "public/**"
+      - "index.html"
+      - "package.json"
+      - "package-lock.json"
+      - "vite.config.js"
+      - "playwright.config.js"
+      - "backend/src/**"
+      - "backend/config/**"
+      - "backend/migracoes/**"
+      - "backend/package.json"
+      - "backend/package-lock.json"
+      - "base-sintetica/**"
+      - ".github/workflows/front.yml"
+
+# Um novo push no mesmo PR cancela a execução anterior; na main, as execuções vão até o fim.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
