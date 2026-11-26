@@ -773,40 +773,6 @@ function TimeExecucao() {
   );
 }
 
-const ROADMAP = [
-  "Upload de PDF, DOCX e PPTX e conexão com Google Drive e SharePoint",
-  "Fluxos de aprovação em múltiplos níveis",
-  "Integrações via MCP com documentações técnicas de API",
-  "Base pré-carregada com normas técnicas e regulatórias do mercado brasileiro (LGPD etc.)",
-  "Modo assistente para preparação de documentos de propostas comerciais e técnicas"
-];
-
-// A linha cresce e cada ponto aparece com o seu número e texto, uma vez a cada entrada no slide.
-function Roadmap({ active }) {
-  const [run, setRun] = React.useState(0);
-  React.useEffect(() => { if (active) setRun((n) => n + 1); }, [active]);
-  return (
-    <>
-      <Heading maxWidth="26ch" style={{ marginBottom: "var(--gap-title)" }}>Roadmap.</Heading>
-      <div key={run} className="roadmap" style={{ "--steps": ROADMAP.length }}>
-        <div className="roadmap-line" />
-        <ol className="roadmap-steps">
-          {ROADMAP.map((text, i) => (
-            <li key={text} className="roadmap-step" style={{ "--i": i }}>
-              <svg viewBox="0 0 48 48" width="24" height="24" aria-hidden="true" style={{ zIndex: 1, flexShrink: 0 }}>
-                <rect width="48" height="48" rx="8" fill="var(--brand-ink)" />
-                <rect x="17" y="17" width="14" height="14" fill="var(--brand-lime)" />
-              </svg>
-              <Eyebrow size={19}>{String(i + 1).padStart(2, "0")}</Eyebrow>
-              <DeckCard style={{ padding: "22px 18px", fontSize: 23, lineHeight: 1.35, textAlign: "center" }}>{text}</DeckCard>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </>
-  );
-}
-
 function Fechamento({ active }) {
   return (
     <>
@@ -840,6 +806,5 @@ export const SLIDES = [
   { label: "Retorno para o cliente", tone: "ink", Component: Retorno, notes: "Cenário ilustrativo, sem resultado em cliente e sem representar redução de folha. 10 propostas por mês × 33 h = 330 h; uma redução hipotética de 30% no esforço ativo dá 99 h. A R$ 180/h, são R$ 17.820 em capacidade, que pode ir para negociação e novas propostas. A assinatura simulada de R$ 5.000 por mês equivale a R$ 60 mil por ano, dentro da faixa interna: benefício/custo de 3,56× e retorno líquido de 256,4%, antes de implantação, tributos e treinamento. O ponto de equilíbrio é 27,78 h, arredondado para 28 h. A redução de esforço usada aqui deve ser cronometrada separadamente da meta de ciclo." },
   { label: "Modelo de negócio", tone: "paper", Component: ModeloNegocio, notes: "A entrada é por empresas de tecnologia que já têm orçamento ligado ao processo, volume recorrente e exigência de evidência. A cobrança por assento e volume vem do pitch original. A faixa de R$ 45 a 80 mil por ano é hipótese, a validar com compradores e uso real. Nenhuma receita, cliente ou contrato é afirmado." },
   { label: "Time e execução", tone: "aurora-paper", Component: TimeExecucao, notes: "A equipe já pode mostrar a experiência. O próximo passo é provar o impacto operacional com compradores reais. O teste interno de qualidade em base sintética não substitui a validação com cliente." },
-  { label: "Roadmap", tone: "paper", Component: Roadmap, notes: "O que vem depois do MVP. Os pontos aparecem um a um ao entrar no slide." },
   { label: "Fechamento", tone: "aurora-lime", Component: Fechamento, notes: "O logo se desenha de novo a cada 5 s, como na capa. Encerrar com a mensagem central, \"Não deixe seu negócio parar por uma planilha\", e abrir para perguntas da banca." }
 ];
