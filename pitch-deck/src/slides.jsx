@@ -317,41 +317,77 @@ function Contagem({ active, valor, ms = 1400, formato = (n) => String(n) }) {
   return <>{formato(n)}</>;
 }
 
-// Slide 02: a persona fictícia que conduz a narrativa. A pergunta dela é o destaque: o cartão entra,
-// a fala é escrita e o selo "Sem resposta" pulsa, a cada entrada no slide.
+// Slide 02: a persona fictícia que conduz a narrativa. A pergunta dela aparece numa tela de chat
+// clara: é digitada no campo, o botão de enviar é pressionado e o balão sobe para a conversa.
+// Recomeça a cada entrada no slide; fora dele (e no PDF ou sem movimento), mostra a mensagem enviada.
 const PERGUNTA = "Quem consegue confirmar qual política de segurança vale hoje?";
-const PERGUNTA_INICIO_MS = 700;
-const PERGUNTA_LETRA_MS = 38;
+const CHAT_INICIO_MS = 900; // o cartão entra antes de a digitação começar
+const CHAT_LETRA_MS = 40;
+const CHAT_ANTES_DE_ENVIAR_MS = 450;
+const CHAT_CLIQUE_MS = 260;
+
+function usarChat(active) {
+  const fim = { typed: PERGUNTA.length, etapa: "enviada" };
+  const [estado, setEstado] = React.useState(fim);
+  React.useEffect(() => {
+    if (!active || REDUCED) { setEstado(fim); return undefined; }
+    setEstado({ typed: 0, etapa: "digitando" });
+    const timers = [];
+    const later = (ms, fn) => timers.push(setTimeout(fn, ms));
+    let t = CHAT_INICIO_MS;
+    for (let k = 1; k <= PERGUNTA.length; k++) later((t += CHAT_LETRA_MS), () => setEstado({ typed: k, etapa: "digitando" }));
+    later((t += CHAT_ANTES_DE_ENVIAR_MS), () => setEstado({ typed: PERGUNTA.length, etapa: "clicando" }));
+    later((t += CHAT_CLIQUE_MS), () => setEstado(fim));
+    return () => timers.forEach(clearTimeout);
+  }, [active]); // eslint-disable-line react-hooks/exhaustive-deps
+  return estado;
+}
 
 function Persona({ active }) {
-  const [typed, setTyped] = React.useState(PERGUNTA.length);
-  React.useEffect(() => {
-    if (!active || REDUCED) { setTyped(PERGUNTA.length); return undefined; }
-    setTyped(0);
-    const timers = [];
-    for (let k = 1; k <= PERGUNTA.length; k++) timers.push(setTimeout(() => setTyped(k), PERGUNTA_INICIO_MS + k * PERGUNTA_LETRA_MS));
-    return () => timers.forEach(clearTimeout);
-  }, [active]);
-  const escrevendo = typed < PERGUNTA.length;
+  const { typed, etapa } = usarChat(active);
+  const enviada = etapa === "enviada";
+  const noCampo = enviada ? "" : PERGUNTA.slice(0, typed);
   return (
     <>
       <Eyebrow style={{ marginBottom: 26 }}>A história · persona fictícia</Eyebrow>
-      <div className="split" style={{ gridTemplateColumns: "minmax(0,1fr) minmax(0,0.95fr)", gap: 96 }}>
+      <div className="split" style={{ gridTemplateColumns: "minmax(0,1fr) 760px", gap: 96 }}>
         <div style={{ display: "grid", gap: 36 }}>
           <h1 className="title" style={{ fontSize: "var(--type-title)", lineHeight: 1.06, maxWidth: "14ch" }}>Marina tem até sexta para enviar a proposta</h1>
           <p style={{ margin: 0, fontSize: "var(--type-body)", lineHeight: 1.5, color: "var(--text-body)", maxWidth: "36ch" }}>
             Ela lidera pré-vendas numa empresa brasileira de software. O cliente enviou uma planilha com perguntas sobre produto, segurança e privacidade.
           </p>
         </div>
-        <figure className={"pergunta" + (active ? " is-on" : "")}>
-          <span className="pergunta-icone" aria-hidden="true"><Icon name="message-square" size={34} /></span>
-          <blockquote className="pergunta-texto" aria-label={`“${PERGUNTA}”`}>
-            <span aria-hidden="true">“{PERGUNTA.slice(0, typed)}{escrevendo ? <span className="type-caret" /> : "”"}<span className="type-rest">{PERGUNTA.slice(typed)}{escrevendo ? "”" : ""}</span></span>
-          </blockquote>
-          <figcaption className="pergunta-rodape">
-            <MonoLabel tone="inverse" size="mono" uppercase={false} style={{ fontSize: 20 }}>Marina, no grupo da equipe</MonoLabel>
-            <span className="pergunta-selo">Sem resposta</span>
-          </figcaption>
+        <figure className={"chat" + (active ? " is-on" : "")} aria-label={`Chat da equipe. Marina pergunta: “${PERGUNTA}”`}>
+          <div className="chat-topo" aria-hidden="true">
+            <span className="chat-canal">proposta-cliente</span>
+            <MonoLabel size="mono" uppercase={false} style={{ fontSize: 19 }}>5 pessoas</MonoLabel>
+          </div>
+          <div className="chat-conversa" aria-hidden="true">
+            <div className="chat-msg">
+              <span className="chat-avatar">C</span>
+              <div className="chat-corpo">
+                <div className="chat-autor">Comercial <span>09:12</span></div>
+                <div className="chat-balao">O cliente mandou a planilha. Precisamos enviar até sexta.</div>
+              </div>
+            </div>
+            {enviada ? (
+              <div className="chat-msg chat-msg--minha chat-sobe">
+                <div className="chat-corpo">
+                  <div className="chat-autor">Marina <span>09:41</span></div>
+                  <div className="chat-balao">{PERGUNTA}</div>
+                  <div className="chat-status"><Icon name="check" size={18} />Enviada · sem resposta</div>
+                </div>
+                <span className="chat-avatar chat-avatar--marina">M</span>
+              </div>
+            ) : null}
+          </div>
+          <div className="chat-entrada" aria-hidden="true">
+            <div className={"chat-campo" + (noCampo ? "" : " is-vazio")}>
+              {noCampo || "Escreva uma mensagem"}
+              {etapa === "digitando" ? <span className="type-caret" /> : null}
+            </div>
+            <span className={"chat-enviar" + (noCampo ? " is-pronto" : "") + (etapa === "clicando" ? " is-clique" : "")}><Icon name="send" size={26} /></span>
+          </div>
         </figure>
       </div>
     </>
