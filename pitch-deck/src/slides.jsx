@@ -1,5 +1,5 @@
 import React from "react";
-import { AnimatedLogo, Badge, Card, Icon, Logo, MonoLabel } from "./ds/index.js";
+import { AnimatedLogo, Badge, Card, Icon, MonoLabel } from "./ds/index.js";
 import { Player } from "./demo/motor.js";
 import { CENAS, side } from "./demo/cenas.js";
 import { STACK_ICONS } from "./stack-icons.js";
@@ -135,8 +135,24 @@ function TituloDigitado({ typed, cursor }) {
   });
 }
 
-function Capa({ active }) {
+// Logo da capa e do fechamento, no mesmo tamanho e posição. Em laço enquanto o slide está na tela:
+// desenha o logo, segura o quadro completo por 5 s e recomeça. Fora dele (e no PDF ou sem movimento),
+// fica no quadro completo. variant: "ink" no campo tinta, "lime" no campo limão.
+function LogoEmLaco({ active, variant }) {
   const ref = React.useRef(null);
+  React.useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    if (!active || REDUCED) { el.pause?.(); el.currentTime = CAPA_LOGO_FINAL; return undefined; }
+    el.replay?.();
+    const laco = setInterval(() => el.replay?.(), CAPA_LOGO_FINAL * 1000 + CAPA_LOGO_PAUSA_MS);
+    return () => clearInterval(laco);
+  }, [active]);
+  const k = CAPA_LOGO_ALTURA / 48;
+  return <AnimatedLogo ref={ref} variant={variant} bare once style={{ width: 224 * k, marginLeft: -4 * k }} title="Tendra.ai" />;
+}
+
+function Capa({ active }) {
   // Título: digitado a cada entrada no slide; fora dele (e no PDF), inteiro.
   const total = CAPA_TITULO_TEXTO.length;
   const [typed, setTyped] = React.useState(total);
@@ -151,20 +167,9 @@ function Capa({ active }) {
     timers.push(setTimeout(() => setCursor(false), t + CAPA_CURSOR_MS));
     return () => timers.forEach(clearTimeout);
   }, [active, total]);
-  // Em laço enquanto o slide está na tela: desenha o logo, segura o quadro completo por 5 s e
-  // recomeça. Fora dele (e no PDF ou sem movimento), fica no quadro completo.
-  React.useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return undefined;
-    if (!active || REDUCED) { el.pause?.(); el.currentTime = CAPA_LOGO_FINAL; return undefined; }
-    el.replay?.();
-    const laco = setInterval(() => el.replay?.(), CAPA_LOGO_FINAL * 1000 + CAPA_LOGO_PAUSA_MS);
-    return () => clearInterval(laco);
-  }, [active]);
-  const k = CAPA_LOGO_ALTURA / 48;
   return (
     <>
-      <AnimatedLogo ref={ref} variant="ink" bare once style={{ width: 224 * k, marginLeft: -4 * k }} title="Tendra.ai" />
+      <LogoEmLaco active={active} variant="ink" />
       <h1 className="title" aria-label={CAPA_TITULO_TEXTO.replace(/\n/g, " ")} style={{ fontSize: "var(--type-display)", lineHeight: 1.02, letterSpacing: "-0.04em", margin: "auto 0 48px", whiteSpace: "pre-line" }}>
         <span aria-hidden="true"><TituloDigitado typed={typed} cursor={cursor} /></span>
       </h1>
@@ -802,10 +807,10 @@ function Roadmap({ active }) {
   );
 }
 
-function Fechamento() {
+function Fechamento({ active }) {
   return (
     <>
-      <Logo variant="mono-ink" size={48} />
+      <LogoEmLaco active={active} variant="lime" />
       <h1 className="title" style={{ fontSize: 100, lineHeight: 1.05, letterSpacing: "-0.04em", margin: "auto 0 48px", maxWidth: "17ch" }}>
         Não deixe seu negócio parar por uma planilha
       </h1>
@@ -836,5 +841,5 @@ export const SLIDES = [
   { label: "Modelo de negócio", tone: "paper", Component: ModeloNegocio, notes: "A entrada é por empresas de tecnologia que já têm orçamento ligado ao processo, volume recorrente e exigência de evidência. A cobrança por assento e volume vem do pitch original. A faixa de R$ 45 a 80 mil por ano é hipótese, a validar com compradores e uso real. Nenhuma receita, cliente ou contrato é afirmado." },
   { label: "Time e execução", tone: "aurora-paper", Component: TimeExecucao, notes: "A equipe já pode mostrar a experiência. O próximo passo é provar o impacto operacional com compradores reais. O teste interno de qualidade em base sintética não substitui a validação com cliente." },
   { label: "Roadmap", tone: "paper", Component: Roadmap, notes: "O que vem depois do MVP. Os pontos aparecem um a um ao entrar no slide." },
-  { label: "Fechamento", tone: "aurora-lime", Component: Fechamento, notes: "Encerrar com a mensagem central, \"Não deixe seu negócio parar por uma planilha\", e abrir para perguntas da banca." }
+  { label: "Fechamento", tone: "aurora-lime", Component: Fechamento, notes: "O logo se desenha de novo a cada 5 s, como na capa. Encerrar com a mensagem central, \"Não deixe seu negócio parar por uma planilha\", e abrir para perguntas da banca." }
 ];
