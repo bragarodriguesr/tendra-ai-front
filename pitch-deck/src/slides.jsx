@@ -453,7 +453,7 @@ function CustoProblema({ active }) {
         </div>
         <div className="custo-linha">
           <div className="title" style={{ fontSize: 96, lineHeight: 1, letterSpacing: "-0.035em", whiteSpace: "nowrap" }}><Contagem active={active} valor={8} ms={1000} /> pessoas</div>
-          <div style={{ fontSize: 30, lineHeight: 1.45, color: "var(--ink-200)", maxWidth: "26ch" }}>tamanho médio da equipe responsável pelas propostas</div>
+          <div style={{ fontSize: 30, lineHeight: 1.45, color: "var(--ink-200)", maxWidth: "34ch" }}>quantidade média de pessoas necessárias para responder a uma proposta</div>
         </div>
       </div>
       <Nota tone="ink">Loopio e APMP 2026 · benchmark global</Nota>
