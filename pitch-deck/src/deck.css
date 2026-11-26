@@ -61,12 +61,12 @@ button { font-family: inherit; }
 .chips { display: flex; gap: 16px; flex-wrap: wrap; }
 .footer-rule { display: flex; justify-content: space-between; align-items: flex-end; gap: 48px; padding-top: 36px; }
 
-/* Slide 02: fontes espalhadas. */
+/* Slide 03: fontes espalhadas. */
 /* Gradiente limão em movimento: o mesmo da barra de progresso de uma RFP em processamento, no site. */
 @keyframes tdr-ai-flow { from { background-position: 0% 50%; } to { background-position: 300% 50%; } }
 .fonte-link, .ai-chip { background: linear-gradient(110deg, #C8F73D 0%, #E6FF9A 25%, #B6EA1E 50%, #E6FF9A 75%, #C8F73D 100%); background-size: 300% 100%; }
 
-/* Slide 02: cada fonte surge e cresce, uma após a outra; o conector limão cresce até a seguinte. */
+/* Slide 03: cada fonte surge e cresce, uma após a outra; o conector limão cresce até a seguinte. */
 .fontes { position: relative; width: 760px; height: 580px; justify-self: center; --passo: 900ms; }
 /* Antes de recomeçar (a cada 10 s), o quadro esmaece. */
 .fontes.is-out { opacity: 0; transition: opacity 500ms var(--ease-out); }
@@ -84,26 +84,67 @@ button { font-family: inherit; }
 .rise-4 { animation-delay: 0.7s; }
 .rise-5 { animation-delay: 0.9s; }
 
-/* Slides 04 e 09: o título é escrito e dá lugar ao logo animado, no centro. */
+/* Slides 05 e 10: o título é escrito e dá lugar ao logo animado, no centro. */
 .intro { position: relative; flex: 1; display: grid; place-items: center; }
 .intro-title, .intro-logo { grid-area: 1 / 1; }
 .intro-print { display: none; grid-area: 1 / 1; font-size: 150px; line-height: 1; letter-spacing: -0.04em; }
 .intro-title { font-size: 150px; line-height: 1; letter-spacing: -0.04em; display: flex; align-items: center; transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out); }
 .intro-caret { display: inline-block; width: 8px; height: 0.9em; margin-left: 10px; background: currentColor; animation: tdr-caret 0.9s steps(2, jump-none) infinite; }
 .intro-logo { opacity: 0; transform: scale(0.94); transition: opacity 700ms var(--ease-out), transform 900ms var(--ease-out); }
-.intro[data-phase="out"] .intro-title, .intro[data-phase="logo"] .intro-title { opacity: 0; transform: scale(1.06); }
+.intro[data-phase="out"] .intro-title, .intro[data-phase="logo"] .intro-title, .intro[data-phase="after"] .intro-title { opacity: 0; transform: scale(1.06); }
 .intro[data-phase="logo"] .intro-logo { opacity: 1; transform: none; }
 @keyframes tdr-caret { 50% { opacity: 0; } }
 /* Capa: título digitado. O que falta já ocupa o lugar (invisível); o cursor não empurra o texto. */
 .type-rest { visibility: hidden; }
 .type-caret { display: inline-block; width: 8px; height: 0.82em; margin: 0 -12px -0.06em 4px; vertical-align: baseline; background: currentColor; animation: tdr-caret 0.9s steps(2, jump-none) infinite; }
 
-/* Slides 05 e 06: janela do produto, a mesma demonstração do site. */
+/* Slide 05: com o logo completo, ele encolhe para o canto de cima e o texto da mudança na rotina entra. */
+.intro-after { grid-area: 1 / 1; align-self: stretch; justify-self: stretch; display: grid; align-content: center; gap: 32px; padding-top: 96px; opacity: 0; visibility: hidden; transform: translateY(16px); transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out), visibility 0s linear 700ms; }
+.intro--after .intro-logo { transform-origin: 0 0; }
+.intro--after[data-phase="after"] .intro-logo { opacity: 1; transform: translate(var(--intro-logo-x, -420px), var(--intro-logo-y, -330px)) scale(0.34); transition: transform 900ms var(--ease-in-out); }
+.intro--after[data-phase="after"] .intro-after { opacity: 1; visibility: visible; transform: none; transition: opacity 700ms var(--ease-out) 450ms, transform 700ms var(--ease-out) 450ms, visibility 0s; }
+
+/* Nota de fonte no pé do slide (como nos slides de referência). */
+.nota { margin-top: auto; padding-top: 22px; }
+
+/* Slide 02: a persona. */
+.persona-quote { margin: 0; padding: 26px 32px; border-radius: var(--radius-lg); background: var(--surface-sunken); border: 1px solid var(--border-default); font-family: var(--font-display); font-weight: 600; font-size: 32px; line-height: 1.35; letter-spacing: -0.01em; color: var(--text-strong); max-width: 30ch; }
+.persona-avatar { flex: none; width: 104px; height: 104px; border-radius: 50%; background: var(--brand-ink); color: var(--brand-lime); display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 52px; }
+.persona-rows { margin: 0; display: grid; gap: 18px; border-top: 1px solid var(--border-default); padding-top: 28px; }
+.persona-rows > div { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 16px; align-items: baseline; }
+.persona-rows dd { margin: 0; font-size: 26px; line-height: 1.35; color: var(--text-strong); }
+
+/* Slide 03: os três passos de hoje ao lado das fontes espalhadas (o quadro de 760×580, a 80%). */
+.caca-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 30px; align-content: center; }
+.caca-step { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 20px; align-items: baseline; padding-bottom: 26px; border-bottom: 1px solid var(--border-default); }
+.caca-step:last-child { border-bottom: 0; padding-bottom: 0; }
+.fontes-escala { width: 608px; height: 464px; }
+.fontes-escala .fontes { transform: scale(0.8); transform-origin: 0 0; }
+.caca-alerta { display: flex; align-items: center; gap: 18px; padding: 20px 28px; border-radius: var(--radius-lg); background: var(--brand-ink); color: var(--brand-paper); font-size: 28px; font-weight: 600; line-height: 1.35; }
+.caca-alerta-icone { display: inline-flex; color: var(--brand-lime); }
+
+/* Slide 04: o custo em dois números. */
+.custo-numero { font-size: 260px; line-height: 0.9; letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
+.custo-linha { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 56px; align-items: center; border-top: 1px solid var(--ink-500); padding-top: 40px; }
+
+/* Slide 11: destaque do benchmark. */
+.destaque { margin-top: 32px; display: flex; align-items: center; gap: 22px; padding: 24px 32px; border-radius: var(--radius-lg); background: var(--lime-wash); border: 1px solid var(--brand-lime); font-size: 30px; font-weight: 600; line-height: 1.35; color: var(--brand-ink); }
+.destaque-numero { font-family: var(--font-display); font-weight: 700; font-size: 44px; letter-spacing: -0.03em; }
+
+/* Slide 12: mercado inicial, um número por linha. */
+.mercado { display: grid; gap: 0; }
+.mercado-linha { display: grid; grid-template-columns: 900px minmax(0, 1fr); gap: 56px; align-items: center; padding: 36px 0; border-top: 1px solid var(--border-default); }
+.mercado-linha:last-child { border-bottom: 1px solid var(--border-default); }
+.mercado-numero { font-size: 150px; line-height: 1; letter-spacing: -0.045em; white-space: nowrap; }
+.mercado-numero--sm { font-size: 96px; letter-spacing: -0.035em; }
+.mercado-texto { font-size: 32px; line-height: 1.4; color: var(--text-body); max-width: 22ch; }
+
+/* Slides 06 e 07: janela do produto, a mesma demonstração do site. */
 .deck-demo { border-radius: 24px; box-shadow: var(--shadow-popover); }
 .demo-caption { display: flex; align-items: center; justify-content: center; gap: 14px; background: var(--lime-wash); border: 1px solid var(--brand-lime); border-radius: var(--radius-lg); padding: 18px 22px; font-size: 26px; font-weight: 600; color: var(--brand-ink); }
 .demo-caption-mark { display: inline-flex; color: var(--state-ink); }
 
-/* Slide 06: carrossel dos passos 01 a 04, da direita para a esquerda. */
+/* Slide 07: carrossel dos passos 01 a 04, da direita para a esquerda. */
 .carousel { position: relative; flex: 1; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 28px; }
 .carousel-view { overflow: hidden; min-height: 0; }
 .carousel-track { display: flex; height: 100%; transition: transform 700ms var(--ease-in-out); }
@@ -121,7 +162,7 @@ button { font-family: inherit; }
 .carousel-dots span { width: 12px; height: 12px; border-radius: 50%; background: var(--border-strong); transition: background var(--duration-base) var(--ease-out), width var(--duration-base) var(--ease-out); }
 .carousel-dots span.is-on { width: 36px; border-radius: 6px; background: var(--brand-ink); }
 
-/* Slide 07: plataforma AI native. */
+/* Slide 08: plataforma AI native. */
 /* O chip da IA usa o mesmo gradiente limão em movimento. */
 .ai-chip { width: 50px; height: 50px; border-radius: var(--radius-lg); color: var(--brand-ink); display: flex; align-items: center; justify-content: center; animation: tdr-ai-flow 3s linear infinite; }
 .ai-tag { display: inline-flex; padding: 6px 16px; border-radius: 99px; border: 1px solid var(--border-strong); font-family: var(--font-mono); font-size: 18px; letter-spacing: 0.04em; color: var(--text-body); background: var(--surface-card); }
@@ -130,13 +171,13 @@ button { font-family: inherit; }
 .ai-foot { margin-top: 40px; border-top: 2px solid var(--brand-ink); padding-top: 28px; font-size: 27px; line-height: 1.5; color: var(--text-body); text-wrap: pretty; }
 .ai-foot b { color: var(--text-strong); }
 
-/* Slide 08: stack, uma linha por peça. */
+/* Slide 09: stack, uma linha por peça. */
 .stack-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
 .stack-row { display: grid; grid-template-columns: 172px 380px minmax(0, 1fr); gap: 32px; align-items: center; background: var(--surface-card); border: 1px solid var(--border-default); border-radius: var(--radius-deck-card); padding: 20px 32px; }
 .stack-logos { display: flex; gap: 12px; }
 .stack-logo { width: 72px; height: 72px; border-radius: var(--radius-lg); background: var(--surface-sunken); border: 1px solid var(--border-default); display: inline-flex; align-items: center; justify-content: center; }
 
-/* Slide 14: linha do tempo; a linha cresce e cada ponto aparece em seguida, uma vez por entrada. */
+/* Slide 17: linha do tempo; a linha cresce e cada ponto aparece em seguida, uma vez por entrada. */
 .roadmap { position: relative; flex: 1; display: flex; align-items: stretch; padding-top: 34px; --step-ms: 650ms; }
 .roadmap-line { position: absolute; top: 48px; left: 0; right: 0; height: 2px; background: var(--border-strong); transform-origin: left center; animation: tdr-grow calc(var(--step-ms) * var(--steps)) linear both; }
 .roadmap-steps { display: flex; justify-content: space-between; gap: 24px; width: 100%; list-style: none; margin: 0; padding: 0; }
@@ -147,7 +188,7 @@ button { font-family: inherit; }
 
 @media (prefers-reduced-motion: reduce) {
   .fonte, .fonte-link, .ai-chip, .rise-1, .rise-2, .rise-3, .rise-4, .rise-5, .roadmap-line, .roadmap-step, .intro-caret, .type-caret { animation: none; }
-  .carousel-track, .intro-title, .intro-logo { transition: none; }
+  .carousel-track, .intro-title, .intro-logo, .intro-after, .intro--after[data-phase="after"] .intro-logo, .intro--after[data-phase="after"] .intro-after { transition: none; }
 }
 
 /* ---- Impressão / PDF: um slide por página, em 1920×1080 ---- */
@@ -164,4 +205,7 @@ button { font-family: inherit; }
   /* Aberturas de seção no PDF: o título inteiro, sem a animação. */
   .intro-title, .intro-logo { display: none; }
   .intro-print { display: block; }
+  /* Slide 05: no PDF, o texto da mudança na rotina, sem o título. */
+  .intro--after .intro-print { display: none; }
+  .intro--after .intro-after { opacity: 1; visibility: visible; transform: none; padding-top: 0; }
 }

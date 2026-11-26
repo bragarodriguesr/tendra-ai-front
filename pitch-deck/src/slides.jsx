@@ -37,15 +37,20 @@ function Heading({ children, maxWidth, style }) {
 
 const REDUCED = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-// Abertura de seção (slides 04 e 09): o título é escrito letra a letra e dá lugar ao logo animado,
+// Abertura de seção (slides 05 e 10): o título é escrito letra a letra e dá lugar ao logo animado,
 // sobre o campo Aurora do slide. Recomeça a cada entrada no slide; com movimento reduzido, mostra o logo.
 // Digitação dos títulos (capa e aberturas de seção): começa após 500 ms, uma letra a cada 110 ms.
 const DIGITA_INICIO_MS = 500;
 const DIGITA_LETRA_MS = 110;
 
-function SectionIntro({ active, title, logo }) {
+// Com `after`, o logo completo encolhe para o canto e o texto do slide entra (slide 05).
+const INTRO_LOGO_MS = 5600; // o logo leva 5 s para ficar completo; segura um instante antes do texto
+
+function SectionIntro({ active, title, logo, after }) {
+  const comTexto = Boolean(after);
+  const final = comTexto ? "after" : "logo";
   const [typed, setTyped] = React.useState(REDUCED ? title.length : 0);
-  const [phase, setPhase] = React.useState(REDUCED ? "logo" : "typing");
+  const [phase, setPhase] = React.useState(REDUCED ? final : "typing");
   const ref = React.useRef(null);
   React.useEffect(() => {
     if (!active || REDUCED) return undefined;
@@ -57,10 +62,11 @@ function SectionIntro({ active, title, logo }) {
     for (let k = 1; k <= title.length; k++) later((t += DIGITA_LETRA_MS), () => setTyped(k));
     later((t += 1100), () => setPhase("out"));
     later((t += 650), () => { setPhase("logo"); ref.current?.replay?.(); });
+    if (comTexto) later((t += INTRO_LOGO_MS), () => setPhase("after"));
     return () => timers.forEach(clearTimeout);
-  }, [active, title]);
+  }, [active, title, comTexto]);
   return (
-    <div className="intro" data-phase={phase}>
+    <div className={"intro" + (after ? " intro--after" : "")} data-phase={phase}>
       <h1 className="title intro-title" aria-label={title}>
         <span aria-hidden="true">{title.slice(0, typed)}</span>
         <span className="intro-caret" aria-hidden="true" />
@@ -70,6 +76,7 @@ function SectionIntro({ active, title, logo }) {
         {/* O desenho do logo tem folga à direita: o deslocamento centra o conjunto visível. */}
         <AnimatedLogo ref={ref} variant={logo} bare once paused={!active || phase !== "logo"} style={{ width: 760, marginLeft: 76 }} title="Tendra.ai" />
       </div>
+      {after ? <div className="intro-after" aria-hidden={phase !== "after"}>{after}</div> : null}
     </div>
   );
 }
@@ -102,9 +109,10 @@ function ContrastCard({ positive, label, items, gap = 24, itemGap = 18 }) {
 // Logo animado na proporção do estático (símbolo de 64 px: viewBox de 224×48, com 4 de folga à esquerda).
 const CAPA_LOGO_ALTURA = 64;
 const CAPA_LOGO_FINAL = 5; // segundos: quadro com o logo completo (o mesmo do `once` e do movimento reduzido)
+const CAPA_LOGO_PAUSA_MS = 5000; // com o logo completo, espera 5 s e toca a animação de novo
 
 // Título da capa em trechos: o do meio leva o realce limão.
-const CAPA_TITULO = [{ t: "Responda a um RFP em " }, { t: "horas", mark: true }, { t: ", não semanas." }];
+const CAPA_TITULO = [{ t: "Responda a uma proposta em " }, { t: "horas", mark: true }, { t: ", não semanas." }];
 const CAPA_TITULO_TEXTO = CAPA_TITULO.map((p) => p.t).join("");
 const CAPA_CURSOR_MS = 1400; // o cursor pisca mais um pouco depois da última letra
 
@@ -154,12 +162,15 @@ function Capa({ active }) {
     timers.push(setTimeout(() => setCursor(false), t + CAPA_CURSOR_MS));
     return () => timers.forEach(clearTimeout);
   }, [active, total]);
-  // Toca uma vez a cada entrada no slide; fora dele (e no PDF), fica no quadro completo.
+  // Em laço enquanto o slide está na tela: desenha o logo, segura o quadro completo por 5 s e
+  // recomeça. Fora dele (e no PDF ou sem movimento), fica no quadro completo.
   React.useLayoutEffect(() => {
     const el = ref.current;
-    if (!el) return;
-    if (active && !REDUCED) el.replay?.();
-    else { el.pause?.(); el.currentTime = CAPA_LOGO_FINAL; }
+    if (!el) return undefined;
+    if (!active || REDUCED) { el.pause?.(); el.currentTime = CAPA_LOGO_FINAL; return undefined; }
+    el.replay?.();
+    const laco = setInterval(() => el.replay?.(), CAPA_LOGO_FINAL * 1000 + CAPA_LOGO_PAUSA_MS);
+    return () => clearInterval(laco);
   }, [active]);
   const k = CAPA_LOGO_ALTURA / 48;
   return (
@@ -176,7 +187,7 @@ function Capa({ active }) {
   );
 }
 
-// Slide 02: as fontes espalhadas, uma após a outra, ligadas por um conector limão em gradiente.
+// Fontes espalhadas (slide 03), uma após a outra, ligadas por um conector limão em gradiente.
 // "mail" e "sheet" vêm do Lucide (ISC), como os demais ícones do DS; o resto usa o <Icon>.
 const FONTE_GLIFOS = {
   mail: '<path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"></path><rect x="2" y="4" width="20" height="16" rx="2"></rect>',
@@ -279,40 +290,135 @@ function Fontes({ active }) {
   return <FontesCena key={run} active={active} saindo={saindo} />;
 }
 
-function Problema({ active }) {
+// Nota de fonte no pé do slide, em mono, como nos slides de referência.
+function Nota({ children, tone = "paper", style }) {
+  return (
+    <MonoLabel as="div" size="mono" uppercase={false} tone={tone === "ink" ? "inverse" : "default"} className="nota" style={{ fontSize: 20, lineHeight: 1.4, ...(tone === "lime" ? { color: "var(--brand-ink)" } : null), ...style }}>{children}</MonoLabel>
+  );
+}
+
+// Número que conta de 0 até o valor a cada entrada no slide; fora dele (e no PDF), fica no valor.
+function Contagem({ active, valor, ms = 1400, formato = (n) => String(n) }) {
+  const [n, setN] = React.useState(valor);
+  React.useEffect(() => {
+    if (!active || REDUCED) { setN(valor); return undefined; }
+    let raf = 0;
+    const t0 = performance.now() + 250;
+    const passo = (agora) => {
+      const t = Math.max(0, Math.min(1, (agora - t0) / ms));
+      setN(Math.round((1 - Math.pow(1 - t, 3)) * valor));
+      if (t < 1) raf = requestAnimationFrame(passo);
+    };
+    setN(0);
+    raf = requestAnimationFrame(passo);
+    return () => cancelAnimationFrame(raf);
+  }, [active, valor, ms]);
+  return <>{formato(n)}</>;
+}
+
+// Slide 02: a persona fictícia que conduz a narrativa.
+function Persona() {
   return (
     <>
-      <div className="split" style={{ gridTemplateColumns: "minmax(0,1fr) minmax(0,0.85fr)" }}>
-        <div style={{ display: "grid", gap: 28, alignContent: "center" }}>
-          <h1 className="title" style={{ fontSize: "var(--type-title)", lineHeight: 1.08, maxWidth: "15ch" }}>Responder uma proposta ainda começa com uma caça ao arquivo certo.</h1>
-          <div style={{ fontSize: "var(--type-body)", lineHeight: 1.5, color: "var(--text-body)", maxWidth: "34ch" }}>
-            Dias procurando informação espalhada por e-mails, PDFs antigos, propostas anteriores e mensagens de chat — sob risco constante de responder com dado desatualizado ou fora de compliance.
+      <Eyebrow style={{ marginBottom: 26 }}>A história · persona fictícia</Eyebrow>
+      <div className="split" style={{ gridTemplateColumns: "minmax(0,1.15fr) minmax(0,0.85fr)" }}>
+        <div style={{ display: "grid", gap: 36 }}>
+          <h1 className="title" style={{ fontSize: "var(--type-title)", lineHeight: 1.06, maxWidth: "14ch" }}>Marina tem até sexta para enviar a proposta</h1>
+          <p style={{ margin: 0, fontSize: "var(--type-body)", lineHeight: 1.5, color: "var(--text-body)", maxWidth: "40ch" }}>
+            Ela lidera pré-vendas numa empresa brasileira de software. O cliente enviou uma planilha com perguntas sobre produto, segurança e privacidade.
+          </p>
+          <blockquote className="persona-quote">“Quem consegue confirmar qual política de segurança vale hoje?”</blockquote>
+        </div>
+        <DeckCard className="stack rise-1" style={{ padding: 44, gap: 32 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+            <span className="persona-avatar" aria-hidden="true">M</span>
+            <div style={{ display: "grid", gap: 6 }}>
+              <div className="card-title" style={{ fontSize: 40 }}>Marina</div>
+              <div style={{ fontSize: 26, color: "var(--text-body)" }}>Líder de pré-vendas</div>
+            </div>
           </div>
-        </div>
-        <div style={{ display: "grid", gap: 24 }}>
-          <Fontes active={active} />
-          <Eyebrow tone="default" size={19}>↳ um processo que hoje envolve, em média, 8 pessoas e mais de 40 horas</Eyebrow>
-        </div>
+          <dl className="persona-rows">
+            <div><dt><Eyebrow as="span" size={20}>Empresa</Eyebrow></dt><dd>Software B2B, no Brasil</dd></div>
+            <div><dt><Eyebrow as="span" size={20}>Pedido</Eyebrow></dt><dd>Planilha de perguntas do cliente</dd></div>
+            <div><dt><Eyebrow as="span" size={20}>Temas</Eyebrow></dt><dd>Produto, segurança e privacidade</dd></div>
+          </dl>
+          <div><Chip tone="warning">Prazo: sexta-feira</Chip></div>
+        </DeckCard>
       </div>
+      <Nota>Cenário ilustrativo baseado no perfil de cliente do projeto</Nota>
     </>
   );
 }
 
-function Custo() {
+// Slide 03: o processo de hoje, com as fontes espalhadas (animação do antigo slide 02) ao lado.
+const CACA = [
+  { n: "01", t: "Buscar", d: "Ela abre propostas antigas, e-mails e pastas em busca de respostas." },
+  { n: "02", t: "Confirmar", d: "Ela aciona engenharia, segurança e jurídico para checar o que ainda vale." },
+  { n: "03", t: "Consolidar", d: "Ela copia as respostas, revisa as versões e cobra aprovações." }
+];
+
+function Caca({ active }) {
   return (
     <>
-      <h1 className="title" style={{ fontSize: 96, lineHeight: 1.12, margin: "auto 0", maxWidth: "20ch" }}>
-        Quantas horas por semana sua equipe gasta <span className="mark" style={{ padding: "0 14px" }}>só procurando</span> informação para montar uma proposta?
-      </h1>
-      <div style={{ fontSize: "var(--type-lead)", lineHeight: 1.5, color: "var(--ink-200)", maxWidth: "50ch", borderTop: "1px solid var(--ink-500)", paddingTop: 36 }}>
-        Multiplique por cada proposta no mês — e pelo custo de enviar uma resposta desatualizada ou fora de compliance. Em média, 45 de cada 100 ficam sem resposta validada por falta de capacidade.
+      <Eyebrow style={{ marginBottom: 26 }}>O processo hoje</Eyebrow>
+      <Heading maxWidth="24ch" style={{ marginBottom: 14 }}>A caça à resposta certa</Heading>
+      <div style={{ fontSize: "var(--type-body)", lineHeight: 1.5, color: "var(--text-body)" }}>Marina coordena o trabalho em uma planilha e por mensagens.</div>
+      <div className="split" style={{ gridTemplateColumns: "minmax(0,1fr) 608px", gap: 48 }}>
+        <ol className="caca-steps">
+          {CACA.map((p, i) => (
+            <li key={p.n} className={`caca-step rise-${i + 1}`}>
+              <Eyebrow as="span" size={24}>{p.n}</Eyebrow>
+              <div style={{ display: "grid", gap: 6 }}>
+                <div className="card-title" style={{ fontSize: 36, lineHeight: 1.15 }}>{p.t}</div>
+                <div style={{ fontSize: 26, lineHeight: 1.45, color: "var(--text-body)" }}>{p.d}</div>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <div className="fontes-escala"><Fontes active={active} /></div>
       </div>
+      <div className="caca-alerta">
+        <span className="caca-alerta-icone" aria-hidden="true"><Icon name="triangle-alert" size={28} /></span>
+        Uma resposta desatualizada pode virar um compromisso com o cliente.
+      </div>
+      <Nota>Fluxo descrito no One Pager e na mentoria</Nota>
+    </>
+  );
+}
+
+// Slide 04: o custo, em dois números do benchmark global; contam a cada entrada no slide.
+function CustoProblema({ active }) {
+  return (
+    <>
+      <Eyebrow tone="accent">O custo do problema</Eyebrow>
+      <div style={{ margin: "auto 0", display: "grid", gap: 56 }}>
+        <div style={{ display: "grid", gap: 4 }}>
+          <div className="title custo-numero"><Contagem active={active} valor={33} /> h</div>
+          <div style={{ fontSize: "var(--type-lead)", lineHeight: 1.4, color: "var(--ink-200)" }}>de trabalho por proposta, em média</div>
+        </div>
+        <div className="custo-linha">
+          <div className="title" style={{ fontSize: 96, lineHeight: 1, letterSpacing: "-0.035em", whiteSpace: "nowrap" }}><Contagem active={active} valor={8} ms={1000} /> pessoas</div>
+          <div style={{ fontSize: 30, lineHeight: 1.45, color: "var(--ink-200)", maxWidth: "26ch" }}>tamanho médio da equipe responsável pelas propostas</div>
+        </div>
+      </div>
+      <Nota tone="ink">Loopio e APMP 2026 · benchmark global</Nota>
     </>
   );
 }
 
 function SecaoSolucao({ active }) {
-  return <SectionIntro active={active} title="A solução" logo="lime" />;
+  return (
+    <SectionIntro active={active} title="A solução" logo="lime" after={
+      <>
+        <Eyebrow style={{ color: "var(--brand-ink)" }}>A mudança na rotina</Eyebrow>
+        <h2 className="title" style={{ fontSize: "var(--type-title)", lineHeight: 1.06, maxWidth: "16ch" }}>Marina agora começa pela <span className="mark" style={{ padding: "0 12px" }}>revisão</span></h2>
+        <p style={{ margin: 0, fontSize: "var(--type-lead)", lineHeight: 1.5, maxWidth: "46ch" }}>
+          As respostas recorrentes já vêm com a fonte ao lado. Ela chama especialistas para o que exige decisão e volta a ter tempo para conversar com o cliente.
+        </p>
+        <Nota tone="lime">Cenário de uso proposto</Nota>
+      </>
+    } />
+  );
 }
 
 // Janela do produto: toca uma cena da demonstração do site ("O produto em ação"), em laço, enquanto
@@ -357,7 +463,7 @@ function Produto() {
   );
 }
 
-// Passos 01 a 04 do site ("O produto em ação"), com o texto lateral de cada um. O 00 está no slide 05.
+// Passos 01 a 04 do site ("O produto em ação"), com o texto lateral de cada um. O 00 está no slide 06.
 const PASSOS = [
   { n: "01", tela: "Tarefas", t: "Importe o questionário", d: "Suba a planilha do cliente. A Tendra.ai separa as perguntas item por item e classifica cada uma por área.", itens: ["Planilha .xlsx ou .csv, na estrutura do cliente", "Perguntas separadas item por item", "Classificação por área responsável"] },
   { n: "02", tela: "IA em ação", t: "Gere com rastreabilidade", d: "O modelo cruza cada pergunta com a base aprovada e escreve a resposta citando o documento e a página que a sustenta.", itens: ["Resposta redigida só com a base aprovada", "Documento e página em cada parágrafo", "Citação que não existe no documento é descartada"] },
@@ -468,6 +574,56 @@ function Arquitetura() {
 
 function SecaoNegocio({ active }) {
   return <SectionIntro active={active} title="O negócio" logo="ink" />;
+}
+
+// Slide 11: o benchmark global de volume e capacidade.
+const VOLUME = [
+  { valor: 166, sufixo: "", d: "propostas enviadas por ano, em média" },
+  { valor: 55, sufixo: "%", d: "das solicitações recebidas são respondidas" },
+  { valor: 39, sufixo: "%", d: "de taxa média de vitória" }
+];
+
+function Volume({ active }) {
+  return (
+    <>
+      <Eyebrow style={{ marginBottom: 26 }}>Benchmark global · 1.533 profissionais</Eyebrow>
+      <Heading maxWidth="24ch" style={{ marginBottom: "var(--gap-title)" }}>O volume subiu. A capacidade virou gargalo.</Heading>
+      <div className="cols cols--3" style={{ flex: "none" }}>
+        {VOLUME.map((v, i) => (
+          <DeckCard key={v.d} className={`stack rise-${i + 1}`} style={{ padding: 44, gap: 16 }}>
+            <div className="title" style={{ fontSize: 120, lineHeight: 1, letterSpacing: "-0.04em" }}><Contagem active={active} valor={v.valor} />{v.sufixo}</div>
+            <div style={{ fontSize: 28, lineHeight: 1.4, color: "var(--text-body)", maxWidth: "18ch" }}>{v.d}</div>
+          </DeckCard>
+        ))}
+      </div>
+      <div className="destaque rise-4">
+        <span className="destaque-numero">50%</span>
+        apontam capacidade de equipe como um dos principais desafios.
+      </div>
+      <Nota style={{ marginTop: "auto" }}>Loopio e APMP 2026 · pesquisa global</Nota>
+    </>
+  );
+}
+
+// Slide 12: o mercado inicial no Brasil (estimativa interna).
+function Oportunidade() {
+  return (
+    <>
+      <Eyebrow style={{ marginBottom: 26 }}>Oportunidade no Brasil</Eyebrow>
+      <Heading maxWidth="24ch" style={{ marginBottom: "var(--gap-title)" }}>Começamos por tecnologia B2B</Heading>
+      <div className="mercado">
+        <div className="mercado-linha rise-1">
+          <div className="title mercado-numero">1.500–3.000</div>
+          <div className="mercado-texto">empresas no mercado inicial estimado</div>
+        </div>
+        <div className="mercado-linha rise-2">
+          <div className="title mercado-numero mercado-numero--sm">R$ 70–240 mi/ano</div>
+          <div className="mercado-texto">potencial de receita desse mercado no cenário-base da equipe</div>
+        </div>
+      </div>
+      <Nota style={{ marginTop: "auto" }}>Estimativa interna · Pesquisa de Mercado e Próximos Passos</Nota>
+    </>
+  );
 }
 
 const ICP = [
@@ -630,15 +786,18 @@ function Fechamento() {
 
 // tone: campo do slide (paper | ink | lime). notes: notas do apresentador (tecla N).
 export const SLIDES = [
-  { label: "Capa", tone: "ink", Component: Capa, notes: "Abertura: apresentar o Tendra.ai e a promessa central antes de detalhar a dor." },
-  { label: "O problema", tone: "paper", Component: Problema, notes: "Descrever a dor: dias caçando informação dispersa, risco de compliance." },
-  { label: "Custo do problema", tone: "ink", Component: Custo, notes: "Pausa para a banca refletir sobre o custo real antes de apresentar a solução." },
-  { label: "Seção: A solução", tone: "aurora-lime", Component: SecaoSolucao, notes: "Transição para a apresentação do produto: \"A solução\" é escrita e dá lugar ao logo animado." },
+  { label: "Capa", tone: "ink", Component: Capa, notes: "Abertura: apresentar o Tendra.ai e a promessa central. O logo se desenha de novo a cada 5 s. Em seguida, acompanhamos uma pessoa que faz esse trabalho." },
+  { label: "A história", tone: "paper", Component: Persona, notes: "Marina é uma personagem fictícia que representa o perfil descrito no One Pager e na mentoria. A fala e o prazo de sexta são cenas ilustrativas, sem atribuição a entrevistados. Quando for útil, explique RFP como solicitação formal de proposta e RFI como solicitação de informações." },
+  { label: "A caça à resposta certa", tone: "paper", Component: Caca, notes: "Volte à pergunta sobre segurança: a resposta está na proposta antiga, mas ninguém sabe se a política mudou. Marina segura o envio enquanto espera a confirmação. Cada área perde tempo procurando a mesma informação, e o comercial fica sem previsão." },
+  { label: "O custo do problema", tone: "ink", Component: CustoProblema, notes: "As 33 horas são de esforço médio de resposta, não prazo corrido. O tamanho médio de oito pessoas descreve a equipe de propostas: não implica que oito pessoas trabalhem em cada proposta nem que cada uma gaste 33 horas. O relatório aponta 33 h no mid-market e 39 h em enterprise." },
+  { label: "Seção: A solução", tone: "aurora-lime", Component: SecaoSolucao, notes: "\"A solução\" é escrita e dá lugar ao logo animado; com o logo completo, entra a mudança na rotina. Retome a pergunta inicial: Marina abre a fonte e valida se a política é a que vale hoje. Se faltar evidência, ela sabe exatamente o que escalar. O ganho comercial é recuperar tempo para tratar objeções e avançar a venda. Essa é a experiência que o piloto vai validar." },
   { label: "Introduzindo Tendra.ai", tone: "paper", Component: Produto, notes: "Apresentar o produto como cérebro comercial e técnico da empresa. A janela mostra o passo 00: documentos entrando na base." },
   { label: "Como funciona", tone: "paper", Component: ComoFunciona, notes: "Carrossel com os passos 01 a 04 (importar, gerar com fonte, revisar e aprovar, exportar). Avance com as setas laterais do slide." },
   { label: "Plataforma AI native", tone: "paper", Component: PlataformaIA, notes: "A IA classifica perguntas e documentos por área, entende o edital, redige com fonte e sinaliza contradição; guardrails em código determinístico conferem tudo, e a pessoa aprova." },
   { label: "Arquitetura técnica", tone: "paper", Component: Arquitetura, notes: "A stack: Claude pela API da Anthropic, GitHub, Supabase, Render e Vercel, e o papel de cada um no produto." },
-  { label: "Seção: O negócio", tone: "aurora-ink", Component: SecaoNegocio, notes: "Transição para cliente, modelo de receita e escopo do MVP: \"O negócio\" é escrito e dá lugar ao logo animado." },
+  { label: "Seção: O negócio", tone: "aurora-ink", Component: SecaoNegocio, notes: "Transição para mercado, cliente, modelo de receita e escopo do MVP: \"O negócio\" é escrito e dá lugar ao logo animado." },
+  { label: "Volume e capacidade", tone: "paper", Component: Volume, notes: "O volume médio subiu de 153 para 166 e a parcela respondida caiu de 63% para 55%. O estudo não atribui todo o volume que fica sem resposta à capacidade. A taxa média de vitória de 39% é da edição de 2026; 45% é a média histórica de 2019 a 2026. Nenhum desses percentuais foi medido especificamente no Brasil." },
+  { label: "Oportunidade no Brasil", tone: "paper", Component: Oportunidade, notes: "O recorte inicial são empresas brasileiras de software, nuvem, infraestrutura e integração que vendem para grandes clientes e respondem com frequência a propostas e questionários de segurança. Contagem e receita são estimativas internas de mercado atendível (SAM), sem censo nem validação primária. A faixa combina 1.500 a 3.000 empresas com R$ 45 a 80 mil de contrato anual hipotético." },
   { label: "Cliente ideal", tone: "paper", Component: ClienteIdeal, notes: "Descrever o ICP: vertical, porte e personas." },
   { label: "Modelo de receita", tone: "paper", Component: Receita, notes: "Mesmo modelo da página de Preços do site: cobrança por revisor; o plano Basic tem até 5 revisores e 20 RFPs por semestre, e o Enterprise tem volume ilimitado." },
   { label: "Escopo do MVP", tone: "paper", Component: Escopo, notes: "O que está dentro e fora do MVP: base em .md, RFP em .xlsx e aprovação por área dentro; outros formatos e integrações fora." },
