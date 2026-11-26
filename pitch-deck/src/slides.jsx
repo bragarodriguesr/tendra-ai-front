@@ -92,18 +92,6 @@ function FeatureCard({ eyebrow, title, titleSize = 34, titleLh = 1.2, children, 
   );
 }
 
-// Par "sim / não": faixa de acento de 3px no topo (limão ou danger).
-function ContrastCard({ positive, label, items, gap = 24, itemGap = 18 }) {
-  return (
-    <DeckCard className="stack" accentTop={positive ? "var(--brand-lime)" : "var(--danger)"} style={{ padding: 44, gap }}>
-      <Eyebrow tone="state" size={24} style={positive ? undefined : { color: "var(--danger)" }}>{label}</Eyebrow>
-      <div className="body-small" style={{ display: "grid", gap: itemGap }}>
-        {items.map((item) => <div key={item}>{item}</div>)}
-      </div>
-    </DeckCard>
-  );
-}
-
 /* ---- Slides ---- */
 
 // Logo animado na proporção do estático (símbolo de 64 px: viewBox de 224×48, com 4 de folga à esquerda).
@@ -435,7 +423,7 @@ function Caca({ active }) {
       </div>
       <div className="caca-alerta">
         <span className="caca-alerta-icone" aria-hidden="true"><Icon name="triangle-alert" size={28} /></span>
-        Uma resposta desatualizada pode virar um compromisso com o cliente.
+        Uma resposta desatualizada pode virar um compromisso com o cliente ou a perda de um contrato.
       </div>
     </>
   );
@@ -466,11 +454,10 @@ function SecaoSolucao({ active }) {
     <SectionIntro active={active} title="A solução" logo="lime" after={
       <>
         <Eyebrow style={{ color: "var(--brand-ink)" }}>A mudança na rotina</Eyebrow>
-        <h2 className="title" style={{ fontSize: "var(--type-title)", lineHeight: 1.06, maxWidth: "16ch" }}>Marina agora começa pela <span className="mark" style={{ padding: "0 12px" }}>revisão</span></h2>
+        <h2 className="title" style={{ fontSize: "var(--type-title)", lineHeight: 1.12, maxWidth: "16ch" }}>Marina agora começa pela <span className="mark mark--bloco" style={{ padding: "0 12px" }}>revisão</span></h2>
         <p style={{ margin: 0, fontSize: "var(--type-lead)", lineHeight: 1.5, maxWidth: "46ch" }}>
           As respostas recorrentes já vêm com a fonte ao lado. Ela chama especialistas para o que exige decisão e volta a ter tempo para conversar com o cliente.
         </p>
-        <Nota tone="lime">Cenário de uso proposto</Nota>
       </>
     } />
   );
@@ -681,93 +668,102 @@ function Oportunidade() {
   );
 }
 
-const ICP = [
-  { label: "Setor-alvo", value: "Tecnologia — Software e Infraestrutura" },
-  { label: "Porte", value: "Mid-market a Enterprise, com área de licitações ou pré-vendas" },
-  { label: "Usuário final", value: "Engenheiro de pré-vendas, Bid Manager, Analista Jurídico" },
-  { label: "Decisor de compra", value: "Diretor de Vendas (CSO) ou Diretor de Operações (COO)" }
+// Slide 13: as metas do piloto; os números contam a cada entrada no slide.
+const METAS = [
+  { valor: 30, formato: (n) => `−${n}%`, t: "tempo de ciclo", d: "Da importação à exportação, em propostas de complexidade similar." },
+  { valor: 70, formato: (n) => `${n}%`, t: "aceitação do texto sugerido", d: "Quanto da sugestão permanece no texto aprovado." }
 ];
 
-function ClienteIdeal() {
+function Piloto({ active }) {
   return (
     <>
-      <Heading maxWidth="26ch" style={{ marginBottom: 20 }}>Foco em concorrências técnicas, longas e reguladas.</Heading>
-      <div style={{ fontSize: "var(--type-body)", lineHeight: 1.5, color: "var(--text-body)", maxWidth: "56ch", marginBottom: "var(--gap-title)" }}>
-        Onde copiar e colar tradicionalmente gera mais risco de compliance do que agilidade.
-      </div>
-      <div className="cols cols--2" style={{ gap: 28 }}>
-        {ICP.map((c) => (
-          <DeckCard key={c.label} className="stack" style={{ padding: 36, gap: 12 }}>
-            <Eyebrow size={21}>{c.label}</Eyebrow>
-            <div style={{ fontSize: 30, lineHeight: 1.3, fontWeight: 600 }}>{c.value}</div>
+      <Eyebrow style={{ marginBottom: 26 }}>Piloto · metas a validar</Eyebrow>
+      <Heading maxWidth="24ch" style={{ marginBottom: "var(--gap-title)" }}>Como vamos provar que funciona</Heading>
+      <div className="cols cols--2" style={{ flex: "none" }}>
+        {METAS.map((m, i) => (
+          <DeckCard key={m.t} className={`stack rise-${i + 1}`} style={{ padding: 44, gap: 14 }}>
+            <div className="title meta-numero"><Contagem active={active} valor={m.valor} formato={m.formato} /></div>
+            <div className="card-title" style={{ fontSize: 36, lineHeight: 1.2 }}>{m.t}</div>
+            <div className="body-small" style={{ maxWidth: "34ch" }}>{m.d}</div>
           </DeckCard>
         ))}
       </div>
-      <Eyebrow tone="default" size={20} style={{ marginTop: 28 }}>Mercado potencial fora do foco do MVP: Engenharia, Logística, Saúde e Consultoria.</Eyebrow>
+      <div className="destaque rise-3">Também medimos horas de trabalho, cobertura de fontes e alertas tratados.</div>
+      <Nota>Meta de aceitação no One Pager · redução de ciclo proposta</Nota>
     </>
   );
 }
 
-function Receita() {
+// Slide 14: simulação do retorno para o cliente; os números contam a cada entrada no slide.
+const reais = (n) => "R$ " + n.toLocaleString("pt-BR");
+
+function Retorno({ active }) {
   return (
     <>
-      <Heading maxWidth="30ch" style={{ marginBottom: 20 }}>Preço por revisor, não por resposta.</Heading>
-      <div style={{ fontSize: "var(--type-body)", lineHeight: 1.5, color: "var(--text-body)", maxWidth: "56ch", marginBottom: "var(--gap-title)" }}>
-        Cobrar por resposta gerada premiaria o volume. Cobramos por quem revisa, porque é a revisão que garante a entrega.
+      <Eyebrow tone="accent" style={{ marginBottom: 26 }}>Retorno para o cliente · simulação</Eyebrow>
+      <Heading maxWidth="24ch" style={{ marginBottom: "var(--gap-title)" }}>Quanto vale o tempo recuperado?</Heading>
+      <div className="retorno">
+        <div className="retorno-item">
+          <div className="title retorno-numero"><Contagem active={active} valor={99} /> h/mês</div>
+          <div className="retorno-texto">de capacidade recuperada</div>
+        </div>
+        <div className="retorno-item">
+          <div className="title retorno-numero"><Contagem active={active} valor={17820} formato={reais} /></div>
+          <div className="retorno-texto">em capacidade por mês</div>
+        </div>
       </div>
-      <div className="cols cols--2">
-        <FeatureCard eyebrow={{ text: "Assentos", size: 24 }} title="Por revisor" titleSize={40} titleLh="normal" padding={44} gap={20}>
-          No plano Basic, até 5 revisores com acesso à plataforma: pré-vendas, jurídico e engenharia.
+      <div className="retorno-conta">10 propostas/mês × 33 h × 30% de redução de esforço × R$ 180/h</div>
+      <p style={{ margin: "28px 0 0", fontSize: 30, lineHeight: 1.45, color: "var(--ink-200)", maxWidth: "56ch" }}>
+        Com mensalidade hipotética de R$ 5 mil, o valor da capacidade cobre a assinatura a partir de 28 horas recuperadas por mês.
+      </p>
+      <Nota tone="ink">Premissas do cenário · benchmark de esforço Loopio/APMP</Nota>
+    </>
+  );
+}
+
+// Slide 15: quem compra e como cobramos.
+function ModeloNegocio() {
+  return (
+    <>
+      <Eyebrow style={{ marginBottom: 26 }}>Modelo de negócio</Eyebrow>
+      <Heading maxWidth="28ch" style={{ marginBottom: "var(--gap-title)" }}>Assinatura para equipes que respondem propostas todo mês</Heading>
+      <div className="cols cols--2" style={{ flex: "none" }}>
+        <FeatureCard title="Quem compra" titleSize={40} padding={44} gap={18} className="rise-1">
+          A liderança comercial ou de operações de empresas B2B com demandas recorrentes.
         </FeatureCard>
-        <FeatureCard eyebrow={{ text: "Volume", size: 24 }} title="Por semestre" titleSize={40} titleLh="normal" padding={44} gap={20}>
-          No plano Basic, até 20 RFPs por semestre. No Enterprise, volume ilimitado, com SSO.
+        <FeatureCard title="Como cobramos" titleSize={40} padding={44} gap={18} className="rise-2">
+          Assinatura por assento com um pacote mensal de propostas processadas.
         </FeatureCard>
       </div>
+      <div className="destaque rise-3">
+        <span className="destaque-numero">R$ 45–80 mil</span>
+        hipótese de contrato anual por empresa
+      </div>
+      <Nota>Modelo original do pitch e faixa estimada em pesquisa interna</Nota>
     </>
   );
 }
 
-function Escopo() {
+// Slide 16: o estágio do projeto e quem está nele.
+const EQUIPE = ["Rafael Braga", "Matheus Alcântara", "Mariana Fugimoto", "Renata Lima da Silva", "Everton Santos", "Roberta Vitalina"];
+
+function TimeExecucao() {
   return (
     <>
-      <Heading maxWidth="30ch" style={{ marginBottom: "var(--gap-title)" }}>O que compõe o MVP.</Heading>
-      <div className="cols cols--2">
-        <ContrastCard positive label="Dentro do MVP" gap={20} itemGap={16} items={[
-          "Upload de documentos e RFPs passadas em .md, numa base isolada por organização e usada para elaborar as respostas.",
-          "Processamento de uma nova RFP em planilha .xlsx e geração do rascunho de resposta.",
-          "Fonte citada em cada resposta (arquivo · seção · linha), com o trecho original a um clique.",
-          "Aprovação por área: cada pergunta vai ao Aprovador responsável (Produto, Tecnologia, Segurança e privacidade, Comercial ou Jurídico)."
-        ]} />
-        <ContrastCard label="Fora do MVP" gap={20} itemGap={16} items={[
-          "Conversão de PDF, DOCX e outros formatos para a base.",
-          "Integrações nativas via API com CRMs, como Salesforce.",
-          "Conexão direta com diretórios corporativos (Google Drive, SharePoint).",
-          "Fluxos complexos de aprovação em múltiplos níveis de diretoria."
-        ]} />
+      <Eyebrow style={{ marginBottom: 26 }}>Time e execução</Eyebrow>
+      <Heading maxWidth="26ch" style={{ marginBottom: "var(--gap-title)" }}>Já temos um protótipo para testar com o mercado</Heading>
+      <div className="cols cols--2" style={{ flex: "none" }}>
+        <FeatureCard title="O que já existe" titleSize={40} padding={44} gap={18} className="rise-1">
+          Protótipo navegável do fluxo de importação, revisão com fontes e aprovação.
+        </FeatureCard>
+        <FeatureCard title="O que falta provar" titleSize={40} padding={44} gap={18} className="rise-2">
+          Quanto tempo o cliente recupera, quais respostas aceita e quanto pagaria.
+        </FeatureCard>
       </div>
-    </>
-  );
-}
-
-const METRICS = [
-  { label: "ROI para o cliente", items: ["Tempo de ciclo de resposta", "Taxa de aceitação da IA, sem reescrita", "Win rate do cliente"] },
-  { label: "Sucesso do produto", items: ["Time-to-First-Value (TTFV)", "CAC versus LTV"] }
-];
-
-function Metricas() {
-  return (
-    <>
-      <Heading maxWidth="30ch" style={{ marginBottom: "var(--gap-title)" }}>Como medimos o resultado.</Heading>
-      <div className="cols cols--2" style={{ gap: 56 }}>
-        {METRICS.map((m) => (
-          <div key={m.label} className="stack" style={{ gap: 28 }}>
-            <Eyebrow tone="inverse" size={22} style={{ borderBottom: "1px solid var(--ink-500)", paddingBottom: 18 }}>{m.label}</Eyebrow>
-            {m.items.map((item) => (
-              <div key={item} style={{ fontSize: 30, lineHeight: 1.4, color: "var(--n-075)" }}>{item}</div>
-            ))}
-          </div>
-        ))}
-      </div>
+      <ul className="equipe rise-3" aria-label="Equipe">
+        {EQUIPE.map((nome) => <li key={nome}>{nome}</li>)}
+      </ul>
+      <Nota>Equipe e estágio do projeto · One Pager AIPL</Nota>
     </>
   );
 }
@@ -850,13 +846,13 @@ export const SLIDES = [
   { label: "Como funciona", tone: "paper", Component: ComoFunciona, notes: "Carrossel com os passos 01 a 04 (importar, gerar com fonte, revisar e aprovar, exportar). Avance com as setas laterais do slide." },
   { label: "Plataforma AI native", tone: "paper", Component: PlataformaIA, notes: "A IA classifica perguntas e documentos por área, entende o edital, redige com fonte e sinaliza contradição; guardrails em código determinístico conferem tudo, e a pessoa aprova." },
   { label: "Arquitetura técnica", tone: "paper", Component: Arquitetura, notes: "A stack: Claude pela API da Anthropic, GitHub, Supabase, Render e Vercel, e o papel de cada um no produto." },
-  { label: "Seção: O negócio", tone: "aurora-ink", Component: SecaoNegocio, notes: "Transição para mercado, cliente, modelo de receita e escopo do MVP: \"O negócio\" é escrito e dá lugar ao logo animado." },
+  { label: "Seção: O negócio", tone: "aurora-ink", Component: SecaoNegocio, notes: "Transição para mercado, piloto, retorno para o cliente e modelo de negócio: \"O negócio\" é escrito e dá lugar ao logo animado." },
   { label: "Volume e capacidade", tone: "paper", Component: Volume, notes: "O volume médio subiu de 153 para 166 e a parcela respondida caiu de 63% para 55%. O estudo não atribui todo o volume que fica sem resposta à capacidade. A taxa média de vitória de 39% é da edição de 2026; 45% é a média histórica de 2019 a 2026. Nenhum desses percentuais foi medido especificamente no Brasil." },
   { label: "Oportunidade no Brasil", tone: "paper", Component: Oportunidade, notes: "O recorte inicial são empresas brasileiras de software, nuvem, infraestrutura e integração que vendem para grandes clientes e respondem com frequência a propostas e questionários de segurança. Contagem e receita são estimativas internas de mercado atendível (SAM), sem censo nem validação primária. A faixa combina 1.500 a 3.000 empresas com R$ 45 a 80 mil de contrato anual hipotético." },
-  { label: "Cliente ideal", tone: "paper", Component: ClienteIdeal, notes: "Descrever o ICP: vertical, porte e personas." },
-  { label: "Modelo de receita", tone: "paper", Component: Receita, notes: "Mesmo modelo da página de Preços do site: cobrança por revisor; o plano Basic tem até 5 revisores e 20 RFPs por semestre, e o Enterprise tem volume ilimitado." },
-  { label: "Escopo do MVP", tone: "paper", Component: Escopo, notes: "O que está dentro e fora do MVP: base em .md, RFP em .xlsx e aprovação por área dentro; outros formatos e integrações fora." },
-  { label: "Métricas", tone: "ink", Component: Metricas, notes: "Como medimos ROI para o cliente e sucesso do produto." },
+  { label: "Piloto: metas a validar", tone: "paper", Component: Piloto, notes: "A meta de 30% é proposta para o piloto e não foi observada em cliente. Compare a mediana do ciclo da importação à exportação com casos comparáveis do processo atual, separando tempo corrido de horas ativas. A meta de 70% vem do One Pager e mede a similaridade por palavras entre o texto sugerido e o aprovado. Medimos também cobertura de fontes, tratamento de alertas e retrabalho. A taxa de vitória é acompanhada depois, sem atribuir causalidade ao produto, porque preço e concorrência também mudam o desfecho." },
+  { label: "Retorno para o cliente", tone: "ink", Component: Retorno, notes: "Cenário ilustrativo, sem resultado em cliente e sem representar redução de folha. 10 propostas por mês × 33 h = 330 h; uma redução hipotética de 30% no esforço ativo dá 99 h. A R$ 180/h, são R$ 17.820 em capacidade, que pode ir para negociação e novas propostas. A assinatura simulada de R$ 5.000 por mês equivale a R$ 60 mil por ano, dentro da faixa interna: benefício/custo de 3,56× e retorno líquido de 256,4%, antes de implantação, tributos e treinamento. O ponto de equilíbrio é 27,78 h, arredondado para 28 h. A redução de esforço usada aqui deve ser cronometrada separadamente da meta de ciclo." },
+  { label: "Modelo de negócio", tone: "paper", Component: ModeloNegocio, notes: "A entrada é por empresas de tecnologia que já têm orçamento ligado ao processo, volume recorrente e exigência de evidência. A cobrança por assento e volume vem do pitch original. A faixa de R$ 45 a 80 mil por ano é hipótese, a validar com compradores e uso real. Nenhuma receita, cliente ou contrato é afirmado." },
+  { label: "Time e execução", tone: "paper", Component: TimeExecucao, notes: "A equipe já pode mostrar a experiência. O próximo passo é provar o impacto operacional com compradores reais. O teste interno de qualidade em base sintética não substitui a validação com cliente." },
   { label: "Roadmap", tone: "paper", Component: Roadmap, notes: "O que vem depois do MVP. Os pontos aparecem um a um ao entrar no slide." },
   { label: "Time", tone: "aurora-lime", Component: Time, notes: "Apresentar o time fundador." },
   { label: "Fechamento", tone: "lime", Component: Fechamento, notes: "Encerrar reforçando a promessa central e abrir para perguntas da banca." }

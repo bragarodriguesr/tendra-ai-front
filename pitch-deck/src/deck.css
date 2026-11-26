@@ -50,6 +50,8 @@ button { font-family: inherit; }
 .title--h2 { font-size: var(--type-h2); line-height: 1.1; }
 /* Marcador limão atrás da palavra: limão é preenchimento, o texto sobre ele é tinta. */
 .mark { background: var(--brand-lime); color: var(--brand-ink); padding: 0 16px; }
+/* Em título de várias linhas: o preenchimento fica na altura da linha e não cobre as letras de cima (slide 05). */
+.mark--bloco { display: inline-block; line-height: 1; }
 .cols { display: grid; gap: 32px; flex: 1; }
 .cols--2 { grid-template-columns: repeat(2, 1fr); }
 .cols--3 { grid-template-columns: repeat(3, 1fr); }
@@ -161,6 +163,20 @@ button { font-family: inherit; }
 .mercado-numero { font-size: 150px; line-height: 1; letter-spacing: -0.045em; white-space: nowrap; }
 .mercado-numero--sm { font-size: 96px; letter-spacing: -0.035em; }
 .mercado-texto { font-size: 32px; line-height: 1.4; color: var(--text-body); max-width: 22ch; }
+
+/* Slide 13: metas do piloto. */
+.meta-numero { font-size: 150px; line-height: 1; letter-spacing: -0.045em; font-variant-numeric: tabular-nums; margin-bottom: 10px; }
+
+/* Slide 14: retorno simulado, em dois números e a conta que os gera. */
+.retorno { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 56px; }
+.retorno-item { display: grid; gap: 10px; }
+.retorno-numero { font-size: 150px; line-height: 1; letter-spacing: -0.045em; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.retorno-texto { font-size: var(--type-lead); line-height: 1.4; color: var(--ink-200); }
+.retorno-conta { margin-top: 48px; padding-top: 36px; border-top: 1px solid var(--ink-500); font-family: var(--font-mono); font-size: 30px; line-height: 1.4; color: var(--brand-paper); }
+
+/* Slide 16: a equipe, numa linha separada por pontos. */
+.equipe { list-style: none; margin: 40px 0 0; padding: 28px 0 0; border-top: 1px solid var(--border-default); display: flex; flex-wrap: wrap; gap: 12px 0; font-size: 28px; line-height: 1.4; color: var(--text-strong); }
+.equipe li + li::before { content: "·"; margin: 0 18px; color: var(--text-meta); }
 
 /* Slides 06 e 07: janela do produto, a mesma demonstração do site. */
 .deck-demo { border-radius: 24px; box-shadow: var(--shadow-popover); }
