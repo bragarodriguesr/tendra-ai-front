@@ -44,7 +44,7 @@ const DIGITA_INICIO_MS = 500;
 const DIGITA_LETRA_MS = 110;
 
 // Com `after`, o logo completo encolhe para o canto e o texto do slide entra (slide 05).
-const INTRO_LOGO_MS = 5600; // o logo leva 5 s para ficar completo; segura um instante antes do texto
+const INTRO_LOGO_MS = 4200; // o logo termina de se desenhar aos 4,2 s (a palavra entra por último); o texto vem em seguida, sem pausa
 
 function SectionIntro({ active, title, logo, after }) {
   const comTexto = Boolean(after);
@@ -112,7 +112,8 @@ const CAPA_LOGO_FINAL = 5; // segundos: quadro com o logo completo (o mesmo do `
 const CAPA_LOGO_PAUSA_MS = 5000; // com o logo completo, espera 5 s e toca a animação de novo
 
 // Título da capa em trechos: o do meio leva o realce limão.
-const CAPA_TITULO = [{ t: "Responda a uma proposta em " }, { t: "horas", mark: true }, { t: ", não semanas." }];
+// "\n" quebra a linha (o título tem white-space: pre-line): três linhas fixas desde a primeira letra.
+const CAPA_TITULO = [{ t: "Responda a uma\nproposta em " }, { t: "horas", mark: true }, { t: ",\nnão semanas." }];
 const CAPA_TITULO_TEXTO = CAPA_TITULO.map((p) => p.t).join("");
 const CAPA_CURSOR_MS = 1400; // o cursor pisca mais um pouco depois da última letra
 
@@ -176,7 +177,7 @@ function Capa({ active }) {
   return (
     <>
       <AnimatedLogo ref={ref} variant="ink" bare once style={{ width: 224 * k, marginLeft: -4 * k }} title="Tendra.ai" />
-      <h1 className="title" aria-label={CAPA_TITULO_TEXTO} style={{ fontSize: "var(--type-display)", lineHeight: 1.02, letterSpacing: "-0.04em", margin: "auto 0 48px", maxWidth: "17ch" }}>
+      <h1 className="title" aria-label={CAPA_TITULO_TEXTO.replace(/\n/g, " ")} style={{ fontSize: "var(--type-display)", lineHeight: 1.02, letterSpacing: "-0.04em", margin: "auto 0 48px", whiteSpace: "pre-line" }}>
         <span aria-hidden="true"><TituloDigitado typed={typed} cursor={cursor} /></span>
       </h1>
       <div className="footer-rule" style={{ borderTop: "1px solid var(--ink-500)" }}>
@@ -316,36 +317,43 @@ function Contagem({ active, valor, ms = 1400, formato = (n) => String(n) }) {
   return <>{formato(n)}</>;
 }
 
-// Slide 02: a persona fictícia que conduz a narrativa.
-function Persona() {
+// Slide 02: a persona fictícia que conduz a narrativa. A pergunta dela é o destaque: o cartão entra,
+// a fala é escrita e o selo "Sem resposta" pulsa, a cada entrada no slide.
+const PERGUNTA = "Quem consegue confirmar qual política de segurança vale hoje?";
+const PERGUNTA_INICIO_MS = 700;
+const PERGUNTA_LETRA_MS = 38;
+
+function Persona({ active }) {
+  const [typed, setTyped] = React.useState(PERGUNTA.length);
+  React.useEffect(() => {
+    if (!active || REDUCED) { setTyped(PERGUNTA.length); return undefined; }
+    setTyped(0);
+    const timers = [];
+    for (let k = 1; k <= PERGUNTA.length; k++) timers.push(setTimeout(() => setTyped(k), PERGUNTA_INICIO_MS + k * PERGUNTA_LETRA_MS));
+    return () => timers.forEach(clearTimeout);
+  }, [active]);
+  const escrevendo = typed < PERGUNTA.length;
   return (
     <>
       <Eyebrow style={{ marginBottom: 26 }}>A história · persona fictícia</Eyebrow>
-      <div className="split" style={{ gridTemplateColumns: "minmax(0,1.15fr) minmax(0,0.85fr)" }}>
+      <div className="split" style={{ gridTemplateColumns: "minmax(0,1fr) minmax(0,0.95fr)", gap: 96 }}>
         <div style={{ display: "grid", gap: 36 }}>
           <h1 className="title" style={{ fontSize: "var(--type-title)", lineHeight: 1.06, maxWidth: "14ch" }}>Marina tem até sexta para enviar a proposta</h1>
-          <p style={{ margin: 0, fontSize: "var(--type-body)", lineHeight: 1.5, color: "var(--text-body)", maxWidth: "40ch" }}>
+          <p style={{ margin: 0, fontSize: "var(--type-body)", lineHeight: 1.5, color: "var(--text-body)", maxWidth: "36ch" }}>
             Ela lidera pré-vendas numa empresa brasileira de software. O cliente enviou uma planilha com perguntas sobre produto, segurança e privacidade.
           </p>
-          <blockquote className="persona-quote">“Quem consegue confirmar qual política de segurança vale hoje?”</blockquote>
         </div>
-        <DeckCard className="stack rise-1" style={{ padding: 44, gap: 32 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-            <span className="persona-avatar" aria-hidden="true">M</span>
-            <div style={{ display: "grid", gap: 6 }}>
-              <div className="card-title" style={{ fontSize: 40 }}>Marina</div>
-              <div style={{ fontSize: 26, color: "var(--text-body)" }}>Líder de pré-vendas</div>
-            </div>
-          </div>
-          <dl className="persona-rows">
-            <div><dt><Eyebrow as="span" size={20}>Empresa</Eyebrow></dt><dd>Software B2B, no Brasil</dd></div>
-            <div><dt><Eyebrow as="span" size={20}>Pedido</Eyebrow></dt><dd>Planilha de perguntas do cliente</dd></div>
-            <div><dt><Eyebrow as="span" size={20}>Temas</Eyebrow></dt><dd>Produto, segurança e privacidade</dd></div>
-          </dl>
-          <div><Chip tone="warning">Prazo: sexta-feira</Chip></div>
-        </DeckCard>
+        <figure className={"pergunta" + (active ? " is-on" : "")}>
+          <span className="pergunta-icone" aria-hidden="true"><Icon name="message-square" size={34} /></span>
+          <blockquote className="pergunta-texto" aria-label={`“${PERGUNTA}”`}>
+            <span aria-hidden="true">“{PERGUNTA.slice(0, typed)}{escrevendo ? <span className="type-caret" /> : "”"}<span className="type-rest">{PERGUNTA.slice(typed)}{escrevendo ? "”" : ""}</span></span>
+          </blockquote>
+          <figcaption className="pergunta-rodape">
+            <MonoLabel tone="inverse" size="mono" uppercase={false} style={{ fontSize: 20 }}>Marina, no grupo da equipe</MonoLabel>
+            <span className="pergunta-selo">Sem resposta</span>
+          </figcaption>
+        </figure>
       </div>
-      <Nota>Cenário ilustrativo baseado no perfil de cliente do projeto</Nota>
     </>
   );
 }
@@ -363,7 +371,7 @@ function Caca({ active }) {
       <Eyebrow style={{ marginBottom: 26 }}>O processo hoje</Eyebrow>
       <Heading maxWidth="24ch" style={{ marginBottom: 14 }}>A caça à resposta certa</Heading>
       <div style={{ fontSize: "var(--type-body)", lineHeight: 1.5, color: "var(--text-body)" }}>Marina coordena o trabalho em uma planilha e por mensagens.</div>
-      <div className="split" style={{ gridTemplateColumns: "minmax(0,1fr) 608px", gap: 48 }}>
+      <div className="split" style={{ gridTemplateColumns: "minmax(0,1fr) 548px", gap: 120, margin: "8px 0 40px" }}>
         <ol className="caca-steps">
           {CACA.map((p, i) => (
             <li key={p.n} className={`caca-step rise-${i + 1}`}>
@@ -381,7 +389,6 @@ function Caca({ active }) {
         <span className="caca-alerta-icone" aria-hidden="true"><Icon name="triangle-alert" size={28} /></span>
         Uma resposta desatualizada pode virar um compromisso com o cliente.
       </div>
-      <Nota>Fluxo descrito no One Pager e na mentoria</Nota>
     </>
   );
 }
