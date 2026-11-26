@@ -108,12 +108,12 @@ button { font-family: inherit; }
 .nota { margin-top: auto; padding-top: 22px; }
 
 /* Slide 02: tela de chat clara. A pergunta é digitada no campo, o botão é pressionado e o balão sobe. */
-.chat { margin: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 600px; border-radius: var(--radius-deck-card); background: var(--surface-card); border: 1px solid var(--border-default); box-shadow: var(--shadow-popover); overflow: hidden; }
+.chat { margin: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 724px; border-radius: var(--radius-deck-card); background: var(--surface-card); border: 1px solid var(--border-default); box-shadow: var(--shadow-popover); overflow: hidden; }
 .chat.is-on { animation: tdr-rise 520ms var(--ease-out) 150ms both; }
 .chat-topo { display: flex; justify-content: space-between; align-items: center; padding: 22px 32px; border-bottom: 1px solid var(--border-default); }
 .chat-canal { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-display); font-weight: 600; font-size: 28px; color: var(--text-strong); }
 .chat-canal::before { content: "#"; color: var(--text-meta); font-weight: 500; }
-.chat-conversa { display: flex; flex-direction: column; justify-content: flex-end; gap: 26px; padding: 28px 32px; background: var(--surface-page); overflow: hidden; }
+.chat-conversa { display: flex; flex-direction: column; justify-content: flex-end; gap: 18px; padding: 20px 32px 24px; background: var(--surface-page); overflow: hidden; }
 .chat-msg { display: flex; align-items: flex-end; gap: 14px; max-width: 86%; }
 .chat-msg--minha { align-self: flex-end; }
 .chat-avatar { flex: none; width: 52px; height: 52px; border-radius: 50%; background: var(--surface-sunken); border: 1px solid var(--border-strong); display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 24px; color: var(--text-body); }

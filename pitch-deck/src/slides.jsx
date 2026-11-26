@@ -321,32 +321,42 @@ function Contagem({ active, valor, ms = 1400, formato = (n) => String(n) }) {
 // clara: é digitada no campo, o botão de enviar é pressionado e o balão sobe para a conversa.
 // Recomeça a cada entrada no slide; fora dele (e no PDF ou sem movimento), mostra a mensagem enviada.
 const PERGUNTA = "Quem consegue confirmar qual política de segurança vale hoje?";
+// As mensagens da Marina, em ordem. A segunda sai 1 h 30 min depois: a primeira ficou sem resposta.
+const MENSAGENS_MARINA = [
+  { texto: PERGUNTA, hora: "09:41" },
+  { texto: "Pessoal, alguém?", hora: "11:11" }
+];
 const CHAT_INICIO_MS = 900; // o cartão entra antes de a digitação começar
 const CHAT_LETRA_MS = 40;
 const CHAT_ANTES_DE_ENVIAR_MS = 450;
 const CHAT_CLIQUE_MS = 260;
+const CHAT_ENTRE_MENSAGENS_MS = 2600; // tempo com a primeira pergunta sem resposta, antes da segunda
 
+// Estado do chat: quantas mensagens já foram enviadas e o que está no campo da mensagem seguinte.
 function usarChat(active) {
-  const fim = { typed: PERGUNTA.length, etapa: "enviada" };
+  const fim = { enviadas: MENSAGENS_MARINA.length, typed: 0, etapa: "parada" };
   const [estado, setEstado] = React.useState(fim);
   React.useEffect(() => {
     if (!active || REDUCED) { setEstado(fim); return undefined; }
-    setEstado({ typed: 0, etapa: "digitando" });
+    setEstado({ enviadas: 0, typed: 0, etapa: "parada" });
     const timers = [];
     const later = (ms, fn) => timers.push(setTimeout(fn, ms));
     let t = CHAT_INICIO_MS;
-    for (let k = 1; k <= PERGUNTA.length; k++) later((t += CHAT_LETRA_MS), () => setEstado({ typed: k, etapa: "digitando" }));
-    later((t += CHAT_ANTES_DE_ENVIAR_MS), () => setEstado({ typed: PERGUNTA.length, etapa: "clicando" }));
-    later((t += CHAT_CLIQUE_MS), () => setEstado(fim));
+    MENSAGENS_MARINA.forEach((m, i) => {
+      if (i > 0) t += CHAT_ENTRE_MENSAGENS_MS;
+      for (let k = 1; k <= m.texto.length; k++) later((t += CHAT_LETRA_MS), () => setEstado({ enviadas: i, typed: k, etapa: "digitando" }));
+      later((t += CHAT_ANTES_DE_ENVIAR_MS), () => setEstado({ enviadas: i, typed: m.texto.length, etapa: "clicando" }));
+      later((t += CHAT_CLIQUE_MS), () => setEstado({ enviadas: i + 1, typed: 0, etapa: "parada" }));
+    });
     return () => timers.forEach(clearTimeout);
   }, [active]); // eslint-disable-line react-hooks/exhaustive-deps
   return estado;
 }
 
 function Persona({ active }) {
-  const { typed, etapa } = usarChat(active);
-  const enviada = etapa === "enviada";
-  const noCampo = enviada ? "" : PERGUNTA.slice(0, typed);
+  const { enviadas, typed, etapa } = usarChat(active);
+  const proxima = MENSAGENS_MARINA[enviadas];
+  const noCampo = proxima && etapa !== "parada" ? proxima.texto.slice(0, typed) : "";
   return (
     <>
       <Eyebrow style={{ marginBottom: 26 }}>A história · persona fictícia</Eyebrow>
@@ -357,7 +367,7 @@ function Persona({ active }) {
             Ela lidera pré-vendas numa empresa brasileira de software. O cliente enviou uma planilha com perguntas sobre produto, segurança e privacidade.
           </p>
         </div>
-        <figure className={"chat" + (active ? " is-on" : "")} aria-label={`Chat da equipe. Marina pergunta: “${PERGUNTA}”`}>
+        <figure className={"chat" + (active ? " is-on" : "")} aria-label={`Chat da equipe. Marina pergunta às 09:41: “${PERGUNTA}” Sem resposta, às 11:11 ela escreve: “Pessoal, alguém?”`}>
           <div className="chat-topo" aria-hidden="true">
             <span className="chat-canal">proposta-cliente</span>
             <MonoLabel size="mono" uppercase={false} style={{ fontSize: 19 }}>5 pessoas</MonoLabel>
@@ -370,16 +380,17 @@ function Persona({ active }) {
                 <div className="chat-balao">O cliente mandou a planilha. Precisamos enviar até sexta.</div>
               </div>
             </div>
-            {enviada ? (
-              <div className="chat-msg chat-msg--minha chat-sobe">
+            {MENSAGENS_MARINA.slice(0, enviadas).map((m, i) => (
+              <div key={m.hora} className="chat-msg chat-msg--minha chat-sobe">
                 <div className="chat-corpo">
-                  <div className="chat-autor">Marina <span>09:41</span></div>
-                  <div className="chat-balao">{PERGUNTA}</div>
-                  <div className="chat-status"><Icon name="check" size={18} />Enviada · sem resposta</div>
+                  <div className="chat-autor">Marina <span>{m.hora}</span></div>
+                  <div className="chat-balao">{m.texto}</div>
+                  {/* "Sem resposta" acompanha só a última mensagem enviada. */}
+                  <div className="chat-status"><Icon name="check" size={18} />{i === enviadas - 1 ? "Enviada · sem resposta" : "Enviada"}</div>
                 </div>
                 <span className="chat-avatar chat-avatar--marina">M</span>
               </div>
-            ) : null}
+            ))}
           </div>
           <div className="chat-entrada" aria-hidden="true">
             <div className={"chat-campo" + (noCampo ? "" : " is-vazio")}>
@@ -830,7 +841,7 @@ function Fechamento() {
 // tone: campo do slide (paper | ink | lime). notes: notas do apresentador (tecla N).
 export const SLIDES = [
   { label: "Capa", tone: "ink", Component: Capa, notes: "Abertura: apresentar o Tendra.ai e a promessa central. O logo se desenha de novo a cada 5 s. Em seguida, acompanhamos uma pessoa que faz esse trabalho." },
-  { label: "A história", tone: "paper", Component: Persona, notes: "Marina é uma personagem fictícia que representa o perfil descrito no One Pager e na mentoria. A fala e o prazo de sexta são cenas ilustrativas, sem atribuição a entrevistados. Quando for útil, explique RFP como solicitação formal de proposta e RFI como solicitação de informações." },
+  { label: "A história", tone: "paper", Component: Persona, notes: "Marina pergunta às 09:41 e, sem resposta, cobra o time às 11:11. Marina é uma personagem fictícia que representa o perfil descrito no One Pager e na mentoria. A fala e o prazo de sexta são cenas ilustrativas, sem atribuição a entrevistados. Quando for útil, explique RFP como solicitação formal de proposta e RFI como solicitação de informações." },
   { label: "A caça à resposta certa", tone: "paper", Component: Caca, notes: "Volte à pergunta sobre segurança: a resposta está na proposta antiga, mas ninguém sabe se a política mudou. Marina segura o envio enquanto espera a confirmação. Cada área perde tempo procurando a mesma informação, e o comercial fica sem previsão." },
   { label: "O custo do problema", tone: "ink", Component: CustoProblema, notes: "As 33 horas são de esforço médio de resposta, não prazo corrido. O tamanho médio de oito pessoas descreve a equipe de propostas: não implica que oito pessoas trabalhem em cada proposta nem que cada uma gaste 33 horas. O relatório aponta 33 h no mid-market e 39 h em enterprise." },
   { label: "Seção: A solução", tone: "aurora-lime", Component: SecaoSolucao, notes: "\"A solução\" é escrita e dá lugar ao logo animado; com o logo completo, entra a mudança na rotina. Retome a pergunta inicial: Marina abre a fonte e valida se a política é a que vale hoje. Se faltar evidência, ela sabe exatamente o que escalar. O ganho comercial é recuperar tempo para tratar objeções e avançar a venda. Essa é a experiência que o piloto vai validar." },
