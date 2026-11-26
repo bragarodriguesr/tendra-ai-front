@@ -330,7 +330,7 @@ const CHAT_INICIO_MS = 900; // o cartão entra antes de a digitação começar
 const CHAT_LETRA_MS = 40;
 const CHAT_ANTES_DE_ENVIAR_MS = 450;
 const CHAT_CLIQUE_MS = 260;
-const CHAT_ENTRE_ENVIOS_MS = 6000; // a segunda mensagem sai 6 s depois da primeira (a digitação conta dentro desse tempo)
+const CHAT_ENTRE_ENVIOS_MS = 10000; // a segunda mensagem sai 10 s depois da primeira (a digitação conta dentro desse tempo)
 
 // Estado do chat: quantas mensagens já foram enviadas e o que está no campo da mensagem seguinte.
 function usarChat(active) {
