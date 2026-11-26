@@ -1,5 +1,5 @@
 import React from "react";
-import { AnimatedLogo, Badge, Card, Icon, Logo, MonoLabel } from "./ds/index.js";
+import { AnimatedLogo, Badge, Card, Icon, MonoLabel } from "./ds/index.js";
 import { Player } from "./demo/motor.js";
 import { CENAS, side } from "./demo/cenas.js";
 import { STACK_ICONS } from "./stack-icons.js";
@@ -135,8 +135,24 @@ function TituloDigitado({ typed, cursor }) {
   });
 }
 
-function Capa({ active }) {
+// Logo da capa e do fechamento, no mesmo tamanho e posição. Em laço enquanto o slide está na tela:
+// desenha o logo, segura o quadro completo por 5 s e recomeça. Fora dele (e no PDF ou sem movimento),
+// fica no quadro completo. variant: "ink" no campo tinta, "lime" no campo limão.
+function LogoEmLaco({ active, variant }) {
   const ref = React.useRef(null);
+  React.useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    if (!active || REDUCED) { el.pause?.(); el.currentTime = CAPA_LOGO_FINAL; return undefined; }
+    el.replay?.();
+    const laco = setInterval(() => el.replay?.(), CAPA_LOGO_FINAL * 1000 + CAPA_LOGO_PAUSA_MS);
+    return () => clearInterval(laco);
+  }, [active]);
+  const k = CAPA_LOGO_ALTURA / 48;
+  return <AnimatedLogo ref={ref} variant={variant} bare once style={{ width: 224 * k, marginLeft: -4 * k }} title="Tendra.ai" />;
+}
+
+function Capa({ active }) {
   // Título: digitado a cada entrada no slide; fora dele (e no PDF), inteiro.
   const total = CAPA_TITULO_TEXTO.length;
   const [typed, setTyped] = React.useState(total);
@@ -151,20 +167,9 @@ function Capa({ active }) {
     timers.push(setTimeout(() => setCursor(false), t + CAPA_CURSOR_MS));
     return () => timers.forEach(clearTimeout);
   }, [active, total]);
-  // Em laço enquanto o slide está na tela: desenha o logo, segura o quadro completo por 5 s e
-  // recomeça. Fora dele (e no PDF ou sem movimento), fica no quadro completo.
-  React.useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return undefined;
-    if (!active || REDUCED) { el.pause?.(); el.currentTime = CAPA_LOGO_FINAL; return undefined; }
-    el.replay?.();
-    const laco = setInterval(() => el.replay?.(), CAPA_LOGO_FINAL * 1000 + CAPA_LOGO_PAUSA_MS);
-    return () => clearInterval(laco);
-  }, [active]);
-  const k = CAPA_LOGO_ALTURA / 48;
   return (
     <>
-      <AnimatedLogo ref={ref} variant="ink" bare once style={{ width: 224 * k, marginLeft: -4 * k }} title="Tendra.ai" />
+      <LogoEmLaco active={active} variant="ink" />
       <h1 className="title" aria-label={CAPA_TITULO_TEXTO.replace(/\n/g, " ")} style={{ fontSize: "var(--type-display)", lineHeight: 1.02, letterSpacing: "-0.04em", margin: "auto 0 48px", whiteSpace: "pre-line" }}>
         <span aria-hidden="true"><TituloDigitado typed={typed} cursor={cursor} /></span>
       </h1>
@@ -768,64 +773,12 @@ function TimeExecucao() {
   );
 }
 
-const ROADMAP = [
-  "Upload de PDF, DOCX e PPTX e conexão com Google Drive e SharePoint",
-  "Fluxos de aprovação em múltiplos níveis",
-  "Integrações via MCP com documentações técnicas de API",
-  "Base pré-carregada com normas técnicas e regulatórias do mercado brasileiro (LGPD etc.)",
-  "Modo assistente para preparação de documentos de propostas comerciais e técnicas"
-];
-
-// A linha cresce e cada ponto aparece com o seu número e texto, uma vez a cada entrada no slide.
-function Roadmap({ active }) {
-  const [run, setRun] = React.useState(0);
-  React.useEffect(() => { if (active) setRun((n) => n + 1); }, [active]);
+function Fechamento({ active }) {
   return (
     <>
-      <Heading maxWidth="26ch" style={{ marginBottom: "var(--gap-title)" }}>Roadmap.</Heading>
-      <div key={run} className="roadmap" style={{ "--steps": ROADMAP.length }}>
-        <div className="roadmap-line" />
-        <ol className="roadmap-steps">
-          {ROADMAP.map((text, i) => (
-            <li key={text} className="roadmap-step" style={{ "--i": i }}>
-              <svg viewBox="0 0 48 48" width="24" height="24" aria-hidden="true" style={{ zIndex: 1, flexShrink: 0 }}>
-                <rect width="48" height="48" rx="8" fill="var(--brand-ink)" />
-                <rect x="17" y="17" width="14" height="14" fill="var(--brand-lime)" />
-              </svg>
-              <Eyebrow size={19}>{String(i + 1).padStart(2, "0")}</Eyebrow>
-              <DeckCard style={{ padding: "22px 18px", fontSize: 23, lineHeight: 1.35, textAlign: "center" }}>{text}</DeckCard>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </>
-  );
-}
-
-const TEAM = ["Rafael Braga", "Matheus Alcântara", "Mariana Fugimoto", "Renata Lima", "Everton Santos", "Roberta Vitalina"];
-
-function Time() {
-  return (
-    <>
-      <Heading maxWidth="26ch" style={{ marginBottom: "var(--gap-title)" }}>Nosso time.</Heading>
-      <div className="cols cols--3" style={{ gap: 28, alignContent: "center" }}>
-        {TEAM.map((name) => (
-          <DeckCard key={name} style={{ padding: "32px 24px", display: "grid", justifyItems: "center", gap: 20, textAlign: "center" }}>
-            <div className="avatar" aria-hidden="true" />
-            <div style={{ fontSize: 25, fontWeight: 600 }}>{name}</div>
-          </DeckCard>
-        ))}
-      </div>
-    </>
-  );
-}
-
-function Fechamento() {
-  return (
-    <>
-      <Logo variant="mono-ink" size={48} />
+      <LogoEmLaco active={active} variant="lime" />
       <h1 className="title" style={{ fontSize: 100, lineHeight: 1.05, letterSpacing: "-0.04em", margin: "auto 0 48px", maxWidth: "17ch" }}>
-        Vamos levar sua equipe da caça por respostas à revisão e aprovação.
+        Não deixe seu negócio parar por uma planilha
       </h1>
       <div className="footer-rule" style={{ borderTop: "2px solid var(--brand-ink)" }}>
         <div style={{ fontSize: "var(--type-lead)", lineHeight: 1.5, fontWeight: 600 }}>contato@tendra.ai · tendra.ai</div>
@@ -852,8 +805,6 @@ export const SLIDES = [
   { label: "Piloto: metas a validar", tone: "paper", Component: Piloto, notes: "A meta de 30% é proposta para o piloto e não foi observada em cliente. Compare a mediana do ciclo da importação à exportação com casos comparáveis do processo atual, separando tempo corrido de horas ativas. A meta de 70% vem do One Pager e mede a similaridade por palavras entre o texto sugerido e o aprovado. Medimos também cobertura de fontes, tratamento de alertas e retrabalho. A taxa de vitória é acompanhada depois, sem atribuir causalidade ao produto, porque preço e concorrência também mudam o desfecho." },
   { label: "Retorno para o cliente", tone: "ink", Component: Retorno, notes: "Cenário ilustrativo, sem resultado em cliente e sem representar redução de folha. 10 propostas por mês × 33 h = 330 h; uma redução hipotética de 30% no esforço ativo dá 99 h. A R$ 180/h, são R$ 17.820 em capacidade, que pode ir para negociação e novas propostas. A assinatura simulada de R$ 5.000 por mês equivale a R$ 60 mil por ano, dentro da faixa interna: benefício/custo de 3,56× e retorno líquido de 256,4%, antes de implantação, tributos e treinamento. O ponto de equilíbrio é 27,78 h, arredondado para 28 h. A redução de esforço usada aqui deve ser cronometrada separadamente da meta de ciclo." },
   { label: "Modelo de negócio", tone: "paper", Component: ModeloNegocio, notes: "A entrada é por empresas de tecnologia que já têm orçamento ligado ao processo, volume recorrente e exigência de evidência. A cobrança por assento e volume vem do pitch original. A faixa de R$ 45 a 80 mil por ano é hipótese, a validar com compradores e uso real. Nenhuma receita, cliente ou contrato é afirmado." },
-  { label: "Time e execução", tone: "paper", Component: TimeExecucao, notes: "A equipe já pode mostrar a experiência. O próximo passo é provar o impacto operacional com compradores reais. O teste interno de qualidade em base sintética não substitui a validação com cliente." },
-  { label: "Roadmap", tone: "paper", Component: Roadmap, notes: "O que vem depois do MVP. Os pontos aparecem um a um ao entrar no slide." },
-  { label: "Time", tone: "aurora-lime", Component: Time, notes: "Apresentar o time fundador." },
-  { label: "Fechamento", tone: "lime", Component: Fechamento, notes: "Encerrar reforçando a promessa central e abrir para perguntas da banca." }
+  { label: "Time e execução", tone: "aurora-paper", Component: TimeExecucao, notes: "A equipe já pode mostrar a experiência. O próximo passo é provar o impacto operacional com compradores reais. O teste interno de qualidade em base sintética não substitui a validação com cliente." },
+  { label: "Fechamento", tone: "aurora-lime", Component: Fechamento, notes: "O logo se desenha de novo a cada 5 s, como na capa. Encerrar com a mensagem central, \"Não deixe seu negócio parar por uma planilha\", e abrir para perguntas da banca." }
 ];
