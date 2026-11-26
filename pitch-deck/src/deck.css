@@ -34,8 +34,9 @@ button { font-family: inherit; }
 .slide--paper { background: var(--brand-paper); color: var(--text-strong); }
 .slide--ink { background: var(--brand-ink); color: var(--brand-paper); }
 .slide--lime { background: var(--brand-lime); color: var(--brand-ink); }
-/* Brand Aurora: só nos slides 04 e 15 (campo limão, texto em tinta) e 09 (campo tinta, texto em papel), por pedido. */
+/* Brand Aurora, por pedido: campo limão nos slides 05 e 18, papel no 16 e tinta no 10 (texto em tinta no limão e no papel, em papel na tinta). */
 .slide--aurora-lime { background: var(--grad-aurora-lime); color: var(--brand-ink); }
+.slide--aurora-paper { background: var(--grad-mist-paper); color: var(--text-strong); }
 .slide--aurora-ink { background: var(--grad-aurora-ink); color: var(--brand-paper); }
 
 /* ---- Controles ---- */
@@ -223,7 +224,6 @@ button { font-family: inherit; }
 .roadmap-step { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 22px; position: relative; animation: tdr-rise 520ms var(--ease-out) both; animation-delay: calc(var(--step-ms) * var(--i) + 120ms); }
 @keyframes tdr-grow { from { transform: scaleX(0); } }
 
-.avatar { width: 88px; height: 88px; border-radius: 50%; background: var(--surface-sunken); border: 1px solid var(--border-strong); }
 
 @media (prefers-reduced-motion: reduce) {
   .chat.is-on, .chat-sobe, .chat-status, .fonte, .fonte-link, .ai-chip, .rise-1, .rise-2, .rise-3, .rise-4, .rise-5, .roadmap-line, .roadmap-step, .intro-caret, .type-caret { animation: none; }
