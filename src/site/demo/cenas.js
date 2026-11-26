@@ -20,7 +20,7 @@ function review(mode) {
     <div style="display:grid;gap:6px"><div class="mono">Fontes por parágrafo</div><div class="s-srcs">
       <div class="s-src" id="src1"><span class="s-id">1 · whitepaper-seguranca.md · 3.2 Criptografia · linha 48</span><p>…dados em repouso <span>cifrados com AES-256</span>, chaves em HSM FIPS 140-2 nível 3…</p></div>
       <div class="s-src" id="src2"><span class="s-id">2 · politica-criptografia.md · 2. Tráfego externo · linha 21</span><p>…conexões externas exigem <span>TLS 1.3 com perfect forward secrecy</span>…</p></div></div></div>
-    <div class="s-row" style="align-items:flex-end"><div class="s-fill"><div class="s-row"><span class="s-id">Preenchimento automático</span><span class="s-id" id="pct">${gen ? "0" : "92"}%</span></div><div class="s-bar"><i id="bar" style="--v:${gen ? 0 : 92}%"></i></div></div>
+    <div class="s-row" style="justify-content:flex-end">
       <div id="acts" style="display:flex;gap:8px"><span class="s-btn sec" id="edit" ${gen ? "data-off" : ""}>${ic("pencil", 13)}<span>Editar resposta</span></span><span class="s-btn" id="ok" ${gen ? "data-off" : ""}>${ic("check", 13)}Aprovar resposta</span></div></div>
   </div></div>`;
 }
@@ -56,7 +56,6 @@ const ETAPAS = [
       await stream(c.$("#ans"), ANSWER, c, { per: 70, onCite: (n) => { c.$$(".s-src").forEach((s) => s.classList.remove("hot")); c.$("#src" + n).classList.add("hot"); } });
       await c.wait(500); c.$("#st").innerHTML = bdg("Sugerida"); c.$('[data-id="REQ-084"] .badge').outerHTML = bdg("Sugerida");
       c.$("#edit").removeAttribute("data-off"); c.$("#ok").removeAttribute("data-off");
-      c.$("#bar").style.setProperty("--v", "92%"); await count(c.$("#pct"), 92, 1400, c, (n) => n + "%");
       await c.wait(500); c.$('[data-id="REQ-085"] .badge').outerHTML = bdg("Gerando"); await c.wait(1100); c.$('[data-id="REQ-085"] .badge').outerHTML = bdg("Sugerida");
     } },
   { id: "revisar", nav: "revisao", dur: 14500,
