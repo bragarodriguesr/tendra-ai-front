@@ -330,7 +330,7 @@ const CHAT_INICIO_MS = 900; // o cartão entra antes de a digitação começar
 const CHAT_LETRA_MS = 40;
 const CHAT_ANTES_DE_ENVIAR_MS = 450;
 const CHAT_CLIQUE_MS = 260;
-const CHAT_ENTRE_MENSAGENS_MS = 2600; // tempo com a primeira pergunta sem resposta, antes da segunda
+const CHAT_ENTRE_ENVIOS_MS = 6000; // a segunda mensagem sai 6 s depois da primeira (a digitação conta dentro desse tempo)
 
 // Estado do chat: quantas mensagens já foram enviadas e o que está no campo da mensagem seguinte.
 function usarChat(active) {
@@ -343,7 +343,8 @@ function usarChat(active) {
     const later = (ms, fn) => timers.push(setTimeout(fn, ms));
     let t = CHAT_INICIO_MS;
     MENSAGENS_MARINA.forEach((m, i) => {
-      if (i > 0) t += CHAT_ENTRE_MENSAGENS_MS;
+      // Pausa antes de digitar: o envio cai exatamente CHAT_ENTRE_ENVIOS_MS depois do anterior.
+      if (i > 0) t += CHAT_ENTRE_ENVIOS_MS - (m.texto.length * CHAT_LETRA_MS + CHAT_ANTES_DE_ENVIAR_MS + CHAT_CLIQUE_MS);
       for (let k = 1; k <= m.texto.length; k++) later((t += CHAT_LETRA_MS), () => setEstado({ enviadas: i, typed: k, etapa: "digitando" }));
       later((t += CHAT_ANTES_DE_ENVIAR_MS), () => setEstado({ enviadas: i, typed: m.texto.length, etapa: "clicando" }));
       later((t += CHAT_CLIQUE_MS), () => setEstado({ enviadas: i + 1, typed: 0, etapa: "parada" }));
