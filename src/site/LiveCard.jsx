@@ -1,16 +1,16 @@
 import React from "react";
-import { Badge, Card, Divider, Icon, MonoLabel, ProgressBar, SourceTrail } from "../ds/index.js";
+import { Badge, Card, Divider, Icon, MonoLabel, SourceTrail } from "../ds/index.js";
 import { REDUCED, makeCtx, onView, run } from "./demo/motor.js";
 
 // Requisitos de exemplo que o cartão responde em sequência. O primeiro é o estado de repouso
 // (o mesmo cartão estático de antes), usado também com movimento reduzido.
 const REQS = [
-  { id: "REQ-084", q: "Descreva os controles de criptografia de dados em repouso e em trânsito.", a: "Dados em repouso cifrados com AES-256, chaves em HSM FIPS 140-2 nível 3 com rotação a cada 90 dias; tráfego em TLS 1.3 com perfect forward secrecy.", file: "whitepaper-seguranca.md · 3.2 Criptografia · linha 48", pct: 92 },
-  { id: "REQ-085", q: "Onde ficam armazenados os backups?", a: "Backups ficam em região distinta da produção, criptografados com AES-256 e retidos por 35 dias.", file: "politica-backup-dr.md · 4. Cópias · linha 33", pct: 93, aviso: "Fonte com mais de 120 dias" },
-  { id: "REQ-086", q: "A plataforma possui certificação ISO 27001?", a: "Sim. A certificação ISO/IEC 27001 está vigente, com escopo que cobre desenvolvimento e operação da plataforma.", file: "certificado-iso27001.md · 1. Escopo · linha 12", pct: 94 }
+  { id: "REQ-084", q: "Descreva os controles de criptografia de dados em repouso e em trânsito.", a: "Dados em repouso cifrados com AES-256, chaves em HSM FIPS 140-2 nível 3 com rotação a cada 90 dias; tráfego em TLS 1.3 com perfect forward secrecy.", file: "whitepaper-seguranca.md · 3.2 Criptografia · linha 48" },
+  { id: "REQ-085", q: "Onde ficam armazenados os backups?", a: "Backups ficam em região distinta da produção, criptografados com AES-256 e retidos por 35 dias.", file: "politica-backup-dr.md · 4. Cópias · linha 33", aviso: "Fonte com mais de 120 dias" },
+  { id: "REQ-086", q: "A plataforma possui certificação ISO 27001?", a: "Sim. A certificação ISO/IEC 27001 está vigente, com escopo que cobre desenvolvimento e operação da plataforma.", file: "certificado-iso27001.md · 1. Escopo · linha 12" }
 ];
 const palavras = (t) => t.split(" ");
-const PRONTO = { n: 0, q: Infinity, a: Infinity, fonte: true, etapa: "ok", pct: REQS[0].pct };
+const PRONTO = { n: 0, q: Infinity, a: Infinity, fonte: true, etapa: "ok" };
 
 function Selo({ etapa, aviso }) {
   if (etapa === "ok") return <Badge tone="approved-inverse" icon="check">Conformidade OK</Badge>;
@@ -40,8 +40,7 @@ export function LiveCard() {
       await c.wait(2600);
       for (let n = 1; ; n++) {
         const i = n % REQS.length, r = REQS[i];
-        const pct = REQS[(i + REQS.length - 1) % REQS.length].pct;
-        setS({ n: i, q: 0, a: 0, fonte: false, etapa: "lendo", pct });
+        setS({ n: i, q: 0, a: 0, fonte: false, etapa: "lendo" });
         await c.wait(400);
         for (let k = 1; k <= r.q.length; k++) { setS((p) => ({ ...p, q: k })); await c.wait(16); }
         await c.wait(500);
@@ -54,7 +53,7 @@ export function LiveCard() {
         await c.wait(1100);
         setS((p) => ({ ...p, etapa: r.aviso ? "aviso" : "ok" }));
         await c.wait(1500);
-        setS((p) => ({ ...p, etapa: "aprovada", pct: r.pct }));
+        setS((p) => ({ ...p, etapa: "aprovada" }));
         await c.wait(2800);
       }
     };
@@ -83,7 +82,6 @@ export function LiveCard() {
             <SourceTrail key={`${s.n}-${s.fonte}`} tone="ink" className={s === PRONTO ? undefined : "tdr-site-live-src"} style={{ visibility: s.fonte ? "visible" : "hidden" }} sources={[{ file: r.file }]} />
           </div>
         </Card>
-        <ProgressBar tone="ink" label="Preenchimento automático" value={s.pct} />
       </div>
     </Card>
   );

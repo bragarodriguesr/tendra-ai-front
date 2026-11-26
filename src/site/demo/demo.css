@@ -31,9 +31,6 @@
 .tdr-demo .s-step .spin { animation: tdr-spin 0.9s linear infinite; }
 .tdr-demo .s-bar { height: 6px; border-radius: 99px; background: var(--n-200); overflow: hidden; }
 .tdr-demo .s-bar i { display: block; height: 100%; width: var(--v, 0%); background: var(--brand-lime); box-shadow: inset 0 0 0 1px rgba(110, 114, 104, 0.35); border-radius: 99px; transition: width var(--duration-fill) var(--ease-out); }
-.tdr-demo .s-fill { flex: 1; display: grid; gap: 5px; max-width: 210px; white-space: nowrap; min-width: 0; }
-.tdr-demo .stage.compact .s-fill { max-width: 180px; }
-.tdr-demo .stage.compact .s-fill .s-id { font-size: 9.5px; }
 .tdr-demo .s-req { display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--n-100); }
 .tdr-demo .s-req:last-child { border-bottom: 0; }
 .tdr-demo .s-req > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--brand-ink); }
