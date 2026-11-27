@@ -649,7 +649,6 @@ function SecaoNegocio({ active }) {
   return (
     <SectionIntro active={active} title="O negócio" logo="ink" after={
       <>
-        <Eyebrow tone="accent">O negócio</Eyebrow>
         <h2 className="title" style={{ fontSize: "var(--type-title)", lineHeight: 1.12, maxWidth: "26ch" }}>Quantas <span className="mark mark--bloco" style={{ padding: "0 12px" }}>Marinas</span> existem?</h2>
         <p style={{ margin: 0, fontSize: "var(--type-lead)", lineHeight: 1.5, maxWidth: "46ch", color: "var(--ink-200)" }}>
           A sexta-feira dela se repete em equipes de propostas no mundo todo. Cada uma é um cliente.
@@ -785,26 +784,23 @@ function ModeloNegocio() {
   );
 }
 
-// Slide 16: o estágio do projeto e quem está nele.
+// Slide 16: o estágio do projeto. A equipe aparece no fechamento (slide 17).
 const EQUIPE = ["Rafael Braga", "Matheus Alcântara", "Mariana Fugimoto", "Renata Lima da Silva", "Everton Santos", "Roberta Vitalina"];
 
 function TimeExecucao() {
   return (
     <>
-      <Eyebrow style={{ marginBottom: 26 }}>Time e execução</Eyebrow>
-      <Heading maxWidth="26ch" style={{ marginBottom: "var(--gap-title)" }}>Já temos um protótipo para testar com o mercado</Heading>
-      <div className="cols cols--2" style={{ flex: "none" }}>
-        <FeatureCard title="O que já existe" titleSize={40} padding={44} gap={18} className="rise-1">
-          Protótipo navegável do fluxo de importação, revisão com fontes e aprovação.
-        </FeatureCard>
-        <FeatureCard title="O que falta provar" titleSize={40} padding={44} gap={18} className="rise-2">
-          Quanto tempo o cliente recupera, quais respostas aceita e quanto pagaria.
-        </FeatureCard>
+      <div style={{ margin: "auto 0" }}>
+        <Heading maxWidth="26ch" style={{ marginBottom: "var(--gap-title)" }}>Já temos um <span className="mark mark--bloco" style={{ padding: "0 12px" }}>MVP</span> para testar<br />com o mercado</Heading>
+        <div className="cols cols--2" style={{ flex: "none" }}>
+          <FeatureCard title="O que já existe" titleSize={40} padding={44} gap={18} className="rise-1">
+            MVP funcional do fluxo de importação, revisão com fontes e aprovação.
+          </FeatureCard>
+          <FeatureCard title="O que falta provar" titleSize={40} padding={44} gap={18} className="rise-2">
+            Quanto tempo o cliente recupera, quais respostas aceita e quanto pagaria.
+          </FeatureCard>
+        </div>
       </div>
-      <ul className="equipe rise-3" aria-label="Equipe">
-        {EQUIPE.map((nome) => <li key={nome}>{nome}</li>)}
-      </ul>
-      <Nota>Equipe e estágio do projeto · One Pager AIPL</Nota>
     </>
   );
 }
@@ -835,6 +831,9 @@ function FechamentoTexto({ ligado }) {
       <h1 className="title" aria-label={FECHO_TEXTO} style={{ fontSize: 100, lineHeight: 1.05, letterSpacing: "-0.04em", margin: "auto 0 48px", maxWidth: "17ch" }}>
         <span aria-hidden="true"><TituloDigitado partes={FECHO_TITULO} typed={typed} cursor={cursor} /></span>
       </h1>
+      <ul className="equipe equipe--fecho" aria-label="Equipe">
+        {EQUIPE.map((nome) => <li key={nome}>{nome}</li>)}
+      </ul>
       <div className="footer-rule" style={{ borderTop: "2px solid var(--brand-ink)" }}>
         <div style={{ fontSize: "var(--type-lead)", lineHeight: 1.5, fontWeight: 600 }}>contato@tendra.ai · tendra.ai</div>
         <Eyebrow style={{ color: "inherit" }}>Perguntas da banca</Eyebrow>
@@ -864,6 +863,6 @@ export const SLIDES = [
   { label: "Piloto: metas a validar", tone: "paper", Component: Piloto, notes: "A meta de 30% é proposta para o piloto e não foi observada em cliente. Compare a mediana do ciclo da importação à exportação com casos comparáveis do processo atual, separando tempo corrido de horas ativas. A meta de 70% vem do One Pager e mede a similaridade por palavras entre o texto sugerido e o aprovado. Medimos também cobertura de fontes, tratamento de alertas e retrabalho. A taxa de vitória é acompanhada depois, sem atribuir causalidade ao produto, porque preço e concorrência também mudam o desfecho." },
   { label: "Retorno para o cliente", tone: "ink", Component: Retorno, notes: "Cenário ilustrativo, sem resultado em cliente e sem representar redução de folha. 10 propostas por mês × 33 h = 330 h; uma redução hipotética de 30% no esforço ativo dá 99 h. A R$ 180/h, são R$ 17.820 em capacidade, que pode ir para negociação e novas propostas. A assinatura simulada de R$ 5.000 por mês equivale a R$ 60 mil por ano, dentro da faixa interna: benefício/custo de 3,56× e retorno líquido de 256,4%, antes de implantação, tributos e treinamento. O ponto de equilíbrio é 27,78 h, arredondado para 28 h. A redução de esforço usada aqui deve ser cronometrada separadamente da meta de ciclo." },
   { label: "Modelo de negócio", tone: "paper", Component: ModeloNegocio, notes: "A entrada é por empresas de tecnologia que já têm orçamento ligado ao processo, volume recorrente e exigência de evidência. A cobrança por assento e volume vem do pitch original. A faixa de R$ 45 a 80 mil por ano é hipótese, a validar com compradores e uso real. Nenhuma receita, cliente ou contrato é afirmado." },
-  { label: "Time e execução", tone: "aurora-paper", Component: TimeExecucao, notes: "A equipe já pode mostrar a experiência. O próximo passo é provar o impacto operacional com compradores reais. O teste interno de qualidade em base sintética não substitui a validação com cliente." },
-  { label: "Fechamento", tone: "aurora-lime", Component: Fechamento, notes: "Como na abertura da solução: o logo se desenha no centro, vai para o canto, onde se redesenha a cada 5 s, e a frase é digitada. Encerrar com a mensagem central, \"Não deixe seu negócio parar por uma planilha\", e abrir para perguntas da banca." }
+  { label: "Time e execução", tone: "aurora-paper", Component: TimeExecucao, notes: "O MVP já mostra a experiência de ponta a ponta. O próximo passo é provar o impacto operacional com compradores reais. O teste interno de qualidade em base sintética não substitui a validação com cliente." },
+  { label: "Fechamento", tone: "aurora-lime", Component: Fechamento, notes: "Como na abertura da solução: o logo se desenha no centro, vai para o canto, onde se redesenha a cada 5 s, e a frase é digitada; abaixo dela, os nomes da equipe. Encerrar com a mensagem central, \"Não deixe seu negócio parar por uma planilha\", e abrir para perguntas da banca." }
 ];
