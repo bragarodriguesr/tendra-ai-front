@@ -43,40 +43,53 @@ const REDUCED = typeof matchMedia === "function" && matchMedia("(prefers-reduced
 const DIGITA_INICIO_MS = 500;
 const DIGITA_LETRA_MS = 110;
 
-// Com `after`, o logo completo encolhe para o canto e o texto do slide entra (slide 05).
+// Com `after`, o logo completo encolhe para o canto e o texto do slide entra (slides 05 e 17).
+// Sem `title`, começa direto pelo logo no centro (slide 17). `after` pode ser uma função que recebe
+// se a fase final já chegou, para o texto animar só a partir dela.
 const INTRO_LOGO_MS = 4200; // o logo termina de se desenhar aos 4,2 s (a palavra entra por último); o texto vem em seguida, sem pausa
 
-function SectionIntro({ active, title, logo, after }) {
+function SectionIntro({ active, title = "", logo, after, className }) {
   const comTexto = Boolean(after);
   const final = comTexto ? "after" : "logo";
   const [typed, setTyped] = React.useState(REDUCED ? title.length : 0);
-  const [phase, setPhase] = React.useState(REDUCED ? final : "typing");
+  const [phase, setPhase] = React.useState(REDUCED ? final : title ? "typing" : "logo");
   const ref = React.useRef(null);
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     if (!active || REDUCED) return undefined;
-    setTyped(0);
-    setPhase("typing");
     const timers = [];
     const later = (ms, fn) => timers.push(setTimeout(fn, ms));
-    let t = DIGITA_INICIO_MS;
-    for (let k = 1; k <= title.length; k++) later((t += DIGITA_LETRA_MS), () => setTyped(k));
-    later((t += 1100), () => setPhase("out"));
-    later((t += 650), () => { setPhase("logo"); ref.current?.replay?.(); });
+    let t = 0;
+    if (title) {
+      setTyped(0);
+      setPhase("typing");
+      t = DIGITA_INICIO_MS;
+      for (let k = 1; k <= title.length; k++) later((t += DIGITA_LETRA_MS), () => setTyped(k));
+      later((t += 1100), () => setPhase("out"));
+      later((t += 650), () => { setPhase("logo"); ref.current?.replay?.(); });
+    } else {
+      setPhase("logo");
+      ref.current?.replay?.();
+    }
     if (comTexto) later((t += INTRO_LOGO_MS), () => setPhase("after"));
     return () => timers.forEach(clearTimeout);
   }, [active, title, comTexto]);
+  const depois = typeof after === "function" ? after(phase === "after") : after;
   return (
-    <div className={"intro" + (after ? " intro--after" : "")} data-phase={phase}>
-      <h1 className="title intro-title" aria-label={title}>
-        <span aria-hidden="true">{title.slice(0, typed)}</span>
-        <span className="intro-caret" aria-hidden="true" />
-      </h1>
-      <div className="title intro-print" aria-hidden="true">{title}</div>
+    <div className={["intro", after ? "intro--after" : "", className].filter(Boolean).join(" ")} data-phase={phase}>
+      {title ? (
+        <>
+          <h1 className="title intro-title" aria-label={title}>
+            <span aria-hidden="true">{title.slice(0, typed)}</span>
+            <span className="intro-caret" aria-hidden="true" />
+          </h1>
+          <div className="title intro-print" aria-hidden="true">{title}</div>
+        </>
+      ) : null}
       <div className="intro-logo">
         {/* O desenho do logo tem folga à direita: o deslocamento centra o conjunto visível. */}
         <AnimatedLogo ref={ref} variant={logo} bare once paused={!active || phase !== "logo"} style={{ width: 760, marginLeft: 76 }} title="Tendra.ai" />
       </div>
-      {after ? <div className="intro-after" aria-hidden={phase !== "after"}>{after}</div> : null}
+      {after ? <div className="intro-after" aria-hidden={phase !== "after"}>{depois}</div> : null}
     </div>
   );
 }
@@ -109,10 +122,10 @@ const CAPA_CURSOR_MS = 1400; // o cursor pisca mais um pouco depois da última l
  * Título digitado letra a letra. O texto inteiro já ocupa o lugar (o que falta fica invisível),
  * então as linhas não se mexem durante a digitação. O realce de "horas" cresce junto com as letras.
  */
-function TituloDigitado({ typed, cursor }) {
+function TituloDigitado({ partes = CAPA_TITULO, typed, cursor }) {
   // O cursor fica no primeiro trecho ainda incompleto (ou no fim, quando tudo foi digitado).
   let inicio = 0;
-  const trechos = CAPA_TITULO.map((p) => {
+  const trechos = partes.map((p) => {
     const n = Math.max(0, Math.min(p.t.length, typed - inicio));
     inicio += p.t.length;
     return { ...p, feito: p.t.slice(0, n), falta: p.t.slice(n) };
@@ -135,7 +148,7 @@ function TituloDigitado({ typed, cursor }) {
   });
 }
 
-// Logo da capa e do fechamento, no mesmo tamanho e posição. Em laço enquanto o slide está na tela:
+// Logo da capa. Em laço enquanto o slide está na tela:
 // desenha o logo, segura o quadro completo por 5 s e recomeça. Fora dele (e no PDF ou sem movimento),
 // fica no quadro completo. variant: "ink" no campo tinta, "lime" no campo limão.
 function LogoEmLaco({ active, variant }) {
@@ -773,12 +786,31 @@ function TimeExecucao() {
   );
 }
 
-function Fechamento({ active }) {
+// Slide 17: como no 05, o logo se desenha no centro e, completo, vai para o canto (o mesmo lugar e
+// tamanho do logo da capa); então a frase é digitada como o título da capa. Fora do slide (e no PDF
+// ou sem movimento), tudo fica no estado final.
+const FECHO_TITULO = [{ t: "Não deixe seu negócio parar por uma planilha" }];
+const FECHO_TEXTO = FECHO_TITULO.map((p) => p.t).join("");
+const FECHO_DIGITA_MS = 700; // espera o texto entrar (o slide 05 usa 450 ms de atraso + 700 ms de entrada)
+
+function FechamentoTexto({ ligado }) {
+  const total = FECHO_TEXTO.length;
+  const [typed, setTyped] = React.useState(total);
+  const [cursor, setCursor] = React.useState(false);
+  React.useLayoutEffect(() => {
+    if (!ligado || REDUCED) { setTyped(total); setCursor(false); return undefined; }
+    setTyped(0);
+    setCursor(true);
+    const timers = [];
+    let t = FECHO_DIGITA_MS;
+    for (let k = 1; k <= total; k++) timers.push(setTimeout(() => setTyped(k), (t += DIGITA_LETRA_MS)));
+    timers.push(setTimeout(() => setCursor(false), t + CAPA_CURSOR_MS));
+    return () => timers.forEach(clearTimeout);
+  }, [ligado, total]);
   return (
     <>
-      <LogoEmLaco active={active} variant="lime" />
-      <h1 className="title" style={{ fontSize: 100, lineHeight: 1.05, letterSpacing: "-0.04em", margin: "auto 0 48px", maxWidth: "17ch" }}>
-        Não deixe seu negócio parar por uma planilha
+      <h1 className="title" aria-label={FECHO_TEXTO} style={{ fontSize: 100, lineHeight: 1.05, letterSpacing: "-0.04em", margin: "auto 0 48px", maxWidth: "17ch" }}>
+        <span aria-hidden="true"><TituloDigitado partes={FECHO_TITULO} typed={typed} cursor={cursor} /></span>
       </h1>
       <div className="footer-rule" style={{ borderTop: "2px solid var(--brand-ink)" }}>
         <div style={{ fontSize: "var(--type-lead)", lineHeight: 1.5, fontWeight: 600 }}>contato@tendra.ai · tendra.ai</div>
@@ -786,6 +818,10 @@ function Fechamento({ active }) {
       </div>
     </>
   );
+}
+
+function Fechamento({ active }) {
+  return <SectionIntro active={active} logo="lime" className="intro--fechamento" after={(ligado) => <FechamentoTexto ligado={ligado} />} />;
 }
 
 // tone: campo do slide (paper | ink | lime). notes: notas do apresentador (tecla N).
@@ -806,5 +842,5 @@ export const SLIDES = [
   { label: "Retorno para o cliente", tone: "ink", Component: Retorno, notes: "Cenário ilustrativo, sem resultado em cliente e sem representar redução de folha. 10 propostas por mês × 33 h = 330 h; uma redução hipotética de 30% no esforço ativo dá 99 h. A R$ 180/h, são R$ 17.820 em capacidade, que pode ir para negociação e novas propostas. A assinatura simulada de R$ 5.000 por mês equivale a R$ 60 mil por ano, dentro da faixa interna: benefício/custo de 3,56× e retorno líquido de 256,4%, antes de implantação, tributos e treinamento. O ponto de equilíbrio é 27,78 h, arredondado para 28 h. A redução de esforço usada aqui deve ser cronometrada separadamente da meta de ciclo." },
   { label: "Modelo de negócio", tone: "paper", Component: ModeloNegocio, notes: "A entrada é por empresas de tecnologia que já têm orçamento ligado ao processo, volume recorrente e exigência de evidência. A cobrança por assento e volume vem do pitch original. A faixa de R$ 45 a 80 mil por ano é hipótese, a validar com compradores e uso real. Nenhuma receita, cliente ou contrato é afirmado." },
   { label: "Time e execução", tone: "aurora-paper", Component: TimeExecucao, notes: "A equipe já pode mostrar a experiência. O próximo passo é provar o impacto operacional com compradores reais. O teste interno de qualidade em base sintética não substitui a validação com cliente." },
-  { label: "Fechamento", tone: "aurora-lime", Component: Fechamento, notes: "O logo se desenha de novo a cada 5 s, como na capa. Encerrar com a mensagem central, \"Não deixe seu negócio parar por uma planilha\", e abrir para perguntas da banca." }
+  { label: "Fechamento", tone: "aurora-lime", Component: Fechamento, notes: "Como na abertura da solução: o logo se desenha no centro, vai para o canto e a frase é digitada. Encerrar com a mensagem central, \"Não deixe seu negócio parar por uma planilha\", e abrir para perguntas da banca." }
 ];
