@@ -34,7 +34,7 @@ button { font-family: inherit; }
 .slide--paper { background: var(--brand-paper); color: var(--text-strong); }
 .slide--ink { background: var(--brand-ink); color: var(--brand-paper); }
 .slide--lime { background: var(--brand-lime); color: var(--brand-ink); }
-/* Brand Aurora, por pedido: campo limão nos slides 05 e 18, papel no 16 e tinta no 10 (texto em tinta no limão e no papel, em papel na tinta). */
+/* Brand Aurora, por pedido: campo limão nos slides 05 e 16, papel no 15 e tinta no 09 (texto em tinta no limão e no papel, em papel na tinta). */
 .slide--aurora-lime { background: var(--grad-aurora-lime); color: var(--brand-ink); }
 .slide--aurora-paper { background: var(--grad-mist-paper); color: var(--text-strong); }
 .slide--aurora-ink { background: var(--grad-aurora-ink); color: var(--brand-paper); }
@@ -87,7 +87,7 @@ button { font-family: inherit; }
 .rise-4 { animation-delay: 0.7s; }
 .rise-5 { animation-delay: 0.9s; }
 
-/* Slides 05 e 10: o título é escrito e dá lugar ao logo animado, no centro; depois o logo vai para o canto e o texto entra. */
+/* Slides 05 e 09: o título é escrito e dá lugar ao logo animado, no centro; depois o logo vai para o canto e o texto entra. */
 .intro { position: relative; flex: 1; display: grid; place-items: center; }
 .intro-title, .intro-logo { grid-area: 1 / 1; }
 .intro-print { display: none; grid-area: 1 / 1; font-size: 150px; line-height: 1; letter-spacing: -0.04em; }
@@ -101,13 +101,13 @@ button { font-family: inherit; }
 .type-rest { visibility: hidden; }
 .type-caret { display: inline-block; width: 8px; height: 0.82em; margin: 0 -12px -0.06em 4px; vertical-align: baseline; background: currentColor; animation: tdr-caret 0.9s steps(2, jump-none) infinite; }
 
-/* Slides 05 e 10: com o logo completo, ele encolhe para o canto de cima e o texto entra. */
+/* Slides 05 e 09: com o logo completo, ele encolhe para o canto de cima e o texto entra. */
 .intro-after { grid-area: 1 / 1; align-self: stretch; justify-self: stretch; display: grid; align-content: center; gap: 32px; padding-top: 96px; opacity: 0; visibility: hidden; transform: translateY(16px); transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out), visibility 0s linear 700ms; }
 .intro--after .intro-logo { transform-origin: 0 0; }
 .intro--after[data-phase="after"] .intro-logo { opacity: 1; transform: translate(var(--intro-logo-x, -420px), var(--intro-logo-y, -330px)) scale(var(--intro-logo-s, 0.34)); transition: transform 900ms var(--ease-in-out); }
 .intro--after[data-phase="after"] .intro-after { opacity: 1; visibility: visible; transform: none; transition: opacity 700ms var(--ease-out) 450ms, transform 700ms var(--ease-out) 450ms, visibility 0s; }
 
-/* Slide 17: o logo vai para o lugar e o tamanho do logo da capa (medidos no palco de 1920×1080);
+/* Slide 16: o logo vai para o lugar e o tamanho do logo da capa (medidos no palco de 1920×1080);
    o texto fica no pé, como na capa. */
 .intro--fechamento { --intro-logo-x: -427px; --intro-logo-y: -329px; --intro-logo-s: 0.393; }
 .intro--fechamento .intro-after { display: flex; flex-direction: column; padding-top: 0; gap: 0; }
@@ -158,11 +158,11 @@ button { font-family: inherit; }
 .custo-numero { font-size: 260px; line-height: 0.9; letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
 .custo-linha { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 56px; align-items: center; border-top: 1px solid var(--ink-500); padding-top: 40px; }
 
-/* Slide 11: destaque do benchmark. */
+/* Slide 10: destaque do benchmark. */
 .destaque { margin-top: 32px; display: flex; align-items: center; gap: 22px; padding: 24px 32px; border-radius: var(--radius-lg); background: var(--lime-wash); border: 1px solid var(--brand-lime); font-size: 30px; font-weight: 600; line-height: 1.35; color: var(--brand-ink); }
 .destaque-numero { font-family: var(--font-display); font-weight: 700; font-size: 44px; letter-spacing: -0.03em; }
 
-/* Slide 12: mercado inicial, um número por linha. */
+/* Slide 11: mercado inicial, um número por linha. */
 .mercado { display: grid; gap: 0; }
 .mercado-linha { display: grid; grid-template-columns: 900px minmax(0, 1fr); gap: 56px; align-items: center; padding: 36px 0; border-top: 1px solid var(--border-default); }
 .mercado-linha:last-child { border-bottom: 1px solid var(--border-default); }
@@ -170,20 +170,20 @@ button { font-family: inherit; }
 .mercado-numero--sm { font-size: 96px; letter-spacing: -0.035em; }
 .mercado-texto { font-size: 32px; line-height: 1.4; color: var(--text-body); max-width: 22ch; }
 
-/* Slide 13: metas do piloto. */
+/* Slide 12: metas do piloto. */
 .meta-numero { font-size: 150px; line-height: 1; letter-spacing: -0.045em; font-variant-numeric: tabular-nums; margin-bottom: 10px; }
 
-/* Slide 14: retorno simulado, em dois números e a conta que os gera. */
+/* Slide 13: retorno simulado, em dois números e a conta que os gera. */
 .retorno { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 56px; }
 .retorno-item { display: grid; gap: 10px; }
 .retorno-numero { font-size: 150px; line-height: 1; letter-spacing: -0.045em; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .retorno-texto { font-size: var(--type-lead); line-height: 1.4; color: var(--ink-200); }
 .retorno-conta { margin-top: 48px; padding-top: 36px; border-top: 1px solid var(--ink-500); font-family: var(--font-mono); font-size: 30px; line-height: 1.4; color: var(--brand-paper); }
 
-/* Equipe numa linha separada por pontos (slide 17). */
+/* Equipe numa linha separada por pontos (slide 16). */
 .equipe { list-style: none; margin: 40px 0 0; padding: 28px 0 0; border-top: 1px solid var(--border-default); display: flex; flex-wrap: wrap; gap: 12px 0; font-size: 28px; line-height: 1.4; color: var(--text-strong); }
 .equipe li + li::before { content: "·"; margin: 0 18px; color: var(--text-meta); }
-/* Slide 17: os nomes da equipe entre a frase e o rodapé, em tinta sobre o campo limão. */
+/* Slide 16: os nomes da equipe entre a frase e o rodapé, em tinta sobre o campo limão. */
 .equipe--fecho { margin: 0 0 32px; padding: 0; border-top: 0; font-size: 26px; color: var(--brand-ink); }
 .equipe--fecho li + li::before { color: inherit; opacity: 0.5; }
 
@@ -210,7 +210,7 @@ button { font-family: inherit; }
 .carousel-dots span { width: 12px; height: 12px; border-radius: 50%; background: var(--border-strong); transition: background var(--duration-base) var(--ease-out), width var(--duration-base) var(--ease-out); }
 .carousel-dots span.is-on { width: 36px; border-radius: 6px; background: var(--brand-ink); }
 
-/* Slide 09: plataforma AI native. */
+/* Slide 08: plataforma AI native. */
 /* O chip da IA usa o mesmo gradiente limão em movimento. */
 .ai-chip { width: 50px; height: 50px; border-radius: var(--radius-lg); color: var(--brand-ink); display: flex; align-items: center; justify-content: center; animation: tdr-ai-flow 3s linear infinite; }
 .ai-tag { display: inline-flex; padding: 6px 16px; border-radius: 99px; border: 1px solid var(--border-strong); font-family: var(--font-mono); font-size: 18px; letter-spacing: 0.04em; color: var(--text-body); background: var(--surface-card); }
@@ -219,14 +219,29 @@ button { font-family: inherit; }
 .ai-foot { margin-top: 40px; border-top: 2px solid var(--brand-ink); padding-top: 28px; font-size: 27px; line-height: 1.5; color: var(--text-body); text-wrap: pretty; }
 .ai-foot b { color: var(--text-strong); }
 
-/* Slide 08: stack, uma linha por peça. */
+/* Stack (no balão do slide 15), uma linha por peça. */
 .stack-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
-.stack-row { display: grid; grid-template-columns: 172px 380px minmax(0, 1fr); gap: 32px; align-items: center; background: var(--surface-card); border: 1px solid var(--border-default); border-radius: var(--radius-deck-card); padding: 20px 32px; }
+.stack-row { display: grid; grid-template-columns: 172px 300px minmax(0, 1fr); gap: 32px; align-items: center; background: var(--surface-card); border: 1px solid var(--border-default); border-radius: var(--radius-deck-card); padding: 20px 32px; }
 .stack-logos { display: flex; gap: 12px; }
 .stack-logo { width: 72px; height: 72px; border-radius: var(--radius-lg); background: var(--surface-sunken); border: 1px solid var(--border-default); display: inline-flex; align-items: center; justify-content: center; }
 
+/* Slide 15: botão que abre a stack, e o balão sobre o slide, apontando para ele. */
+.stack-gatilho { align-self: flex-start; display: inline-flex; align-items: center; gap: 16px; padding: 18px 28px; border-radius: 99px; border: 1px solid var(--brand-ink); background: var(--brand-ink); color: var(--brand-paper); font-family: var(--font-sans); font-size: 24px; font-weight: 600; line-height: 1.3; cursor: pointer; transition: background var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out); }
+.stack-gatilho svg { color: var(--brand-lime); flex: none; }
+.stack-gatilho:hover { background: var(--ink-700); }
+.stack-gatilho:active { transform: scale(0.98); }
+.stack-popup { position: absolute; inset: 0; z-index: 5; background: color-mix(in srgb, var(--brand-ink) 45%, transparent); animation: tdr-fade 240ms var(--ease-out) both; }
+.stack-balao { position: absolute; left: var(--pad-x); right: var(--pad-x); bottom: 224px; padding: 44px 48px; border-radius: var(--radius-deck-card); background: var(--brand-paper); color: var(--text-strong); box-shadow: var(--shadow-overlay); animation: tdr-balao 320ms var(--ease-out) both; transform-origin: 120px calc(100% + 24px); }
+/* A ponta do balão, sobre o botão. */
+.stack-balao::after { content: ""; position: absolute; left: 96px; bottom: -14px; width: 28px; height: 28px; background: var(--brand-paper); transform: rotate(45deg); border-radius: 0 0 6px 0; }
+.stack-balao .stack-list { gap: 14px; }
+.stack-balao .stack-row { padding: 16px 28px; }
+.stack-fechar { position: absolute; top: 28px; right: 28px; z-index: 1; width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--border-strong); background: var(--surface-card); color: var(--brand-ink); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: background var(--duration-fast) var(--ease-out); }
+.stack-fechar:hover { background: var(--n-100); }
+@keyframes tdr-balao { from { opacity: 0; transform: translateY(16px) scale(0.97); } }
+
 @media (prefers-reduced-motion: reduce) {
-  .chat.is-on, .chat-sobe, .chat-status, .fonte, .fonte-link, .ai-chip, .rise-1, .rise-2, .rise-3, .rise-4, .rise-5, .intro-caret, .type-caret { animation: none; }
+  .chat.is-on, .chat-sobe, .chat-status, .fonte, .fonte-link, .ai-chip, .rise-1, .rise-2, .rise-3, .rise-4, .rise-5, .intro-caret, .type-caret, .stack-popup, .stack-balao { animation: none; }
   .carousel-track, .intro-title, .intro-logo, .intro-after, .intro--after[data-phase="after"] .intro-logo, .intro--after[data-phase="after"] .intro-after { transition: none; }
 }
 
@@ -240,13 +255,13 @@ button { font-family: inherit; }
   .slide, .slide[hidden] { display: flex; position: relative; inset: auto; width: var(--deck-w); height: var(--deck-h); break-after: page; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .slide:last-child { break-after: auto; }
   .slide * { animation: none !important; }
-  .deck-controls, .deck-notes { display: none; }
+  .deck-controls, .deck-notes, .stack-gatilho, .stack-popup { display: none; }
   /* Aberturas de seção no PDF: o título inteiro, sem a animação. */
   .intro-title, .intro-logo { display: none; }
   .intro-print { display: block; }
   /* Slide 05: no PDF, o texto da mudança na rotina, sem o título. */
   .intro--after .intro-print { display: none; }
   .intro--after .intro-after { opacity: 1; visibility: visible; transform: none; padding-top: 0; }
-  /* Slide 17: no PDF, o logo já no canto. */
+  /* Slide 16: no PDF, o logo já no canto. */
   .intro--fechamento .intro-logo { display: block; opacity: 1; transform: translate(var(--intro-logo-x), var(--intro-logo-y)) scale(var(--intro-logo-s)); }
 }
