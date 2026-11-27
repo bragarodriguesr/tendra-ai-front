@@ -87,7 +87,7 @@ button { font-family: inherit; }
 .rise-4 { animation-delay: 0.7s; }
 .rise-5 { animation-delay: 0.9s; }
 
-/* Slides 05 e 10: o título é escrito e dá lugar ao logo animado, no centro. */
+/* Slides 05 e 10: o título é escrito e dá lugar ao logo animado, no centro; depois o logo vai para o canto e o texto entra. */
 .intro { position: relative; flex: 1; display: grid; place-items: center; }
 .intro-title, .intro-logo { grid-area: 1 / 1; }
 .intro-print { display: none; grid-area: 1 / 1; font-size: 150px; line-height: 1; letter-spacing: -0.04em; }
@@ -101,7 +101,7 @@ button { font-family: inherit; }
 .type-rest { visibility: hidden; }
 .type-caret { display: inline-block; width: 8px; height: 0.82em; margin: 0 -12px -0.06em 4px; vertical-align: baseline; background: currentColor; animation: tdr-caret 0.9s steps(2, jump-none) infinite; }
 
-/* Slide 05: com o logo completo, ele encolhe para o canto de cima e o texto da mudança na rotina entra. */
+/* Slides 05 e 10: com o logo completo, ele encolhe para o canto de cima e o texto entra. */
 .intro-after { grid-area: 1 / 1; align-self: stretch; justify-self: stretch; display: grid; align-content: center; gap: 32px; padding-top: 96px; opacity: 0; visibility: hidden; transform: translateY(16px); transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out), visibility 0s linear 700ms; }
 .intro--after .intro-logo { transform-origin: 0 0; }
 .intro--after[data-phase="after"] .intro-logo { opacity: 1; transform: translate(var(--intro-logo-x, -420px), var(--intro-logo-y, -330px)) scale(var(--intro-logo-s, 0.34)); transition: transform 900ms var(--ease-in-out); }
@@ -207,7 +207,7 @@ button { font-family: inherit; }
 .carousel-dots span { width: 12px; height: 12px; border-radius: 50%; background: var(--border-strong); transition: background var(--duration-base) var(--ease-out), width var(--duration-base) var(--ease-out); }
 .carousel-dots span.is-on { width: 36px; border-radius: 6px; background: var(--brand-ink); }
 
-/* Slide 08: plataforma AI native. */
+/* Slide 09: plataforma AI native. */
 /* O chip da IA usa o mesmo gradiente limão em movimento. */
 .ai-chip { width: 50px; height: 50px; border-radius: var(--radius-lg); color: var(--brand-ink); display: flex; align-items: center; justify-content: center; animation: tdr-ai-flow 3s linear infinite; }
 .ai-tag { display: inline-flex; padding: 6px 16px; border-radius: 99px; border: 1px solid var(--border-strong); font-family: var(--font-mono); font-size: 18px; letter-spacing: 0.04em; color: var(--text-body); background: var(--surface-card); }
@@ -216,7 +216,7 @@ button { font-family: inherit; }
 .ai-foot { margin-top: 40px; border-top: 2px solid var(--brand-ink); padding-top: 28px; font-size: 27px; line-height: 1.5; color: var(--text-body); text-wrap: pretty; }
 .ai-foot b { color: var(--text-strong); }
 
-/* Slide 09: stack, uma linha por peça. */
+/* Slide 08: stack, uma linha por peça. */
 .stack-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
 .stack-row { display: grid; grid-template-columns: 172px 380px minmax(0, 1fr); gap: 32px; align-items: center; background: var(--surface-card); border: 1px solid var(--border-default); border-radius: var(--radius-deck-card); padding: 20px 32px; }
 .stack-logos { display: flex; gap: 12px; }

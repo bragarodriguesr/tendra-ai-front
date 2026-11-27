@@ -43,7 +43,7 @@ const REDUCED = typeof matchMedia === "function" && matchMedia("(prefers-reduced
 const DIGITA_INICIO_MS = 500;
 const DIGITA_LETRA_MS = 110;
 
-// Com `after`, o logo completo encolhe para o canto e o texto do slide entra (slides 05 e 17).
+// Com `after`, o logo completo encolhe para o canto e o texto do slide entra (slides 05, 10 e 17).
 // Sem `title`, começa direto pelo logo no centro (slide 17). `after` pode ser uma função que recebe
 // se a fase final já chegou, para o texto animar só a partir dela. Com `loop`, o logo já no canto
 // segue o ciclo da capa: fica completo por 5 s, desenha-se de novo e repete (slide 17).
@@ -643,11 +643,23 @@ function Arquitetura() {
   );
 }
 
+// Slide 10: como no 05, "O negócio" é escrito, o logo se desenha e vai para o canto, e entra a pergunta
+// que liga a persona ao mercado: os slides seguintes respondem a ela.
 function SecaoNegocio({ active }) {
-  return <SectionIntro active={active} title="O negócio" logo="ink" />;
+  return (
+    <SectionIntro active={active} title="O negócio" logo="ink" after={
+      <>
+        <Eyebrow tone="accent">O negócio</Eyebrow>
+        <h2 className="title" style={{ fontSize: "var(--type-title)", lineHeight: 1.12, maxWidth: "26ch" }}>Quantas <span className="mark mark--bloco" style={{ padding: "0 12px" }}>Marinas</span> existem?</h2>
+        <p style={{ margin: 0, fontSize: "var(--type-lead)", lineHeight: 1.5, maxWidth: "46ch", color: "var(--ink-200)" }}>
+          A sexta-feira dela se repete em equipes de propostas no mundo todo. Cada uma é um cliente.
+        </p>
+      </>
+    } />
+  );
 }
 
-// Slide 11: o benchmark global de volume e capacidade.
+// Slide 11: por que agora. O benchmark global de volume e capacidade, primeira resposta à pergunta do 10.
 const VOLUME = [
   { valor: 166, sufixo: "", d: "propostas enviadas por ano, em média" },
   { valor: 55, sufixo: "%", d: "das solicitações recebidas são respondidas" },
@@ -657,8 +669,8 @@ const VOLUME = [
 function Volume({ active }) {
   return (
     <>
-      <Eyebrow style={{ marginBottom: 26 }}>Benchmark global · 1.533 profissionais</Eyebrow>
-      <Heading maxWidth="24ch" style={{ marginBottom: "var(--gap-title)" }}>O volume subiu. A capacidade virou gargalo.</Heading>
+      <Eyebrow style={{ marginBottom: 26 }}>Por que agora · benchmark global, 1.533 profissionais</Eyebrow>
+      <Heading maxWidth="24ch" style={{ marginBottom: "var(--gap-title)" }}>Mais pedidos, o mesmo time.</Heading>
       <div className="cols cols--3" style={{ flex: "none" }}>
         {VOLUME.map((v, i) => (
           <DeckCard key={v.d} className={`stack rise-${i + 1}`} style={{ padding: 44, gap: 16 }}>
@@ -676,12 +688,12 @@ function Volume({ active }) {
   );
 }
 
-// Slide 12: o mercado inicial no Brasil (estimativa interna).
+// Slide 12: o mercado inicial no Brasil (estimativa interna), o mundo da persona do slide 02.
 function Oportunidade() {
   return (
     <>
       <Eyebrow style={{ marginBottom: 26 }}>Oportunidade no Brasil</Eyebrow>
-      <Heading maxWidth="24ch" style={{ marginBottom: "var(--gap-title)" }}>Começamos por tecnologia B2B</Heading>
+      <Heading maxWidth="28ch" style={{ marginBottom: "var(--gap-title)" }}>Começamos onde a Marina trabalha: software B2B no Brasil</Heading>
       <div className="mercado">
         <div className="mercado-linha rise-1">
           <div className="title mercado-numero">1.500–3.000</div>
@@ -844,11 +856,11 @@ export const SLIDES = [
   { label: "Seção: A solução", tone: "aurora-lime", Component: SecaoSolucao, notes: "\"A solução\" é escrita e dá lugar ao logo animado; com o logo completo, entra a mudança na rotina. Retome a pergunta inicial: Marina abre a fonte e valida se a política é a que vale hoje. Se faltar evidência, ela sabe exatamente o que escalar. O ganho comercial é recuperar tempo para tratar objeções e avançar a venda. Essa é a experiência que o piloto vai validar." },
   { label: "Introduzindo Tendra.ai", tone: "paper", Component: Produto, notes: "Apresentar o produto como cérebro comercial e técnico da empresa. A janela mostra o passo 00: documentos entrando na base." },
   { label: "Como funciona", tone: "paper", Component: ComoFunciona, notes: "Carrossel com os passos 01 a 04 (importar, gerar com fonte, revisar e aprovar, exportar). Avance com as setas laterais do slide." },
-  { label: "Plataforma AI native", tone: "paper", Component: PlataformaIA, notes: "A IA classifica perguntas e documentos por área, entende o edital, redige com fonte e sinaliza contradição; guardrails em código determinístico conferem tudo, e a pessoa aprova." },
   { label: "Arquitetura técnica", tone: "paper", Component: Arquitetura, notes: "A stack: Claude pela API da Anthropic, GitHub, Supabase, Render e Vercel, e o papel de cada um no produto." },
-  { label: "Seção: O negócio", tone: "aurora-ink", Component: SecaoNegocio, notes: "Transição para mercado, piloto, retorno para o cliente e modelo de negócio: \"O negócio\" é escrito e dá lugar ao logo animado." },
-  { label: "Volume e capacidade", tone: "paper", Component: Volume, notes: "O volume médio subiu de 153 para 166 e a parcela respondida caiu de 63% para 55%. O estudo não atribui todo o volume que fica sem resposta à capacidade. A taxa média de vitória de 39% é da edição de 2026; 45% é a média histórica de 2019 a 2026. Nenhum desses percentuais foi medido especificamente no Brasil." },
-  { label: "Oportunidade no Brasil", tone: "paper", Component: Oportunidade, notes: "O recorte inicial são empresas brasileiras de software, nuvem, infraestrutura e integração que vendem para grandes clientes e respondem com frequência a propostas e questionários de segurança. Contagem e receita são estimativas internas de mercado atendível (SAM), sem censo nem validação primária. A faixa combina 1.500 a 3.000 empresas com R$ 45 a 80 mil de contrato anual hipotético." },
+  { label: "Plataforma AI native", tone: "paper", Component: PlataformaIA, notes: "A IA classifica perguntas e documentos por área, entende o edital, redige com fonte e sinaliza contradição; guardrails em código determinístico conferem tudo, e a pessoa aprova." },
+  { label: "Seção: O negócio", tone: "aurora-ink", Component: SecaoNegocio, notes: "Transição: resolvemos a sexta-feira da Marina; a pergunta agora é quantas Marinas existem. \"O negócio\" é escrito, o logo se desenha e vai para o canto, e entra a pergunta. Os próximos slides respondem: por que o problema cresce (11), quantas existem no Brasil e quanto vale (12), como provamos (13), quanto vale para o cliente (14) e como cobramos (15)." },
+  { label: "Volume e capacidade", tone: "paper", Component: Volume, notes: "Primeira resposta: mais pedidos chegam ao mesmo time. O volume médio subiu de 153 para 166 e a parcela respondida caiu de 63% para 55%. O estudo não atribui todo o volume que fica sem resposta à capacidade. A taxa média de vitória de 39% é da edição de 2026; 45% é a média histórica de 2019 a 2026. Nenhum desses percentuais foi medido especificamente no Brasil." },
+  { label: "Oportunidade no Brasil", tone: "paper", Component: Oportunidade, notes: "Volte à persona: a Marina lidera pré-vendas numa empresa brasileira de software, e é por esse mercado que começamos. O recorte inicial são empresas brasileiras de software, nuvem, infraestrutura e integração que vendem para grandes clientes e respondem com frequência a propostas e questionários de segurança. Contagem e receita são estimativas internas de mercado atendível (SAM), sem censo nem validação primária. A faixa combina 1.500 a 3.000 empresas com R$ 45 a 80 mil de contrato anual hipotético." },
   { label: "Piloto: metas a validar", tone: "paper", Component: Piloto, notes: "A meta de 30% é proposta para o piloto e não foi observada em cliente. Compare a mediana do ciclo da importação à exportação com casos comparáveis do processo atual, separando tempo corrido de horas ativas. A meta de 70% vem do One Pager e mede a similaridade por palavras entre o texto sugerido e o aprovado. Medimos também cobertura de fontes, tratamento de alertas e retrabalho. A taxa de vitória é acompanhada depois, sem atribuir causalidade ao produto, porque preço e concorrência também mudam o desfecho." },
   { label: "Retorno para o cliente", tone: "ink", Component: Retorno, notes: "Cenário ilustrativo, sem resultado em cliente e sem representar redução de folha. 10 propostas por mês × 33 h = 330 h; uma redução hipotética de 30% no esforço ativo dá 99 h. A R$ 180/h, são R$ 17.820 em capacidade, que pode ir para negociação e novas propostas. A assinatura simulada de R$ 5.000 por mês equivale a R$ 60 mil por ano, dentro da faixa interna: benefício/custo de 3,56× e retorno líquido de 256,4%, antes de implantação, tributos e treinamento. O ponto de equilíbrio é 27,78 h, arredondado para 28 h. A redução de esforço usada aqui deve ser cronometrada separadamente da meta de ciclo." },
   { label: "Modelo de negócio", tone: "paper", Component: ModeloNegocio, notes: "A entrada é por empresas de tecnologia que já têm orçamento ligado ao processo, volume recorrente e exigência de evidência. A cobrança por assento e volume vem do pitch original. A faixa de R$ 45 a 80 mil por ano é hipótese, a validar com compradores e uso real. Nenhuma receita, cliente ou contrato é afirmado." },
