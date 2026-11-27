@@ -37,16 +37,16 @@ function Heading({ children, maxWidth, style }) {
 
 const REDUCED = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-// Abertura de seção (slides 05 e 10): o título é escrito letra a letra e dá lugar ao logo animado,
+// Abertura de seção (slides 05 e 09): o título é escrito letra a letra e dá lugar ao logo animado,
 // sobre o campo Aurora do slide. Recomeça a cada entrada no slide; com movimento reduzido, mostra o logo.
 // Digitação dos títulos (capa e aberturas de seção): começa após 500 ms, uma letra a cada 110 ms.
 const DIGITA_INICIO_MS = 500;
 const DIGITA_LETRA_MS = 110;
 
-// Com `after`, o logo completo encolhe para o canto e o texto do slide entra (slides 05 e 17).
-// Sem `title`, começa direto pelo logo no centro (slide 17). `after` pode ser uma função que recebe
+// Com `after`, o logo completo encolhe para o canto e o texto do slide entra (slides 05, 09 e 16).
+// Sem `title`, começa direto pelo logo no centro (slide 16). `after` pode ser uma função que recebe
 // se a fase final já chegou, para o texto animar só a partir dela. Com `loop`, o logo já no canto
-// segue o ciclo da capa: fica completo por 5 s, desenha-se de novo e repete (slide 17).
+// segue o ciclo da capa: fica completo por 5 s, desenha-se de novo e repete (slide 16).
 const INTRO_LOGO_MS = 4200; // o logo termina de se desenhar aos 4,2 s (a palavra entra por último); o texto vem em seguida, sem pausa
 
 function SectionIntro({ active, title = "", logo, after, className, loop = false }) {
@@ -611,7 +611,8 @@ function PlataformaIA() {
   );
 }
 
-// Stack do produto: marca (Simple Icons, em tinta) e a função de cada peça.
+// Stack do produto: marca (Simple Icons, em tinta) e a função de cada peça. Não é mais um slide: abre
+// num balão pelo botão no pé do slide 15.
 const STACK = [
   { icons: ["anthropic", "claude"], nome: "Anthropic · API Claude", d: "Os modelos Claude redigem cada resposta com citações e apontam contradições; um modelo menor identifica as perguntas e classifica as áreas. Pela API comercial, o dado do cliente não treina modelos." },
   { icons: ["github"], nome: "GitHub", d: "Código, revisão de cada mudança e integração contínua: testes do backend, jornada de ponta a ponta e varredura de segredos antes de publicar." },
@@ -626,16 +627,16 @@ function Marca({ slug }) {
   );
 }
 
-function Arquitetura() {
+function StackConteudo({ idTitulo }) {
   return (
     <>
-      <Heading maxWidth="34ch" style={{ marginBottom: 44 }}>Uma stack enxuta, com cada peça no seu papel.</Heading>
+      <h2 id={idTitulo} className="title title--h2" style={{ fontSize: 48, marginBottom: 32, paddingRight: 96 }}>Uma stack enxuta, com cada peça no seu papel.</h2>
       <ul className="stack-list">
-        {STACK.map((s, i) => (
-          <li key={s.nome} className={`stack-row rise-${i + 1}`}>
+        {STACK.map((s) => (
+          <li key={s.nome} className="stack-row">
             <div className="stack-logos">{s.icons.map((slug) => <span key={slug} className="stack-logo"><Marca slug={slug} /></span>)}</div>
-            <div className="card-title" style={{ fontSize: 30, lineHeight: 1.2 }}>{s.nome}</div>
-            <div style={{ fontSize: 23, lineHeight: 1.45, color: "var(--text-body)" }}>{s.d}</div>
+            <div className="card-title" style={{ fontSize: 28, lineHeight: 1.2 }}>{s.nome}</div>
+            <div style={{ fontSize: 21, lineHeight: 1.45, color: "var(--text-body)" }}>{s.d}</div>
           </li>
         ))}
       </ul>
@@ -643,11 +644,69 @@ function Arquitetura() {
   );
 }
 
-function SecaoNegocio({ active }) {
-  return <SectionIntro active={active} title="O negócio" logo="ink" />;
+// Botão no pé do slide 15 que abre a stack num balão sobre o slide. Fecha pelo X, pelo Esc ou por um
+// clique fora do balão; enquanto está aberto, as setas e o espaço não trocam de slide. Fecha sozinho
+// ao sair do slide. Fora da tela (no PDF), o botão some.
+const TECLAS_DO_DECK = ["ArrowRight", "ArrowDown", "PageDown", "ArrowLeft", "ArrowUp", "PageUp", "Backspace", "Home", "End", " ", "Enter"];
+
+function PopupStack({ active }) {
+  const [aberto, setAberto] = React.useState(false);
+  const gatilho = React.useRef(null);
+  const fechar = React.useRef(null);
+  const fecharPopup = React.useCallback(() => {
+    setAberto(false);
+    setTimeout(() => gatilho.current?.focus(), 0);
+  }, []);
+  React.useEffect(() => { if (!active) setAberto(false); }, [active]);
+  React.useEffect(() => {
+    if (!aberto) return undefined;
+    fechar.current?.focus();
+    // Na captura, antes da navegação do deck (que escuta a janela na fase de bolha).
+    const onKey = (e) => {
+      if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); fecharPopup(); return; }
+      if (e.key === "Tab") { e.preventDefault(); fechar.current?.focus(); return; }
+      if (TECLAS_DO_DECK.includes(e.key)) e.stopPropagation();
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [aberto, fecharPopup]);
+  const semDeslize = (e) => e.stopPropagation();
+  return (
+    <>
+      <button ref={gatilho} type="button" className="stack-gatilho rise-3" aria-haspopup="dialog" aria-expanded={aberto} onClick={() => setAberto(true)}>
+        <Icon name="layout-grid" size={26} />
+        Clique para saber mais sobre a stack por trás do Tendra.ai.
+      </button>
+      {aberto ? (
+        <div className="stack-popup" onClick={fecharPopup} onTouchStart={semDeslize} onTouchEnd={semDeslize}>
+          <div className="stack-balao" role="dialog" aria-modal="true" aria-labelledby="stack-titulo" onClick={(e) => e.stopPropagation()}>
+            <button ref={fechar} type="button" className="stack-fechar" aria-label="Fechar a stack" title="Fechar" onClick={fecharPopup}>
+              <Icon name="x" size={28} />
+            </button>
+            <StackConteudo idTitulo="stack-titulo" />
+          </div>
+        </div>
+      ) : null}
+    </>
+  );
 }
 
-// Slide 11: o benchmark global de volume e capacidade.
+// Slide 09: como no 05, "O negócio" é escrito, o logo se desenha e vai para o canto, e entra a pergunta
+// que liga a persona ao mercado: os slides seguintes respondem a ela.
+function SecaoNegocio({ active }) {
+  return (
+    <SectionIntro active={active} title="O negócio" logo="ink" after={
+      <>
+        <h2 className="title" style={{ fontSize: "var(--type-title)", lineHeight: 1.12, maxWidth: "26ch" }}>Quantas <span className="mark mark--bloco" style={{ padding: "0 12px" }}>Marinas</span> existem?</h2>
+        <p style={{ margin: 0, fontSize: "var(--type-lead)", lineHeight: 1.5, maxWidth: "46ch", color: "var(--ink-200)" }}>
+          A sexta-feira dela se repete em equipes de propostas no mundo todo. Cada uma é um cliente.
+        </p>
+      </>
+    } />
+  );
+}
+
+// Slide 10: por que agora. O benchmark global de volume e capacidade, primeira resposta à pergunta do 09.
 const VOLUME = [
   { valor: 166, sufixo: "", d: "propostas enviadas por ano, em média" },
   { valor: 55, sufixo: "%", d: "das solicitações recebidas são respondidas" },
@@ -657,8 +716,8 @@ const VOLUME = [
 function Volume({ active }) {
   return (
     <>
-      <Eyebrow style={{ marginBottom: 26 }}>Benchmark global · 1.533 profissionais</Eyebrow>
-      <Heading maxWidth="24ch" style={{ marginBottom: "var(--gap-title)" }}>O volume subiu. A capacidade virou gargalo.</Heading>
+      <Eyebrow style={{ marginBottom: 26 }}>Por que agora · benchmark global, 1.533 profissionais</Eyebrow>
+      <Heading maxWidth="24ch" style={{ marginBottom: "var(--gap-title)" }}>Mais pedidos, o mesmo time.</Heading>
       <div className="cols cols--3" style={{ flex: "none" }}>
         {VOLUME.map((v, i) => (
           <DeckCard key={v.d} className={`stack rise-${i + 1}`} style={{ padding: 44, gap: 16 }}>
@@ -676,12 +735,12 @@ function Volume({ active }) {
   );
 }
 
-// Slide 12: o mercado inicial no Brasil (estimativa interna).
+// Slide 11: o mercado inicial no Brasil (estimativa interna), o mundo da persona do slide 02.
 function Oportunidade() {
   return (
     <>
       <Eyebrow style={{ marginBottom: 26 }}>Oportunidade no Brasil</Eyebrow>
-      <Heading maxWidth="24ch" style={{ marginBottom: "var(--gap-title)" }}>Começamos por tecnologia B2B</Heading>
+      <Heading maxWidth="28ch" style={{ marginBottom: "var(--gap-title)" }}>Começamos onde a Marina trabalha: software B2B no Brasil</Heading>
       <div className="mercado">
         <div className="mercado-linha rise-1">
           <div className="title mercado-numero">1.500–3.000</div>
@@ -697,7 +756,7 @@ function Oportunidade() {
   );
 }
 
-// Slide 13: as metas do piloto; os números contam a cada entrada no slide.
+// Slide 12: as metas do piloto; os números contam a cada entrada no slide.
 const METAS = [
   { valor: 30, formato: (n) => `−${n}%`, t: "tempo de ciclo", d: "Da importação à exportação, em propostas de complexidade similar." },
   { valor: 70, formato: (n) => `${n}%`, t: "aceitação do texto sugerido", d: "Quanto da sugestão permanece no texto aprovado." }
@@ -723,7 +782,7 @@ function Piloto({ active }) {
   );
 }
 
-// Slide 14: simulação do retorno para o cliente; os números contam a cada entrada no slide.
+// Slide 13: simulação do retorno para o cliente; os números contam a cada entrada no slide.
 const reais = (n) => "R$ " + n.toLocaleString("pt-BR");
 
 function Retorno({ active }) {
@@ -750,7 +809,7 @@ function Retorno({ active }) {
   );
 }
 
-// Slide 15: quem compra e como cobramos.
+// Slide 14: quem compra e como cobramos.
 function ModeloNegocio() {
   return (
     <>
@@ -773,31 +832,30 @@ function ModeloNegocio() {
   );
 }
 
-// Slide 16: o estágio do projeto e quem está nele.
+// Slide 15: o estágio do projeto. A equipe aparece no fechamento (slide 16).
 const EQUIPE = ["Rafael Braga", "Matheus Alcântara", "Mariana Fugimoto", "Renata Lima da Silva", "Everton Santos", "Roberta Vitalina"];
 
-function TimeExecucao() {
+function TimeExecucao({ active }) {
   return (
     <>
-      <Eyebrow style={{ marginBottom: 26 }}>Time e execução</Eyebrow>
-      <Heading maxWidth="26ch" style={{ marginBottom: "var(--gap-title)" }}>Já temos um protótipo para testar com o mercado</Heading>
-      <div className="cols cols--2" style={{ flex: "none" }}>
-        <FeatureCard title="O que já existe" titleSize={40} padding={44} gap={18} className="rise-1">
-          Protótipo navegável do fluxo de importação, revisão com fontes e aprovação.
-        </FeatureCard>
-        <FeatureCard title="O que falta provar" titleSize={40} padding={44} gap={18} className="rise-2">
-          Quanto tempo o cliente recupera, quais respostas aceita e quanto pagaria.
-        </FeatureCard>
+      <div style={{ margin: "auto 0" }}>
+        <Eyebrow style={{ marginBottom: 26 }}>Onde estamos hoje</Eyebrow>
+        <Heading maxWidth="26ch" style={{ marginBottom: "var(--gap-title)" }}>Já temos um <span className="mark mark--bloco" style={{ padding: "0 12px" }}>MVP</span> para testar<br />com o mercado</Heading>
+        <div className="cols cols--2" style={{ flex: "none" }}>
+          <FeatureCard title="O que já existe" titleSize={40} padding={44} gap={18} className="rise-1">
+            MVP funcional do fluxo de importação, revisão com fontes e aprovação.
+          </FeatureCard>
+          <FeatureCard title="O que falta provar" titleSize={40} padding={44} gap={18} className="rise-2">
+            Quanto tempo o cliente recupera, quais respostas aceita e quanto pagaria.
+          </FeatureCard>
+        </div>
       </div>
-      <ul className="equipe rise-3" aria-label="Equipe">
-        {EQUIPE.map((nome) => <li key={nome}>{nome}</li>)}
-      </ul>
-      <Nota>Equipe e estágio do projeto · One Pager AIPL</Nota>
+      <PopupStack active={active} />
     </>
   );
 }
 
-// Slide 17: como no 05, o logo se desenha no centro e, completo, vai para o canto (o mesmo lugar e
+// Slide 16: como no 05, o logo se desenha no centro e, completo, vai para o canto (o mesmo lugar e
 // tamanho do logo da capa), onde segue em laço como na capa; então a frase é digitada como o título da capa. Fora do slide (e no PDF
 // ou sem movimento), tudo fica no estado final.
 const FECHO_TITULO = [{ t: "Não deixe seu negócio parar por uma planilha" }];
@@ -820,9 +878,12 @@ function FechamentoTexto({ ligado }) {
   }, [ligado, total]);
   return (
     <>
-      <h1 className="title" aria-label={FECHO_TEXTO} style={{ fontSize: 100, lineHeight: 1.05, letterSpacing: "-0.04em", margin: "auto 0 48px", maxWidth: "17ch" }}>
+      <h1 className="title" aria-label={FECHO_TEXTO} style={{ fontSize: 100, lineHeight: 1.05, letterSpacing: "-0.04em", margin: "auto 0 96px", maxWidth: "17ch" }}>
         <span aria-hidden="true"><TituloDigitado partes={FECHO_TITULO} typed={typed} cursor={cursor} /></span>
       </h1>
+      <ul className="equipe equipe--fecho" aria-label="Equipe">
+        {EQUIPE.map((nome) => <li key={nome}>{nome}</li>)}
+      </ul>
       <div className="footer-rule" style={{ borderTop: "2px solid var(--brand-ink)" }}>
         <div style={{ fontSize: "var(--type-lead)", lineHeight: 1.5, fontWeight: 600 }}>contato@tendra.ai · tendra.ai</div>
         <Eyebrow style={{ color: "inherit" }}>Perguntas da banca</Eyebrow>
@@ -845,13 +906,12 @@ export const SLIDES = [
   { label: "Introduzindo Tendra.ai", tone: "paper", Component: Produto, notes: "Apresentar o produto como cérebro comercial e técnico da empresa. A janela mostra o passo 00: documentos entrando na base." },
   { label: "Como funciona", tone: "paper", Component: ComoFunciona, notes: "Carrossel com os passos 01 a 04 (importar, gerar com fonte, revisar e aprovar, exportar). Avance com as setas laterais do slide." },
   { label: "Plataforma AI native", tone: "paper", Component: PlataformaIA, notes: "A IA classifica perguntas e documentos por área, entende o edital, redige com fonte e sinaliza contradição; guardrails em código determinístico conferem tudo, e a pessoa aprova." },
-  { label: "Arquitetura técnica", tone: "paper", Component: Arquitetura, notes: "A stack: Claude pela API da Anthropic, GitHub, Supabase, Render e Vercel, e o papel de cada um no produto." },
-  { label: "Seção: O negócio", tone: "aurora-ink", Component: SecaoNegocio, notes: "Transição para mercado, piloto, retorno para o cliente e modelo de negócio: \"O negócio\" é escrito e dá lugar ao logo animado." },
-  { label: "Volume e capacidade", tone: "paper", Component: Volume, notes: "O volume médio subiu de 153 para 166 e a parcela respondida caiu de 63% para 55%. O estudo não atribui todo o volume que fica sem resposta à capacidade. A taxa média de vitória de 39% é da edição de 2026; 45% é a média histórica de 2019 a 2026. Nenhum desses percentuais foi medido especificamente no Brasil." },
-  { label: "Oportunidade no Brasil", tone: "paper", Component: Oportunidade, notes: "O recorte inicial são empresas brasileiras de software, nuvem, infraestrutura e integração que vendem para grandes clientes e respondem com frequência a propostas e questionários de segurança. Contagem e receita são estimativas internas de mercado atendível (SAM), sem censo nem validação primária. A faixa combina 1.500 a 3.000 empresas com R$ 45 a 80 mil de contrato anual hipotético." },
+  { label: "Seção: O negócio", tone: "aurora-ink", Component: SecaoNegocio, notes: "Transição: resolvemos a sexta-feira da Marina; a pergunta agora é quantas Marinas existem. \"O negócio\" é escrito, o logo se desenha e vai para o canto, e entra a pergunta. Os próximos slides respondem: por que o problema cresce (10), quantas existem no Brasil e quanto vale (11), como provamos (12), quanto vale para o cliente (13) e como cobramos (14)." },
+  { label: "Volume e capacidade", tone: "paper", Component: Volume, notes: "Primeira resposta: mais pedidos chegam ao mesmo time. O volume médio subiu de 153 para 166 e a parcela respondida caiu de 63% para 55%. O estudo não atribui todo o volume que fica sem resposta à capacidade. A taxa média de vitória de 39% é da edição de 2026; 45% é a média histórica de 2019 a 2026. Nenhum desses percentuais foi medido especificamente no Brasil." },
+  { label: "Oportunidade no Brasil", tone: "paper", Component: Oportunidade, notes: "Volte à persona: a Marina lidera pré-vendas numa empresa brasileira de software, e é por esse mercado que começamos. O recorte inicial são empresas brasileiras de software, nuvem, infraestrutura e integração que vendem para grandes clientes e respondem com frequência a propostas e questionários de segurança. Contagem e receita são estimativas internas de mercado atendível (SAM), sem censo nem validação primária. A faixa combina 1.500 a 3.000 empresas com R$ 45 a 80 mil de contrato anual hipotético." },
   { label: "Piloto: metas a validar", tone: "paper", Component: Piloto, notes: "A meta de 30% é proposta para o piloto e não foi observada em cliente. Compare a mediana do ciclo da importação à exportação com casos comparáveis do processo atual, separando tempo corrido de horas ativas. A meta de 70% vem do One Pager e mede a similaridade por palavras entre o texto sugerido e o aprovado. Medimos também cobertura de fontes, tratamento de alertas e retrabalho. A taxa de vitória é acompanhada depois, sem atribuir causalidade ao produto, porque preço e concorrência também mudam o desfecho." },
   { label: "Retorno para o cliente", tone: "ink", Component: Retorno, notes: "Cenário ilustrativo, sem resultado em cliente e sem representar redução de folha. 10 propostas por mês × 33 h = 330 h; uma redução hipotética de 30% no esforço ativo dá 99 h. A R$ 180/h, são R$ 17.820 em capacidade, que pode ir para negociação e novas propostas. A assinatura simulada de R$ 5.000 por mês equivale a R$ 60 mil por ano, dentro da faixa interna: benefício/custo de 3,56× e retorno líquido de 256,4%, antes de implantação, tributos e treinamento. O ponto de equilíbrio é 27,78 h, arredondado para 28 h. A redução de esforço usada aqui deve ser cronometrada separadamente da meta de ciclo." },
   { label: "Modelo de negócio", tone: "paper", Component: ModeloNegocio, notes: "A entrada é por empresas de tecnologia que já têm orçamento ligado ao processo, volume recorrente e exigência de evidência. A cobrança por assento e volume vem do pitch original. A faixa de R$ 45 a 80 mil por ano é hipótese, a validar com compradores e uso real. Nenhuma receita, cliente ou contrato é afirmado." },
-  { label: "Time e execução", tone: "aurora-paper", Component: TimeExecucao, notes: "A equipe já pode mostrar a experiência. O próximo passo é provar o impacto operacional com compradores reais. O teste interno de qualidade em base sintética não substitui a validação com cliente." },
-  { label: "Fechamento", tone: "aurora-lime", Component: Fechamento, notes: "Como na abertura da solução: o logo se desenha no centro, vai para o canto, onde se redesenha a cada 5 s, e a frase é digitada. Encerrar com a mensagem central, \"Não deixe seu negócio parar por uma planilha\", e abrir para perguntas da banca." }
+  { label: "Time e execução", tone: "aurora-paper", Component: TimeExecucao, notes: "Se a banca perguntar pela tecnologia, o botão no pé do slide abre a stack: Claude pela API da Anthropic, GitHub, Supabase, Render e Vercel, e o papel de cada um; Esc ou o X fecham. O MVP já mostra a experiência de ponta a ponta. O próximo passo é provar o impacto operacional com compradores reais. O teste interno de qualidade em base sintética não substitui a validação com cliente." },
+  { label: "Fechamento", tone: "aurora-lime", Component: Fechamento, notes: "Como na abertura da solução: o logo se desenha no centro, vai para o canto, onde se redesenha a cada 5 s, e a frase é digitada; abaixo dela, os nomes da equipe. Encerrar com a mensagem central, \"Não deixe seu negócio parar por uma planilha\", e abrir para perguntas da banca." }
 ];
