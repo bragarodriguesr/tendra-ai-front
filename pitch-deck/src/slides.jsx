@@ -45,10 +45,11 @@ const DIGITA_LETRA_MS = 110;
 
 // Com `after`, o logo completo encolhe para o canto e o texto do slide entra (slides 05 e 17).
 // Sem `title`, começa direto pelo logo no centro (slide 17). `after` pode ser uma função que recebe
-// se a fase final já chegou, para o texto animar só a partir dela.
+// se a fase final já chegou, para o texto animar só a partir dela. Com `loop`, o logo já no canto
+// segue o ciclo da capa: fica completo por 5 s, desenha-se de novo e repete (slide 17).
 const INTRO_LOGO_MS = 4200; // o logo termina de se desenhar aos 4,2 s (a palavra entra por último); o texto vem em seguida, sem pausa
 
-function SectionIntro({ active, title = "", logo, after, className }) {
+function SectionIntro({ active, title = "", logo, after, className, loop = false }) {
   const comTexto = Boolean(after);
   const final = comTexto ? "after" : "logo";
   const [typed, setTyped] = React.useState(REDUCED ? title.length : 0);
@@ -73,6 +74,16 @@ function SectionIntro({ active, title = "", logo, after, className }) {
     if (comTexto) later((t += INTRO_LOGO_MS), () => setPhase("after"));
     return () => timers.forEach(clearTimeout);
   }, [active, title, comTexto]);
+  const emLaco = loop && comTexto && phase === "after";
+  React.useEffect(() => {
+    if (!active || REDUCED || !emLaco) return undefined;
+    let laco = 0;
+    const primeiro = setTimeout(() => {
+      ref.current?.replay?.();
+      laco = setInterval(() => ref.current?.replay?.(), CAPA_LOGO_FINAL * 1000 + CAPA_LOGO_PAUSA_MS);
+    }, CAPA_LOGO_PAUSA_MS);
+    return () => { clearTimeout(primeiro); clearInterval(laco); };
+  }, [active, emLaco]);
   const depois = typeof after === "function" ? after(phase === "after") : after;
   return (
     <div className={["intro", after ? "intro--after" : "", className].filter(Boolean).join(" ")} data-phase={phase}>
@@ -87,7 +98,7 @@ function SectionIntro({ active, title = "", logo, after, className }) {
       ) : null}
       <div className="intro-logo">
         {/* O desenho do logo tem folga à direita: o deslocamento centra o conjunto visível. */}
-        <AnimatedLogo ref={ref} variant={logo} bare once paused={!active || phase !== "logo"} style={{ width: 760, marginLeft: 76 }} title="Tendra.ai" />
+        <AnimatedLogo ref={ref} variant={logo} bare once paused={!active || !(phase === "logo" || emLaco)} style={{ width: 760, marginLeft: 76 }} title="Tendra.ai" />
       </div>
       {after ? <div className="intro-after" aria-hidden={phase !== "after"}>{depois}</div> : null}
     </div>
@@ -787,7 +798,7 @@ function TimeExecucao() {
 }
 
 // Slide 17: como no 05, o logo se desenha no centro e, completo, vai para o canto (o mesmo lugar e
-// tamanho do logo da capa); então a frase é digitada como o título da capa. Fora do slide (e no PDF
+// tamanho do logo da capa), onde segue em laço como na capa; então a frase é digitada como o título da capa. Fora do slide (e no PDF
 // ou sem movimento), tudo fica no estado final.
 const FECHO_TITULO = [{ t: "Não deixe seu negócio parar por uma planilha" }];
 const FECHO_TEXTO = FECHO_TITULO.map((p) => p.t).join("");
@@ -821,7 +832,7 @@ function FechamentoTexto({ ligado }) {
 }
 
 function Fechamento({ active }) {
-  return <SectionIntro active={active} logo="lime" className="intro--fechamento" after={(ligado) => <FechamentoTexto ligado={ligado} />} />;
+  return <SectionIntro active={active} logo="lime" className="intro--fechamento" loop after={(ligado) => <FechamentoTexto ligado={ligado} />} />;
 }
 
 // tone: campo do slide (paper | ink | lime). notes: notas do apresentador (tecla N).
@@ -842,5 +853,5 @@ export const SLIDES = [
   { label: "Retorno para o cliente", tone: "ink", Component: Retorno, notes: "Cenário ilustrativo, sem resultado em cliente e sem representar redução de folha. 10 propostas por mês × 33 h = 330 h; uma redução hipotética de 30% no esforço ativo dá 99 h. A R$ 180/h, são R$ 17.820 em capacidade, que pode ir para negociação e novas propostas. A assinatura simulada de R$ 5.000 por mês equivale a R$ 60 mil por ano, dentro da faixa interna: benefício/custo de 3,56× e retorno líquido de 256,4%, antes de implantação, tributos e treinamento. O ponto de equilíbrio é 27,78 h, arredondado para 28 h. A redução de esforço usada aqui deve ser cronometrada separadamente da meta de ciclo." },
   { label: "Modelo de negócio", tone: "paper", Component: ModeloNegocio, notes: "A entrada é por empresas de tecnologia que já têm orçamento ligado ao processo, volume recorrente e exigência de evidência. A cobrança por assento e volume vem do pitch original. A faixa de R$ 45 a 80 mil por ano é hipótese, a validar com compradores e uso real. Nenhuma receita, cliente ou contrato é afirmado." },
   { label: "Time e execução", tone: "aurora-paper", Component: TimeExecucao, notes: "A equipe já pode mostrar a experiência. O próximo passo é provar o impacto operacional com compradores reais. O teste interno de qualidade em base sintética não substitui a validação com cliente." },
-  { label: "Fechamento", tone: "aurora-lime", Component: Fechamento, notes: "Como na abertura da solução: o logo se desenha no centro, vai para o canto e a frase é digitada. Encerrar com a mensagem central, \"Não deixe seu negócio parar por uma planilha\", e abrir para perguntas da banca." }
+  { label: "Fechamento", tone: "aurora-lime", Component: Fechamento, notes: "Como na abertura da solução: o logo se desenha no centro, vai para o canto, onde se redesenha a cada 5 s, e a frase é digitada. Encerrar com a mensagem central, \"Não deixe seu negócio parar por uma planilha\", e abrir para perguntas da banca." }
 ];
